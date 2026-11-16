@@ -1,0 +1,10 @@
+.env
+.env.*
+changes/backups/
+work/
+.venv/
+node_modules/
+*.log
+.claude/settings.local.json
+CLAUDE.local.md
+STATUS.md
