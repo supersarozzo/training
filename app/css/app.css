@@ -253,3 +253,12 @@ textarea {
   .muted { color: #333; }
   a { color: #000; text-decoration: none; }
 }
+
+/* Update banner and install hint */
+.update-banner {
+  position: fixed; left: var(--s4); right: var(--s4); top: calc(var(--s2) + env(safe-area-inset-top)); z-index: 15;
+  max-width: 488px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--s3);
+  background: var(--bg-surface); border: 1px solid var(--brand-primary); border-radius: var(--r-card); padding: var(--s2) var(--s3);
+  box-shadow: var(--shadow-overlay);
+}
+.update-banner .button { width: auto; min-width: 96px; margin: 0; }

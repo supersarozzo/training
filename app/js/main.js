@@ -17,6 +17,7 @@ import { clearTickers } from "./timer.js";
 import { closeSheets } from "./ui/parts.js";
 import { setSoundOn } from "./sound.js";
 import { soundOn } from "./active.js";
+import { registerWorker, updateBanner } from "./ui/update.js";
 
 const tabRoutes = { today: renderToday, progress: renderProgress, plan: renderPlan, settings: renderSettings };
 const flowRoutes = { setup: renderSetup, intake: renderIntake, targets: renderTargets, workout: renderWorkout, weighin: renderWeighin, weekly: renderWeekly };
@@ -45,7 +46,7 @@ function render() {
     const name = guard(wanted);
     if (name !== wanted) history.replaceState(null, "", `#/${name}`);
     if (Object.hasOwn(flowRoutes, name)) mount(root, flowRoutes[name]());
-    else mount(root, tabRoutes[name](), tabBar(name));
+    else mount(root, tabRoutes[name](), updateBanner(), tabBar(name));
     window.scrollTo(0, 0);
   } catch (e) {
     mount(root, errorState(e && e.message ? e.message : "The app could not start."));
@@ -56,3 +57,4 @@ try { setSoundOn(soundOn()); } catch { /* storage blocked: default sound on */ }
 setRedraw(render);
 window.addEventListener("hashchange", render);
 render();
+registerWorker();

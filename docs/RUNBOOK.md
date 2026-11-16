@@ -84,3 +84,9 @@ Not yet. Build step 12 (with Rosario): the GitHub account, the public `training`
 ## Rollback of a change
 
 Git project: revert the commit (`git revert <commit>`). Nothing outside this folder is changed by the project, so no change ledger is needed.
+
+## Releasing a new version of the app (step 8)
+1. Change `APP_VERSION` in `app/js/version.js` **and** at the top of `app/sw.js` (same text). `node --test` fails if they differ.
+2. Add any new file in `app/` to the `FILES` list in `app/sw.js`. `node --test` fails if the list and the folder differ.
+3. On the phone the banner "New version ready" appears; tap Update.
+4. To try the worker on your computer: open `http://localhost:8000/?sw=1`. Remove it afterwards in the browser's site data. The built-in preview pane of the Claude app cannot run service workers: test offline in real Chrome or Safari.

@@ -10,6 +10,7 @@ import { days } from "../plan/plan-v2.js";
 import { startWorkout } from "./flow.js";
 import { activeWeighins, weeklySummary } from "../engine/trend.js";
 import { seenWeek } from "./weekly.js";
+import { installHintShown, dismissInstallHint } from "./update.js";
 
 let savedMessage = null; // shown once, after a workout was saved
 export function setSavedMessage(text) { savedMessage = text; }
@@ -111,6 +112,12 @@ export function renderToday() {
       targets.kcal !== null ? h("div", { class: "metric" }, h("div", { class: "value" }, String(targets.kcal), h("span", { class: "unit" }, " kcal a day"))) : null,
       targets.protein_g !== null ? h("div", { class: "metric" }, h("div", { class: "value" }, String(targets.protein_g), h("span", { class: "unit" }, " g protein a day"))) : null,
       h("div", { class: "small muted" }, `Starting walk: ${targets.walk_start.speed_kmh} km/h, ${targets.walk_start.slope_pct} % slope`)));
+  }
+  if (!open && installHintShown()) {
+    children.push(h("div", { class: "card warn" }, h("h2", {}, "Add this app to your Home Screen"),
+      h("p", {}, "In Safari, tap the Share button, then Add to Home Screen. Open the app from there."),
+      h("p", { class: "small muted" }, "Safari can delete the data of a web page you do not open for 7 days. An app on the Home Screen keeps it."),
+      h("button", { class: "button secondary", type: "button", onclick: () => { dismissInstallHint(); rerender(); } }, "I did this")));
   }
   children.push(h("p", { class: "small muted" }, "Only on this phone. Set up GitHub in Settings."));
 
