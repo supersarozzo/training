@@ -1,5 +1,6 @@
 // Finish: summary (time, sets, new bests, what changes next time), optional effort and note, Save.
 // Save writes on the phone first, then starts a sync (if GitHub is set up). The sync never blocks the screen.
+import { MAX_TEXT } from "../validate.js";
 import { h } from "../h.js";
 import { workoutScreen, topBar, actionBar, mainButton, choiceRow } from "./parts.js";
 import { model, go, rerender } from "./app.js";
@@ -70,7 +71,7 @@ export function renderFinish(ctx) {
       choiceRow([[1, "1"], [2, "2"], [3, "3"], [4, "4"], [5, "5"]], draft.effort, (v) => { draft.effort = draft.effort === v ? null : v; rerender(); }),
       choiceRow([[6, "6"], [7, "7"], [8, "8"], [9, "9"], [10, "10"]], draft.effort, (v) => { draft.effort = draft.effort === v ? null : v; rerender(); }),
       h("div", { class: "field" }, h("label", { for: "f-note" }, "Note (optional)"),
-        h("textarea", { id: "f-note", value: draft.note, oninput: (e) => { draft.note = e.target.value; } })),
+        h("textarea", { id: "f-note", maxlength: MAX_TEXT, value: draft.note, oninput: (e) => { draft.note = e.target.value; } })),
       h("p", { class: "small muted" }, "Stop the workout on your Apple Watch now.")),
     actionBar(mainButton("Save", save)),
   ];

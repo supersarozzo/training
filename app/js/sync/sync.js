@@ -24,6 +24,7 @@ export const MESSAGES = {
   too_new: "Update the app first.",
   full: "Phone storage full. Download a backup.",
   local_problem: "The data on this phone could not be read. Nothing was sent. Ask the Training chat.",
+  local_invalid: "Some data on this phone does not pass the app's own check. Nothing was sent. Ask the Training chat.",
   error: "Saved on phone. Will sync later.",
 };
 
@@ -129,6 +130,9 @@ export function createSyncer({ store, getFetch, nowIso = () => new Date().toISOS
       if (found && canonical(merged) === canonical(remote.doc)) {
         return done("ok", { found }, { last_sha: file.sha, last_sync_at: startedAt }); // GitHub already has everything
       }
+
+      // Never write a file that this app could not read back: the next GET would call it damaged (review F1).
+      if (!validateDocument(JSON.parse(JSON.stringify(merged))).ok) return done("local_invalid");
 
       try {
         const sent = await gh.putFile({ text: `${JSON.stringify(merged, null, 2)}\n`, sha: file.sha, message: `Training log ${startedAt}` });

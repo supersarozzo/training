@@ -7,7 +7,17 @@ export const FORMAT = 1;
 const APP = "training";
 const BAD_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 const LISTS = ["sessions", "weighins", "measurements", "exercise_state"];
-const MAX_TEXT = 2000;
+export const MAX_TEXT = 2000;
+
+// Cut a text to the limit the check allows, without splitting an emoji in half.
+// The app uses this before it saves a note, so it never saves what this file would refuse later.
+export function clipText(value, max = MAX_TEXT) {
+  let s = String(value ?? "");
+  if (s.length <= max) return s;
+  s = s.slice(0, max);
+  const last = s.charCodeAt(s.length - 1);
+  return last >= 0xd800 && last <= 0xdbff ? s.slice(0, -1) : s;
+}
 
 export function emptyDoc() {
   return {

@@ -2,6 +2,7 @@
 //   learn -> warm-up -> set 1 -> "how many more?" -> set 2 (suggested weight) -> "how many more?" -> result (starting weight saved)
 // Bodyweight and timed exercises skip the weight steps: learn -> set 1 -> set 2.
 // Where an exercise stands is worked out from the saved sets (engine/week1.js week1Stage), so a reload continues in place.
+import { MAX_TEXT } from "../validate.js";
 import { h } from "../h.js";
 import { workoutScreen, topBar, actionBar, mainButton, stepper, choiceRow } from "./parts.js";
 import { model, rerender } from "./app.js";
@@ -83,7 +84,7 @@ export function renderWeek1(ctx) {
           weighted ? h("p", { class: "small muted" }, "Set up the machine or the bench. Ask the staff if you are not sure how.") : null),
         weighted ? h("div", { class: "field" },
           h("label", { for: "w1-note" }, "Machine settings (seat height, pin position)"),
-          h("textarea", { id: "w1-note", value: d.note, oninput: (e) => { d.note = e.target.value; } })) : null,
+          h("textarea", { id: "w1-note", maxlength: MAX_TEXT, value: d.note, oninput: (e) => { d.note = e.target.value; } })) : null,
         h("p", { class: "small muted" }, targetText(exId, sets, 3))),
       actionBar(mainButton(weighted ? "Start warm-up" : "Start set 1", () => {
         if (weighted && d.note.trim()) model.setExerciseState(exId, { machine_note: d.note.trim() });
@@ -165,7 +166,7 @@ export function renderWeek1(ctx) {
       h("p", { class: "small muted" }, res.note))),
     h("div", { class: "field" },
       h("label", { for: "w1-note2" }, "Machine settings (seat height, pin position)"),
-      h("textarea", { id: "w1-note2", value: d.note, oninput: (e) => { d.note = e.target.value; } }))),
+      h("textarea", { id: "w1-note2", maxlength: MAX_TEXT, value: d.note, oninput: (e) => { d.note = e.target.value; } }))),
     actionBar(mainButton("Save and go on", () => {
       model.setExerciseState(exId, { start_weight_kg: res.start_weight_kg, machine_note: d.note.trim() });
       model.flagExercise(session.id, rec.slot, { w1_saved: true });

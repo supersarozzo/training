@@ -2,7 +2,7 @@
 // Every change stamps `updated_at` and is saved at once (docs/ARCHITECTURE.md section 6).
 import { nowUtc, newId, exerciseStateId, weighinId, localDate } from "./ids.js";
 import { hasData } from "./store.js";
-import { validateDocument } from "./validate.js";
+import { validateDocument, clipText } from "./validate.js";
 import { mergeDocs } from "./sync/merge.js";
 
 // Monday of the current week (local), or the next Monday. Used for a new block's start.
@@ -124,8 +124,8 @@ export function createModel(store, clock = () => new Date()) {
         if (!rec) throw new Error(`No exercise ${slot} in this workout`);
         rec.done_exercise = newExerciseId;
         rec.swap_reason = reason;
-        if (note) rec.note = rec.note ? `${rec.note}
-${note}` : note;
+        if (note) rec.note = clipText(rec.note ? `${rec.note}
+${note}` : note);
         rec.swap_weight_kg = startKg;
         rec.warmup_skipped = false;
       });
@@ -134,7 +134,7 @@ ${note}` : note;
       return editSession(sessionId, (s) => { s.walk = walk; });
     },
     finishSession(sessionId, { effort = null, note = "" } = {}) {
-      return editSession(sessionId, (s, t) => { s.status = "finished"; s.finished_at = t; s.effort = effort; s.note = note; });
+      return editSession(sessionId, (s, t) => { s.status = "finished"; s.finished_at = t; s.effort = effort; s.note = clipText(note); });
     },
     abandonSession(sessionId) {
       return editSession(sessionId, (s, t) => { s.status = "abandoned"; s.finished_at = t; });
@@ -167,6 +167,7 @@ ${note}` : note;
         const i = doc.exercise_state.findIndex((x) => x.id === id);
         const base = i >= 0 ? doc.exercise_state[i] : { id, start_weight_kg: null, machine_note: "", fail_streak: 0 };
         const next = { ...base, ...patch, id, updated_at: t };
+        if (typeof next.machine_note === "string") next.machine_note = clipText(next.machine_note);
         if (i >= 0) doc.exercise_state[i] = next; else doc.exercise_state.push(next);
       });
     },

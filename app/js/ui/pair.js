@@ -1,4 +1,5 @@
 // Pairs and sets: one exercise at a time with the current set's weight and reps. Also used for abs and the "on its own" exercise.
+import { MAX_TEXT } from "../validate.js";
 import { h } from "../h.js";
 import { workoutScreen, topBar, actionBar, mainButton, stepper, openSheet, timerView, choiceRow } from "./parts.js";
 import { model, rerender } from "./app.js";
@@ -34,7 +35,7 @@ function openTips(ctx, rec) {
     h("p", {}, cues[rec.done_exercise] ?? "Move slowly and keep good form."),
     h("div", { class: "field" },
       h("label", { for: "machine-note" }, "Machine settings note (seat height, pin)"),
-      h("textarea", { id: "machine-note", oninput: (e) => { note = e.target.value; }, value: note })),
+      h("textarea", { id: "machine-note", maxlength: MAX_TEXT, oninput: (e) => { note = e.target.value; }, value: note })),
     h("button", { class: "button", type: "button", onclick: () => { model.setExerciseState(rec.done_exercise, { machine_note: note.trim() }); close(); rerender(); } }, "Save note"));
 }
 

@@ -1,4 +1,5 @@
 // Swap an exercise: "Machine busy", "Don't like it", "It hurts" (WORKFLOW D5).
+import { MAX_TEXT } from "../validate.js";
 import { h } from "../h.js";
 import { openSheet } from "./parts.js";
 import { model, rerender } from "./app.js";
@@ -27,7 +28,7 @@ export function openSwap(ctx, rec) {
     let note = "";
     const hurts = reason === "hurts";
     const list = h("div", { class: "choices" });
-    const noteBox = hurts ? h("textarea", { id: "swap-note", "aria-label": "What hurts?", placeholder: "What hurts? Where?", oninput: (e) => { note = e.target.value.trim(); } }) : null;
+    const noteBox = hurts ? h("textarea", { id: "swap-note", maxlength: MAX_TEXT, "aria-label": "What hurts?", placeholder: "What hurts? Where?", oninput: (e) => { note = e.target.value.trim(); } }) : null;
     const go = (id) => {
       if (hurts && !note) { warn.textContent = "Write a short note first, so you remember what hurt."; return; }
       const last = workSets(rec).slice(-1)[0];
