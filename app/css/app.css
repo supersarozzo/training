@@ -93,6 +93,7 @@ a, .text-button { color: var(--brand-primary); }
 .button[disabled], .button.disabled { background: var(--bg-subtle); color: var(--text-muted); cursor: default; }
 .button.secondary { background: none; color: var(--text-primary); border-color: var(--border-strong); min-height: 48px; }
 .button.secondary:active { background: var(--bg-subtle); }
+.button.secondary[disabled] { background: none; color: var(--text-muted); border-color: var(--border-default); }
 .button + .button { margin-top: var(--s3); }
 :focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
 

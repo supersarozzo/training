@@ -73,6 +73,7 @@ Plain words used here:
 - First start shows two choices: **Start fresh** or **Restore**.
 - **Start fresh** runs the intake (questions 20 to 38, about 5 minutes, with the plan's defaults filled in). The app computes the targets with the public formulas, then shows them for Rosario to confirm or change. Rosario can type the numbers from the private plan if they differ.
 - **Restore** reads `progress.json` from the private repo (needs the token) or a backup file. The profile comes with it. Nothing to retype on a new or reset phone.
+- **The starter file route (Rosario's choice 47 a, 2026-11-16):** to avoid retyping the intake, `node tools/make-starter.mjs` reads the private intake answers (`private/intake-2026-11-16.json`) and writes `private/starter-backup.json` in the backup format (profile and settings answers only: no token, no sessions, no targets). Both files are git-ignored. Rosario moves the starter file to the phone by a private route (AirDrop, iCloud Drive or Files; never GitHub) and chooses **Restore from file** at first start. The app then computes the targets from the answers and shows them to confirm. The tool itself holds no data and is committed.
 - Why not a file in the public repo: it would publish body data. Why not "always from the private repo": Rosario has no GitHub account yet, and the app must work before sync is set up.
 
 ## 3. File layout
@@ -91,6 +92,7 @@ app/
     version.js           APP_VERSION (same as in sw.js)
     h.js                 h(tag, props, ...children) helper
     store.js             load/save, schema, migrations
+    validate.js          checks a data document (backup, synced file) before use
     ids.js               new ids, now() in UTC
     model.js             create/update/delete records
     plan/plan-v2.js      the plan as data (no body data)
@@ -320,6 +322,7 @@ Rules:
 
 - **Download backup** (Settings): the data document as a file `training-backup-YYYY-MM-DD.json` (through a download link; on iPhone it goes to the Files app). Never contains the token. The app remembers `last_backup_at` and shows it.
 - **Restore from file** and **Restore from GitHub** (first start or Settings): read the file, check its shape, then **merge** it into the phone with the sync merge rules. A restore never deletes what is on the phone. A `prev` copy is saved first.
+- **Build step 3 (first start only):** Restore from file checks every field (`validate.js`; the file is untrusted data) and loads the file into an **empty** phone. If the phone already has data, it **refuses with a plain message and changes nothing**. The merge-restore described above comes in build steps 9 and 10, with the sync merge. Restore from GitHub is shown disabled ("Available after sync is set up").
 - The private repo's git history is the long-term backup: every sync is a commit.
 
 ## 11. Error states (what Rosario sees)

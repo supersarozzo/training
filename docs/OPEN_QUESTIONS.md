@@ -52,3 +52,6 @@ Full wording, reasons and options are in [WORKFLOW.md](WORKFLOW.md), section A. 
 43. Auto sync: a) after each workout and when the app opens, plus buttons. (2026-11-16)
 44. Backup file button in Settings: a) yes. (2026-11-16)
 45. Your GitHub account name: b) no GitHub account yet. Rosario makes one when the app is ready to go online. (2026-11-16)
+46. Start the app design now: a) yes. (2026-11-16)
+47. How the first answers get onto the phone: a) a private starter file made from the answers, opened once on the phone; no retyping. (2026-11-16)
+48. Start building the app now: a) yes, steps 1 to 11, one worker after another, checked by the master. (2026-11-16)
