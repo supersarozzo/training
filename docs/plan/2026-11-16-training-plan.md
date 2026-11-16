@@ -1,5 +1,7 @@
 # Training plan: 12 weeks, Monday to Friday
 
+> **Replaced on 2026-11-16 by [plan v2](2026-11-16-training-plan-v2.md).** Kept for history. Its form cues (section 9) are still used by plan v2.
+
 Date: 2026-11-16. For: Rosario. Goal: build muscle. Level: beginner. Gym: The Gym Group, York Foss Island (equipment: docs/research/2026-11-16-gym-equipment.md). No injuries.
 Status: first version. Two things wait for Rosario's choice: cardio placement (question 15) and session length (question 13; this plan uses 75 minutes).
 

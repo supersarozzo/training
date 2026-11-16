@@ -174,7 +174,7 @@ Each muscle gets trained about 2 times a week. Most training apps and the eviden
 90     done, auto sync up
 ```
 
-This is the layout for answer 35 a) (walk after weights). If you pick b), c) or d), the app moves the walk block. The weights block never gets shorter than 40 minutes.
+This is the layout for answer 35 a) (walk after weights). If you pick b), c) or d), the app moves the walk block. Rosario chose b) (walk before weights): the layout is in [plan v2](plan/2026-11-16-training-plan-v2.md), section 4. The weights block never gets shorter than 40 minutes.
 
 **Short day** (a busy day): the app offers a 60-minute version. It keeps pairs A and B and one abs exercise, and shortens the walk to 15 minutes. Cut exercises, never rest times.
 
@@ -229,7 +229,7 @@ These are rough rules. BMI does not see muscle. The app always shows the suggest
 
 **Starting settings (from answer 36):**
 
-| Answer 30 | Speed | Slope |
+| Answer 36 | Speed | Slope |
 |---|---|---|
 | Yes | 5.0 to 5.5 km/h | 6 to 8 % |
 | Not sure | 4.5 to 5.0 km/h | 4 to 5 % |
@@ -485,7 +485,7 @@ Version 1 must be small enough to build and test on one iPhone.
 - Automatic calorie changes from the trend (F3). In version 1 the weekly screen shows the suggestion; you decide.
 - Measurements chart, the 12-week review screen (G) and the new-block generator. In version 1 the master chat does the review with you.
 - Readiness check before a workout ("tired / sore / good") that lowers sets on bad days (like Fitbod's recovery idea).
-- Shortcuts button "Log to Apple Health" (Watch research, option A).
+- Shortcuts button "Log to Apple Health" (Watch research, option A). Rosario chose it (answer 40 b); the app design step decides if it moves into version 1.
 - Streaks and badges (all can run on the phone without a server).
 - Reminders when the app is closed: not possible without a server (see the Watch research). Use the iPhone Clock or Calendar app instead.
 - Food logging: not planned. Use MyFitnessPal or similar if you want it.

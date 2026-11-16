@@ -6,7 +6,7 @@ A training plan and a phone web app (GitHub Pages) that guides Rosario's workout
 Folder: C:\Users\Rosario\Documents\training. Whole CLAUDE.md stays under 200 lines; project rules longer than ~80 lines move to docs/.
 
 ## Docs
-Spec: docs/PROJECT.md (or the project's existing spec doc; point to it, do not duplicate). Decisions: docs/DECISIONS.md. Open questions: docs/OPEN_QUESTIONS.md. Procedures: docs/RUNBOOK.md. Hand-over: docs/HANDOVER.md. Map to existing files under their current names.
+Spec: docs/PROJECT.md (or the project's existing spec doc; point to it, do not duplicate). Decisions: docs/DECISIONS.md. Open questions: docs/OPEN_QUESTIONS.md. Procedures: docs/RUNBOOK.md. Hand-over: docs/HANDOVER.md. Training plan: docs/plan/2026-11-16-training-plan-v2.md (plan v1 replaced; personal numbers only in the git-ignored private/ folder). Map to existing files under their current names.
 Product requirements (to be written by a later worker): docs/PRD.md. Architecture (to be written by a later worker): docs/ARCHITECTURE.md. Screen and UI rules (to be written by a later worker): docs/DESIGN.md.
 
 ## Recording work
