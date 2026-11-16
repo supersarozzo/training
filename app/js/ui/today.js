@@ -117,7 +117,7 @@ export function renderToday() {
       h("div", { class: "label" }, "Your numbers"),
       targets.kcal !== null ? h("div", { class: "metric" }, h("div", { class: "value" }, String(targets.kcal), h("span", { class: "unit" }, " kcal a day"))) : null,
       targets.protein_g !== null ? h("div", { class: "metric" }, h("div", { class: "value" }, String(targets.protein_g), h("span", { class: "unit" }, " g protein a day"))) : null,
-      h("div", { class: "small muted" }, `Starting walk: ${targets.walk_start.speed_kmh} km/h, ${targets.walk_start.slope_pct} % slope`)));
+      targets.walk_start ? h("div", { class: "small muted" }, `Starting walk: ${targets.walk_start.speed_kmh} km/h, ${targets.walk_start.slope_pct} % slope`) : null)); // a restored file may have none (review F4)
   }
   if (!open && installHintShown()) {
     children.push(h("div", { class: "card warn" }, h("h2", {}, "Add this app to your Home Screen"),

@@ -57,6 +57,10 @@ export function saveConnection(store, { owner, repo, token, token_expires }) {
     else return { ok: false, error: "The end date must look like 2027-11-16." };
   }
   delete next.last_sha; // a new connection starts clean
+  // The last result belongs to the old key or repo: a new key that works must not still show "key wrong" (review F3).
+  delete next.last_sync_result;
+  delete next.last_sync_attempt_at;
+  if (owner !== device.owner || repo !== device.repo) delete next.last_sync_at; // another repo: not synced there yet
   store.saveDevice(next);
   return { ok: true };
 }

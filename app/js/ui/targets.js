@@ -30,7 +30,8 @@ export function renderTargets() {
   if (!profile) { go("#/setup"); return h("main", { class: "screen" }); }
   const intake = profile.intake;
   const computed = computeTargets(intake);
-  const shown = profile.targets ?? computed;
+  // A restored file may have targets without a walk start (review F4): show the computed one then.
+  const shown = profile.targets ? { ...profile.targets, walk_start: profile.targets.walk_start ?? computed.walk_start } : computed;
 
   const showKcal = shown.kcal !== null;
   const showProtein = shown.protein_g !== null;

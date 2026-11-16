@@ -7,6 +7,8 @@ export const FORMAT = 1;
 const APP = "training";
 const BAD_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 const LISTS = ["sessions", "weighins", "measurements", "exercise_state"];
+// Same list as LEFT_CHOICES in engine/week1.js (kept here so this file stays small; tests/review-low.test.mjs checks they match).
+const LEFT_CHOICES = ["0-1", "2-3", "4-6", "7+"];
 export const MAX_TEXT = 2000;
 
 // Cut a text to the limit the check allows, without splitting an emoji in half.
@@ -169,6 +171,7 @@ function checkSet(s, where) {
   numOrNull(s.reps, `${where} reps`, 0, 1000);
   numOrNull(s.seconds, `${where} seconds`, 0, 3600);
   numOrNull(s.rir, `${where} reps left`, 0, 20);
+  if (s.left !== undefined && s.left !== null) oneOf(s.left, LEFT_CHOICES, `${where} "how many more"`); // the week 1 screen needs a known answer
   return s;
 }
 

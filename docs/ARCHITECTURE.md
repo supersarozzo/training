@@ -267,7 +267,7 @@ Rules:
 1. **One sync at a time.** A `running` flag; a second request while running sets `again = true`, and one more sync runs at the end.
 2. **Never lose an edit made during a sync.** The page keeps working while the network call waits. So every time the app saves a merge result, it merges with the **current** local data again: `save(merge(load(), merged))`. Merge is safe to repeat.
 3. **Mark synced only what was sent.** Remember the time the sync started. After a good PUT, `last_sync_at` = that start time. Records changed after it still count as "not synced".
-4. **Never PUT when the remote file could not be read or checked.** A broken or unknown file is reported, not overwritten. GitHub keeps the history, so Rosario can fix it with help.
+4. **Never PUT when the remote file could not be read or checked.** A broken or unknown file is reported, not overwritten. GitHub keeps the history, so Rosario can fix it with help. **And never PUT a file the app could not read back:** the merged document must pass `validate.js` first, or the sync stops with "Some data on this phone does not pass the app's own check" (review F1, 2026-11-16).
 5. **Retry on conflict** (409 or 422): GET again, merge again, PUT again, up to 3 times. Then stop with "conflict, try again".
 6. **Network errors and 5xx:** stop quietly, show "Saved on phone, will sync later". The next trigger tries again.
 
@@ -301,9 +301,10 @@ Rules:
 
 - **localStorage**, not IndexedDB. The log is small (one 12-week block is about 200 to 300 KB; the box holds about 5 MB). A localStorage write finishes before the next line of code runs, so a set is safe the moment Done is tapped. Move to IndexedDB only if the data passes about 2 MB (a later decision).
 - **Save on every change** (`model.js`), not on a timer.
-- **Quota error** (box full): show "Phone storage full. Download a backup, then tell the Training chat." Never drop data to make room.
+- **Quota error** (box full): show "Phone storage full. Download a backup, then tell the Training chat." Never drop data to make room. Done by `errors.js`: any storage error that no screen caught shows a "Not saved" sheet (review F2).
+- **Text limit:** notes are cut to `MAX_TEXT` (2000 letters, from `validate.js`) when saved, so the phone never holds what the validator refuses (review F1).
 - **Install to the home screen is required** (research: Safari tabs can lose data after 7 days without use; home-screen apps have their own counter). The app shows an install hint when it is opened in a normal Safari tab.
-- **Schema changes:** `store.js` has a `migrations` list keyed by `format`. Data is never rewritten without a `prev` copy first.
+- **Schema changes:** `store.js` has a `migrations` list keyed by `format`. Data is never rewritten without a `prev` copy first. **When format 2 is made:** `validateDocument` must run the same migrations on an older backup or GitHub file; today it only relabels the format (review F8).
 
 ## 7. Service worker and updates
 
@@ -350,6 +351,8 @@ Rules:
 
 ## 12. Delicate parts (Opus code review before the phone test)
 
+Reviewed on 2026-11-16 (build step 11): every item passes, some after fixes. Findings, fixes and the checklist: [REVIEW-2026-11-16.md](REVIEW-2026-11-16.md).
+
 1. **Token handling:** storage key, never in backup/sync/URL/logs/errors; password field; CSP; no third-party code; "forget key" works.
 2. **Sync merge** (`sync/merge.js`): the merge properties in 5.3, tombstones, tie-breaks, unknown fields kept.
 3. **Sync flow** (`sync/sync.js`, `sync/github.js`): one sync at a time; edits made during a sync are kept; never PUT over an unreadable file; 409/422 retry; `cache: "no-store"`; UTF-8 base64; `last_sync_at` from the start time.
@@ -381,7 +384,7 @@ Small phases, one task chat each, in this order. Each phase ends with its own co
 | 8 | **Offline + update banner + install hint** | Sonnet | `sw.js`, `manifest.webmanifest`, `icons/`, `ui/update.js` | App opens with the network off (browser offline mode); version change shows the banner; never during a workout | Browser devtools offline; version test (`sw.js` list = files in `app/`) |
 | 9 | **Sync core** (delicate) | Sonnet, then Opus review in step 11 | `sync/merge.js`, `sync/github.js`, `sync/sync.js`, `sync/fake-github.js`, `ui/settings-sync.js`, `tests/merge.test.mjs`, `tests/sync.test.mjs` | All merge properties and all error rows of section 11 pass against the fake | `node --test` with `fake-github.mjs`; browser with `?fake-github=1` |
 | 10 | **Backup and restore; Shortcuts button** | Sonnet | `backup.js`, `ui/settings.js`, `shortcuts.js` | Backup → empty storage → restore gives the same data; token never in the file; Shortcuts button hidden until turned on | Unit test (round trip, no token); browser |
-| 11 | **Opus review** | **Opus** | all, focus on section 12 | Every "Delicate parts" item checked; findings fixed by a Sonnet chat; tests still pass | Code review + `node --test` + a grep for personal numbers |
+| 11 | **Opus review** (done 2026-11-16: [REVIEW-2026-11-16.md](REVIEW-2026-11-16.md); the review chat also made the fixes) | **Opus** | all, focus on section 12 | Every "Delicate parts" item checked; findings fixed by a Sonnet chat; tests still pass | Code review + `node --test` + a grep for personal numbers |
 | 12 | **[Rosario] GitHub set-up** | Sonnet guide chat with Rosario | `docs/RUNBOOK.md` (steps) | Rosario has an account, the public `training` repo with Pages on (source: GitHub Actions), the private `training-data` repo, a fine-grained token; code pushed **after Rosario says yes** | Rosario follows plain steps; the chat checks the Pages address opens |
 | 13 | **[Rosario] Phone test** | Sonnet guide chat with Rosario | `docs/RUNBOOK.md` (results) | On the iPhone: installed to home screen; offline works; screen stays on; beep with ring on; first real sync and a sync clash test; backup to Files; Shortcut test (or left off) | Rosario follows a checklist; results written down |
 | 14 | **[Rosario] First gym week** | Training Agent chat | `docs/OPEN_QUESTIONS.md` (question 17), fixes list | Week 1 done with the app; the first-visit check (machines, dumbbell steps) entered in Settings | Rosario's feedback |

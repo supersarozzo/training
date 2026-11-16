@@ -57,6 +57,8 @@ function mergeSingle(a, b) {
 }
 
 const isRecordList = (v) => Array.isArray(v) && v.length > 0 && v.every((r) => isObj(r) && typeof r.id === "string");
+// Missing, or a list whose items are all records (review F5: a list on one side and something else on the other used to throw).
+const listLike = (v) => v === undefined || (Array.isArray(v) && v.every((r) => isObj(r) && typeof r.id === "string"));
 
 export function mergeDocs(a, b) {
   const out = {};
@@ -65,8 +67,8 @@ export function mergeDocs(a, b) {
     if (key === "format") continue;
     if (LISTS.includes(key)) out[key] = mergeList(a[key], b[key]);
     else if (SINGLES.includes(key)) out[key] = mergeSingle(a[key], b[key]);
-    else if (isRecordList(a[key]) || isRecordList(b[key])) out[key] = mergeList(a[key] ?? [], b[key] ?? []); // a list from a newer app
-    else if (key in a && key in b) out[key] = canonical(a[key]) <= canonical(b[key]) ? clone(a[key]) : clone(b[key]); // unknown field on both sides: same pick on both phones
+    else if (listLike(a[key]) && listLike(b[key]) && (isRecordList(a[key]) || isRecordList(b[key]))) out[key] = mergeList(a[key] ?? [], b[key] ?? []); // a list from a newer app
+    else if (key in a && key in b) out[key] = clone(pick(a[key], b[key])); // unknown field on both sides: the later edit wins, else the same pick on both phones
     else out[key] = clone(key in a ? a[key] : b[key]);
   }
   out.format = Math.max(a.format ?? FORMAT, b.format ?? FORMAT);

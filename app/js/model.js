@@ -172,6 +172,13 @@ ${note}` : note);
       });
     },
 
+    // A profile needs a block (Today reads its start). A file from GitHub can bring a profile without one (review F4).
+    ensureBlock() {
+      const doc = store.load();
+      if (doc.block || !doc.profile) return doc;
+      return update((d, t) => ensureBlock(d, t, clock()));
+    },
+
     // Restore from a backup file or from GitHub. The file is checked first (it is untrusted data).
     // An empty phone takes the file as it is. A phone with data MERGES the file in with the sync rules:
     // nothing on the phone is dropped, and a safety copy is kept first (ARCHITECTURE section 10).

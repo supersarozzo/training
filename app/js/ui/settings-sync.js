@@ -108,7 +108,7 @@ export function restoreFromGithub(onDone) {
     const res = await syncer.request("get");
     if (res.result !== "ok") return { kind: "error", text: res.message };
     if (res.found === false) return { kind: "error", text: "Nothing is saved on GitHub yet. Use Start fresh, or Restore from file." };
-    const doc = model.doc();
+    const doc = model.ensureBlock();
     if (!doc.profile) return { kind: "error", text: "The GitHub file has no profile. Use Start fresh, or Restore from file." };
     onDone(doc);
     return { kind: "ok", text: "Restored." };

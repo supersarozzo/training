@@ -22,6 +22,7 @@ import { syncer } from "./syncer.js";
 import { startAutoSync } from "./autosync.js";
 import { getActive } from "./active.js";
 import { watchStoreErrors } from "./errors.js";
+import { resetSyncDraft } from "./ui/settings-sync.js";
 
 const tabRoutes = { today: renderToday, progress: renderProgress, plan: renderPlan, settings: renderSettings };
 const flowRoutes = { setup: renderSetup, intake: renderIntake, targets: renderTargets, workout: renderWorkout, weighin: renderWeighin, weekly: renderWeekly };
@@ -48,6 +49,7 @@ function render() {
   try {
     const wanted = routeName(location.hash);
     const name = guard(wanted);
+    if (name !== "settings" && name !== "setup") resetSyncDraft(); // a typed key never stays in memory after its screen is left (review F6)
     if (name !== wanted) history.replaceState(null, "", `#/${name}`);
     if (Object.hasOwn(flowRoutes, name)) mount(root, flowRoutes[name]());
     else mount(root, tabRoutes[name](), updateBanner(), tabBar(name));

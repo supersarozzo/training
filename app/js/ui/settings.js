@@ -62,7 +62,8 @@ function downloadBackup() {
   try {
     const b = makeBackup(store, now());
     downloadText(b.filename, b.text);
-    store.saveDevice({ ...store.loadDevice(), last_backup_at: new Date().toISOString() });
+    // On a full phone the file is still made; only the "last backup" date can not be kept (review F2).
+    try { store.saveDevice({ ...store.loadDevice(), last_backup_at: new Date().toISOString() }); } catch { /* the file was made */ }
     backupMessage = { kind: "ok", text: `Backup file ${b.filename} made. On iPhone it goes to the Files app.` };
   } catch (e) {
     backupMessage = { kind: "error", text: e && e.message ? e.message : "Could not make the backup." };

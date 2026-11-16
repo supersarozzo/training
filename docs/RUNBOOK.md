@@ -74,11 +74,13 @@ git check-ignore private/starter-backup.json
 
 Not yet. Build step 12 (with Rosario): the GitHub account, the public `training` repo with Pages set to "GitHub Actions", the private `training-data` repo, and a key. Code is pushed only after Rosario says yes.
 
+When you make the private `training-data` repo, tick **Add a README file**. Then the `main` branch exists from the start. An empty repo can make every sync end in "Sync clash" (review F9, 2026-11-16).
+
 ## When something breaks
 
 1. Run `node --test`. If a test fails, the line names what broke.
 2. The app shows "Something is wrong" with a plain message: your data was not changed. Tell the Training chat what the message says.
-3. "Phone storage full": download a backup (from step 10) and tell the Training chat.
+3. "Not saved. Phone storage full" (a sheet after a tap): the tap was not saved. Download a backup (Settings) and tell the Training chat. If sync says "Some data on this phone does not pass the app's own check. Nothing was sent.", the GitHub copy is safe and unchanged: do the same.
 4. A blank page: open the browser console (F12 > Console) and copy the red text to the Training chat.
 
 ## Rollback of a change
