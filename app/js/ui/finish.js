@@ -8,6 +8,7 @@ import { leaveWorkout } from "./flow.js";
 import { performances, suggestFor, workSets, isNewBest } from "../engine/workout.js";
 import { setSavedMessage } from "./today.js";
 import { syncer } from "../syncer.js";
+import { shortcutUrl } from "../shortcuts.js";
 
 let draft = null;
 
@@ -43,10 +44,14 @@ export function renderFinish(ctx) {
   const sum = summarize(doc, session);
 
   const save = () => {
-    model.finishSession(session.id, { effort: draft.effort, note: draft.note.trim() });
+    const finished = model.finishSession(session.id, { effort: draft.effort, note: draft.note.trim() });
     draft = null;
     leaveWorkout();
-    setSavedMessage("Workout saved on this phone. Stop your Apple Watch workout.");
+    // The Log to Health button (off unless turned on in Settings). The link carries only the times.
+    const rec = finished.sessions.find((x) => x.id === session.id);
+    const minutes = rec && rec.started_at ? (Date.parse(rec.finished_at) - Date.parse(rec.started_at)) / 60000 : NaN;
+    const link = rec ? shortcutUrl(finished.shared_settings, rec.started_at, minutes) : null;
+    setSavedMessage("Workout saved on this phone. Stop your Apple Watch workout.", link);
     go("#/today");
     if (syncer.isConfigured()) syncer.request("full");
   };

@@ -67,6 +67,7 @@ const getNow = () => run("get", async () => {
   const res = await syncer.request("get");
   return asMessage(res, res.found === false ? "Nothing on GitHub yet. Your phone data is unchanged." : "Got the latest from GitHub and merged it into this phone.");
 });
+export { getNow as getFromGithub };
 const sendNow = () => run("send", async () => asMessage(await syncer.request("full"), "Synced: the phone and GitHub now have the same data."));
 
 function confirmForget() {

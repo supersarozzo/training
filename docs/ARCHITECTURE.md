@@ -112,7 +112,8 @@ app/
     sync/fake-github.js  in-browser fake (localhost only; tests/fake-github.mjs re-exports it)
     syncer.js            the page's one syncer (picks the fake with ?fake-github=1 on localhost)
     autosync.js          when sync runs by itself (open, front, signal back; never in a workout)
-    backup.js            download file, restore (merge)
+    backup.js            make the backup file (data only, never the key), download it
+    (restore itself is model.restore: check, then merge)
     timer.js             timers based on end time
     wakelock.js          keep the screen on
     sound.js             beep (Web Audio)
@@ -321,7 +322,7 @@ Rules:
 ## 9. Apple Watch and Shortcuts
 
 - **Watch:** the Today screen and the walk screen remind Rosario to start a **Strength** workout on the Watch at minute 0; the Finish screen reminds to stop it. No data link (not possible for web apps).
-- **Shortcuts "Log to Health" (F21, off by default):** when on, Finish shows a button that opens `shortcuts://run-shortcut?name=<name>&input=text&text=<start time>|<minutes>`. Rosario's Shortcut splits the text and runs "Log Workout" (Traditional Strength Training). The link carries only times, no body data. Research found reports of 0-minute workouts and a Health permission step, so this needs a phone test (build step 13). If it fails, it stays off: the Watch workout by hand already logs to Health.
+- **Shortcuts "Log to Health" (F21, off by default):** when on, the "Workout saved" message on Today (shown right after Save on Finish) has a **Log to Health** button that opens `shortcuts://run-shortcut?name=<name>&input=text&text=<start time>|<minutes>`. Rosario's Shortcut splits the text and runs "Log Workout" (Traditional Strength Training). The link carries only times, no body data. Research found reports of 0-minute workouts and a Health permission step, so this needs a phone test (build step 13). If it fails, it stays off: the Watch workout by hand already logs to Health.
 
 ## 10. Backup and restore
 

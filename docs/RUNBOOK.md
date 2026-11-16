@@ -62,12 +62,12 @@ git check-ignore private/starter-backup.json
 
 - **The code and docs:** git (every build step is one commit). The GitHub copy comes at build step 12.
 - **Your private files** (`private/`): they are NOT in git on purpose. Copy the `private` folder to a safe place of your own now and then (for example a USB stick or your cloud drive). Nobody else has these files.
-- **The phone data:** from build step 10 the Settings screen has **Download backup**. Until then the data is only on the phone.
+- **The phone data:** Settings > Backup and restore > **Download backup** makes a file (on iPhone it goes to the Files app). It never holds the GitHub key. Make one now and then, and keep it outside the phone.
 
 ## Restore
 
 - The code: `git log` shows the steps. `git checkout <commit>` goes back to one. Ask the Training chat for help.
-- The phone: Restore from file works on an empty phone (see above).
+- The phone: Settings or first start > **Restore from file** (merges into the phone; an empty phone takes it as it is), or **Restore from GitHub** once sync is set up.
 - Date of last tested restore: never on a real phone (tested only in the computer browser and in automatic tests, 2026-11-16).
 
 ## Release / deploy
@@ -96,4 +96,8 @@ Git project: revert the commit (`git revert <commit>`). Nothing outside this fol
 2. Settings > GitHub sync shows the test account (`rosa-test`) and test key (`fake-token-ok`). Use them. Another key gives "GitHub key expired or wrong".
 3. In the browser console, `fakeGithub` is the pretend GitHub: `fakeGithub.readDoc()` shows its file, `fakeGithub.setBlocked(true)` = no signal, `fakeGithub.fail("put", 409, 3)` = three clashes, `fakeGithub.putDoc(doc)` = another phone saved. `fakeGithub.reset()` empties it.
 4. This works on localhost only. On the real site the address option does nothing.
+
+## The Log to Health button (optional)
+1. Settings > Log to Health button: type the name of your Shortcut, tap the button until it says "Button is on".
+2. After you save a workout, Today shows **Log to Health**. It opens Shortcuts and passes the start time and the minutes, like `2026-11-16T09:00:00.000Z|62`. Your Shortcut must split that text and run "Log Workout". Not tested on a real phone yet (build step 13). If it does not work, turn it off: the Watch workout already logs to Health.
 

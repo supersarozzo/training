@@ -16,7 +16,8 @@ import { syncer } from "../syncer.js";
 import { statusText, keyEndsSoon, connectionOf } from "../sync/sync.js";
 
 let savedMessage = null; // shown once, after a workout was saved
-export function setSavedMessage(text) { savedMessage = text; }
+let savedLink = null; // the Log to Health link, only when that button is on
+export function setSavedMessage(text, link = null) { savedMessage = text; savedLink = link; }
 
 const BLOCK_NAMES = {
   walk: "Walk", changeover: "Change-over", lift_warmup: "Lift warm-up", pairs: "Weights (3 pairs)", abs: "Abs and holds",
@@ -56,8 +57,10 @@ export function renderToday() {
   let bar = null;
 
   if (savedMessage) {
-    children.push(h("div", { class: "card" }, h("p", { class: "status-success" }, savedMessage)));
+    children.push(h("div", { class: "card" }, h("p", { class: "status-success" }, savedMessage),
+      savedLink ? h("a", { class: "button secondary", href: savedLink }, "Log to Health") : null));
     savedMessage = null;
+    savedLink = null;
   }
 
   if (open) {
