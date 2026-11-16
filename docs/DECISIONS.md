@@ -15,3 +15,11 @@ State: pending (not decided yet) / active / superseded (by which row).
 | 2026-11-16 | No files outside the project folder, so no change ledger | Rosario's choice: the project touches nothing outside its folder | active |
 | 2026-11-16 | Apple Watch link | Waiting for research 8.2 | pending |
 | 2026-11-16 | Where the private progress file lives: a second, private GitHub repo | Waiting for research 8.2 | pending |
+| 2026-11-16 | Goal: build muscle | Rosario's answer (question 6) | active |
+| 2026-11-16 | Level: beginner, no training experience | Rosario's answer (question 7) | active |
+| 2026-11-16 | Gym: The Gym Group York Foss Island (UK) | Rosario's answer (question 8); equipment in docs/research/2026-11-16-gym-equipment.md | active |
+| 2026-11-16 | 5 days a week, Monday to Friday | Rosario's answer (question 9) | active |
+| 2026-11-16 | No injuries or health problems | Rosario's answer (question 10) | active |
+| 2026-11-16 | Cardio placement: Rosario asked for a big block at the start and the end; the plan proposes 8 min easy at the start and 15 min steady at the end | Big hard cardio before weights lowers lifting quality (question 15) | pending |
+| 2026-11-16 | Session length: plan designed for about 75 minutes, with a 60-minute version | Default until Rosario answers question 13 | pending |
+| 2026-11-16 | Weights are done as pairs (supersets) with rest, not non-stop circuits | Beginner muscle goal needs rest to lift heavy enough (question 16) | pending |
