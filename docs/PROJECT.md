@@ -9,7 +9,16 @@ A training plan and a phone web app (GitHub Pages) that guides Rosario's workout
 Rosario (the only user named so far).
 
 ## Done looks like
-{{DEFINITION_OF_DONE}}
+Version 1 features and their "done when" tests: [PRD.md](PRD.md), section 4. Build steps: [ARCHITECTURE.md](ARCHITECTURE.md), section 13.
+
+## Design docs
+| Doc | What it holds |
+|---|---|
+| [PRD.md](PRD.md) | What the app is, version 1 features, success measures |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Stack, data model, sync, delicate parts, build steps |
+| [DESIGN.md](DESIGN.md) | Look, colours, sizes, screens |
+| [WORKFLOW.md](WORKFLOW.md) | The app flow, screen by screen |
+| [plan v2](plan/2026-11-16-training-plan-v2.md) | The 12-week training plan |
 
 ## Where things live
 | Thing | Location |
@@ -20,7 +29,7 @@ Rosario (the only user named so far).
 | Notes folder | none |
 
 ## Key terms
-{{TERMS_IN_PLAIN_WORDS}}
+Training words: [WORKFLOW.md](WORKFLOW.md), section 0. App words: [PRD.md](PRD.md), section 3, and [ARCHITECTURE.md](ARCHITECTURE.md), top.
 
 ## Out of scope
-{{OUT_OF_SCOPE}}
+[PRD.md](PRD.md), sections 5 (later) and 6 (out of scope).
