@@ -56,7 +56,7 @@ git check-ignore private/starter-backup.json
 
 4. Move it to the phone by a private route (AirDrop, or iCloud Drive in the Files app). Never email it, never put it on GitHub.
 5. On the phone: first screen > **Restore from file** > choose the file. The app shows your numbers. Tap **Looks right**.
-6. It works only on a phone with no data yet. If the phone already has data, the app refuses and changes nothing (full merge-restore comes with the sync steps).
+6. On a phone that already has data, the file is checked and then **merged** in (nothing on the phone is removed; a safety copy is kept first).
 
 ## Back up
 
@@ -90,3 +90,10 @@ Git project: revert the commit (`git revert <commit>`). Nothing outside this fol
 2. Add any new file in `app/` to the `FILES` list in `app/sw.js`. `node --test` fails if the list and the folder differ.
 3. On the phone the banner "New version ready" appears; tap Update.
 4. To try the worker on your computer: open `http://localhost:8000/?sw=1`. Remove it afterwards in the browser's site data. The built-in preview pane of the Claude app cannot run service workers: test offline in real Chrome or Safari.
+
+## Trying sync on the computer (no real GitHub)
+1. `python -m http.server 8000 --directory app`, then open `http://localhost:8000/?fake-github=1#/settings` at phone size.
+2. Settings > GitHub sync shows the test account (`rosa-test`) and test key (`fake-token-ok`). Use them. Another key gives "GitHub key expired or wrong".
+3. In the browser console, `fakeGithub` is the pretend GitHub: `fakeGithub.readDoc()` shows its file, `fakeGithub.setBlocked(true)` = no signal, `fakeGithub.fail("put", 409, 3)` = three clashes, `fakeGithub.putDoc(doc)` = another phone saved. `fakeGithub.reset()` empties it.
+4. This works on localhost only. On the real site the address option does nothing.
+

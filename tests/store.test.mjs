@@ -106,27 +106,59 @@ test("restore into an empty phone loads the file and adds a block if missing", (
   const model = createModel(createStore(storage), clock);
   const file = validDoc();
   delete file.block;
-  const result = model.restoreIntoEmpty(file);
+  const result = model.restore(file);
   assert.equal(result.ok, true);
   assert.equal(result.doc.block.start_monday, "2026-01-12");
   assert.equal(result.doc.weighins.length, 1);
   assert.equal(JSON.parse(storage.getItem(KEYS.data)).profile.intake.q22_sex, "male");
 });
 
-test("restore refuses when the phone already has data, and changes nothing", () => {
+test("restore into a phone that has data merges: nothing on the phone is dropped, a safety copy is kept", () => {
   const storage = fakeStorage();
   const model = createModel(createStore(storage), clock);
   model.setProfile(intake({ q21_age: 41 }));
+  model.setWeighin("2026-01-06", 79.1);
+  const before = JSON.parse(storage.getItem(KEYS.data));
+  const result = model.restore(validDoc());
+  assert.equal(result.ok, true);
+  assert.equal(result.merged, true);
+  const after = JSON.parse(storage.getItem(KEYS.data));
+  assert.deepEqual(after.weighins.map((w) => w.date).sort(), ["2026-01-05", "2026-01-06"]); // both kept
+  assert.deepEqual(JSON.parse(storage.getItem(KEYS.prev)), before); // the copy from before
+});
+
+test("restoring the same file twice changes nothing the second time", () => {
+  const storage = fakeStorage();
+  const model = createModel(createStore(storage), clock);
+  model.setProfile(intake());
+  model.restore(validDoc());
+  const once = storage.getItem(KEYS.data);
+  model.restore(validDoc());
+  assert.equal(storage.getItem(KEYS.data), once);
+});
+
+test("a restore never brings back a record the phone deleted later", () => {
+  const storage = fakeStorage();
+  const model = createModel(createStore(storage), clock);
+  model.setProfile(intake());
+  model.restore(validDoc()); // brings w-2026-01-05
+  model.deleteWeighin("2026-01-05");
+  model.restore(validDoc()); // the same old file again
+  assert.equal(JSON.parse(storage.getItem(KEYS.data)).weighins.find((w) => w.date === "2026-01-05").deleted, true);
+});
+
+test("a bad file changes nothing on a phone with data", () => {
+  const storage = fakeStorage();
+  const model = createModel(createStore(storage), clock);
+  model.setProfile(intake());
   const before = storage.getItem(KEYS.data);
-  const result = model.restoreIntoEmpty(validDoc());
-  assert.equal(result.ok, false);
-  assert.match(result.error, /already has data/);
+  assert.equal(model.restore({ app: "training", format: 1, sessions: "x" }).ok, false);
   assert.equal(storage.getItem(KEYS.data), before);
 });
 
 test("restore refuses a bad file with a plain message", () => {
   const model = createModel(createStore(fakeStorage()), clock);
-  const result = model.restoreIntoEmpty({ app: "other" });
+  const result = model.restore({ app: "other" });
   assert.equal(result.ok, false);
   assert.match(result.error, /not a training backup/);
 });

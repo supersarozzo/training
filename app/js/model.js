@@ -3,6 +3,7 @@
 import { nowUtc, newId, exerciseStateId, weighinId, localDate } from "./ids.js";
 import { hasData } from "./store.js";
 import { validateDocument } from "./validate.js";
+import { mergeDocs } from "./sync/merge.js";
 
 // Monday of the current week (local), or the next Monday. Used for a new block's start.
 // If today is Monday, the block starts today. Otherwise the next Monday.
@@ -170,21 +171,23 @@ ${note}` : note;
       });
     },
 
-    // Restore from a backup file into an EMPTY phone. If the phone has data, refuse for now:
-    // the merge-restore comes with the sync work (build steps 9 and 10).
-    restoreIntoEmpty(rawDoc) {
-      const current = store.load();
-      if (hasData(current)) {
-        return { ok: false, error: "This phone already has data. Restoring over existing data is not ready yet (it comes after sync is set up). Nothing was changed." };
-      }
+    // Restore from a backup file or from GitHub. The file is checked first (it is untrusted data).
+    // An empty phone takes the file as it is. A phone with data MERGES the file in with the sync rules:
+    // nothing on the phone is dropped, and a safety copy is kept first (ARCHITECTURE section 10).
+    restore(rawDoc) {
       const checked = validateDocument(rawDoc);
       if (!checked.ok) return { ok: false, error: checked.error };
-      const doc = checked.doc;
+      let current;
+      try { current = store.load(); } catch (e) { return { ok: false, error: e && e.message ? e.message : "The data on this phone could not be read. Nothing was changed." }; }
+      const merging = hasData(current);
+      const doc = merging ? mergeDocs(current, checked.doc) : checked.doc;
       const t = stamp();
-      store.savePrev();
-      ensureBlock(doc, t, clock());
-      store.save(doc);
-      return { ok: true, doc };
+      try {
+        store.savePrev();
+        ensureBlock(doc, t, clock());
+        store.save(doc);
+      } catch (e) { return { ok: false, error: e && e.message ? e.message : "Could not save. Nothing was changed." }; }
+      return { ok: true, doc, merged: merging };
     },
   };
 }

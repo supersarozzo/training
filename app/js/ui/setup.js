@@ -1,11 +1,13 @@
-// First start: Start fresh, Restore from file, Restore from GitHub (not ready yet).
+// First start: Start fresh, Restore from file, Restore from GitHub.
 import { h } from "../h.js";
 import { flowScreen } from "./parts.js";
 import { model, go, rerender } from "./app.js";
 import { resetDraft } from "./intake.js";
+import { connectionFields, restoreFromGithub, syncMessage, syncBusy, resetSyncDraft } from "./settings-sync.js";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 let message = null; // { kind: "error" | "ok", text }
+let githubOpen = false;
 
 async function restoreFromFile(file) {
   if (!file) return;
@@ -21,7 +23,7 @@ async function restoreFromFile(file) {
     message = { kind: "error", text: "That file is not a training backup (it can not be read as data)." };
     return rerender();
   }
-  const result = model.restoreIntoEmpty(raw);
+  const result = model.restore(raw);
   if (!result.ok) {
     message = { kind: "error", text: result.error };
     return rerender();
@@ -44,12 +46,31 @@ export function renderSetup() {
       h("button", { class: "button", type: "button", onclick: () => { resetDraft(); go("#/intake"); } }, "Start fresh")),
     h("div", { class: "card" },
       h("h2", {}, "Restore from file"),
-      h("p", { class: "muted" }, "Use a training backup file or the starter file. It works only on a phone with no data yet."),
+      h("p", { class: "muted" }, "Use a training backup file or the starter file. It is checked first, then merged into this phone."),
       input,
       h("button", { class: "button secondary", type: "button", onclick: () => input.click() }, "Choose file"),
       message ? h("p", { class: message.kind === "error" ? "error-text" : "status-success", role: "alert" }, message.text) : null),
-    h("div", { class: "card" },
+    githubCard());
+}
+
+function afterRestore(doc) {
+  resetSyncDraft();
+  go(doc.profile?.targets ? "#/today" : "#/targets");
+}
+
+function githubCard() {
+  const msg = syncMessage();
+  if (!githubOpen) {
+    return h("div", { class: "card" },
       h("h2", {}, "Restore from GitHub"),
-      h("p", { class: "muted" }, "Available after sync is set up."),
-      h("button", { class: "button secondary", type: "button", disabled: true }, "Restore from GitHub")));
+      h("p", { class: "muted" }, "Get your saved data from your private GitHub repo. You need your GitHub key."),
+      h("button", { class: "button secondary", type: "button", onclick: () => { githubOpen = true; rerender(); } }, "Restore from GitHub"));
+  }
+  return h("div", { class: "card" },
+    h("h2", {}, "Restore from GitHub"),
+    h("p", { class: "muted" }, "Type where your data is saved and paste your GitHub key. The key stays on this phone only."),
+    connectionFields(),
+    msg ? h("p", { class: msg.kind === "error" ? "error-text" : "status-success", role: "alert" }, msg.text) : null,
+    h("button", { class: "button", type: "button", disabled: syncBusy(), onclick: () => restoreFromGithub(afterRestore) }, syncBusy() ? "Working…" : "Connect and restore"),
+    h("button", { class: "button secondary", type: "button", onclick: () => { githubOpen = false; resetSyncDraft(); rerender(); } }, "Cancel"));
 }

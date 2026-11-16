@@ -1,5 +1,5 @@
 // Finish: summary (time, sets, new bests, what changes next time), optional effort and note, Save.
-// Sync comes in a later build step; for now the workout is saved on the phone only.
+// Save writes on the phone first, then starts a sync (if GitHub is set up). The sync never blocks the screen.
 import { h } from "../h.js";
 import { workoutScreen, topBar, actionBar, mainButton, choiceRow } from "./parts.js";
 import { model, go, rerender } from "./app.js";
@@ -7,6 +7,7 @@ import { exercises } from "../plan/plan-v2.js";
 import { leaveWorkout } from "./flow.js";
 import { performances, suggestFor, workSets, isNewBest } from "../engine/workout.js";
 import { setSavedMessage } from "./today.js";
+import { syncer } from "../syncer.js";
 
 let draft = null;
 
@@ -47,6 +48,7 @@ export function renderFinish(ctx) {
     leaveWorkout();
     setSavedMessage("Workout saved on this phone. Stop your Apple Watch workout.");
     go("#/today");
+    if (syncer.isConfigured()) syncer.request("full");
   };
 
   return [

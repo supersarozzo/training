@@ -1,10 +1,11 @@
-// Settings. Sound and Gym (first visit check) for now; sync, backup and theme come in later build steps.
+// Settings: GitHub sync, gym weights, body unit, sound. (Backup, restore and the Shortcuts button: build step 10.)
 import { h } from "../h.js";
 import { screen, choiceRow } from "./parts.js";
 import { model, rerender } from "./app.js";
 import { soundOn, setSound } from "../active.js";
 import { setSoundOn, beep } from "../sound.js";
 import { extraMachines } from "../plan/plan-v2.js";
+import { syncCard } from "./settings-sync.js";
 
 const MACHINE_NAMES = { lat_pulldown: "Lat pulldown machine", seated_row: "Seated row machine", leg_curl: "Leg curl machine", pec_deck: "Pec deck", calf_raise: "Calf raise machine" };
 let gymMessage = null;
@@ -55,6 +56,7 @@ export function renderSettings() {
   const doc = model.doc();
   return screen(
     h("h1", {}, "Settings"),
+    syncCard(),
     gymCard(doc.shared_settings),
     h("div", { class: "card" },
       h("h2", {}, "Body weight unit"),

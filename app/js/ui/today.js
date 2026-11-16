@@ -11,6 +11,9 @@ import { startWorkout } from "./flow.js";
 import { activeWeighins, weeklySummary } from "../engine/trend.js";
 import { seenWeek } from "./weekly.js";
 import { installHintShown, dismissInstallHint } from "./update.js";
+import { store } from "./app.js";
+import { syncer } from "../syncer.js";
+import { statusText, keyEndsSoon, connectionOf } from "../sync/sync.js";
 
 let savedMessage = null; // shown once, after a workout was saved
 export function setSavedMessage(text) { savedMessage = text; }
@@ -119,7 +122,13 @@ export function renderToday() {
       h("p", { class: "small muted" }, "Safari can delete the data of a web page you do not open for 7 days. An app on the Home Screen keeps it."),
       h("button", { class: "button secondary", type: "button", onclick: () => { dismissInstallHint(); rerender(); } }, "I did this")));
   }
-  children.push(h("p", { class: "small muted" }, "Only on this phone. Set up GitHub in Settings."));
+  const device = store.loadDevice();
+  const ends = keyEndsSoon(device, t);
+  if (ends) children.push(h("p", { class: "small status-warning" }, ends.days < 0 ? `GitHub key ended on ${ends.date}. Make a new one.` : `GitHub key ends on ${ends.date}.`));
+  const configured = connectionOf(device) !== null;
+  const bad = configured && device.last_sync_result && device.last_sync_result !== "ok";
+  children.push(h("p", { class: bad ? "small status-warning" : "small muted", role: "status" },
+    statusText(device, configured && syncer.hasUnsynced()), " ", configured ? null : h("a", { href: "#/settings" }, "Settings"), bad ? h("a", { href: "#/settings" }, "Settings") : null));
 
   const main = h("main", { class: "screen has-bar" }, ...children);
   return bar ? [main, tabActionBar(bar)] : [h("main", { class: "screen has-tabs" }, ...children)];

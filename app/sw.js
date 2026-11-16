@@ -1,6 +1,6 @@
 // Service worker: keeps every app file on the phone so the app opens without a network.
 // APP_VERSION must match js/version.js (a unit test checks this and the file list).
-const APP_VERSION = "0.1.0";
+const APP_VERSION = "0.2.0";
 const CACHE = `training-${APP_VERSION}`;
 const FILES = [
   "./",
@@ -11,6 +11,7 @@ const FILES = [
   "icons/icon-192.png",
   "icons/icon-512.png",
   "js/active.js",
+  "js/autosync.js",
   "js/chartmath.js",
   "js/clock.js",
   "js/engine/nutrition.js",
@@ -28,6 +29,11 @@ const FILES = [
   "js/plan/plan-v2.js",
   "js/sound.js",
   "js/store.js",
+  "js/sync/fake-github.js",
+  "js/sync/github.js",
+  "js/sync/merge.js",
+  "js/sync/sync.js",
+  "js/syncer.js",
   "js/timer.js",
   "js/ui/app.js",
   "js/ui/charts.js",
@@ -39,6 +45,7 @@ const FILES = [
   "js/ui/plansheet.js",
   "js/ui/progress.js",
   "js/ui/rest.js",
+  "js/ui/settings-sync.js",
   "js/ui/settings.js",
   "js/ui/setup.js",
   "js/ui/svg.js",

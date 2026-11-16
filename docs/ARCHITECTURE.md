@@ -109,7 +109,9 @@ app/
     sync/github.js       GET and PUT calls only
     sync/merge.js        pure merge of two documents
     sync/sync.js         one sync at a time, retries
-    sync/fake-github.js  in-browser fake (localhost only)
+    sync/fake-github.js  in-browser fake (localhost only; tests/fake-github.mjs re-exports it)
+    syncer.js            the page's one syncer (picks the fake with ?fake-github=1 on localhost)
+    autosync.js          when sync runs by itself (open, front, signal back; never in a workout)
     backup.js            download file, restore (merge)
     timer.js             timers based on end time
     wakelock.js          keep the screen on
@@ -325,7 +327,7 @@ Rules:
 
 - **Download backup** (Settings): the data document as a file `training-backup-YYYY-MM-DD.json` (through a download link; on iPhone it goes to the Files app). Never contains the token. The app remembers `last_backup_at` and shows it.
 - **Restore from file** and **Restore from GitHub** (first start or Settings): read the file, check its shape, then **merge** it into the phone with the sync merge rules. A restore never deletes what is on the phone. A `prev` copy is saved first.
-- **Build step 3 (first start only):** Restore from file checks every field (`validate.js`; the file is untrusted data) and loads the file into an **empty** phone. If the phone already has data, it **refuses with a plain message and changes nothing**. The merge-restore described above comes in build steps 9 and 10, with the sync merge. Restore from GitHub is shown disabled ("Available after sync is set up").
+- **Done in build step 9:** Restore from file and Restore from GitHub check the data first (`validate.js`; the file is untrusted data). An **empty** phone takes it as it is. A phone **with data** merges it in with the sync rules (`model.restore`, using `sync/merge.js`) after saving the `prev` copy. Nothing on the phone is dropped; a tombstone or a later edit in the file follows the normal merge rules. Restoring the same file twice changes nothing.
 - The private repo's git history is the long-term backup: every sync is a commit.
 
 ## 11. Error states (what Rosario sees)

@@ -18,6 +18,9 @@ import { closeSheets } from "./ui/parts.js";
 import { setSoundOn } from "./sound.js";
 import { soundOn } from "./active.js";
 import { registerWorker, updateBanner } from "./ui/update.js";
+import { syncer } from "./syncer.js";
+import { startAutoSync } from "./autosync.js";
+import { getActive } from "./active.js";
 
 const tabRoutes = { today: renderToday, progress: renderProgress, plan: renderPlan, settings: renderSettings };
 const flowRoutes = { setup: renderSetup, intake: renderIntake, targets: renderTargets, workout: renderWorkout, weighin: renderWeighin, weekly: renderWeekly };
@@ -58,3 +61,7 @@ setRedraw(render);
 window.addEventListener("hashchange", render);
 render();
 registerWorker();
+// Sync when the app opens, comes to the front, or gets signal back. Never during a workout.
+startAutoSync({ syncer, win: window, inWorkout: () => getActive() !== null });
+// When a sync ends, redraw the quiet screens so the status line is right (never a workout or a form being filled in).
+syncer.subscribe(() => { if (["#/today", "#/settings", "#/progress"].includes(location.hash) || location.hash === "") render(); });
