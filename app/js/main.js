@@ -1,6 +1,6 @@
 // Start-up and router. Hash routes: #/today, #/progress, #/plan, #/settings (with tabs),
 // and #/setup, #/intake, #/targets (the first-start flow, no tabs).
-import { mount } from "./h.js";
+import { mount, h } from "./h.js";
 import { renderToday } from "./ui/today.js";
 import { renderProgress } from "./ui/progress.js";
 import { renderPlan } from "./ui/plansheet.js";
@@ -14,13 +14,14 @@ import { renderWeekly } from "./ui/weekly.js";
 import { tabBar, errorState } from "./ui/parts.js";
 import { model, setRedraw } from "./ui/app.js";
 import { clearTickers } from "./timer.js";
-import { closeSheets } from "./ui/parts.js";
+import { closeSheets, openSheet } from "./ui/parts.js";
 import { setSoundOn } from "./sound.js";
 import { soundOn } from "./active.js";
 import { registerWorker, updateBanner } from "./ui/update.js";
 import { syncer } from "./syncer.js";
 import { startAutoSync } from "./autosync.js";
 import { getActive } from "./active.js";
+import { watchStoreErrors } from "./errors.js";
 
 const tabRoutes = { today: renderToday, progress: renderProgress, plan: renderPlan, settings: renderSettings };
 const flowRoutes = { setup: renderSetup, intake: renderIntake, targets: renderTargets, workout: renderWorkout, weighin: renderWeighin, weekly: renderWeekly };
@@ -55,6 +56,11 @@ function render() {
     mount(root, errorState(e && e.message ? e.message : "The app could not start."));
   }
 }
+
+// A save that failed because the phone is full (or blocks storage) says so, instead of doing nothing (review F2).
+watchStoreErrors(window, (text) => {
+  const close = openSheet(h("h2", {}, "Not saved"), h("p", {}, text), h("button", { class: "button", type: "button", onclick: () => close() }, "OK"));
+});
 
 try { setSoundOn(soundOn()); } catch { /* storage blocked: default sound on */ }
 setRedraw(render);

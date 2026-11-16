@@ -15,6 +15,7 @@ const FILES = [
   "js/backup.js",
   "js/chartmath.js",
   "js/clock.js",
+  "js/errors.js",
   "js/engine/nutrition.js",
   "js/engine/progression.js",
   "js/engine/schedule.js",
