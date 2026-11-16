@@ -6,8 +6,6 @@ Numbered so Rosario can answer "1 yes, 2 a". Move answered ones to the bottom wi
 
 17. On the first visit, check if the gym has: lat pulldown machine, seated row machine, leg curl machine, pec deck, calf raise machine. The plan works without them (cable versions are used). If they exist, the plan can use them. Also note the dumbbell steps (for example 2, 4, 6 kg or 2, 3, 4 kg). (A first-visit check, not a question to answer now.)
 
-45. Your GitHub account name (needed before the app's repos are made). The repo names are already chosen (question 41 a): "training" (public app) and "training-data" (private data).
-
 ## Answered
 
 6. Main goal: build muscle. (2026-11-16)
@@ -49,7 +47,8 @@ Full wording, reasons and options are in [WORKFLOW.md](WORKFLOW.md), section A. 
 38. Progress photos: answered 2026-11-16, kept private (private/ folder).
 39. iOS version: 27.2.1. That is above 18.4, so the app can keep the screen awake. (2026-11-16)
 40. Apple Watch link: b) start a Strength workout on the Watch by hand, plus a Shortcuts "Log to Health" button. (2026-11-16)
-41. Repo names: a) "training" (public app) and "training-data" (private data). GitHub account name still open: see question 45. (2026-11-16)
+41. Repo names: a) "training" (public app) and "training-data" (private data). GitHub account: to be created at the repo step (see question 45). (2026-11-16)
 42. GitHub key (token) life: b) 1 year. (2026-11-16)
 43. Auto sync: a) after each workout and when the app opens, plus buttons. (2026-11-16)
 44. Backup file button in Settings: a) yes. (2026-11-16)
+45. Your GitHub account name: b) no GitHub account yet. Rosario makes one when the app is ready to go online. (2026-11-16)
