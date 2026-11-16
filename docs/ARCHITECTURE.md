@@ -355,7 +355,7 @@ Rules:
 Small phases, one task chat each, in this order. Each phase ends with its own commit (not pushed) and updates the docs it touches. **Model:** Sonnet for normal build work, Opus for the review. Steps that need Rosario are marked **[Rosario]**.
 
 **How workers test without Rosario:**
-- **Unit tests:** `node --test tests/` (Node 24, built in; no install). Pure modules only.
+- **Unit tests:** `node --test` (Node 24, built in; no install). Pure modules only.
 - **Run the app locally:** `python -m http.server 8000 --directory app`, then open `http://localhost:8000/` in the built-in browser at phone size (preset "mobile", 375 × 812), in light and in dark mode. Service workers work on `localhost`.
 - **Fake GitHub:** `tests/fake-github.mjs` imitates the contents API in memory (sha, 404, 401, 403, 409, 422, network failure, broken file). The sync code takes `fetch` as a parameter, so tests pass the fake. In the browser, `?fake-github=1` on `localhost` only switches the app to `sync/fake-github.js`, so the sync screens can be tested by hand.
 - **No real GitHub** until step 12. No real body data, ever: tests use made-up profiles.
