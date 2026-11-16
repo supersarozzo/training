@@ -1,6 +1,7 @@
 // Shared handles for the screens: the store, the model and a redraw hook.
 import { createStore } from "../store.js";
 import { createModel } from "../model.js";
+import { now } from "../clock.js";
 
 function pickStorage() {
   try {
@@ -14,7 +15,7 @@ function pickStorage() {
 }
 
 export const store = createStore(pickStorage());
-export const model = createModel(store);
+export const model = createModel(store, now);
 
 let redraw = () => {};
 export function setRedraw(fn) { redraw = fn; }

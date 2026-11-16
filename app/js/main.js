@@ -8,11 +8,16 @@ import { renderSettings } from "./ui/settings.js";
 import { renderSetup } from "./ui/setup.js";
 import { renderIntake } from "./ui/intake.js";
 import { renderTargets } from "./ui/targets.js";
+import { renderWorkout } from "./ui/workout.js";
 import { tabBar, errorState } from "./ui/parts.js";
 import { model, setRedraw } from "./ui/app.js";
+import { clearTickers } from "./timer.js";
+import { closeSheets } from "./ui/parts.js";
+import { setSoundOn } from "./sound.js";
+import { soundOn } from "./active.js";
 
 const tabRoutes = { today: renderToday, progress: renderProgress, plan: renderPlan, settings: renderSettings };
-const flowRoutes = { setup: renderSetup, intake: renderIntake, targets: renderTargets };
+const flowRoutes = { setup: renderSetup, intake: renderIntake, targets: renderTargets, workout: renderWorkout };
 const DEFAULT_ROUTE = "today";
 
 function routeName(hash) {
@@ -23,7 +28,7 @@ function routeName(hash) {
 // Where the app really goes: no profile -> first start; profile without confirmed targets -> targets.
 function guard(name) {
   const doc = model.doc();
-  if (!doc.profile) return Object.hasOwn(flowRoutes, name) && name !== "targets" ? name : "setup";
+  if (!doc.profile) return name === "setup" || name === "intake" ? name : "setup";
   if (!doc.profile.targets) return "targets";
   if (name === "setup" || name === "intake") return DEFAULT_ROUTE;
   return name;
@@ -31,6 +36,8 @@ function guard(name) {
 
 function render() {
   const root = document.getElementById("app");
+  clearTickers(); // timers of the old screen stop
+  closeSheets();
   try {
     const wanted = routeName(location.hash);
     const name = guard(wanted);
@@ -43,6 +50,7 @@ function render() {
   }
 }
 
+try { setSoundOn(soundOn()); } catch { /* storage blocked: default sound on */ }
 setRedraw(render);
 window.addEventListener("hashchange", render);
 render();

@@ -19,6 +19,10 @@ python -m http.server 8000 --directory app
 
 First start: the app shows **Start fresh**, **Restore from file** and **Restore from GitHub** (not ready yet). After you finish the questions (or restore a file), you see your numbers, then the empty Today screen. The Plan tab shows the whole plan.
 
+Test another day: add `?date=2026-11-17` to the address (only works on localhost). The app then behaves as if it were that day, so you can test every weekday and week.
+
+The workout (build step 5): Today > Start workout > walk > change-over > warm-up > pairs > abs > Finish > Save. Closing the tab or reloading in the middle continues in the same place.
+
 To start again from an empty first screen: in the browser open the developer tools (F12), go to Application > Local storage > http://localhost:8000, and delete the keys that start with `trn.`. Do this only on your computer while testing.
 
 ## Run the tests

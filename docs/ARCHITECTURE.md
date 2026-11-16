@@ -98,6 +98,9 @@ app/
     plan/plan-v2.js      the plan as data (no body data)
     plan/cues.js         form tips, warm-up moves
     engine/schedule.js   week, day, short day, swap, gaps
+    engine/workout.js    pair order, resume position, suggestions, walk suggestion
+    active.js            the running workout screen and timer end times (device box)
+    clock.js             now() and today(); ?date= test override on localhost only
     engine/progression.js  next weight and reps
     engine/week1.js      "find your weight" steps
     engine/walk.js       walk start and walk progress
@@ -112,7 +115,7 @@ app/
     wakelock.js          keep the screen on
     sound.js             beep (Web Audio)
     shortcuts.js         "Log to Health" link
-    ui/                  one file per screen + parts
+    ui/                  one file per screen + parts (workout.js picks the workout screen; flow.js shares its helpers)
 tests/
   *.test.mjs             node --test (pure modules)
   fake-github.mjs        fake GitHub contents API
@@ -215,7 +218,7 @@ All `0` and `"…"` above are placeholders, not real values. Body weight is alwa
 `plan/plan-v2.js` exports plain objects, no body data:
 - `exercises`: id, name, equipment, kind (`reps` or `hold`), rep range (or seconds range), per side or not, step type (`dumbbell`, `stack`, `smith_2x2.5`, `bodyweight`), swaps (ids, with `needs_machine` for the Q17 machines), cue id.
 - `days`: mon to fri, each a list of slots (`A1`, `A2`, …, `Abs1`, `D`) with exercise id, sets, rest after, and RIR rule (Wednesday RIR 3).
-- `weeks`: 1 to 12 with phase name, set changes (week 1: 2 sets; weeks 6 and 12: one set less; weeks 7 to 11: pair A gets a 4th set, Tuesday's leg extension drops to 2 sets), RIR, progression on or off, walk progress on or off.
+- `weeks`: 1 to 12 with phase name, set changes (week 1: 2 sets; weeks 6 and 12: one set less; weeks 7 to 11: pair A gets a 4th set, and exercise D (the leg exercise done on its own, on both leg days: Tuesday's leg extension and Friday's calf raise) drops to 2 sets, as plan v2 section 4 says), RIR, progression on or off, walk progress on or off.
 - `session_order`: `["walk", "changeover", "lift_warmup", "pairs", "abs"]` (Rosario's walk-first choice), and the short-day version.
 - `walk_rules`, `warmup_moves`.
 

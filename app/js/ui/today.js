@@ -1,16 +1,99 @@
+// Today: the day, the blocks, the buttons (Start, Short day, Swap day), the missed-days message, your numbers.
 import { h } from "../h.js";
-import { screen, emptyState } from "./parts.js";
-import { model } from "./app.js";
+import { tabActionBar, mainButton, secondaryButton, openSheet } from "./parts.js";
+import { model, go, rerender } from "./app.js";
+import { today } from "../clock.js";
+import { getActive, setActive } from "../active.js";
+import { dayLabel, sessionLayout, expectedMinutes, canStartWorkout, swapOptions, missedRule } from "../engine/schedule.js";
+import { finishedSessions } from "../engine/workout.js";
+import { days } from "../plan/plan-v2.js";
+import { startWorkout } from "./flow.js";
+
+let savedMessage = null; // shown once, after a workout was saved
+export function setSavedMessage(text) { savedMessage = text; }
+
+const BLOCK_NAMES = {
+  walk: "Walk", changeover: "Change-over", lift_warmup: "Lift warm-up", pairs: "Weights (3 pairs)", abs: "Abs and holds",
+  finish: "Finish and save", pairs_ab: "Weights (pairs A and B)", abs_first: "First abs exercise",
+};
+
+function resumeCard(doc, session) {
+  const act = getActive();
+  const when = session.date === today() ? "today's" : `the unfinished (${session.date})`;
+  const resume = () => {
+    if (!act || act.session_id !== session.id) {
+      const phase = session.exercises.some((e) => e.sets.length) ? "weights" : session.walk ? "changeover" : "walk";
+      setActive({ session_id: session.id, phase, timer_end: null, timer_total: null, rest: null, hold: null });
+    }
+    go("#/workout");
+  };
+  return { card: h("div", { class: "card warn" }, h("h2", {}, `Continue ${when} workout?`), h("p", { class: "muted" }, "Every set you did is saved.")), button: mainButton("Continue workout", resume) };
+}
+
+function openSwapDay(doc, t, pos) {
+  const options = swapOptions({ startMonday: doc.block.start_monday, today: t, sessions: doc.sessions });
+  const close = openSheet(
+    h("h2", {}, "Swap day"),
+    h("p", { class: "muted" }, "Do the workout of an earlier day that you missed this week, in place of today's."),
+    options.length
+      ? options.map((d) => h("button", { class: "button secondary", type: "button", onclick: () => { close(); const r = startWorkout({ planDay: d, swappedFrom: pos.planDay }); if (!r.ok) rerender(); } }, `${days[d].name}: ${days[d].focus}`))
+      : h("p", {}, "No missed day this week to swap in."));
+}
 
 export function renderToday() {
-  const targets = model.doc().profile?.targets;
-  return screen(
-    h("h1", {}, "Today"),
-    targets ? h("div", { class: "card" },
+  const doc = model.doc();
+  const targets = doc.profile?.targets;
+  const t = today();
+  const label = dayLabel(doc.block.start_monday, t);
+  const open = doc.sessions.find((s) => !s.deleted && s.status === "in_progress");
+  const children = [h("h1", {}, "Today"), h("div", { class: "label" }, label.text)];
+  let bar = null;
+
+  if (savedMessage) {
+    children.push(h("div", { class: "card" }, h("p", { class: "status-success" }, savedMessage)));
+    savedMessage = null;
+  }
+
+  if (open) {
+    const r = resumeCard(doc, open);
+    children.push(r.card);
+    bar = r.button;
+  } else if (label.state === "before") {
+    children.push(h("div", { class: "card" }, h("h2", {}, "Your plan has not started"), h("p", { class: "muted" }, `It starts on Monday ${doc.block.start_monday}.`)));
+  } else if (label.state === "after") {
+    children.push(h("div", { class: "card" }, h("h2", {}, "The 12 weeks are done"), h("p", { class: "muted" }, "Time for the review. Talk to the Training chat about the next block.")));
+  } else if (!label.planDay) {
+    children.push(h("div", { class: "card" }, h("h2", {}, "Rest day"), h("p", { class: "muted" }, "A relaxed walk outside is fine. Weigh in in the morning.")));
+  } else {
+    const kind = "full";
+    const check = canStartWorkout(doc.sessions, t);
+    const lastFinished = finishedSessions(doc.sessions)[0];
+    const missed = missedRule(lastFinished ? lastFinished.date : null, t);
+    const layout = sessionLayout(kind, label.week);
+    children.push(h("div", { class: "card" },
+      h("h2", {}, days[label.planDay].focus),
+      layout.map((b) => h("div", { class: "block-line" }, h("span", {}, BLOCK_NAMES[b.id] ?? b.id), h("span", { class: "muted" }, `${b.minutes} min`))),
+      h("p", { class: "small muted" }, `About ${expectedMinutes(kind, label.week)} minutes. Start a Strength workout on your Apple Watch at minute 0.`)));
+    if (lastFinished && missed.kind !== "carry_on") children.push(h("div", { class: "card warn" }, h("p", {}, missed.message)));
+    if (!check.ok) {
+      children.push(h("div", { class: "card" }, h("p", { class: "status-success" }, "Done for today."), h("p", { class: "muted" }, check.reason)));
+    } else {
+      bar = mainButton("Start workout", () => { const r = startWorkout({ kind: "full", planDay: label.planDay }); if (!r.ok) rerender(); });
+      children.push(secondaryButton("Short day (60 min)", () => { const r = startWorkout({ kind: "short", planDay: label.planDay }); if (!r.ok) rerender(); }));
+      const swaps = swapOptions({ startMonday: doc.block.start_monday, today: t, sessions: doc.sessions });
+      if (swaps.length) children.push(secondaryButton("Swap day", () => openSwapDay(doc, t, label)));
+    }
+  }
+
+  if (targets) {
+    children.push(h("div", { class: "card" },
       h("div", { class: "label" }, "Your numbers"),
       targets.kcal !== null ? h("div", { class: "metric" }, h("div", { class: "value" }, String(targets.kcal), h("span", { class: "unit" }, " kcal a day"))) : null,
       targets.protein_g !== null ? h("div", { class: "metric" }, h("div", { class: "value" }, String(targets.protein_g), h("span", { class: "unit" }, " g protein a day"))) : null,
-      h("div", { class: "small muted" }, `Starting walk: ${targets.walk_start.speed_kmh} km/h, ${targets.walk_start.slope_pct} % slope`)) : null,
-    emptyState("No workout yet", "Workouts come in a later build step."),
-    h("p", { class: "small muted" }, "Only on this phone. Set up GitHub in Settings."));
+      h("div", { class: "small muted" }, `Starting walk: ${targets.walk_start.speed_kmh} km/h, ${targets.walk_start.slope_pct} % slope`)));
+  }
+  children.push(h("p", { class: "small muted" }, "Only on this phone. Set up GitHub in Settings."));
+
+  const main = h("main", { class: "screen has-bar" }, ...children);
+  return bar ? [main, tabActionBar(bar)] : [h("main", { class: "screen has-tabs" }, ...children)];
 }
