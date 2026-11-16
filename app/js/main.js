@@ -9,6 +9,8 @@ import { renderSetup } from "./ui/setup.js";
 import { renderIntake } from "./ui/intake.js";
 import { renderTargets } from "./ui/targets.js";
 import { renderWorkout } from "./ui/workout.js";
+import { renderWeighin } from "./ui/weighin.js";
+import { renderWeekly } from "./ui/weekly.js";
 import { tabBar, errorState } from "./ui/parts.js";
 import { model, setRedraw } from "./ui/app.js";
 import { clearTickers } from "./timer.js";
@@ -17,7 +19,7 @@ import { setSoundOn } from "./sound.js";
 import { soundOn } from "./active.js";
 
 const tabRoutes = { today: renderToday, progress: renderProgress, plan: renderPlan, settings: renderSettings };
-const flowRoutes = { setup: renderSetup, intake: renderIntake, targets: renderTargets, workout: renderWorkout };
+const flowRoutes = { setup: renderSetup, intake: renderIntake, targets: renderTargets, workout: renderWorkout, weighin: renderWeighin, weekly: renderWeekly };
 const DEFAULT_ROUTE = "today";
 
 function routeName(hash) {

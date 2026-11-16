@@ -8,6 +8,8 @@ import { dayLabel, sessionLayout, expectedMinutes, canStartWorkout, swapOptions,
 import { finishedSessions } from "../engine/workout.js";
 import { days } from "../plan/plan-v2.js";
 import { startWorkout } from "./flow.js";
+import { activeWeighins, weeklySummary } from "../engine/trend.js";
+import { seenWeek } from "./weekly.js";
 
 let savedMessage = null; // shown once, after a workout was saved
 export function setSavedMessage(text) { savedMessage = text; }
@@ -84,6 +86,23 @@ export function renderToday() {
       const swaps = swapOptions({ startMonday: doc.block.start_monday, today: t, sessions: doc.sessions });
       if (swaps.length) children.push(secondaryButton("Swap day", () => openSwapDay(doc, t, label)));
     }
+  }
+
+  // Weigh-in, the weekly summary (Mondays, once per week) and the 4-weekly measurement reminder.
+  const lastWeigh = activeWeighins(doc.weighins).slice(-1)[0];
+  const weighedToday = lastWeigh && lastWeigh.date === t;
+  if (label.state === "running" && label.week >= 2) {
+    const sum = weeklySummary(doc, { startMonday: doc.block.start_monday, today: t });
+    if (sum && seenWeek() !== sum.week) {
+      children.push(h("div", { class: "card warn" }, h("h2", {}, "Last week is ready"), h("p", { class: "muted" }, "Workouts, weight trend and a food suggestion."),
+        h("a", { class: "button secondary", href: "#/weekly" }, "See last week")));
+    }
+  }
+  const measureWeek = label.state === "running" && [1, 4, 8, 12].includes(label.week) && label.day === "mon";
+  if (!weighedToday) {
+    children.push(h("div", { class: "card" }, h("h2", {}, "Weigh-in"),
+      h("p", { class: "muted" }, measureWeek ? "Weigh in, and measure your waist, chest, arm and thigh today." : "Weigh in after the toilet, before food and drink."),
+      h("a", { class: "button secondary", href: "#/weighin" }, "Weigh in")));
   }
 
   if (targets) {

@@ -1,6 +1,6 @@
 // Settings. Sound and Gym (first visit check) for now; sync, backup and theme come in later build steps.
 import { h } from "../h.js";
-import { screen } from "./parts.js";
+import { screen, choiceRow } from "./parts.js";
 import { model, rerender } from "./app.js";
 import { soundOn, setSound } from "../active.js";
 import { setSoundOn, beep } from "../sound.js";
@@ -56,6 +56,11 @@ export function renderSettings() {
   return screen(
     h("h1", {}, "Settings"),
     gymCard(doc.shared_settings),
+    h("div", { class: "card" },
+      h("h2", {}, "Body weight unit"),
+      h("p", { class: "muted" }, "How your weight is shown and typed. It is always saved in kg."),
+      choiceRow([["kg", "Kilograms"], ["st", "Stones, pounds"]], doc.shared_settings.body_unit ?? "kg",
+        (value) => { model.updateSettings({ body_unit: value }); rerender(); })),
     h("div", { class: "card" },
       h("h2", {}, "Sound"),
       h("p", { class: "muted" }, "A beep when a timer ends. It only plays with the app open and the phone's ring switch on. The screen flash always shows."),

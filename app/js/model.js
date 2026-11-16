@@ -1,6 +1,6 @@
 // Create, update and delete records. Screens never write storage directly: they call these.
 // Every change stamps `updated_at` and is saved at once (docs/ARCHITECTURE.md section 6).
-import { nowUtc, newId, exerciseStateId, localDate } from "./ids.js";
+import { nowUtc, newId, exerciseStateId, weighinId, localDate } from "./ids.js";
 import { hasData } from "./store.js";
 import { validateDocument } from "./validate.js";
 
@@ -137,6 +137,27 @@ ${note}` : note;
     },
     abandonSession(sessionId) {
       return editSession(sessionId, (s, t) => { s.status = "abandoned"; s.finished_at = t; });
+    },
+    // One weigh-in per day: saving again for the same day replaces it (and brings back a deleted one).
+    setWeighin(date, kg) {
+      return update((doc, t) => {
+        const id = weighinId(date);
+        const rec = { id, updated_at: t, date, kg };
+        const i = doc.weighins.findIndex((x) => x.id === id);
+        if (i >= 0) doc.weighins[i] = rec; else doc.weighins.push(rec);
+      });
+    },
+    // A delete keeps a tombstone, so it reaches the other copy when sync arrives.
+    deleteWeighin(date) {
+      return update((doc, t) => {
+        const i = doc.weighins.findIndex((x) => x.id === weighinId(date));
+        if (i >= 0) doc.weighins[i] = { ...doc.weighins[i], deleted: true, deleted_at: t, updated_at: t };
+      });
+    },
+    addMeasurement(date, values) {
+      return update((doc, t) => {
+        doc.measurements.push({ id: newId("m", clock()), updated_at: t, date, waist_cm: values.waist_cm ?? null, chest_cm: values.chest_cm ?? null, arm_cm: values.arm_cm ?? null, thigh_cm: values.thigh_cm ?? null });
+      });
     },
     // Starting weight and machine note of one exercise (week 1, first visit).
     setExerciseState(exerciseId, patch) {
