@@ -49,3 +49,35 @@ export function week1StartingWeight(set2, exerciseId, settings) {
 // Week 1 rules (section 8): 2 working sets, RIR 3, no progression. Those numbers live in plan-v2.js
 // (weeks[0]); this list is what the guided screen steps through for each exercise.
 export const WEEK1_STEPS = ["learn", "warmup", "set1", "set2"];
+
+// ---------- the guided flow of one exercise (used by ui/week1.js, kept pure here so it can be tested) ----------
+
+// "How many more could you do?" in week 1 uses four ranges. For the rule engine each becomes a number of reps left.
+export const LEFT_TO_RIR = { "0-1": 0, "2-3": 2, "4-6": 4, "7+": 4 };
+
+// Where one exercise of the workout stands. rec: the exercise record in the session. weighted: false for
+// bodyweight and timed exercises (no weight to find, so no warm-up, no "how many more", no result screen).
+// Returns "learn" | "warmup" | "set1" | "left1" | "set2" | "left2" | "result" | "done".
+export function week1Stage(rec, weighted) {
+  const work = rec.sets.filter((s) => s.type === "work");
+  const warm = rec.sets.filter((s) => s.type === "warmup").length;
+  if (work.length === 0) {
+    if (!rec.w1_ready) return "learn";
+    if (weighted && warm === 0 && !rec.warmup_skipped) return "warmup";
+    return "set1";
+  }
+  if (work.length === 1) {
+    if (weighted && !work[0].left) return "left1";
+    return "set2";
+  }
+  if (!weighted) return "done";
+  if (!work[1].left) return "left2";
+  return rec.w1_saved ? "done" : "result";
+}
+
+// The result of the exercise after both sets: the starting weight for week 2.
+export function week1Result(rec, exerciseId, settings) {
+  const work = rec.sets.filter((s) => s.type === "work");
+  const set2 = { weight_kg: work[1].weight_kg, reps: work[1].reps, left: work[1].left };
+  return week1StartingWeight(set2, exerciseId, settings);
+}

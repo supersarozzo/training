@@ -12,6 +12,7 @@ import { renderChangeover, renderLiftWarmup } from "./warmup.js";
 import { renderPair } from "./pair.js";
 import { renderRest } from "./rest.js";
 import { renderFinish } from "./finish.js";
+import { renderWeek1 } from "./week1.js";
 
 export function renderWorkout() {
   let act = getActive();
@@ -36,6 +37,12 @@ export function renderWorkout() {
     case "warmup": return renderLiftWarmup(ctx);
     case "finish": return renderFinish(ctx);
     default: {
+      if (session.week === 1) {
+        const screen = renderWeek1(ctx);
+        if (screen) return screen;
+        act = patchActive({ phase: "finish", rest: null });
+        return renderFinish(buildCtx(doc, session, act));
+      }
       const pos = ctx.position();
       if (!pos) { act = patchActive({ phase: "finish", rest: null }); return renderFinish(buildCtx(doc, session, act)); }
       if (act.rest) return renderRest(ctx, pos);

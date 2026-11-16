@@ -74,6 +74,7 @@ export function renderToday() {
       h("h2", {}, days[label.planDay].focus),
       layout.map((b) => h("div", { class: "block-line" }, h("span", {}, BLOCK_NAMES[b.id] ?? b.id), h("span", { class: "muted" }, `${b.minutes} min`))),
       h("p", { class: "small muted" }, `About ${expectedMinutes(kind, label.week)} minutes. Start a Strength workout on your Apple Watch at minute 0.`)));
+    if (label.week === 1) children.push(h("div", { class: "card" }, h("p", {}, "Week 1: learn the moves and find your weights. Two sets of each exercise. It will feel easy on purpose."), h("p", { class: "small muted" }, "In Settings, fill in the gym's dumbbell sizes and weight steps when you know them.")));
     if (lastFinished && missed.kind !== "carry_on") children.push(h("div", { class: "card warn" }, h("p", {}, missed.message)));
     if (!check.ok) {
       children.push(h("div", { class: "card" }, h("p", { class: "status-success" }, "Done for today."), h("p", { class: "muted" }, check.reason)));

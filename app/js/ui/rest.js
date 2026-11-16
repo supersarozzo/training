@@ -16,7 +16,7 @@ export function renderRest(ctx, pos) {
     patchActive({ rest: { ...rest, end, total } });
     rerender();
   };
-  const nextLine = nextText(ctx, pos.entry);
+  const nextLine = pos.label ?? nextText(ctx, pos.entry);
   return [
     workoutScreen(
       topBar("Rest", () => askEnd(ctx)),

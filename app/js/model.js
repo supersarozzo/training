@@ -91,11 +91,18 @@ export function createModel(store, clock = () => new Date()) {
       });
     },
     // "How many more could you do?" for the set just saved.
-    setLastRir(sessionId, slot, rir) {
+    setLastRir(sessionId, slot, rir, left = undefined) {
       return editSession(sessionId, (s) => {
         const rec = s.exercises.find((e) => e.slot === slot);
         const last = rec && [...rec.sets].reverse().find((x) => x.type === "work");
-        if (last) last.rir = rir;
+        if (last) { last.rir = rir; if (left !== undefined) last.left = left; }
+      });
+    },
+    // Small flags on one exercise of a workout (week 1 steps: learned, saved).
+    flagExercise(sessionId, slot, patch) {
+      return editSession(sessionId, (s) => {
+        const rec = s.exercises.find((e) => e.slot === slot);
+        if (rec) Object.assign(rec, patch);
       });
     },
     undoLastSet(sessionId, slot) {
