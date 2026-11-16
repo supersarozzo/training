@@ -45,7 +45,7 @@ State: pending (not decided yet) / active / superseded (by which row).
 | 2026-11-16 | No exercises excluded | Rosario's answer (question 37 a) | active |
 | 2026-11-16 | iPhone runs iOS 27.2.1, so the app can keep the screen awake (needs 18.4 or later) | Rosario's answer (question 39) | active |
 | 2026-11-16 | Apple Watch: Strength workout started by hand, plus a Shortcuts "Log to Health" button | Rosario's answer (question 40 b). WORKFLOW H lists the button under "later"; the app design step decides when it comes | active |
-| 2026-11-16 | Repo names: "training" (public app) and "training-data" (private data); GitHub account name still open (question 45) | Rosario's answer (question 41 a) | active |
+| 2026-11-16 | Repo names: "training" (public app) and "training-data" (private data); no GitHub account yet: Rosario creates one at the repo step, when the app is ready to go online | Rosario's answers (question 41 a, question 45 b) | active |
 | 2026-11-16 | GitHub key (token) lasts 1 year | Rosario's answer (question 42 b) | active |
 | 2026-11-16 | Auto sync after each workout and when the app opens, plus sync buttons | Rosario's answer (question 43 a) | active |
 | 2026-11-16 | Backup file button in Settings | Rosario's answer (question 44 a) | active |
