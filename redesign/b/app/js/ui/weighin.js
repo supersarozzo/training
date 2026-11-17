@@ -1,6 +1,9 @@
 // Weigh-in: one number, under 10 seconds. Measurements (waist, chest, arm, thigh) every 4 weeks.
+// Redesign B: a scale icon and one big stepper in a card; the date as an inset row; measurements as an inset list
+// with the numbers on the right (like the Health app's "Add data" sheet).
 import { h } from "../h.js";
-import { flowScreen, actionBar, mainButton, stepper } from "./parts.js";
+import { flowScreen, actionBar, mainButton, stepper, backLink, section, group, foot } from "./parts.js";
+import { icon } from "./icons.js";
 import { model, go, rerender } from "./app.js";
 import { today } from "../clock.js";
 import { activeWeighins } from "../engine/trend.js";
@@ -42,32 +45,34 @@ export function renderWeighin() {
     const sp = kgToStonesPounds(draft.kg);
     const state = { st: sp.stones, lb: sp.pounds };
     const upd = () => { draft.kg = stonesPoundsToKg(state.st, state.lb); };
-    input = h("div", {},
+    input = h("div", { class: "steppers" },
       stepper({ label: "Stones", unit: "st", value: state.st, step: 1, min: 3, max: 60, decimals: 0, onChange: (v) => { state.st = v; upd(); } }),
       stepper({ label: "Pounds", unit: "lb", value: state.lb, step: 0.2, min: 0, max: 13.9, decimals: 1, onChange: (v) => { state.lb = v; upd(); } }));
   } else {
-    input = stepper({ label: "Weight", unit: "kg", value: Math.round(draft.kg * 10) / 10, step: 0.1, min: 20, max: 400, decimals: 1, onChange: (v) => { draft.kg = v; } });
+    input = h("div", { class: "steppers" }, stepper({ label: "Weight", unit: "kg", value: Math.round(draft.kg * 10) / 10, step: 0.1, min: 20, max: 400, decimals: 1, onChange: (v) => { draft.kg = v; } }));
   }
 
-  const num = (key, label) => h("div", { class: "field" }, h("label", { for: `m-${key}` }, label),
-    h("input", { type: "number", id: `m-${key}`, inputmode: "decimal", step: "any", min: 10, max: 300, value: measure[key], oninput: (e) => { measure[key] = e.target.value; } }));
+  const num = (key, label) => h("div", { class: "field-row" }, h("label", { for: `m-${key}` }, label),
+    h("input", { type: "number", id: `m-${key}`, inputmode: "decimal", step: "any", min: 10, max: 300, placeholder: "–", value: measure[key], oninput: (e) => { measure[key] = e.target.value; } }),
+    h("span", { class: "unit" }, "cm"));
 
   return [
     flowScreen(
-      h("a", { href: "#/progress", class: "text-button", onclick: () => { draft = null; message = null; } }, "‹ Back"),
-      h("h1", {}, "Weigh-in"),
-      h("p", { class: "muted small" }, "After the toilet, before food and drink, in light clothes."),
-      h("div", { class: "field" }, h("label", { for: "w-date" }, "Date"),
-        h("input", { type: "date", id: "w-date", value: draft.date, max: today(), onchange: (e) => { if (e.target.value) { draft.date = e.target.value; rerender(); } } })),
-      existing ? h("p", { class: "small status-warning" }, `You already weighed in on this day: ${formatBody(existing.kg, unit)}. Saving replaces it.`) : null,
+      backLink("#/progress", "Progress", () => { draft = null; message = null; }),
+      h("div", { class: "center" },
+        h("div", { class: "hero-icon small accent", "aria-hidden": "true" }, icon("scale", 34, { stroke: 2.2 })),
+        h("h1", { class: "title1" }, "Weigh-in"),
+        h("p", { class: "subhead muted" }, "After the toilet, before food and drink, in light clothes.")),
+      group(h("div", { class: "field-row" }, h("label", { for: "w-date" }, "Date"),
+        h("input", { type: "date", id: "w-date", value: draft.date, max: today(), onchange: (e) => { if (e.target.value) { draft.date = e.target.value; rerender(); } } }))),
+      existing ? h("div", { class: "info-line warn" }, icon("info", 17), h("span", {}, `You already weighed in on this day: ${formatBody(existing.kg, unit)}. Saving replaces it.`)) : null,
       input,
       message ? h("div", { class: message.kind === "error" ? "error-text" : "status-success", role: "status" }, message.text) : null,
-      existing ? h("div", { class: "text-link-row" }, h("button", { class: "text-button", type: "button", onclick: remove }, "Delete this weigh-in")) : null,
-      h("div", { class: "card" },
-        h("h2", {}, "Measurements (every 4 weeks)"),
-        h("p", { class: "small muted" }, "In cm. Waist at the belly button. Same time and same way each time."),
-        num("waist_cm", "Waist (cm)"), num("chest_cm", "Chest (cm)"), num("arm_cm", "Upper arm (cm)"), num("thigh_cm", "Thigh (cm)"),
-        h("button", { class: "button secondary", type: "button", onclick: saveMeasure }, "Save measurements"))),
-    actionBar(mainButton("Save weigh-in", save)),
+      existing ? h("div", { class: "text-link-row" }, h("button", { class: "text-button danger", type: "button", onclick: remove }, "Delete this weigh-in")) : null,
+      section("Measurements · every 4 weeks",
+        group(num("waist_cm", "Waist"), num("chest_cm", "Chest"), num("arm_cm", "Upper arm"), num("thigh_cm", "Thigh")),
+        foot("Waist at the belly button. Same time and same way each time."),
+        h("button", { class: "button secondary", type: "button", onclick: saveMeasure }, icon("ruler", 18), "Save measurements"))),
+    actionBar(mainButton("Save weigh-in", save, { iconName: "check" })),
   ];
 }

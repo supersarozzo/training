@@ -297,3 +297,8 @@ export function choiceRow(items, selected, onPick, { columns = items.length } = 
 
 // Coloured dot plus words, for status lines (never colour alone).
 export function statusDot(kind) { return h("span", { class: `dot ${kind}`, "aria-hidden": "true" }); }
+
+// A back link at the top of a flow screen (iOS style: chevron + the name of the screen it goes back to).
+export function backLink(href, label, onclick = null) {
+  return h("a", { class: "back-link", href, onclick }, icon("back", 20, { stroke: 2.6 }), label);
+}

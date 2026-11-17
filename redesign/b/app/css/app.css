@@ -594,3 +594,19 @@ tr:last-child td { border-bottom: 0; }
 /* Week 1 result: the starting weight, big and centred */
 .result-card { text-align: center; padding-block: 20px; }
 .result-card .display { color: var(--accent-text); }
+
+/* Back link at the top of a flow screen */
+.back-link { display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; color: var(--accent-text); font-size: 17px; text-decoration: none; }
+.back-link:active { opacity: 0.5; }
+/* Progress: chart card, row chart, sparkline */
+.chart-card { padding-bottom: var(--s3); }
+.row-chart { padding: 0 var(--s4) var(--s3); border-top: 0.5px solid var(--sep); }
+.sparkline { flex: none; display: block; }
+.sparkline .chart-line { stroke-width: 2; }
+/* Measurement inputs in a grouped list */
+.field-row { display: flex; align-items: center; gap: var(--s3); min-height: 48px; padding: 0 var(--s4); }
+.field-row + .field-row { border-top: 0.5px solid var(--sep); }
+.field-row label { flex: 1; font-size: 17px; }
+.field-row input { width: 96px; text-align: right; border: 0; background: transparent; font: inherit; font-size: 17px; color: var(--label); padding: 10px 0; }
+.field-row input:focus { outline: none; color: var(--accent-text); }
+.field-row .unit { color: var(--label-2); font-size: 15px; }
