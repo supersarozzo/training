@@ -109,3 +109,12 @@ test("R3: the page wraps long words, so no note can make a screen wider than the
   assert.ok(body, "app.css has a body rule");
   assert.match(body[2], /overflow-wrap:\s*anywhere/, "body { overflow-wrap: anywhere } so every text can break");
 });
+
+// R3, second part (found in the print view check): with overflow-wrap: anywhere, table columns shrink and short
+// words break in the middle ("Sl-ot", "mov-e" in the plan tables). Tables hold plan text only, never notes, so they
+// keep the normal wrapping.
+test("R3: tables keep normal word wrapping (no word broken in the middle in the plan tables)", async () => {
+  const fs = await import("node:fs");
+  const css = fs.readFileSync(new URL("../app/css/app.css", import.meta.url), "utf8");
+  assert.match(css, /(^|\n)table\s*\{[^}]*overflow-wrap:\s*normal/, "table { overflow-wrap: normal }");
+});
