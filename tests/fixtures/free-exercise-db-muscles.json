@@ -1,0 +1,328 @@
+{
+  "source": "free-exercise-db, https://github.com/yuhonas/free-exercise-db, dist/exercises.json",
+  "licence": "The Unlicense (public domain)",
+  "commit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+  "read": "2026-11-17",
+  "note": "Only the entries our exercises use (app/js/plan/media.js `lib`), only name and muscle fields, copied unchanged. Test data for tests/muscles.test.mjs.",
+  "entries": {
+    "Barbell_Glute_Bridge": {
+      "name": "Barbell Glute Bridge",
+      "primaryMuscles": [
+        "glutes"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "hamstrings"
+      ]
+    },
+    "Barbell_Hip_Thrust": {
+      "name": "Barbell Hip Thrust",
+      "primaryMuscles": [
+        "glutes"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "hamstrings"
+      ]
+    },
+    "Cable_Crunch": {
+      "name": "Cable Crunch",
+      "primaryMuscles": [
+        "abdominals"
+      ],
+      "secondaryMuscles": []
+    },
+    "Cable_Rope_Overhead_Triceps_Extension": {
+      "name": "Cable Rope Overhead Triceps Extension",
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "secondaryMuscles": []
+    },
+    "Cable_Seated_Lateral_Raise": {
+      "name": "Cable Seated Lateral Raise",
+      "primaryMuscles": [
+        "shoulders"
+      ],
+      "secondaryMuscles": [
+        "middle back",
+        "traps"
+      ]
+    },
+    "Calf_Press_On_The_Leg_Press_Machine": {
+      "name": "Calf Press On The Leg Press Machine",
+      "primaryMuscles": [
+        "calves"
+      ],
+      "secondaryMuscles": []
+    },
+    "Close-Grip_Front_Lat_Pulldown": {
+      "name": "Close-Grip Front Lat Pulldown",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back",
+        "shoulders"
+      ]
+    },
+    "Dead_Bug": {
+      "name": "Dead Bug",
+      "primaryMuscles": [
+        "abdominals"
+      ],
+      "secondaryMuscles": []
+    },
+    "Dumbbell_Bench_Press": {
+      "name": "Dumbbell Bench Press",
+      "primaryMuscles": [
+        "chest"
+      ],
+      "secondaryMuscles": [
+        "shoulders",
+        "triceps"
+      ]
+    },
+    "Dumbbell_Bicep_Curl": {
+      "name": "Dumbbell Bicep Curl",
+      "primaryMuscles": [
+        "biceps"
+      ],
+      "secondaryMuscles": [
+        "forearms"
+      ]
+    },
+    "Dumbbell_Lying_Rear_Lateral_Raise": {
+      "name": "Dumbbell Lying Rear Lateral Raise",
+      "primaryMuscles": [
+        "shoulders"
+      ],
+      "secondaryMuscles": []
+    },
+    "Dumbbell_Shoulder_Press": {
+      "name": "Dumbbell Shoulder Press",
+      "primaryMuscles": [
+        "shoulders"
+      ],
+      "secondaryMuscles": [
+        "triceps"
+      ]
+    },
+    "Face_Pull": {
+      "name": "Face Pull",
+      "primaryMuscles": [
+        "shoulders"
+      ],
+      "secondaryMuscles": [
+        "middle back"
+      ]
+    },
+    "Goblet_Squat": {
+      "name": "Goblet Squat",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings",
+        "shoulders"
+      ]
+    },
+    "Hammer_Curls": {
+      "name": "Hammer Curls",
+      "primaryMuscles": [
+        "biceps"
+      ],
+      "secondaryMuscles": []
+    },
+    "Incline_Dumbbell_Press": {
+      "name": "Incline Dumbbell Press",
+      "primaryMuscles": [
+        "chest"
+      ],
+      "secondaryMuscles": [
+        "shoulders",
+        "triceps"
+      ]
+    },
+    "Leg_Extensions": {
+      "name": "Leg Extensions",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": []
+    },
+    "Leg_Press": {
+      "name": "Leg Press",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings"
+      ]
+    },
+    "Leverage_Chest_Press": {
+      "name": "Leverage Chest Press",
+      "primaryMuscles": [
+        "chest"
+      ],
+      "secondaryMuscles": [
+        "shoulders",
+        "triceps"
+      ]
+    },
+    "Leverage_Iso_Row": {
+      "name": "Leverage Iso Row",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back"
+      ]
+    },
+    "Machine_Shoulder_Military_Press": {
+      "name": "Machine Shoulder (Military) Press",
+      "primaryMuscles": [
+        "shoulders"
+      ],
+      "secondaryMuscles": [
+        "triceps"
+      ]
+    },
+    "One-Arm_Dumbbell_Row": {
+      "name": "One-Arm Dumbbell Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats",
+        "shoulders"
+      ]
+    },
+    "Plank": {
+      "name": "Plank",
+      "primaryMuscles": [
+        "abdominals"
+      ],
+      "secondaryMuscles": []
+    },
+    "Pull_Through": {
+      "name": "Pull Through",
+      "primaryMuscles": [
+        "glutes"
+      ],
+      "secondaryMuscles": [
+        "hamstrings",
+        "lower back"
+      ]
+    },
+    "Reverse_Crunch": {
+      "name": "Reverse Crunch",
+      "primaryMuscles": [
+        "abdominals"
+      ],
+      "secondaryMuscles": []
+    },
+    "Seated_Cable_Rows": {
+      "name": "Seated Cable Rows",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats",
+        "shoulders"
+      ]
+    },
+    "Seated_Leg_Curl": {
+      "name": "Seated Leg Curl",
+      "primaryMuscles": [
+        "hamstrings"
+      ],
+      "secondaryMuscles": []
+    },
+    "Side_Bridge": {
+      "name": "Side Bridge",
+      "primaryMuscles": [
+        "abdominals"
+      ],
+      "secondaryMuscles": [
+        "shoulders"
+      ]
+    },
+    "Side_Lateral_Raise": {
+      "name": "Side Lateral Raise",
+      "primaryMuscles": [
+        "shoulders"
+      ],
+      "secondaryMuscles": []
+    },
+    "Smith_Machine_Calf_Raise": {
+      "name": "Smith Machine Calf Raise",
+      "primaryMuscles": [
+        "calves"
+      ],
+      "secondaryMuscles": []
+    },
+    "Smith_Machine_Squat": {
+      "name": "Smith Machine Squat",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings",
+        "lower back"
+      ]
+    },
+    "Standing_Biceps_Cable_Curl": {
+      "name": "Standing Biceps Cable Curl",
+      "primaryMuscles": [
+        "biceps"
+      ],
+      "secondaryMuscles": []
+    },
+    "Standing_Calf_Raises": {
+      "name": "Standing Calf Raises",
+      "primaryMuscles": [
+        "calves"
+      ],
+      "secondaryMuscles": []
+    },
+    "Stiff-Legged_Dumbbell_Deadlift": {
+      "name": "Stiff-Legged Dumbbell Deadlift",
+      "primaryMuscles": [
+        "hamstrings"
+      ],
+      "secondaryMuscles": [
+        "glutes",
+        "lower back"
+      ]
+    },
+    "Triceps_Pushdown": {
+      "name": "Triceps Pushdown",
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "secondaryMuscles": []
+    },
+    "Wide-Grip_Lat_Pulldown": {
+      "name": "Wide-Grip Lat Pulldown",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back",
+        "shoulders"
+      ]
+    }
+  }
+}
