@@ -71,9 +71,11 @@ From WORKFLOW H, unchanged:
 - Reading or writing Apple Health directly, or a Watch app (a web app cannot; see the research).
 - Reminders or "rest over" alerts while the app is closed (needs a server).
 - Vibration (iPhones do not allow it for web apps).
-- Food logging (use another app if wanted). Progress photos inside the app (they stay in the Photos app; the exercise photos of F24 are different).
+- ~~Food logging~~ **moved into scope by Rosario on 2026-11-17** (answer 62 a): a Diet tab with food logging and barcode scan, designed with the Plan tab redesign and built after it. It will get its own feature rows here once Rosario picks a design. Research: [2026-11-17-plan-diet-research.md](research/2026-11-17-plan-diet-research.md).
+- Progress photos inside the app (they stay in the Photos app; the exercise photos of F24 are different).
+- The printable Plan sheet (the print part of F3): **to be removed, Rosario's request of 2026-11-17** (Plan tab redesign). F3's "plan inside the app" stays; F3's "prints on A4" test goes when the redesign is built.
 - More than one user, accounts, log-in pages, social features.
-- Any paid service, any server of our own, any third-party script or tracker.
+- Any paid service, any server of our own, any script loaded from another site, any tracker. (Rule changed by Rosario's answer 63 a on 2026-11-17: one open-source barcode decoder may be copied into the app and served from our own site.)
 - An Android or desktop version (it may work in a browser, but it is not tested).
 
 ## 7. Success measures

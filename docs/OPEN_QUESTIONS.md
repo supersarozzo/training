@@ -68,3 +68,8 @@ Full wording, reasons and options are in [WORKFLOW.md](WORKFLOW.md), section A. 
 59. Photo size: a) keep the sharp 850 px photos (about 5.4 MB); only the two oversized dead-bug photos shrunk to 850 px. (2026-11-17)
 60. Walk minutes on Today vs the walk screen: a) fix the display only, no engine change. (2026-11-17)
 61. Swap in the middle of an exercise: a) fix it first, tests in their own commit, then the fix. (2026-11-17)
+62. Food logging in the app (a new Diet tab with barcode scan): a) yes, back in scope; designed now together with the Plan tab redesign, built after the Plan tab. (2026-11-17)
+63. Barcode decoder: a) a self-hosted open-source decoder, copied into our own site and served from it. The rule changes from "no third-party scripts" to "no scripts loaded from other sites". (2026-11-17)
+64. Food database: a) Open Food Facts lookup; only the barcode number or the search word is sent; plus Rosario's own saved foods, which work offline. (2026-11-17)
+65. How long a Plan edit lasts: "forever". An add, remove or swap in the Plan tab changes that day of the plan permanently; there is no "just today" option in Plan edit. The existing mid-workout swap stays as it is (one workout only). (2026-11-17)
+66. How the redesign runs: research (worker 8.26) → 2 builders who each make a version and review each other → 1 reviewer who judges and merges into a mock-up page (OLD vs NEW, questions on screen) → Rosario picks → build in steps. (2026-11-17)
