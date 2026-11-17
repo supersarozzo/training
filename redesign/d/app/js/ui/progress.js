@@ -7,6 +7,8 @@ import { trendSeries, activeWeighins } from "../engine/trend.js";
 import { finishedSessions, workSets } from "../engine/workout.js";
 import { exercises } from "../plan/plan-v2.js";
 import { formatBody } from "./units.js";
+import { thumb } from "./demo.js";
+import { icon } from "./icons.js";
 
 let openExercise = null;
 
@@ -38,11 +40,11 @@ export function renderProgress() {
   const last = weighins[weighins.length - 1];
   const lastTrend = series.length ? series[series.length - 1].trend : null;
 
-  const body = h("div", { class: "card" },
-    h("h2", {}, "Body weight"),
+  const body = h("section", { class: "card" },
+    h("span", { class: "eyebrow brand" }, "Body weight"),
     last ? h("div", { class: "row" },
-      h("div", { class: "metric" }, h("div", { class: "label" }, "Last weigh-in"), h("div", { class: "value" }, formatBody(last.kg, unit)), h("div", { class: "small muted" }, last.date)),
-      h("div", { class: "metric" }, h("div", { class: "label" }, "Trend (7 days)"), h("div", { class: "value" }, formatBody(lastTrend, unit)))) : null,
+      h("div", { class: "metric" }, h("div", { class: "label" }, "Trend (7 days)"), h("div", { class: "value" }, formatBody(lastTrend, unit))),
+      h("div", { class: "metric" }, h("div", { class: "label" }, "Last weigh-in"), h("div", { class: "value" }, formatBody(last.kg, unit)), h("div", { class: "small muted" }, last.date))) : null,
     lineChart({
       series: [
         { points: series.map((x) => ({ date: x.date, y: x.kg })), line: false },
@@ -51,31 +53,39 @@ export function renderProgress() {
       unit: "kg", label: "Body weight in kg: single weigh-ins as dots, the 7-day trend as a line",
       emptyText: "No data yet. Log a weigh-in to start the line.",
     }),
-    h("a", { class: "button secondary", href: "#/weighin" }, "Weigh in"));
+    h("p", { class: "small muted" }, "Dots: single weigh-ins. Line: the 7-day trend."),
+    h("a", { class: "button secondary", href: "#/weighin" }, icon("scale"), "Weigh in"));
 
   const done = [...new Set(finishedSessions(doc.sessions).flatMap((s) => s.exercises.filter((r) => workSets(r).length).map((r) => r.done_exercise)))]
     .filter((id) => exercises[id]).sort((a, b) => exercises[a].name.localeCompare(exercises[b].name));
 
   const list = done.length
-    ? h("div", { class: "card" }, h("h2", {}, "Exercises"), done.map((id) => {
-      const ex = exercises[id];
-      const pts = exerciseSeries(doc.sessions, id);
-      const open = openExercise === id;
-      return [
-        h("button", { class: "exercise-row", type: "button", "aria-expanded": open ? "true" : "false", onclick: () => { openExercise = open ? null : id; rerender(); } },
-          h("span", {}, ex.name), h("span", { class: "muted small" }, `${pts.length} workout${pts.length === 1 ? "" : "s"}`)),
-        open ? lineChart({ series: [{ points: pts, line: true }], unit: unitFor(ex), label: `${ex.name}: best working set over time in ${unitFor(ex)}`, emptyText: "No data yet." }) : null,
-      ];
-    }))
+    ? [h("h2", {}, "Exercises"), h("p", { class: "small muted" }, "Best working set per workout. Tap one to see its chart."),
+      h("div", { class: "list" }, done.map((id) => {
+        const ex = exercises[id];
+        const pts = exerciseSeries(doc.sessions, id);
+        const open = openExercise === id;
+        const best = pts.length ? Math.max(...pts.map((p) => p.y)) : null;
+        return [
+          h("button", { class: "list-row", type: "button", "aria-expanded": open ? "true" : "false", onclick: () => { openExercise = open ? null : id; rerender(); } },
+            thumb(id),
+            h("span", { class: "grow" }, h("span", { class: "title" }, ex.name),
+              h("span", { class: "sub" }, `${pts.length} workout${pts.length === 1 ? "" : "s"}${best !== null ? ` · best ${best} ${unitFor(ex)}` : ""}`)),
+            icon("chevron", "chev")),
+          open ? h("div", { class: "list-chart" }, lineChart({ series: [{ points: pts, line: true }], unit: unitFor(ex), label: `${ex.name}: best working set over time in ${unitFor(ex)}`, emptyText: "No data yet." })) : null,
+        ];
+      }))]
     : emptyState("No exercises yet", "After your first workout, each exercise shows a chart here.");
 
   const meas = doc.measurements.filter((m) => !m.deleted);
   const lastM = meas[meas.length - 1];
-  return screen(
-    h("h1", {}, "Progress"),
+  const main = screen(
+    h("div", { class: "page-head" }, h("div", {}, h("span", { class: "eyebrow" }, "Your log"), h("h1", {}, "Progress"))),
     body,
-    lastM ? h("div", { class: "card" }, h("h2", {}, "Last measurements"), h("p", { class: "small muted" }, lastM.date),
+    lastM ? h("div", { class: "card" }, h("span", { class: "eyebrow" }, "Last measurements"), h("p", { class: "small muted" }, lastM.date),
       h("ul", { class: "list-plain" }, [["Waist", lastM.waist_cm], ["Chest", lastM.chest_cm], ["Upper arm", lastM.arm_cm], ["Thigh", lastM.thigh_cm]]
         .filter(([, v]) => v !== null && v !== undefined).map(([k, v]) => h("li", {}, h("span", {}, k), h("span", {}, `${v} cm`))))) : null,
     list);
+  main.dataset.view = "progress";
+  return main;
 }

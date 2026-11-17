@@ -37,7 +37,10 @@ export function lineChart({ series, unit, label, emptyText = "No data yet.", wid
   });
   const marks = series.map((one) => {
     const pts = layoutPoints(one.points.map((p) => ({ x: dayNumber(p.date), y: p.y })), range, box);
-    if (one.line && pts.length >= 2) return s("path", { d: linePath(pts), class: "chart-line", fill: "none" });
+    if (one.line && pts.length >= 2) {
+      const end = pts[pts.length - 1];
+      return [s("path", { d: linePath(pts), class: "chart-line", fill: "none", pathLength: 1 }), s("circle", { cx: end.px, cy: end.py, r: 5, class: "chart-end" })];
+    }
     return pts.map((p) => s("circle", { cx: p.px, cy: p.py, r: one.line ? 4 : 3, class: one.line ? "chart-dot-main" : "chart-dot" }));
   });
   const first = shortDate(xMin);

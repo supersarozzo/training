@@ -2,7 +2,11 @@
 // Save writes on the phone first, then starts a sync (if GitHub is set up). The sync never blocks the screen.
 import { MAX_TEXT } from "../validate.js";
 import { h } from "../h.js";
-import { workoutScreen, topBar, actionBar, mainButton, choiceRow } from "./parts.js";
+import { guideScreen, actionBar, mainButton, choiceRow } from "./parts.js";
+import { s as svg } from "./svg.js";
+import { guideTop } from "./coach.js";
+import { icon } from "./icons.js";
+import { countUp } from "./motion.js";
 import { model, go, rerender } from "./app.js";
 import { exercises } from "../plan/plan-v2.js";
 import { leaveWorkout } from "./flow.js";
@@ -57,22 +61,34 @@ export function renderFinish(ctx) {
     if (syncer.isConfigured()) syncer.request("full");
   };
 
+  const num = (value, unit) => {
+    const v = h("span", {}, value === null ? "–" : String(value));
+    if (value !== null) queueMicrotask(() => countUp(v, value));
+    return h("div", { class: "value" }, v, unit ? h("span", { class: "unit" }, ` ${unit}`) : null);
+  };
+  const badge = svg("svg", { viewBox: "0 0 96 96", "aria-hidden": "true" },
+    svg("circle", { cx: 48, cy: 48, r: 42, fill: "var(--bg-tint)" }),
+    svg("circle", { cx: 48, cy: 48, r: 42, fill: "none", stroke: "var(--brand-primary)", "stroke-width": 6, "stroke-linecap": "round", pathLength: 1, class: "finish-ring", transform: "rotate(-90 48 48)" }),
+    svg("path", { d: "M31 49l11 11 23-24", fill: "none", stroke: "var(--brand-primary)", "stroke-width": 7, "stroke-linecap": "round", "stroke-linejoin": "round", pathLength: 1, class: "finish-check" }));
+  const pick = (v) => { draft.effort = draft.effort === v ? null : v; rerender(); };
+
   return [
-    workoutScreen(
-      topBar("Finish"),
-      h("h1", {}, "Well done"),
-      h("div", { class: "card" },
-        h("div", { class: "row" },
-          h("div", { class: "metric" }, h("div", { class: "label" }, "Time"), h("div", { class: "value" }, sum.minutes ? String(sum.minutes) : "–", h("span", { class: "unit" }, " min"))),
-          h("div", { class: "metric" }, h("div", { class: "label" }, "Sets"), h("div", { class: "value" }, String(sum.sets))))),
-      sum.bests.length ? h("div", { class: "card" }, h("h2", {}, "New bests"), h("ul", { class: "list-plain" }, sum.bests.map((b) => h("li", {}, b)))) : null,
-      sum.next.length ? h("div", { class: "card" }, h("h2", {}, "Next time"), h("ul", { class: "list-plain" }, sum.next.map((n) => h("li", {}, n)))) : null,
+    guideScreen(`finish:${session.id}`,
+      guideTop(ctx, [h("b", {}, "Finish"), " · save your workout"]),
+      h("div", { class: "finish-hero" }, badge,
+        h("h1", {}, "Workout done"),
+        h("p", { class: "muted" }, "Nice work. Save it, and it goes to your log.")),
+      h("div", { class: "tiles" },
+        h("div", { class: "tile" }, h("div", { class: "label" }, "Time"), num(sum.minutes, "min")),
+        h("div", { class: "tile" }, h("div", { class: "label" }, "Sets"), num(sum.sets, null))),
+      sum.bests.length ? h("div", { class: "card" }, h("span", { class: "eyebrow brand" }, "New bests"), sum.bests.map((b) => h("div", { class: "best" }, icon("star"), h("span", {}, b)))) : null,
+      sum.next.length ? h("div", { class: "card" }, h("span", { class: "eyebrow" }, "Next time"), h("ul", { class: "list-plain" }, sum.next.map((n) => h("li", {}, n)))) : null,
       h("h3", {}, "How hard was the whole workout? (optional)"),
-      choiceRow([[1, "1"], [2, "2"], [3, "3"], [4, "4"], [5, "5"]], draft.effort, (v) => { draft.effort = draft.effort === v ? null : v; rerender(); }),
-      choiceRow([[6, "6"], [7, "7"], [8, "8"], [9, "9"], [10, "10"]], draft.effort, (v) => { draft.effort = draft.effort === v ? null : v; rerender(); }),
+      choiceRow([[1, "1"], [2, "2"], [3, "3"], [4, "4"], [5, "5"]], draft.effort, pick),
+      choiceRow([[6, "6"], [7, "7"], [8, "8"], [9, "9"], [10, "10"]], draft.effort, pick),
       h("div", { class: "field" }, h("label", { for: "f-note" }, "Note (optional)"),
         h("textarea", { id: "f-note", maxlength: MAX_TEXT, value: draft.note, oninput: (e) => { draft.note = e.target.value; } })),
-      h("p", { class: "small muted" }, "Stop the workout on your Apple Watch now.")),
-    actionBar(mainButton("Save", save)),
+      h("div", { class: "coach" }, icon("timer"), h("div", {}, "Stop the workout on your Apple Watch now."))),
+    actionBar(mainButton("Save workout", save)),
   ];
 }
