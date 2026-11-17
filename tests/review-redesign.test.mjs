@@ -97,3 +97,15 @@ test("R2: when the save fails, the Done button can be tapped again, and the erro
   await new Promise((r) => setTimeout(r, 200));
   assert.equal(after, 1, "the next screen is drawn once, only after the good save");
 });
+
+// ---------- R3: a long word in a note pushes the Done button off the screen ----------
+// A "where" note (or a machine settings note) with a long run of letters and no space, for example a pasted web
+// link, made the set screen wider than the phone. The page grew sideways and the fixed Done bar moved below the
+// visible screen (browser check at 375 x 812: page 864 px wide, Done at y = 1788). Long words must wrap.
+test("R3: the page wraps long words, so no note can make a screen wider than the phone", async () => {
+  const fs = await import("node:fs");
+  const css = fs.readFileSync(new URL("../app/css/app.css", import.meta.url), "utf8");
+  const body = css.match(/(^|\n)body\s*\{([^}]*)\}/);
+  assert.ok(body, "app.css has a body rule");
+  assert.match(body[2], /overflow-wrap:\s*anywhere/, "body { overflow-wrap: anywhere } so every text can break");
+});
