@@ -32,6 +32,7 @@ const FILES = [
   "js/plan/cues.js",
   "js/plan/machine-ids.js",
   "js/plan/media.js",
+  "js/plan/muscles.js",
   "js/plan/plan-v2.js",
   "js/prefs.js",
   "js/shortcuts.js",
@@ -167,6 +168,10 @@ const FILES = [
   "media/exercises/triceps_pushdown/1.jpg",
   "media/exercises/uphill_walk/0.jpg",
   "media/exercises/uphill_walk/1.jpg",
+  "vendor/body-muscles/CHANGES.md",
+  "vendor/body-muscles/LICENSE",
+  "vendor/body-muscles/NOTICE",
+  "vendor/body-muscles/shapes.js",
 ];
 
 // Install: fill the cache. The new worker then waits; the app shows "New version ready" and the user taps Update.
