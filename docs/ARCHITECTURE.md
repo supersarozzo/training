@@ -367,7 +367,7 @@ Rules:
 
 ## 12. Delicate parts (Opus code review before the phone test)
 
-Reviewed on 2026-11-16 (build step 11): every item passes, some after fixes. Findings, fixes and the checklist: [REVIEW-2026-11-16.md](REVIEW-2026-11-16.md).
+Reviewed on 2026-11-16 (build step 11): every item passes, some after fixes. Findings, fixes and the checklist: [REVIEW-2026-11-16.md](REVIEW-2026-11-16.md). The redesign merge (app 0.4.0, then 0.4.1) was reviewed again on 2026-11-17: [REVIEW-2026-11-17-redesign.md](REVIEW-2026-11-17-redesign.md); every item passes.
 
 1. **Token handling:** storage key, never in backup/sync/URL/logs/errors; password field; CSP; no third-party code; "forget key" works.
 2. **Sync merge** (`sync/merge.js`): the merge properties in 5.3, tombstones, tie-breaks, unknown fields kept.
