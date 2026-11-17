@@ -12,7 +12,7 @@ import { syncer } from "../syncer.js";
 import { shortcutUrl } from "../shortcuts.js";
 import { s as svg } from "./svg.js";
 import { icon } from "./icons.js";
-import { countUp, onMount, stagger } from "./motion.js";
+import { countUp, onMount, stagger, reduced } from "./motion.js";
 
 // A closed ring that draws itself once: the "workout complete" mark (redesign A). No confetti, no sound.
 function doneRing() {
@@ -21,7 +21,8 @@ function doneRing() {
   const el = svg("svg", { viewBox: "0 0 120 120", width: 104, height: 104, "aria-hidden": "true", class: "done-ring" },
     svg("circle", { cx: 60, cy: 60, r: R, fill: "none", stroke: "var(--ring-track)", "stroke-width": 9 }), arc,
     svg("path", { d: "M40 61l13 13 27-28", fill: "none", stroke: "var(--accent)", "stroke-width": 9, "stroke-linecap": "round", "stroke-linejoin": "round" }));
-  onMount(() => { if (arc.animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) arc.animate([{ strokeDashoffset: C }, { strokeDashoffset: 0 }], { duration: 900, easing: "cubic-bezier(.2,.8,.2,1)" }); });
+  // reduced(): the phone's Reduce Motion OR the app's Animations switch (review 8.25 R4: it checked only the phone).
+  onMount(() => { if (arc.animate && !reduced()) arc.animate([{ strokeDashoffset: C }, { strokeDashoffset: 0 }], { duration: 900, easing: "cubic-bezier(.2,.8,.2,1)" }); });
   return el;
 }
 

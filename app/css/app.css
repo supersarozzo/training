@@ -88,6 +88,7 @@ body {
 #app { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
 img { display: block; max-width: 100%; }
 button { -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+svg.ic { flex-shrink: 0; } /* an icon keeps its size next to a long text (the Gym row pin was squeezed to 3 px; review 8.25 R5) */
 
 /* ---------- layout ---------- */
 .screen {
