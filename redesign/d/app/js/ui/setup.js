@@ -45,7 +45,7 @@ export function renderSetup() {
       h("p", { class: "muted" }, "A 12-week gym plan, Monday to Friday. A coach card for every set. Your data stays on this phone.")),
     h("div", { class: "collage" }, demo("chest_press", { label: false }), demo("lat_pulldown_machine", { label: false }), demo("leg_press", { label: false })),
     h("div", { class: "card" },
-      h("div", { class: "card-row" }, h("span", { class: "ico-box" }, icon("sparkle")),
+      h("div", { class: "card-row" }, h("span", { class: "ico-box" }, icon("weights")),
         h("div", { class: "grow" }, h("h2", {}, "Start fresh"),
           h("p", { class: "muted small" }, "Answer 19 short questions (about 5 minutes). The app works out your numbers."))),
       h("button", { class: "button", type: "button", onclick: () => { resetDraft(); go("#/intake"); } }, "Start fresh")),

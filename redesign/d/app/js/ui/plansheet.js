@@ -49,7 +49,7 @@ function dayTable(dayId) {
     h("h2", {}, day.focus),
     h("p", { class: "small muted" }, walkText),
     h("div", { class: "table-wrap" },
-      h("table", {},
+      h("table", { class: "day-table" },
         h("thead", {}, h("tr", {}, h("th", {}, "Slot"), h("th", {}, "Exercise"), h("th", {}, "Sets × reps"), h("th", {}, "Rest"))),
         h("tbody", {}, rows))));
 }

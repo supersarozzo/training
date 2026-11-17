@@ -517,3 +517,37 @@ a.card:active { transform: scale(0.99); }
 .set-head svg { width: 22px; height: 22px; color: var(--brand-primary); flex: none; }
 .group-head { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin: var(--s6) 0 var(--s2) var(--s1); }
 .page-head + .group-head { margin-top: var(--s2); }
+
+/* plan: on the phone screen each exercise row stacks (name, then sets and rest); print keeps the full table */
+@media screen and (max-width: 520px) {
+  .day-table thead { display: none; }
+  .day-table tr { display: grid; grid-template-columns: 34px 1fr auto; column-gap: var(--s2); border-bottom: 1px solid var(--border-default); padding: var(--s2) 0; }
+  .day-table td { border: 0; padding: 0; }
+  .day-table td:nth-child(1) { grid-row: 1 / span 2; font-weight: 700; color: var(--brand-primary); padding-top: 2px; }
+  .day-table td:nth-child(2) { grid-column: 2 / span 2; }
+  .day-table td:nth-child(3) { grid-column: 2; padding: 4px 0 0 48px; font-weight: 600; }
+  .day-table td:nth-child(4) { grid-column: 3; padding-top: 4px; color: var(--text-muted); font-size: 13px; text-align: right; }
+}
+
+/* stepper: the number box fits the number, so the unit sits next to it */
+.step-input, input.step-input[type="number"] { width: calc(var(--chars, 2) * 0.62em + 0.2em); max-width: 100%; }
+
+/* pair screen at phone height: weight and reps must be visible without scrolling (review 2026-11-17) */
+.guide .g-card.pair > .demo { height: 132px; }
+.guide .g-card.pair .g-body { padding: var(--s3) var(--s4); }
+.guide .g-card.pair .chips { flex-wrap: nowrap; gap: 6px; margin: var(--s2) 0; overflow-x: auto; scrollbar-width: none; }
+.guide .g-card.pair .chip { padding: 0 6px; gap: 4px; font-size: 14px; min-height: 40px; flex: 1 1 auto; justify-content: center; }
+.guide .g-card.pair .chip svg { width: 16px; height: 16px; }
+.guide .g-card.pair .target-line { margin-top: var(--s2); }
+.guide .g-card.pair + .sets-label { margin-top: 0; }
+.guide .sets { margin: var(--s2) 0; }
+.guide .dials { margin: var(--s2) 0; }
+.guide .dials .stepper-block { padding: var(--s2) var(--s3) var(--s3); }
+.guide .dials .step-btn { height: 52px; }
+.guide .dials input.step-input[type="number"] { height: 48px; font-size: 36px; }
+.guide .g-card.pair .where-add { min-height: 32px; margin-top: 4px; }
+.guide .g-card.pair .where-line { margin-top: 6px; }
+.choice.swap-pick { display: flex; align-items: center; gap: var(--s3); text-align: left; }
+.card-row:has(> .ico-box) { align-items: flex-start; margin-bottom: var(--s3); }
+.card-row > .grow > h2:first-child { margin-top: 2px; }
+.progress-top .text-button { font-size: 32px; line-height: 1; min-width: 44px; min-height: 44px; padding: 0; justify-content: flex-start; }

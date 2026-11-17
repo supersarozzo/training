@@ -142,11 +142,15 @@ export function stepper({ label, unit, value, step = 1, next, min = 0, max = 999
   const fmt = (n) => (Number.isInteger(n) ? String(n) : String(Math.round(n * 10 ** decimals) / 10 ** decimals));
   const input = h("input", {
     type: "number", class: "step-input", inputmode: decimals ? "decimal" : "numeric", step: "any", value: fmt(v), "aria-label": label,
-    oninput: (e) => { const n = parseFloat(e.target.value); if (Number.isFinite(n)) { v = n; onChange(v); } },
+    oninput: (e) => { fit(); const n = parseFloat(e.target.value); if (Number.isFinite(n)) { v = n; onChange(v); } },
   });
+  // The box is as wide as the number, so the unit sits right next to it.
+  const fit = () => input.style.setProperty("--chars", String(Math.max(1, input.value.length)));
+  fit();
   const set = (n) => {
     v = Math.min(max, Math.max(min, Math.round(n * 10 ** decimals) / 10 ** decimals));
     input.value = fmt(v);
+    fit();
     bump(input);
     onChange(v);
   };

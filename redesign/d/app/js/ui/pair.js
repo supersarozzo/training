@@ -170,7 +170,7 @@ export function renderPair(ctx, pos) {
   return [
     guideScreen(`pair:${session.id}:${entry.slot}:${exId}`,
       guideTop(ctx, stepText, () => askEnd(ctx)),
-      h("section", { class: "g-card" },
+      h("section", { class: "g-card pair" },
         demo(exId),
         h("div", { class: "g-body" },
           h("span", { class: "eyebrow brand" }, unit.type === "pair" ? `${entry.slot} of pair ${unit.id}` : unitLabel(unit)),

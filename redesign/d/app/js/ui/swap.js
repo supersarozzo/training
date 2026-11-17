@@ -2,6 +2,7 @@
 import { MAX_TEXT } from "../validate.js";
 import { h } from "../h.js";
 import { openSheet } from "./parts.js";
+import { thumb } from "./demo.js";
 import { model, rerender } from "./app.js";
 import { exercises } from "../plan/plan-v2.js";
 import { lighterFor, workSets } from "../engine/workout.js";
@@ -42,7 +43,7 @@ export function openSwap(ctx, rec) {
     const warn = h("div", { class: "error-text", role: "alert" }, "");
     options.forEach((id) => {
       const ex = exercises[id];
-      list.append(h("button", { class: "choice", type: "button", onclick: () => go(id) }, h("span", {}, ex.name, h("br"), h("span", { class: "small muted" }, ex.equipment))));
+      list.append(h("button", { class: "choice swap-pick", type: "button", onclick: () => go(id) }, thumb(id), h("span", {}, ex.name, h("br"), h("span", { class: "small muted" }, ex.equipment))));
     });
     openSheet(
       h("h2", {}, hurts ? "Stop this exercise" : "Pick a swap"),
