@@ -182,7 +182,8 @@ test("the body drawing: licence files kept, every muscle we use can be drawn", (
   const ids = new Set();
   for (const [id, d] of parts) {
     assert.match(id, /^[a-z-]+$/);
-    assert.match(d, /^[mM][-0-9., mlhvcszMLHVCSZ]+$/, `${id}: a plain SVG path`);
+    // Path letters, numbers (an exponent such as 4.9e-4 is valid SVG), spaces and commas only: nothing else can hide in it.
+    assert.match(d, /^[mM][-0-9., eEmlhvcszMLHVCSZ]+$/, `${id}: a plain SVG path`);
     ids.add(id);
     const g = partMuscle(id);
     if (g !== null) assert.ok(MUSCLES[g], `${id} -> ${g} is in our list`);
