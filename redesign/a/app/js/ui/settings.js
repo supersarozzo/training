@@ -10,6 +10,8 @@ import { syncer } from "../syncer.js";
 import { makeBackup, downloadText, BACKUP_WARN_BYTES } from "../backup.js";
 import { shortcutOn, shortcutName } from "../shortcuts.js";
 import { now } from "../clock.js";
+import { THEMES, currentTheme, setTheme } from "./theme.js";
+import { icon } from "./icons.js";
 
 const MACHINE_NAMES = { lat_pulldown: "Lat pulldown machine", seated_row: "Seated row machine", leg_curl: "Leg curl machine", pec_deck: "Pec deck", calf_raise: "Calf raise machine" };
 let gymMessage = null;
@@ -40,6 +42,7 @@ function gymCard(settings) {
   return h("div", { class: "card" },
     h("h2", {}, "Gym weights"),
     h("p", { class: "muted" }, "From your first visit. Until you fill this in, the app guesses 2 kg steps for dumbbells and 5 kg for machines."),
+    h("a", { class: "button secondary", href: "#/machines" }, icon("pin", 18), "Machines and where they are"),
     h("div", { class: "field" }, h("label", { for: "g-db" }, "Dumbbell sizes in kg, separated by commas"),
       h("input", { type: "text", id: "g-db", inputmode: "decimal", value: draft.dumbbells, placeholder: "2, 4, 6, 8", oninput: (e) => { draft.dumbbells = e.target.value; } })),
     h("div", { class: "field" }, h("label", { for: "g-stack" }, "Smallest step on the weight stacks, in kg"),
@@ -127,6 +130,7 @@ export function renderSettings() {
   const toggle = () => { setSound(!on); setSoundOn(!on); if (!on) beep(); rerender(); };
   const doc = model.doc();
   return screen(
+    h("span", { class: "eyebrow accent" }, "This phone and GitHub"),
     h("h1", {}, "Settings"),
     syncCard(),
     backupCard(),
@@ -137,6 +141,10 @@ export function renderSettings() {
       choiceRow([["kg", "Kilograms"], ["st", "Stones, pounds"]], doc.shared_settings.body_unit ?? "kg",
         (value) => { model.updateSettings({ body_unit: value }); rerender(); })),
     shortcutCard(doc.shared_settings),
+    h("div", { class: "card" },
+      h("h2", {}, "Look"),
+      h("p", { class: "muted" }, "Auto follows the phone. Dark is easiest on the eyes in the gym. This choice stays on this phone only."),
+      choiceRow(THEMES, currentTheme(), (value) => { setTheme(value); rerender(); })),
     h("div", { class: "card" },
       h("h2", {}, "Sound"),
       h("p", { class: "muted" }, "A beep when a timer ends. It only plays with the app open and the phone's ring switch on. The screen flash always shows."),

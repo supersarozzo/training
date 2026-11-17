@@ -234,6 +234,13 @@ export function buildIntake(a) {
 
 let errorText = null;
 
+// Redesign A: a thin bar that fills as the questions go by.
+function progressBar(n, total) {
+  const fill = h("span", { class: "fill" });
+  fill.style.transform = `scaleX(${n / total})`; // set by script: the CSP blocks style attributes
+  return h("div", { class: "qbar", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": String(total), "aria-valuenow": String(n) }, fill);
+}
+
 export function renderIntake() {
   if (!draft) resetDraft();
   const q = QUESTIONS[draft.step];
@@ -260,6 +267,7 @@ export function renderIntake() {
 
   return flowScreen(
     h("div", { class: "progress-line" }, `${draft.step + 1} of ${QUESTIONS.length}`),
+    progressBar(draft.step + 1, QUESTIONS.length),
     h("h1", {}, q.title),
     q.help ? h("p", { class: "muted" }, q.help) : null,
     ...q.view(),

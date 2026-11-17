@@ -23,9 +23,11 @@ import { startAutoSync } from "./autosync.js";
 import { getActive } from "./active.js";
 import { watchStoreErrors } from "./errors.js";
 import { resetSyncDraft } from "./ui/settings-sync.js";
+import { renderMachines } from "./ui/machines.js";
+import { applyTheme } from "./ui/theme.js";
 
 const tabRoutes = { today: renderToday, progress: renderProgress, plan: renderPlan, settings: renderSettings };
-const flowRoutes = { setup: renderSetup, intake: renderIntake, targets: renderTargets, workout: renderWorkout, weighin: renderWeighin, weekly: renderWeekly };
+const flowRoutes = { setup: renderSetup, intake: renderIntake, targets: renderTargets, workout: renderWorkout, weighin: renderWeighin, weekly: renderWeekly, machines: renderMachines };
 const DEFAULT_ROUTE = "today";
 
 function routeName(hash) {
@@ -42,6 +44,20 @@ function guard(name) {
   return name;
 }
 
+// Redesign A: a screen slides in only when it is a NEW screen (a new route, workout step, exercise or set),
+// not when the same screen redraws after a tap (an effort pick, a sync status change).
+let lastKey = "";
+function screenKey(root) {
+  const act = getActive();
+  const h1 = root.querySelector("h1");
+  return [location.hash, act ? act.phase : "", act && act.rest ? "rest" : "", h1 ? h1.textContent : "", root.querySelector(".topbar-label")?.textContent ?? ""].join("|");
+}
+function enter(root) {
+  const key = screenKey(root);
+  if (key !== lastKey) root.querySelector(".screen")?.classList.add("enter");
+  lastKey = key;
+}
+
 function render() {
   const root = document.getElementById("app");
   clearTickers(); // timers of the old screen stop
@@ -53,6 +69,7 @@ function render() {
     if (name !== wanted) history.replaceState(null, "", `#/${name}`);
     if (Object.hasOwn(flowRoutes, name)) mount(root, flowRoutes[name]());
     else mount(root, tabRoutes[name](), updateBanner(), tabBar(name));
+    enter(root);
     window.scrollTo(0, 0);
   } catch (e) {
     mount(root, errorState(e && e.message ? e.message : "The app could not start."));
@@ -65,6 +82,7 @@ watchStoreErrors(window, (text) => {
 });
 
 try { setSoundOn(soundOn()); } catch { /* storage blocked: default sound on */ }
+applyTheme();
 setRedraw(render);
 window.addEventListener("hashchange", render);
 render();

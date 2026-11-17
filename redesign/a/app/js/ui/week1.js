@@ -16,6 +16,8 @@ import { startTimer } from "../timer.js";
 import { askEnd } from "./flow.js";
 import { openSwap } from "./swap.js";
 import { renderRest } from "./rest.js";
+import { exerciseHeader, whereLine } from "./pair.js";
+import { icon } from "./icons.js";
 
 function bigRow(pick) {
   const row = choiceRow(LEFT_CHOICES.map((c) => [c, c]), null, pick, { columns: 4 });
@@ -45,12 +47,11 @@ export function renderWeek1(ctx) {
   const title = `Exercise ${index + 1} of ${recs.length}`;
   const sets = 2;
 
+  // Redesign A: the same moving-picture header as the pair screen (Tips, Video, Swap) and the "where it is" line.
   const header = (extra) => [
-    topBar(title, () => askEnd(ctx)),
-    h("h1", {}, ex.name),
-    h("div", { class: "small muted" }, `${ex.equipment}${rec.swap_reason ? " · swapped in" : ""}`),
-    h("div", { class: "links" },
-      h("button", { class: "text-button", type: "button", onclick: () => openSwap(ctx, rec) }, "Swap")),
+    topBar(title, () => askEnd(ctx), { done: index, total: recs.length }),
+    exerciseHeader(ctx, rec),
+    h("div", { class: "info-lines" }, whereLine(ctx, exId)),
     extra,
   ];
   const setRest = () => {
@@ -135,7 +136,7 @@ export function renderWeek1(ctx) {
         suggestion ? h("p", { class: "small" }, `${suggestion.note} Suggested: ${suggestion.weight_kg} kg.`) : null)),
       weighted ? weightStepper(d) : null,
       repsStepper(d)),
-      actionBar(mainButton(`Done · set ${n}`, save)),
+      actionBar(mainButton([icon("check", 22, { strokeWidth: 3 }), `Done · set ${n}`], save)),
     ];
   }
 
@@ -160,7 +161,7 @@ export function renderWeek1(ctx) {
   const res = week1Result(rec, exId, settings);
   const d = fresh(`${session.id}:${rec.slot}:result:${exId}`, { note: ctx.state(exId)?.machine_note ?? "" });
   return [
-    workoutScreen(...header(h("div", { class: "card" },
+    workoutScreen(...header(h("div", { class: "card accent" },
       h("div", { class: "label" }, "Your starting weight for week 2"),
       h("div", { class: "display" }, String(res.start_weight_kg), h("span", { class: "unit" }, " kg")),
       h("p", { class: "small muted" }, res.note))),

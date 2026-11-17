@@ -4,6 +4,7 @@ import { flowScreen } from "./parts.js";
 import { model, go, rerender } from "./app.js";
 import { resetDraft } from "./intake.js";
 import { connectionFields, restoreFromGithub, syncMessage, syncBusy, resetSyncDraft } from "./settings-sync.js";
+import { photosFor } from "../plan/media.js";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 let message = null; // { kind: "error" | "ok", text }
@@ -38,8 +39,12 @@ export function renderSetup() {
     onchange: (e) => restoreFromFile(e.target.files[0]),
   });
   return flowScreen(
-    h("h1", {}, "Training"),
-    h("p", { class: "muted" }, "A 12-week gym plan, Monday to Friday. Your data stays on this phone."),
+    h("div", { class: "hero" },
+      h("div", { class: "hero-strip", "aria-hidden": "true" }, ["leg_press", "chest_press", "uphill_walk"].map((id) => h("img", { src: photosFor(id)[0], alt: "", decoding: "async" }))),
+      h("div", { class: "hero-body" },
+        h("span", { class: "eyebrow accent" }, "12 weeks · 5 days · 90 minutes"),
+        h("h1", {}, "Training"),
+        h("p", { class: "muted" }, "A 12-week gym plan, Monday to Friday. Your data stays on this phone."))),
     h("div", { class: "card" },
       h("h2", {}, "Start fresh"),
       h("p", { class: "muted" }, "Answer 19 short questions (about 5 minutes). The app works out your numbers."),

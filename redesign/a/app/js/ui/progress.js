@@ -7,6 +7,9 @@ import { trendSeries, activeWeighins } from "../engine/trend.js";
 import { finishedSessions, workSets } from "../engine/workout.js";
 import { exercises } from "../plan/plan-v2.js";
 import { formatBody } from "./units.js";
+import { thumb } from "./media.js";
+import { icon } from "./icons.js";
+import { onMount, stagger } from "./motion.js";
 
 let openExercise = null;
 
@@ -39,10 +42,10 @@ export function renderProgress() {
   const lastTrend = series.length ? series[series.length - 1].trend : null;
 
   const body = h("div", { class: "card" },
-    h("h2", {}, "Body weight"),
+    h("span", { class: "eyebrow" }, "Body weight"),
     last ? h("div", { class: "row" },
-      h("div", { class: "metric" }, h("div", { class: "label" }, "Last weigh-in"), h("div", { class: "value" }, formatBody(last.kg, unit)), h("div", { class: "small muted" }, last.date)),
-      h("div", { class: "metric" }, h("div", { class: "label" }, "Trend (7 days)"), h("div", { class: "value" }, formatBody(lastTrend, unit)))) : null,
+      h("div", { class: "metric" }, h("div", { class: "label" }, "Last weigh-in"), h("div", { class: "big-number" }, formatBody(last.kg, unit)), h("div", { class: "small muted" }, last.date)),
+      h("div", { class: "metric" }, h("div", { class: "label" }, "Trend (7 days)"), h("div", { class: "value" }, formatBody(lastTrend, unit)), h("div", { class: "small muted" }, "the line"))) : null,
     lineChart({
       series: [
         { points: series.map((x) => ({ date: x.date, y: x.kg })), line: false },
@@ -63,7 +66,9 @@ export function renderProgress() {
       const open = openExercise === id;
       return [
         h("button", { class: "exercise-row", type: "button", "aria-expanded": open ? "true" : "false", onclick: () => { openExercise = open ? null : id; rerender(); } },
-          h("span", {}, ex.name), h("span", { class: "muted small" }, `${pts.length} workout${pts.length === 1 ? "" : "s"}`)),
+          thumb(id, { small: true, still: true }),
+          h("span", { class: "grow" }, ex.name, h("span", { class: "small muted", style: null }, h("br"), `${pts.length} workout${pts.length === 1 ? "" : "s"}${pts.length ? ` · best ${Math.max(...pts.map((x) => x.y))} ${unitFor(ex)}` : ""}`)),
+          h("span", { class: "chev" }, icon("chevron", 18))),
         open ? lineChart({ series: [{ points: pts, line: true }], unit: unitFor(ex), label: `${ex.name}: best working set over time in ${unitFor(ex)}`, emptyText: "No data yet." }) : null,
       ];
     }))
@@ -71,7 +76,9 @@ export function renderProgress() {
 
   const meas = doc.measurements.filter((m) => !m.deleted);
   const lastM = meas[meas.length - 1];
+  onMount(() => stagger(document.querySelectorAll(".screen > .card")));
   return screen(
+    h("span", { class: "eyebrow accent" }, "Your 12 weeks"),
     h("h1", {}, "Progress"),
     body,
     lastM ? h("div", { class: "card" }, h("h2", {}, "Last measurements"), h("p", { class: "small muted" }, lastM.date),

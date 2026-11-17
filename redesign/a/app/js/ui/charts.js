@@ -3,6 +3,9 @@
 import { h } from "../h.js";
 import { s } from "./svg.js";
 import { niceScale, layoutPoints, linePath } from "../chartmath.js";
+import { drawIn, stagger, onMount } from "./motion.js";
+
+let chartCount = 0; // each chart gets its own gradient id
 
 const MS_DAY = 86400000;
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -35,15 +38,31 @@ export function lineChart({ series, unit, label, emptyText = "No data yet.", wid
       s("text", { x: box.left - 6, y: y + 4, "text-anchor": "end", class: "chart-text" }, String(Math.round(t * 100) / 100)),
     ];
   });
+  // Redesign A: the main line glows, has a soft fill under it, draws itself in, and its last point is marked.
+  const gid = `chart-fill-${++chartCount}`;
+  const lines = [];
+  const dots = [];
   const marks = series.map((one) => {
     const pts = layoutPoints(one.points.map((p) => ({ x: dayNumber(p.date), y: p.y })), range, box);
-    if (one.line && pts.length >= 2) return s("path", { d: linePath(pts), class: "chart-line", fill: "none" });
-    return pts.map((p) => s("circle", { cx: p.px, cy: p.py, r: one.line ? 4 : 3, class: one.line ? "chart-dot-main" : "chart-dot" }));
+    if (one.line && pts.length >= 2) {
+      const d = linePath(pts);
+      const area = s("path", { d: `${d} L${pts[pts.length - 1].px},${box.bottom} L${pts[0].px},${box.bottom} Z`, fill: `url(#${gid})`, stroke: "none" });
+      const line = s("path", { d, class: "chart-line", fill: "none" });
+      lines.push(line);
+      const last = pts[pts.length - 1];
+      return [area, line, s("circle", { cx: last.px, cy: last.py, r: 5, class: "chart-last" })];
+    }
+    const made = pts.map((p) => s("circle", { cx: p.px, cy: p.py, r: one.line ? 5 : 3, class: one.line ? "chart-last" : "chart-dot" }));
+    dots.push(...made);
+    return made;
   });
+  onMount(() => { lines.forEach((l) => drawIn(l)); stagger(dots, { step: 15, ms: 300 }); });
   const first = shortDate(xMin);
   const last = shortDate(xMax);
   return h("div", { class: "chart" },
     s("svg", { viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": label },
+      s("defs", {}, s("linearGradient", { id: gid, x1: 0, y1: 0, x2: 0, y2: 1 },
+        s("stop", { offset: "0%", class: "chart-fill-top" }), s("stop", { offset: "100%", class: "chart-fill-bottom" }))),
       grid, marks,
       s("text", { x: box.left, y: height - 6, "text-anchor": "start", class: "chart-text" }, first),
       xMax !== xMin ? s("text", { x: box.right, y: height - 6, "text-anchor": "end", class: "chart-text" }, last) : null,

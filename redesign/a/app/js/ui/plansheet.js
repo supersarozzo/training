@@ -2,6 +2,9 @@
 import { h } from "../h.js";
 import { screen } from "./parts.js";
 import { exercises, days, weeks, DAY_IDS, MOVE_SECONDS, walkRules } from "../plan/plan-v2.js";
+import { thumb } from "./media.js";
+import { icon } from "./icons.js";
+import { openExerciseInfo } from "./exinfo.js";
 
 function repText(ex) {
   const [lo, hi] = ex.range;
@@ -34,7 +37,8 @@ function dayTable(dayId) {
     return h("tr", {},
       h("td", {}, slot.slot === "D" ? "D" : slot.slot),
       h("td", {},
-        h("strong", {}, ex.name),
+        h("button", { class: "plan-ex", type: "button", onclick: () => openExerciseInfo(slot.ex, { settingsNote: false }), "aria-label": `${ex.name}: pictures, tips and video` },
+          thumb(slot.ex, { small: true, still: true }), h("strong", {}, ex.name)),
         h("div", { class: "small muted" }, ex.equipment),
         swap ? h("div", { class: "small muted" }, `Swap: ${swap}`) : null),
       h("td", { class: "nowrap" }, `${slot.sets} × ${repText(ex)}`),
@@ -74,8 +78,10 @@ function weeksTable() {
 
 export function renderPlan() {
   return screen(
+    h("span", { class: "eyebrow accent no-print" }, "Plan v2 · 12 weeks"),
     h("h1", {}, "Plan"),
-    h("p", { class: "muted" }, "Monday to Friday. Walk first, then weights in pairs."),
+    h("p", { class: "muted" }, "Monday to Friday. Walk first, then weights in pairs. Tap an exercise for pictures, tips and a video."),
+    h("a", { class: "button no-print", href: "#/machines" }, icon("pin", 20), "Machines and where they are"),
     h("button", { class: "button secondary no-print", type: "button", onclick: () => window.print() }, "Print"),
     h("h2", {}, "The week"),
     h("div", { class: "card" },

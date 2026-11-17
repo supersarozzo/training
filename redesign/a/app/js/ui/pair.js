@@ -12,6 +12,13 @@ import { askEnd, nextText } from "./flow.js";
 import { openSwap } from "./swap.js";
 import { startTimer } from "../timer.js";
 import { prime } from "../sound.js";
+import { flip, thumb } from "./media.js";
+import { icon } from "./icons.js";
+import { openExerciseInfo, videoButton } from "./exinfo.js";
+import { openMachineCard, whereOf, machineFor } from "./machines.js";
+import { machines } from "../plan/media.js";
+
+let justDone = null; // the set that was just saved: its row plays the "done" animation once (redesign A)
 
 let draft = { key: null, weight: 0, reps: 0 };
 
@@ -26,17 +33,36 @@ export function askRir(sessionId, slot, ex) {
     h("button", { class: "text-button", type: "button", onclick: () => close() }, "Skip"));
 }
 
+// Tips: the info sheet (picture, form tips, video, machine card and the machine settings note).
 function openTips(ctx, rec) {
+  openExerciseInfo(rec.done_exercise, { state: ctx.state(rec.done_exercise) });
+}
+
+// The exercise header shared by the pair screen and week 1: moving photos with the name on top, then Tips · Video · Swap.
+export function exerciseHeader(ctx, rec, { tips = true } = {}) {
   const ex = exercises[rec.done_exercise];
-  const st = ctx.state(rec.done_exercise);
-  let note = st?.machine_note ?? "";
-  const close = openSheet(
-    h("h2", {}, ex.name),
-    h("p", {}, cues[rec.done_exercise] ?? "Move slowly and keep good form."),
-    h("div", { class: "field" },
-      h("label", { for: "machine-note" }, "Machine settings note (seat height, pin)"),
-      h("textarea", { id: "machine-note", maxlength: MAX_TEXT, oninput: (e) => { note = e.target.value; }, value: note })),
-    h("button", { class: "button", type: "button", onclick: () => { model.setExerciseState(rec.done_exercise, { machine_note: note.trim() }); close(); rerender(); } }, "Save note"));
+  return [
+    h("div", { class: "ex-hero" },
+      flip(rec.done_exercise, { smooth: true, tag: true }),
+      h("div", { class: "ex-hero-fade" }),
+      h("div", { class: "ex-hero-text" },
+        h("h1", {}, ex.name),
+        h("div", { class: "small" }, `${ex.equipment}${rec.swap_reason ? " · swapped in" : ""}`))),
+    h("div", { class: "chips" },
+      tips ? h("button", { class: "chip", type: "button", onclick: () => openTips(ctx, rec) }, icon("info", 17), "Tips") : null,
+      videoButton(rec.done_exercise, { chip: true }),
+      h("button", { class: "chip", type: "button", onclick: () => openSwap(ctx, rec) }, icon("swap", 17), "Swap")),
+  ];
+}
+
+// "Where it is" line under the target: the saved note, or a one-tap "Add where it is" the first time.
+export function whereLine(ctx, exId) {
+  const mid = machineFor(exId);
+  if (!mid || !machines[mid]) return null;
+  const where = whereOf(ctx.doc, mid);
+  if (where) return h("div", { class: "where-line" }, icon("pin", 16), `${machines[mid].name}: ${where}`);
+  return h("div", {}, h("button", { class: "chip accent where-add", type: "button", onclick: () => openMachineCard(mid, { edit: true, onSaved: rerender }) },
+    icon("pin", 16), `Where is the ${machines[mid].name.split(" (")[0].toLowerCase()}?`));
 }
 
 export function renderPair(ctx, pos) {
@@ -78,6 +104,7 @@ export function renderPair(ctx, pos) {
       ? { type: "work", weight_kg: 0, seconds: draft.reps }
       : { type: "work", weight_kg: bodyweight ? 0 : draft.weight, reps: draft.reps };
     model.logSet(session.id, entry.slot, set);
+    justDone = `${session.id}:${entry.slot}:${done.length + 1}`;
     const nextEntry = seq[pos.index + 1] ?? null;
     if (!nextEntry) patchActive({ phase: "finish", rest: null, hold: null });
     else if (entry.restAfter) patchActive({ rest: { end: startTimer(entry.restAfter, Date.now()), total: entry.restAfter * 1000, kind: entry.restKind, slot: entry.slot }, hold: null });
@@ -98,10 +125,12 @@ export function renderPair(ctx, pos) {
     if (s) {
       const what = hold ? `${s.seconds} s` : bodyweight ? `${s.reps} reps` : `${s.weight_kg} kg × ${s.reps}`;
       const left = s.rir == null || hold ? "" : ` · ${s.rir >= 4 ? "4+" : s.rir} left`;
-      rows.push(h("div", { class: "set-row done" }, h("span", { class: "num" }, String(n)), h("span", { class: "what" }, `${what}${left}`), h("span", {}, "✓")));
+      const just = justDone === `${session.id}:${entry.slot}:${n}`;
+      if (just) justDone = null;
+      rows.push(h("div", { class: `set-row done ${just ? "just" : ""}` }, h("span", { class: "num" }, String(n)), h("span", { class: "what" }, `${what}${left}`), h("span", { class: "tick", "aria-label": "done" }, icon("check", 16, { strokeWidth: 3 }))));
     } else {
       const cur = n === done.length + 1;
-      rows.push(h("div", { class: `set-row ${cur ? "current" : ""}` }, h("span", { class: "num" }, String(n)), h("span", { class: "what" }, cur ? "Now" : "Later")));
+      rows.push(h("div", { class: `set-row ${cur ? "current" : ""}` }, h("span", { class: "num" }, String(n)), h("span", { class: "what" }, cur ? "Now" : "Later"), cur ? h("span", { class: "small muted" }, `${entry.sets - done.length} to go`) : null));
     }
   }
 
@@ -134,32 +163,31 @@ export function renderPair(ctx, pos) {
   const nextLine = nextEntry ? nextText(ctx, nextEntry) : null;
   const unknown = !hold && !bodyweight && !startKg && !done.length;
 
+  const nextRec = nextEntry ? slotRecord(session, nextEntry.slot) : null;
   return [
     workoutScreen(
-      topBar(title, () => askEnd(ctx)),
-      h("h1", {}, ex.name),
-      h("div", { class: "small muted" }, `${ex.equipment}${rec.swap_reason ? " · swapped in" : ""}`),
-      h("div", { class: "links" },
-        h("button", { class: "text-button", type: "button", onclick: () => openTips(ctx, rec) }, "Tips"),
-        h("button", { class: "text-button", type: "button", onclick: () => openSwap(ctx, rec) }, "Swap")),
+      topBar(title, () => askEnd(ctx), { done: pos.index, total: seq.length }),
+      exerciseHeader(ctx, rec),
       h("div", { class: "target" }, targetText(exId, entry.sets, ctx.plan.rir)),
-      sg.lastText ? h("div", { class: "small muted" }, sg.lastText) : null,
-      sg.note && !(sg.action === "unknown") ? h("div", { class: "small muted" }, sg.note) : null,
-      ctx.state(exId)?.machine_note ? h("div", { class: "small muted" }, `Machine: ${ctx.state(exId).machine_note}`) : null,
-      rec.swap_reason === "hurts" ? h("div", { class: "small status-warning" }, "You swapped because it hurt. Start light.") : null,
-      unknown ? h("div", { class: "small status-warning" }, "Pick a light weight you can lift with good form.") : null,
-      wsets.length ? h("div", { class: "card" },
-        h("div", { class: "label" }, "Warm-up sets"),
-        wsets.map((w, i) => h("div", { class: `set-row warmup ${i < wDone ? "done" : ""}` },
-          h("span", { class: "num" }, `W${i + 1}`), h("span", { class: "what" }, `${w.weight_kg} kg × ${w.reps}`), i < wDone ? h("span", {}, "✓") : null))) : null,
-      h("div", { class: "label" }, "Sets"),
-      rows,
+      h("div", { class: "info-lines" },
+        sg.lastText ? h("div", {}, sg.lastText) : null,
+        sg.note && !(sg.action === "unknown") ? h("div", {}, sg.note) : null,
+        ctx.state(exId)?.machine_note ? h("div", {}, `Machine: ${ctx.state(exId).machine_note}`) : null,
+        whereLine(ctx, exId),
+        rec.swap_reason === "hurts" ? h("div", { class: "warn" }, "You swapped because it hurt. Start light.") : null,
+        unknown ? h("div", { class: "warn" }, "Pick a light weight you can lift with good form.") : null),
+      wsets.length ? h("div", { class: "set-list" },
+        h("span", { class: "eyebrow" }, "Warm-up sets"),
+        wsets.map((w, i) => h("div", { class: `set-row warmup ${i < wDone ? "done" : i === wDone ? "current" : ""}` },
+          h("span", { class: "num" }, `W${i + 1}`), h("span", { class: "what" }, `${w.weight_kg} kg × ${w.reps}`), i < wDone ? h("span", { class: "tick" }, icon("check", 16, { strokeWidth: 3 })) : null))) : null,
+      h("div", { class: "set-list" }, h("span", { class: "eyebrow" }, "Sets"), rows),
       controls,
-      nextLine ? h("p", { class: "small muted" }, `Next: ${nextLine}`) : null,
+      nextLine ? h("div", { class: "next-card" }, nextRec ? thumb(nextRec.done_exercise, { small: true }) : null,
+        h("div", { class: "what" }, h("span", { class: "eyebrow" }, "Next"), h("b", {}, nextLine))) : null,
       warmupPending ? h("div", { class: "text-link-row" }, h("button", { class: "text-button", type: "button", onclick: () => { model.skipWarmup(session.id, entry.slot); rerender(); } }, "Skip warm-up sets")) : null,
       done.length ? h("div", { class: "text-link-row" }, h("button", { class: "text-button", type: "button", onclick: () => { model.undoLastSet(session.id, entry.slot); rerender(); } }, "Undo last set")) : null),
     actionBar(warmupPending
-      ? mainButton(`Done · warm-up set ${wDone + 1}`, saveWarmup)
-      : mainButton("Done", saveWork)),
+      ? mainButton([icon("check", 22, { strokeWidth: 3 }), `Done · warm-up set ${wDone + 1}`], saveWarmup)
+      : mainButton([icon("check", 22, { strokeWidth: 3 }), "Done"], saveWork)),
   ];
 }
