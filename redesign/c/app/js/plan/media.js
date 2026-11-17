@@ -89,7 +89,52 @@ export const otherMedia = {
 };
 
 // Form videos: one trusted link per exercise (filled in from MEDIA.md; every link was checked to answer).
-export const videos = {};
+export const videos = {
+  chest_press: { url: "https://www.youtube.com/watch?v=sqNwDkUU_Ps", by: "PureGym", title: "How To Use The Chest Press Machine" },
+  pulldown: { url: "https://www.youtube.com/watch?v=VIJPZ8m0EDM", by: "PureGym", title: "How To Do Kneeling Lat Pulldowns" },
+  shoulder_press_machine: { url: "https://www.youtube.com/watch?v=TnhIyp4kmO8", by: "PureGym", title: "How To Use The Shoulder Press Machine" },
+  one_arm_db_row: { url: "https://www.youtube.com/watch?v=ZRSGpBUVcNw", by: "PureGym", title: "How To Do Single Arm Dumbbell Rows" },
+  db_curl: { url: "https://www.youtube.com/watch?v=MtXdEcW3Eog", by: "PureGym", title: "How To Double Arm Curl (Dumbbell Bicep Curl)" },
+  triceps_pushdown: { url: "https://www.youtube.com/watch?v=LXkCrxn3caQ", by: "PureGym", title: "How To Do A Tricep Pushdown" },
+  plank: { url: "https://www.youtube.com/watch?v=q4rDeHYMcIg", by: "PureGym", title: "How To Do A Plank" },
+  dead_bug: { url: "https://www.youtube.com/watch?v=ZSYRZKYOf28", by: "PureGym", title: "Deadbug Demo: How To Do Deadbugs & Form Tips" },
+  leg_press: { url: "https://www.youtube.com/watch?v=p5dCqF7wWUw", by: "PureGym", title: "How To Use The Leg Press Machine" },
+  cable_crunch: { url: "https://www.youtube.com/watch?v=ToJeyhydUxU", by: "Testosterone Nation", title: "Cable Crunch: Do It Right!" },
+  romanian_deadlift: { url: "https://www.youtube.com/watch?v=zU-f6DMCdAI", by: "PureGym", title: "Leg exercise - How To Do A Romanian Deadlift" },
+  face_pull: { url: "https://www.youtube.com/watch?v=0Po47vvj9g4", by: "PureGym", title: "How To Do Cable Face Pulls" },
+  hip_thrust: { url: "https://www.youtube.com/watch?v=aweBS7K71l8", by: "PureGym", title: "How To Do A Barbell Hip Thrust" },
+  leg_extension: { url: "https://www.youtube.com/watch?v=4ZDm5EbiFI8", by: "PureGym", title: "How To Do A Leg Extension" },
+  goblet_squat: { url: "https://www.youtube.com/watch?v=zBV3ceGyAxw", by: "PureGym", title: "How To Do A Goblet squat" },
+  db_bench_press: { url: "https://www.youtube.com/watch?v=AduT4Eq-iP0", by: "PureGym", title: "How To Do A Dumbbell Bench Press" },
+  lateral_raise: { url: "https://www.youtube.com/watch?v=z-kOn7flIZg", by: "PureGym", title: "How To Do Lateral Raises" },
+  hammer_curl: { url: "https://www.youtube.com/watch?v=B4RznoFvTl4", by: "PureGym", title: "How To Do Hammer Curls" },
+  overhead_triceps_ext: { url: "https://www.youtube.com/watch?v=9wxRhONFsRA", by: "PureGym", title: "How To Do An Overhead Tricep Extension" },
+  side_plank: { url: "https://www.youtube.com/watch?v=Oe9Tp9SvTCE", by: "PureGym", title: "How To Do A Side Plank" },
+  incline_db_press: { url: "https://www.youtube.com/watch?v=oZVCBM9f8Eo", by: "PureGym", title: "How To Do A Dumbbell Incline Press" },
+  seated_cable_row: { url: "https://www.youtube.com/watch?v=lJoozxC0Rns", by: "PureGym", title: "How To Do A Seated Cable Row" },
+  seated_db_shoulder_press: { url: "https://www.youtube.com/watch?v=TsduLWuhlFM", by: "PureGym", title: "How To Do A Seated Shoulder Press" },
+  smith_squat: { url: "https://www.youtube.com/watch?v=AHnX-aimA4E", by: "ScottHermanFitness", title: "How To: Smith Machine- Squat" },
+  reverse_crunch: { url: "https://www.youtube.com/watch?v=XY8KzdDcMFg", by: "PureGym", title: "How To Do A Reverse Crunch" },
+  cable_pull_through: { url: "https://www.youtube.com/watch?v=pv8e6OSyETE", by: "Renaissance Periodization", title: "Cable Pull Through" },
+  calf_raise_standing: { url: "https://www.youtube.com/watch?v=Zep-wKHWkNM", by: "PureGym", title: "How To Do Calf Raises" },
+  cable_curl: { url: "https://www.youtube.com/watch?v=GNlopToAZyg", by: "PureGym", title: "How To Do A Cable Curl" },
+  cable_lateral_raise: { url: "https://www.youtube.com/watch?v=Z5FA9aq3L6A", by: "PureGym", title: "How To Do Cable Lateral Raises" },
+  rear_delt_raise: { url: "https://www.youtube.com/watch?v=nlkF7_2O_Lw", by: "PureGym", title: "How To Do A Rear Delt Fly" },
+  db_glute_bridge: { url: "https://www.youtube.com/watch?v=cruqsnAyU6A", by: "PureGym", title: "How To Do A Glute Bridge With A Dumbbell" },
+  calf_raise_leg_press: { url: "https://www.youtube.com/watch?v=dhRz1Ns60Zg", by: "PureGym", title: "How To Do Calf Raises On The Leg Press" },
+  lat_pulldown_machine: { url: "https://www.youtube.com/watch?v=JGeRYIZdojU", by: "PureGym", title: "How To Do A Lat Pulldown" },
+  seated_row_machine: { url: "https://www.youtube.com/watch?v=TeFo51Q_Nsc", by: "PureGym", title: "How To Use The Seated Row Machine" },
+  leg_curl_machine: { url: "https://www.youtube.com/watch?v=QjNFk4F5dAs", by: "PureGym", title: "How To Use The Prone Leg Curl Machine" },
+  calf_raise_machine: { url: "https://www.youtube.com/watch?v=Zep-wKHWkNM", by: "PureGym", title: "How To Do Calf Raises" },
+  uphill_walk: { url: "https://www.youtube.com/watch?v=HxsFneJFM2c", by: "PureGym", title: "How To Use The Treadmill" },
+  arm_circles: { url: "https://www.youtube.com/watch?v=UVMEnIaY8aU", by: "Sworkit", title: "Arm Circles Exercise" },
+  arm_swings: { url: "https://www.youtube.com/watch?v=BHmBWVRDbXw", by: "PhysiHub Library", title: "Arm Swings (lateral)" },
+  cat_cow: { url: "https://www.youtube.com/watch?v=CE_5RWjFA3Q", by: "PureGym", title: "How To Do Cat Cow Stretch" },
+  bodyweight_squats: { url: "https://www.youtube.com/watch?v=l83R5PblSMA", by: "PureGym", title: "Leg exercise - How to bodyweight squat" },
+  glute_bridges: { url: "https://www.youtube.com/watch?v=tqp5XQPpTxY", by: "PureGym", title: "How To Do A Glute Bridge" },
+  hip_hinge: { url: "https://www.youtube.com/watch?v=3znqI4AXmn0", by: "Cambridge University Sport", title: "Bodyweight Hip Hinge" },
+  pushups_bench: { url: "https://www.youtube.com/watch?v=yAbg3_pJKvw", by: "PureGym", title: "How To Do An Incline Push Up" },
+};
 
 // The photos of one id, or null (an id with `svg: true`, or an unknown id).
 export function photosFor(id) {
