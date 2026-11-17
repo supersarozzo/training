@@ -610,3 +610,11 @@ tr:last-child td { border-bottom: 0; }
 .field-row input { width: 96px; text-align: right; border: 0; background: transparent; font: inherit; font-size: 17px; color: var(--label); padding: 10px 0; }
 .field-row input:focus { outline: none; color: var(--accent-text); }
 .field-row .unit { color: var(--label-2); font-size: 15px; }
+
+/* Plan: the A4 tables only on paper, the inset lists only on screen */
+.print-only { display: none; }
+@media print { .print-only { display: block; } .screen-only { display: none !important; } }
+.card .sync-line { justify-content: flex-start; text-align: left; margin: 0 0 var(--s2); font-size: 15px; }
+.field-row input.wide { width: 60%; }
+.section > .button, .section > .group + .button { margin-top: var(--s3); }
+.nav-head .row-2 { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); }

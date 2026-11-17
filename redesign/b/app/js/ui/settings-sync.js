@@ -2,7 +2,8 @@
 // SAFETY: the key is typed in a password field, goes straight to the device box (js/sync/sync.js saveConnection) and is
 // never shown again, never put in a URL, a message or a log. The draft below holds it only while the form is open.
 import { h } from "../h.js";
-import { openSheet } from "./parts.js";
+import { openSheet, statusDot } from "./parts.js";
+import { icon } from "./icons.js";
 import { store, model, rerender } from "./app.js";
 import { syncer, fakeInfo } from "../syncer.js";
 import { saveConnection, forgetKey, statusText, keyEndsSoon, connectionOf } from "../sync/sync.js";
@@ -84,9 +85,11 @@ export function syncCard() {
   const unsynced = configured && syncer.hasUnsynced();
   const ends = keyEndsSoon(device, today());
   const disabled = busy !== null;
+  // Redesign B: only the head changed (icon title, a coloured dot before the status words). The fields and the key handling are as before.
+  const warn = busy || (device.last_sync_result && device.last_sync_result !== "ok");
   return h("div", { class: "card" },
-    h("h2", {}, "GitHub sync"),
-    h("p", { class: busy || (device.last_sync_result && device.last_sync_result !== "ok") ? "status-warning" : "muted", role: "status" }, busy ? "Working…" : statusText(device, unsynced)),
+    h("div", { class: "card-title" }, icon("cloud", 18), "GitHub sync"),
+    h("p", { class: `sync-line ${warn ? "status-warning" : "muted"}`, role: "status" }, statusDot(warn ? "warn" : configured ? "ok" : "off"), busy ? "Working…" : statusText(device, unsynced)),
     ends ? h("p", { class: "status-warning" }, ends.days < 0 ? `The GitHub key ended on ${ends.date}. Make a new one.` : `The GitHub key ends on ${ends.date}.`) : null,
     h("p", { class: "small muted" }, "Your data syncs to your private GitHub repo when you save a workout and when you open the app. It can not sync while the app is closed."),
     connectionFields(),
@@ -96,7 +99,7 @@ export function syncCard() {
       h("button", { class: "button secondary", type: "button", disabled, onclick: getNow }, "Get from GitHub"),
       h("button", { class: "button secondary", type: "button", disabled, onclick: sendNow }, "Send to GitHub"),
       h("p", { class: "small muted" }, "Both buttons merge. Neither one overwrites anything."),
-      h("button", { class: "button secondary", type: "button", disabled, onclick: confirmForget }, "Forget GitHub key"),
+      h("button", { class: "button danger", type: "button", disabled, onclick: confirmForget }, "Forget GitHub key"),
     ] : null);
 }
 

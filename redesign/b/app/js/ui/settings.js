@@ -1,7 +1,13 @@
 // Settings: GitHub sync, backup and restore, the Log to Health button, gym weights, body unit, sound.
+// Redesign B (iOS Settings style): sections with small grey heads; switches for sound and the Health button;
+// a segmented control for the body unit; a row to the Machines list. Every setting from before is still here.
 import { h } from "../h.js";
-import { screen, choiceRow } from "./parts.js";
-import { model, store, rerender } from "./app.js";
+import { screen, navHead, section, group, row, foot, iconTile, switchRow, segmented } from "./parts.js";
+import { icon } from "./icons.js";
+import { showPlanPart } from "./plansheet.js";
+import { machines } from "../plan/machines.js";
+import { spotFor } from "./machines.js";
+import { model, store, rerender, go } from "./app.js";
 import { soundOn, setSound } from "../active.js";
 import { setSoundOn, beep } from "../sound.js";
 import { extraMachines } from "../plan/plan-v2.js";
@@ -38,13 +44,13 @@ function gymCard(settings) {
     rerender();
   };
   return h("div", { class: "card" },
-    h("h2", {}, "Gym weights"),
+    h("div", { class: "card-title" }, icon("dumbbell", 18), "Gym weights"),
     h("p", { class: "muted" }, "From your first visit. Until you fill this in, the app guesses 2 kg steps for dumbbells and 5 kg for machines."),
     h("div", { class: "field" }, h("label", { for: "g-db" }, "Dumbbell sizes in kg, separated by commas"),
       h("input", { type: "text", id: "g-db", inputmode: "decimal", value: draft.dumbbells, placeholder: "2, 4, 6, 8", oninput: (e) => { draft.dumbbells = e.target.value; } })),
     h("div", { class: "field" }, h("label", { for: "g-stack" }, "Smallest step on the weight stacks, in kg"),
       h("input", { type: "number", id: "g-stack", inputmode: "decimal", step: "any", min: 0, value: draft.stack, oninput: (e) => { draft.stack = e.target.value; } })),
-    h("h3", {}, "Extra machines (question 17)"),
+    h("h3", { class: "group-head" }, "Extra machines (question 17)"),
     extraMachines.map((m) => h("div", { class: "field" },
       h("label", { for: `g-m-${m}` }, MACHINE_NAMES[m]),
       h("select", { id: `g-m-${m}`, onchange: (e) => { draft.machines[m] = e.target.value === "yes" ? true : e.target.value === "no" ? false : null; } },
@@ -91,13 +97,13 @@ function backupCard() {
   const last = device.last_backup_at ? new Date(device.last_backup_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "never";
   const input = h("input", { type: "file", accept: ".json,application/json", class: "no-print", hidden: true, onchange: (e) => restoreFile(e.target.files[0]) });
   return h("div", { class: "card" },
-    h("h2", {}, "Backup and restore"),
+    h("div", { class: "card-title" }, icon("download", 18), "Backup and restore"),
     h("p", { class: "muted" }, `Last backup file: ${last}. The file holds your workouts and profile. It never holds your GitHub key.`),
     bytes > BACKUP_WARN_BYTES ? h("p", { class: "status-warning" }, "The data file is getting big. Tell the Training chat.") : null,
     backupMessage ? h("div", { class: backupMessage.kind === "error" ? "error-text" : "status-success", role: "status" }, backupMessage.text) : null,
-    h("button", { class: "button", type: "button", onclick: downloadBackup }, "Download backup"),
-    h("button", { class: "button secondary", type: "button", onclick: () => input.click() }, "Restore from file"),
-    h("button", { class: "button secondary", type: "button", disabled: !syncer.isConfigured(), onclick: getFromGithub }, "Restore from GitHub"),
+    h("button", { class: "button", type: "button", onclick: downloadBackup }, icon("download", 18), "Download backup"),
+    h("button", { class: "button secondary", type: "button", onclick: () => input.click() }, icon("upload", 18), "Restore from file"),
+    h("button", { class: "button secondary", type: "button", disabled: !syncer.isConfigured(), onclick: getFromGithub }, icon("cloud", 18), "Restore from GitHub"),
     input,
     h("p", { class: "small muted" }, syncer.isConfigured() ? "Both restores merge into this phone. Nothing on the phone is removed, and a safety copy is kept first." : "Restore from GitHub works after you set up GitHub sync above. Restore from file merges the file into this phone; nothing is removed."));
 }
@@ -113,32 +119,35 @@ function saveShortcut(settings, on) {
 function shortcutCard(settings) {
   const on = shortcutOn(settings);
   if (shortcutDraft === null) shortcutDraft = shortcutName(settings);
-  return h("div", { class: "card" },
-    h("h2", {}, "Log to Health button"),
-    h("p", { class: "muted" }, "Off by default. When on, the Saved message after a workout shows a button that runs a Shortcut you made, with the start time and the minutes. Your Apple Watch workout already logs to Health by itself, so this is optional. Try it on the phone before you rely on it."),
-    h("div", { class: "field" }, h("label", { for: "sc-name" }, "Name of your Shortcut"),
-      h("input", { type: "text", id: "sc-name", maxlength: 80, autocomplete: "off", value: shortcutDraft, oninput: (e) => { shortcutDraft = e.target.value; } })),
-    h("button", { class: "choice", type: "button", "aria-pressed": on ? "true" : "false", onclick: () => saveShortcut(settings, !on) }, on ? "Button is on" : "Button is off"),
-    on ? h("button", { class: "button secondary", type: "button", onclick: () => saveShortcut(settings, true) }, "Save the name") : null);
+  return [
+    group(
+      switchRow({ title: "Log to Health button", sub: on ? "Button is on" : "Button is off", on, onToggle: () => saveShortcut(settings, !on), lead: iconTile("heart", "red") }),
+      h("div", { class: "field-row" }, h("label", { for: "sc-name" }, "Shortcut name"),
+        h("input", { type: "text", id: "sc-name", class: "wide", maxlength: 80, autocomplete: "off", value: shortcutDraft, oninput: (e) => { shortcutDraft = e.target.value; } }))),
+    on ? h("button", { class: "button secondary", type: "button", onclick: () => saveShortcut(settings, true) }, "Save the name") : null,
+    foot("Off by default. When on, the Saved message after a workout shows a button that runs a Shortcut you made, with the start time and the minutes. Your Apple Watch workout already logs to Health by itself, so this is optional. Try it on the phone before you rely on it."),
+  ];
 }
 
 export function renderSettings() {
   const on = soundOn();
   const toggle = () => { setSound(!on); setSoundOn(!on); if (!on) beep(); rerender(); };
   const doc = model.doc();
+  const ids = Object.keys(machines);
+  const filled = ids.filter((id) => spotFor(doc, id)).length;
   return screen(
-    h("h1", {}, "Settings"),
-    syncCard(),
-    backupCard(),
-    gymCard(doc.shared_settings),
-    h("div", { class: "card" },
-      h("h2", {}, "Body weight unit"),
-      h("p", { class: "muted" }, "How your weight is shown and typed. It is always saved in kg."),
-      choiceRow([["kg", "Kilograms"], ["st", "Stones, pounds"]], doc.shared_settings.body_unit ?? "kg",
-        (value) => { model.updateSettings({ body_unit: value }); rerender(); })),
-    shortcutCard(doc.shared_settings),
-    h("div", { class: "card" },
-      h("h2", {}, "Sound"),
-      h("p", { class: "muted" }, "A beep when a timer ends. It only plays with the app open and the phone's ring switch on. The screen flash always shows."),
-      h("button", { class: "choice", type: "button", "aria-pressed": on ? "true" : "false", onclick: toggle }, on ? "Sound is on" : "Sound is off")));
+    navHead("Settings"),
+    section("Sync", syncCard()),
+    section("Backup", backupCard()),
+    section("My gym",
+      group(row({ title: "Machines in my gym", sub: `Where each one is: ${filled} of ${ids.length} filled in`, lead: iconTile("pin", "orange"), onclick: () => { showPlanPart("machines"); go("#/plan"); }, chevron: true })),
+      gymCard(doc.shared_settings)),
+    section("Body weight unit",
+      segmented([["kg", "Kilograms"], ["st", "Stones, pounds"]], doc.shared_settings.body_unit ?? "kg",
+        (value) => { model.updateSettings({ body_unit: value }); rerender(); }, { label: "Body weight unit" }),
+      foot("How your weight is shown and typed. It is always saved in kg.")),
+    section("Sound",
+      group(switchRow({ title: "Timer beep", sub: on ? "Sound is on" : "Sound is off", on, onToggle: toggle, lead: iconTile("sound", "red") })),
+      foot("A beep when a timer ends. It only plays with the app open and the phone\u2019s ring switch on. The screen flash always shows.")),
+    section("Apple Health", shortcutCard(doc.shared_settings)));
 }
