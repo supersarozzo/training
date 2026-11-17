@@ -73,3 +73,21 @@ Full wording, reasons and options are in [WORKFLOW.md](WORKFLOW.md), section A. 
 64. Food database: a) Open Food Facts lookup; only the barcode number or the search word is sent; plus Rosario's own saved foods, which work offline. (2026-11-17)
 65. How long a Plan edit lasts: "forever". An add, remove or swap in the Plan tab changes that day of the plan permanently; there is no "just today" option in Plan edit. The existing mid-workout swap stays as it is (one workout only). (2026-11-17)
 66. How the redesign runs: research (worker 8.26) → 2 builders who each make a version and review each other → 1 reviewer who judges and merges into a mock-up page (OLD vs NEW, questions on screen) → Rosario picks → build in steps. (2026-11-17)
+
+### Plan, Gym and Diet design (questions 67 to 79, answered all at once on 2026-11-17, "All recommended")
+
+Asked on the mock-up page https://claude.ai/artifact/3PXi5fxUPPUCou1D4Hfw52. Rules: docs/DESIGN.md section 15.
+
+67. How the tab bar keeps 5 tabs: a) Settings leaves the bar; a gear at the top right of every tab. (2026-11-17)
+68. Order of the 5 tabs: a) Today · Plan · Gym · Diet · Progress. (2026-11-17)
+69. Where the day arrows go: a) at the bottom, on a solid bar above the tabs. (2026-11-17)
+70. A big body map of the whole day at the top of each Plan day: a) no; a small map on each card, the first exercise visible without scrolling. (2026-11-17)
+71. Which body drawing: b) body-muscles (Apache-2.0), finer shapes, front / side / rear shoulders and lats / mid back apart. (2026-11-17)
+72. Where "Add an exercise" puts it: a) at the end of the day, on its own, 3 sets, 60 s rest, at most 2 a day (reviewed engine change, tests first). (2026-11-17)
+73. Ask first before "Back to the plan's day": a) yes; ask first and list what goes away, then Undo for 8 s. (2026-11-17)
+74. The plan cross-check gaps (back thighs 3 sets a week, calves 3, abs 27): b) a plan review in its own chat; nothing changes until Rosario approves it. (2026-11-17)
+75. Gym › Exercises list: a) grouped by main muscle, with "In the plan: Mon". (2026-11-17)
+76. Today's food list on the Diet tab: b) meals (Breakfast, Lunch, Dinner, Snacks), picked from the clock. (2026-11-17)
+77. Today's totals at the top of Diet: b) two rings, protein first, plus carbs and fat. (2026-11-17)
+78. Where the food log syncs: a) its own file in the private repo (`food.json`). (2026-11-17)
+79. Open Food Facts name search: a) UK products only. (2026-11-17)

@@ -1,6 +1,6 @@
 # Training app design system
 
-Date: 2026-11-17 (first version 2026-11-16). Rewritten by task chat 8.24 for the redesign merge (redesign/JUDGING.md section 3; Rosario's answers 55 to 61 in [DECISIONS.md](DECISIONS.md)). Agents follow this file for all UI work in `app/`. What the app does: [PRD.md](PRD.md). Screens and flow: [WORKFLOW.md](WORKFLOW.md), section D. Before and after pictures: [redesign-final/LOOK.md](redesign-final/LOOK.md).
+Date: 2026-11-17 (first version 2026-11-16; section 15 added by worker 8.31 the same day). Rewritten by task chat 8.24 for the redesign merge (redesign/JUDGING.md section 3; Rosario's answers 55 to 61 in [DECISIONS.md](DECISIONS.md)). Agents follow this file for all UI work in `app/`. What the app does: [PRD.md](PRD.md). Screens and flow: [WORKFLOW.md](WORKFLOW.md), section D. Before and after pictures: [redesign-final/LOOK.md](redesign-final/LOOK.md).
 
 ## 1. Overview
 
@@ -164,11 +164,11 @@ Motion explains what changed; it never decorates. All of it is CSS or the Web An
 | Weigh-in | one number with keypad, last weigh-in | Save |
 | Progress | totals, weight chart, exercise list with chart and the last 3 workouts | – |
 | Weekly summary | tiles with a 5-segment bar | Got it |
-| Plan | Week / Exercises / Machines switch; print tables | Print |
-| Gym | machines by area, "x of N noted", where-notes | – |
+| Plan | Week / Exercises / Machines switch; print tables (until build step 2; then section 15.3) | Print (removed in section 15) |
+| Gym | machines by area, "x of N noted", where-notes (Machines / Exercises switch from section 15.7) | – |
 | Settings | Sync, Backup, Look (theme, Animations), Gym, Sound, Shortcuts | – |
 
-**Navigation:** a bottom tab bar outside a workout: Today · Progress · Plan · Gym · Settings (icon plus label). During a workout the tab bar is hidden; the top bar shows the progress and an "End" button (44 px, with a confirm sheet).
+**Navigation:** a bottom tab bar outside a workout: Today · Progress · Plan · Gym · Settings (icon plus label). Approved replacement, built from build step 2: Today · Plan · Gym · Diet · Progress plus a Settings gear on every tab (section 15.2). During a workout the tab bar is hidden; the top bar shows the progress and an "End" button (44 px, with a confirm sheet).
 
 ## 10. Do / Don't
 
@@ -202,7 +202,7 @@ Don't
 |---|---|---|
 | phone | < 640 px | the only target; one column, bottom bar, bottom sheets |
 | tablet / desktop | ≥ 640 px | same layout, centred at 520 px |
-| print | – | Plan only: black on white, no bars, no photos, tables not split across pages |
+| print | – | Plan only: black on white, no bars, no photos, tables not split across pages. **Removed by Rosario** (2026-11-17, section 15.1); goes in build step 2 |
 
 ## 13. Known gaps
 
@@ -217,3 +217,86 @@ Don't
 2. Never add a one-off value in a component; add a token or reuse one.
 3. Re-check contrast after any colour change and update the list in section 3.
 4. Date this file when edited.
+
+## 15. Plan, Gym and Diet (Rosario approved 2026-11-17)
+
+**The contract.** The approved mock-up page is the contract for these screens: https://claude.ai/artifact/3PXi5fxUPPUCou1D4Hfw52 (source `redesign/plan-diet/judge/mockup.html`; judge report and build steps `redesign/plan-diet/judge/JUDGING.md`; research `docs/research/2026-11-17-plan-diet-research.md`). Rosario picked every recommended answer, questions 67 to 79 (2026-11-17, "All recommended"; [DECISIONS.md](DECISIONS.md)). **Rosario's newer words win over the mock-up.** Where this section and the mock-up disagree, the mock-up wins until this section is fixed. Values marked **(mock-up)** are new to this file and approved through the mock-up page. Everything else uses the tokens and components above. Built in the steps of JUDGING.md section 7; each build step checks its screens against the mock-up (gap list).
+
+### 15.1 What goes, what moves
+
+- The Print button, the printable Plan sheet and the print styles go (PRD F3 print part, removed by Rosario).
+- Exercises and Machines leave the Plan tab and live in the Gym tab (15.7).
+- Nothing else of the 0.4.1 Plan tab is lost: day focus, walk text, sets × reps, rest, the plan's swaps, the 12 weeks and the RIR line all stay (mock-up "Nothing lost").
+
+### 15.2 Tab bar and Settings (questions 67 a, 68 a)
+
+- **5 tabs, in this order:** Today · Plan · Gym · Diet · Progress (icon plus label).
+- **Settings is a gear button at the top right of every tab** (44 × 44 px), always in the same place. Settings keeps its own page, with a "‹ Today" back link.
+- During a workout the tab bar stays hidden, as now.
+
+### 15.3 Plan day page
+
+- One day per page, read like Today, opened on today, with the real sets of this week.
+- **Top:** the week chip ("Week 3 · Build 1 ›", opens the 12 weeks sheet), Edit, the gear. Then the big day name with a "Today" mark, the focus words and a meta line: "about 90 min · 21 sets · stop with 2 left".
+- **Day strip:** the 5 days with their focus words and done ticks; one tap jumps to any day.
+- **Order on the page:** the walk card first ("Walk first · 30 min uphill", with the leg-day easier line), then the pairs, then the abs, then the "Whole plan check" card at the end of the day.
+- **Pair headers in words**, not slot letters: "Pair A · back and forth · 3 rounds · rest 90 s after each round"; "On its own · rest 60 s between sets".
+- **Day arrows at the bottom** (question 69 a): "‹ Monday · Wednesday ›" on a **solid frosted bar** above the tab bar, the same frost as the tab bar, so cards never show through.
+- **No big day map at the top** (question 70 a). The first exercise shows without scrolling at 375 × 812.
+- **The 12 weeks sheet:** the 0.4.1 lines (phase, sets rule, RIR, walk note). Picking a week shows that week's real sets on every day; the day page then says "Showing week 7. This week is week 3." with "Back to this week".
+
+### 15.4 Exercise card (closed) and opened exercise
+
+- **Closed card:** photo, name, sets × reps, the muscles in plain words ("Front thighs · helps calves, glutes, back thighs") and a **small body map** (about 26 px wide, **mock-up**).
+- **Opened exercise** (a bottom sheet): Swap, Remove and Video at the top; then **two body maps side by side: "This exercise" and "Day so far"**.
+  - "This exercise": main muscles strong, helpers light. Words under it: "Main: back thighs · Helps: glutes, lower back".
+  - "Day so far": shaded by the sets from the first card down to this one, with "Day so far · 3 of 7" and words that list **every** muscle with sets ("Sets so far: back thighs 4.5, front thighs 3, glutes 3, abs 3, calves 1.5, lower back 1.5").
+  - **Legend: one scale in 3 steps, "A little · More · Most", with "Helpers count half"** (**mock-up**). Map fills: plain body = map base; the 3 steps mix the accent into the map colour at about 30 %, 62 % and 100 % (**mock-up**). Never colour alone: the words always say the same.
+  - 4 number tiles: Sets, Reps, Rest, "Stop with 2 reps left". Previous and Next are named after the neighbour exercise ("‹ Cable crunch · Face pull ›").
+  - Below, unchanged from 0.4.1: the moving photo, start and end photos, How to do it, the video link, the machine row, plus "The plan's own swap: …".
+- **Plain muscle words** everywhere on screen: "front thighs" (not quads), "back thighs" (not hamstrings), "inner thighs", "front / side / rear shoulders", "lats", "mid back". The data and its names: `app/js/plan/muscles.js`.
+- **Body drawing:** body-muscles by Ivan Vulović, Apache-2.0 (question 71 b), files in `app/vendor/body-muscles/` with its LICENSE, NOTICE and our change note. Front / side / rear shoulders apart and lats / mid back apart. Drawn by our own code as inline SVG (no `innerHTML`, sizes through CSSOM).
+
+### 15.5 Edit rules (questions 65, 72 a, 73 a)
+
+- Edit mode: Swap and Remove on every card, "Add an exercise (2 of 2 left)", "Done editing". A line at the top: "Editing Tuesday. Each change saves at once and lasts: every Tuesday from now on, in every week. Past workouts stay as they were." plus the new minutes against the plan's.
+- **Every edit saves at once and lasts for that day of the plan** (answer 65). **Past workouts and a running workout never change**; the running day shows a lock card.
+- **Swap sheet:** "Same muscle (front thighs), other equipment" first; **the plan's own swaps are always offered and marked "Plan's pick"**; exercises already in the day are **named but never offered** ("Already in Tuesday: Leg extension."); machines the first visit has not found are hidden, with one line saying which; "Show exercises for other muscles" at the end. A swap keeps the slot's sets and rest; the reps come from the new exercise.
+- **Add** (question 72 a): the new exercise goes **at the end of the day, on its own, 3 sets, 60 s rest, at most 2 added exercises a day** (**mock-up**). The Add sheet lists muscles (with "low" on the ones the muscle check finds short) and never offers an exercise already in the day. Never the same exercise twice in a day.
+- **Undo:** every edit shows a toast with Undo for **8 s** (**mock-up**).
+- A changed day shows the card "Changed by you · 17 Nov" with what changed and "Back to the plan's Tuesday".
+- **"Back to the plan's Tuesday" asks first** (question 73 a): a sheet lists every change that goes away, says that done workouts, weights and history stay, and offers "Back to the plan's Tuesday" / "Keep my Tuesday"; then the 8 s Undo toast.
+
+### 15.6 Whole-plan muscle check
+
+- Reached from the "Whole plan check" card at the end of each Plan day. Week chips: Week 1 · Weeks 2–5 · Week 6 · Weeks 7–11 · Week 12.
+- "N things stand out" first, then one row per muscle with **two numbers: direct sets · with helpers (½)**. Bands (**mock-up**): 10 or more = fine; 5–9 = low; under 5 or helping only = low, grey when only helpers reach 10 ("Under 10 direct; 10+ counting helpers"); 10–20 is the normal range; well above 20 = "a lot".
+- Shoulder parts as "Part of shoulders" rows. One line: "Not trained on purpose in this plan: traps, forearms, neck and inner thighs." Lower back has no warning.
+- "This screen only shows numbers. It never changes the plan." A plan change only comes from a plan review in its own chat, approved by Rosario (question 74 b).
+- The numbers come from the same function as the opened exercise's "Day so far", so the two never disagree.
+
+### 15.7 Gym tab (question 75 a)
+
+- One switch at the top: **Machines | Exercises**.
+- Machines: the 0.4.1 list and machine cards, word for word.
+- Exercises: every exercise, **grouped by main muscle** (the same groups as the swap list and the muscle check), each row with equipment, "In the plan: Mon" or "Swap only", the helper words and a small map. A tap opens the same exercise sheet with one map.
+
+### 15.8 Diet tab (questions 76 b, 77 b, 78 a, 79 a)
+
+- **Top:** "Food · Tuesday 17 Nov". **Two rings, protein first, then calories** (the rest timer's ring look), "76 g to go", "1,550 kcal left", then a line with **carbs and fat**, then "Last 7 days, average: …". Targets come from the plan (Today shows the same numbers).
+- **The 4 ways row:** Search · Digits · Quick add · Copy yesterday. **"Log again · one tap"** list with "had today". A bottom bar: "Your foods · Scan" (one Scan button only).
+- **Today's foods by meal:** Breakfast, Lunch, Dinner, Snacks, each with its kcal and protein; the meal is picked for you from the clock and can be changed.
+- **Scanner** on one route only; the camera stops when it closes or the route changes. A misread keeps the camera open ("That read looks wrong. Hold the phone still and try again."). While a good barcode is looked up: "Looking it up · Only the barcode number is sent." "Type the digits" is always offered; the **check digit is tested before any lookup** ("No lookup was made").
+- **Search runs only when you tap Search**, never while typing; **UK products only** (question 79 a); "Your foods" come first and work offline; "Make a new food".
+- Food syncs in **its own file `food.json`** in the private repo (question 78 a), not inside `progress.json`.
+
+### 15.9 Check step before saving a food
+
+- Every food from Open Food Facts is checked by Rosario before it is saved: "Check before saving. Anyone can add products to Open Food Facts, so numbers can be wrong. Compare with the pack. You can change anything."
+- Fields: name, brand · pack · barcode line, per 100 g: calories, protein, carbs, fat (4 fields in a grid). "✓ The numbers add up." or soft warnings in words ("The pack size says 1 gram. That is likely wrong."); warnings never block saving.
+- **Portion starts at the pack's serving** when known, else the last amount, else 100 g. The meal row (Breakfast, Lunch, Dinner, Snacks). Main button "Save and add 43.1 g".
+- Open Food Facts text goes in only through `h()`, clipped to **120 letters**; numbers are range-checked; lookups give up after **20 s** with "Open Food Facts did not answer" (**mock-up** and JUDGING.md section 7).
+
+### 15.10 Open Food Facts credit
+
+- The line "Contains data from Open Food Facts, available under the Open Database License." with both names as links, **on every sheet that shows their data and at the foot of the Diet tab**.
