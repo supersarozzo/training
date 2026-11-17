@@ -23,6 +23,7 @@ import { startAutoSync } from "./autosync.js";
 import { getActive } from "./active.js";
 import { watchStoreErrors } from "./errors.js";
 import { resetSyncDraft } from "./ui/settings-sync.js";
+import { enterScreen } from "./ui/motion.js";
 
 const tabRoutes = { today: renderToday, progress: renderProgress, plan: renderPlan, settings: renderSettings };
 const flowRoutes = { setup: renderSetup, intake: renderIntake, targets: renderTargets, workout: renderWorkout, weighin: renderWeighin, weekly: renderWeekly };
@@ -42,6 +43,23 @@ function guard(name) {
   return name;
 }
 
+// Screen transitions (redesign B): only when the screen really changes, never on a redraw of the same screen
+// (a tap on a choice redraws; it must not slide in again). Workout screens give their own key (data-screen).
+let lastKey = null;
+let lastName = null;
+function animateChange(root, name) {
+  const main = root.querySelector("main");
+  if (!main) return;
+  const key = `${location.hash}|${main.dataset.screen ?? ""}`;
+  if (key === lastKey) return;
+  const kind = name === "workout" ? (lastName === "workout" ? "up" : "push")
+    : Object.hasOwn(tabRoutes, name) ? (Object.hasOwn(tabRoutes, lastName ?? "") || lastName === null ? "fade" : "back") : "push";
+  if (Object.hasOwn(tabRoutes, name)) main.classList.add("stagger");
+  enterScreen(main, kind);
+  lastKey = key;
+  lastName = name;
+}
+
 function render() {
   const root = document.getElementById("app");
   clearTickers(); // timers of the old screen stop
@@ -53,7 +71,9 @@ function render() {
     if (name !== wanted) history.replaceState(null, "", `#/${name}`);
     if (Object.hasOwn(flowRoutes, name)) mount(root, flowRoutes[name]());
     else mount(root, tabRoutes[name](), updateBanner(), tabBar(name));
-    window.scrollTo(0, 0);
+    const before = lastKey;
+    animateChange(root, name);
+    if (before !== lastKey) window.scrollTo(0, 0); // a redraw of the same screen keeps its scroll place
   } catch (e) {
     mount(root, errorState(e && e.message ? e.message : "The app could not start."));
   }
