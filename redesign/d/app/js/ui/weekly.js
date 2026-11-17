@@ -6,9 +6,14 @@ import { model, go, store } from "./app.js";
 import { today } from "../clock.js";
 import { weeklySummary, statusWords } from "../engine/trend.js";
 import { formatChange } from "./units.js";
+import { icon } from "./icons.js";
 
 export function seenWeek() {
   try { return store.loadDevice().weekly_seen ?? null; } catch { return null; }
+}
+
+function tile(label, value, unit) {
+  return h("div", { class: "tile" }, h("div", { class: "label" }, label), h("div", { class: "value" }, String(value), unit ? h("span", { class: "unit" }, ` ${unit}`) : null));
 }
 
 function metric(label, value, unit) {
@@ -46,19 +51,19 @@ export function renderWeekly() {
     } else if (foodMode !== "targets") {
       text = sum.food.kcal > 0 ? "Eat a bit more, for example one extra snack." : "Eat a bit less, for example skip one snack.";
     }
-    food = h("div", { class: "card warn" }, h("h2", {}, "Food suggestion"), h("p", {}, text), h("p", { class: "small muted" }, "This is a suggestion. You decide."));
+    food = h("div", { class: "card warn" }, h("span", { class: "eyebrow" }, "Food suggestion"), h("p", {}, text), h("p", { class: "small muted" }, "This is a suggestion. You decide."));
   } else if (sum.week < 3) {
     food = h("p", { class: "small muted" }, "No food changes in weeks 1 and 2. Weight moves a lot from water.");
   }
 
   return [
     flowScreen(
-      h("h1", {}, "Last week"),
-      h("div", { class: "small muted" }, `Week ${sum.week - 1}, ${sum.from} to ${sum.to}`),
-      h("div", { class: "card" },
-        h("div", { class: "row" }, metric("Workouts", `${sum.workouts} of 5`), metric("Sets", sum.sets)),
-        h("div", { class: "row" }, metric("New bests", sum.newBests), metric("Walk", sum.walkMinutes, "min"))),
-      h("div", { class: "card" }, h("h2", {}, "Weight trend"), trendCard),
+      h("div", { class: "page-head" }, h("div", {}, h("span", { class: "eyebrow" }, `Week ${sum.week - 1} · ${sum.from} to ${sum.to}`), h("h1", {}, "Last week"))),
+      h("div", { class: "tiles" },
+        tile("Workouts", `${sum.workouts} of 5`), tile("Sets", sum.sets),
+        tile("New bests", sum.newBests), tile("Walk", sum.walkMinutes, "min")),
+      h("div", { class: "card" }, h("span", { class: "eyebrow brand" }, "Weight trend"), trendCard),
+      h("div", { class: "coach" }, icon("coach"), h("div", {}, "Look at the trend, not one morning. Water moves the scale every day.")),
       food),
     actionBar(mainButton("Got it", () => {
       store.saveDevice({ ...store.loadDevice(), weekly_seen: sum.week });

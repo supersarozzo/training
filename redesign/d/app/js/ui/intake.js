@@ -2,6 +2,9 @@
 // The answers are saved only at the end, in the shape of docs/ARCHITECTURE.md section 4.2.
 import { h } from "../h.js";
 import { flowScreen, actionBar, mainButton, secondaryButton } from "./parts.js";
+import { fillFrom } from "./motion.js";
+
+let shownFill = 0; // the bar grows from the last question's fill
 import { model, go, rerender } from "./app.js";
 import { stonesPoundsToKg } from "../engine/nutrition.js";
 
@@ -258,12 +261,22 @@ export function renderIntake() {
     rerender();
   };
 
-  return flowScreen(
-    h("div", { class: "progress-line" }, `${draft.step + 1} of ${QUESTIONS.length}`),
+  const fill = (draft.step + 1) / QUESTIONS.length;
+  const bar = h("i", {});
+  bar.style.setProperty("transform", `scaleX(${fill})`);
+  if (shownFill !== fill) { const from = shownFill; queueMicrotask(() => fillFrom(bar, from, fill)); shownFill = fill; }
+  const main = flowScreen(
+    h("div", { class: "progress-top" },
+      h("button", { class: "text-button", type: "button", onclick: back, "aria-label": "Back" }, "‹"),
+      h("div", { class: "progress-track", role: "progressbar", "aria-valuemin": "1", "aria-valuemax": String(QUESTIONS.length), "aria-valuenow": String(draft.step + 1) }, bar),
+      h("div", { class: "progress-line" }, `${draft.step + 1} of ${QUESTIONS.length}`)),
+    h("span", { class: "eyebrow brand" }, "About you"),
     h("h1", {}, q.title),
     q.help ? h("p", { class: "muted" }, q.help) : null,
     ...q.view(),
     errorText ? h("p", { class: "error-text", role: "alert" }, errorText) : null,
     actionBar(mainButton(last ? "Finish" : "Next", next), secondaryButton("Back", back)));
+  main.dataset.view = `intake:${draft.step}`;
+  return main;
 }
 

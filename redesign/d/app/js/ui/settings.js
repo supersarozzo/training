@@ -10,6 +10,11 @@ import { syncer } from "../syncer.js";
 import { makeBackup, downloadText, BACKUP_WARN_BYTES } from "../backup.js";
 import { shortcutOn, shortcutName } from "../shortcuts.js";
 import { now } from "../clock.js";
+import { icon } from "./icons.js";
+import { motionSetting, setMotionSetting } from "./motion.js";
+
+// A card heading with a small line icon (coach style).
+const head = (ico, title) => h("div", { class: "set-head" }, icon(ico), h("h2", {}, title));
 
 const MACHINE_NAMES = { lat_pulldown: "Lat pulldown machine", seated_row: "Seated row machine", leg_curl: "Leg curl machine", pec_deck: "Pec deck", calf_raise: "Calf raise machine" };
 let gymMessage = null;
@@ -38,7 +43,7 @@ function gymCard(settings) {
     rerender();
   };
   return h("div", { class: "card" },
-    h("h2", {}, "Gym weights"),
+    head("weights", "Gym weights"),
     h("p", { class: "muted" }, "From your first visit. Until you fill this in, the app guesses 2 kg steps for dumbbells and 5 kg for machines."),
     h("div", { class: "field" }, h("label", { for: "g-db" }, "Dumbbell sizes in kg, separated by commas"),
       h("input", { type: "text", id: "g-db", inputmode: "decimal", value: draft.dumbbells, placeholder: "2, 4, 6, 8", oninput: (e) => { draft.dumbbells = e.target.value; } })),
@@ -91,7 +96,7 @@ function backupCard() {
   const last = device.last_backup_at ? new Date(device.last_backup_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "never";
   const input = h("input", { type: "file", accept: ".json,application/json", class: "no-print", hidden: true, onchange: (e) => restoreFile(e.target.files[0]) });
   return h("div", { class: "card" },
-    h("h2", {}, "Backup and restore"),
+    head("download", "Backup and restore"),
     h("p", { class: "muted" }, `Last backup file: ${last}. The file holds your workouts and profile. It never holds your GitHub key.`),
     bytes > BACKUP_WARN_BYTES ? h("p", { class: "status-warning" }, "The data file is getting big. Tell the Training chat.") : null,
     backupMessage ? h("div", { class: backupMessage.kind === "error" ? "error-text" : "status-success", role: "status" }, backupMessage.text) : null,
@@ -114,7 +119,7 @@ function shortcutCard(settings) {
   const on = shortcutOn(settings);
   if (shortcutDraft === null) shortcutDraft = shortcutName(settings);
   return h("div", { class: "card" },
-    h("h2", {}, "Log to Health button"),
+    head("external", "Log to Health button"),
     h("p", { class: "muted" }, "Off by default. When on, the Saved message after a workout shows a button that runs a Shortcut you made, with the start time and the minutes. Your Apple Watch workout already logs to Health by itself, so this is optional. Try it on the phone before you rely on it."),
     h("div", { class: "field" }, h("label", { for: "sc-name" }, "Name of your Shortcut"),
       h("input", { type: "text", id: "sc-name", maxlength: 80, autocomplete: "off", value: shortcutDraft, oninput: (e) => { shortcutDraft = e.target.value; } })),
@@ -125,20 +130,33 @@ function shortcutCard(settings) {
 export function renderSettings() {
   const on = soundOn();
   const toggle = () => { setSound(!on); setSoundOn(!on); if (!on) beep(); rerender(); };
+  const moves = motionSetting();
   const doc = model.doc();
-  return screen(
-    h("h1", {}, "Settings"),
-    syncCard(),
-    backupCard(),
-    gymCard(doc.shared_settings),
+  const main = screen(
+    h("div", { class: "page-head" }, h("div", {}, h("span", { class: "eyebrow" }, "This phone and your data"), h("h1", {}, "Settings"))),
+    h("h3", { class: "group-head" }, "Workout"),
     h("div", { class: "card" },
-      h("h2", {}, "Body weight unit"),
+      head("sound", "Sound"),
+      h("p", { class: "muted" }, "A beep when a timer ends. It only plays with the app open and the phone's ring switch on. The screen flash always shows."),
+      h("button", { class: "choice", type: "button", "aria-pressed": on ? "true" : "false", onclick: toggle }, on ? "Sound is on" : "Sound is off")),
+    h("div", { class: "card" },
+      head("sparkle", "Animations"),
+      h("p", { class: "muted" }, "Screens slide, rings fill and the photos loop. Turn it off for a still app. If the iPhone's Reduce Motion is on, animations stay off anyway."),
+      h("button", { class: "choice", type: "button", "aria-pressed": moves ? "true" : "false", onclick: () => { setMotionSetting(!moves); rerender(); } }, moves ? "Animations are on" : "Animations are off")),
+    h("div", { class: "card" },
+      head("scale", "Body weight unit"),
       h("p", { class: "muted" }, "How your weight is shown and typed. It is always saved in kg."),
       choiceRow([["kg", "Kilograms"], ["st", "Stones, pounds"]], doc.shared_settings.body_unit ?? "kg",
         (value) => { model.updateSettings({ body_unit: value }); rerender(); })),
-    shortcutCard(doc.shared_settings),
-    h("div", { class: "card" },
-      h("h2", {}, "Sound"),
-      h("p", { class: "muted" }, "A beep when a timer ends. It only plays with the app open and the phone's ring switch on. The screen flash always shows."),
-      h("button", { class: "choice", type: "button", "aria-pressed": on ? "true" : "false", onclick: toggle }, on ? "Sound is on" : "Sound is off")));
+    gymCard(doc.shared_settings),
+    h("a", { class: "card card-row", href: "#/gym" }, h("span", { class: "dot-ico" }, icon("gym")),
+      h("div", { class: "grow" }, h("b", {}, "Machines and where they are"), h("div", { class: "small muted" }, "Open the Gym tab to add a note for each machine.")),
+      icon("chevron", "chev")),
+    h("h3", { class: "group-head" }, "Your data"),
+    syncCard(),
+    backupCard(),
+    h("h3", { class: "group-head" }, "Extras"),
+    shortcutCard(doc.shared_settings));
+  main.dataset.view = "settings";
+  return main;
 }

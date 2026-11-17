@@ -1,6 +1,8 @@
 // First start: Start fresh, Restore from file, Restore from GitHub.
 import { h } from "../h.js";
 import { flowScreen } from "./parts.js";
+import { icon, logo } from "./icons.js";
+import { demo } from "./demo.js";
 import { model, go, rerender } from "./app.js";
 import { resetDraft } from "./intake.js";
 import { connectionFields, restoreFromGithub, syncMessage, syncBusy, resetSyncDraft } from "./settings-sync.js";
@@ -37,20 +39,26 @@ export function renderSetup() {
     type: "file", accept: ".json,application/json", class: "no-print", hidden: true,
     onchange: (e) => restoreFromFile(e.target.files[0]),
   });
-  return flowScreen(
-    h("h1", {}, "Training"),
-    h("p", { class: "muted" }, "A 12-week gym plan, Monday to Friday. Your data stays on this phone."),
+  const main = flowScreen(
+    h("div", { class: "welcome fade-up" }, logo(),
+      h("h1", {}, "Training"),
+      h("p", { class: "muted" }, "A 12-week gym plan, Monday to Friday. A coach card for every set. Your data stays on this phone.")),
+    h("div", { class: "collage" }, demo("chest_press", { label: false }), demo("lat_pulldown_machine", { label: false }), demo("leg_press", { label: false })),
     h("div", { class: "card" },
-      h("h2", {}, "Start fresh"),
-      h("p", { class: "muted" }, "Answer 19 short questions (about 5 minutes). The app works out your numbers."),
+      h("div", { class: "card-row" }, h("span", { class: "ico-box" }, icon("sparkle")),
+        h("div", { class: "grow" }, h("h2", {}, "Start fresh"),
+          h("p", { class: "muted small" }, "Answer 19 short questions (about 5 minutes). The app works out your numbers."))),
       h("button", { class: "button", type: "button", onclick: () => { resetDraft(); go("#/intake"); } }, "Start fresh")),
     h("div", { class: "card" },
-      h("h2", {}, "Restore from file"),
-      h("p", { class: "muted" }, "Use a training backup file or the starter file. It is checked first, then merged into this phone."),
+      h("div", { class: "card-row" }, h("span", { class: "ico-box" }, icon("download")),
+        h("div", { class: "grow" }, h("h2", {}, "Restore from file"),
+          h("p", { class: "muted small" }, "Use a training backup file or the starter file. It is checked first, then merged into this phone."))),
       input,
       h("button", { class: "button secondary", type: "button", onclick: () => input.click() }, "Choose file"),
       message ? h("p", { class: message.kind === "error" ? "error-text" : "status-success", role: "alert" }, message.text) : null),
     githubCard());
+  main.dataset.view = "setup";
+  return main;
 }
 
 function afterRestore(doc) {
@@ -62,8 +70,9 @@ function githubCard() {
   const msg = syncMessage();
   if (!githubOpen) {
     return h("div", { class: "card" },
-      h("h2", {}, "Restore from GitHub"),
-      h("p", { class: "muted" }, "Get your saved data from your private GitHub repo. You need your GitHub key."),
+      h("div", { class: "card-row" }, h("span", { class: "ico-box" }, icon("github")),
+        h("div", { class: "grow" }, h("h2", {}, "Restore from GitHub"),
+          h("p", { class: "muted small" }, "Get your saved data from your private GitHub repo. You need your GitHub key."))),
       h("button", { class: "button secondary", type: "button", onclick: () => { githubOpen = true; rerender(); } }, "Restore from GitHub"));
   }
   return h("div", { class: "card" },

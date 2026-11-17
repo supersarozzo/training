@@ -6,6 +6,7 @@ import { today } from "../clock.js";
 import { activeWeighins } from "../engine/trend.js";
 import { kgToStonesPounds, stonesPoundsToKg } from "../engine/nutrition.js";
 import { formatBody } from "./units.js";
+import { icon } from "./icons.js";
 
 let draft = null; // { date, kg }
 let measure = { waist_cm: "", chest_cm: "", arm_cm: "", thigh_cm: "" };
@@ -42,7 +43,7 @@ export function renderWeighin() {
     const sp = kgToStonesPounds(draft.kg);
     const state = { st: sp.stones, lb: sp.pounds };
     const upd = () => { draft.kg = stonesPoundsToKg(state.st, state.lb); };
-    input = h("div", {},
+    input = h("div", { class: "dials" },
       stepper({ label: "Stones", unit: "st", value: state.st, step: 1, min: 3, max: 60, decimals: 0, onChange: (v) => { state.st = v; upd(); } }),
       stepper({ label: "Pounds", unit: "lb", value: state.lb, step: 0.2, min: 0, max: 13.9, decimals: 1, onChange: (v) => { state.lb = v; upd(); } }));
   } else {
@@ -55,16 +56,20 @@ export function renderWeighin() {
   return [
     flowScreen(
       h("a", { href: "#/progress", class: "text-button", onclick: () => { draft = null; message = null; } }, "‹ Back"),
-      h("h1", {}, "Weigh-in"),
-      h("p", { class: "muted small" }, "After the toilet, before food and drink, in light clothes."),
-      h("div", { class: "field" }, h("label", { for: "w-date" }, "Date"),
-        h("input", { type: "date", id: "w-date", value: draft.date, max: today(), onchange: (e) => { if (e.target.value) { draft.date = e.target.value; rerender(); } } })),
-      existing ? h("p", { class: "small status-warning" }, `You already weighed in on this day: ${formatBody(existing.kg, unit)}. Saving replaces it.`) : null,
-      input,
+      h("div", { class: "page-head" }, h("div", {}, h("span", { class: "eyebrow" }, "Under 10 seconds"), h("h1", {}, "Weigh-in"))),
+      h("section", { class: "g-card" },
+        h("div", { class: "g-body" },
+          h("div", { class: "coach" }, icon("scale"), h("div", {}, "After the toilet, before food and drink, in light clothes.")),
+          h("div", { class: "field" }, h("label", { for: "w-date" }, "Date"),
+            h("input", { type: "date", id: "w-date", value: draft.date, max: today(), onchange: (e) => { if (e.target.value) { draft.date = e.target.value; rerender(); } } })),
+          existing ? h("p", { class: "small status-warning" }, `You already weighed in on this day: ${formatBody(existing.kg, unit)}. Saving replaces it.`) : null,
+          input,
+          last ? h("p", { class: "small muted" }, `Last weigh-in: ${formatBody(last.kg, unit)} on ${last.date}.`) : null)),
       message ? h("div", { class: message.kind === "error" ? "error-text" : "status-success", role: "status" }, message.text) : null,
       existing ? h("div", { class: "text-link-row" }, h("button", { class: "text-button", type: "button", onclick: remove }, "Delete this weigh-in")) : null,
       h("div", { class: "card" },
-        h("h2", {}, "Measurements (every 4 weeks)"),
+        h("span", { class: "eyebrow" }, "Every 4 weeks"),
+        h("h2", {}, "Measurements"),
         h("p", { class: "small muted" }, "In cm. Waist at the belly button. Same time and same way each time."),
         num("waist_cm", "Waist (cm)"), num("chest_cm", "Chest (cm)"), num("arm_cm", "Upper arm (cm)"), num("thigh_cm", "Thigh (cm)"),
         h("button", { class: "button secondary", type: "button", onclick: saveMeasure }, "Save measurements"))),

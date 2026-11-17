@@ -1,6 +1,7 @@
 // Plan sheet: the whole plan v2 as tables. Prints on A4 (see the print rules in css/app.css).
 import { h } from "../h.js";
 import { screen } from "./parts.js";
+import { thumb } from "./demo.js";
 import { exercises, days, weeks, DAY_IDS, MOVE_SECONDS, walkRules } from "../plan/plan-v2.js";
 
 function repText(ex) {
@@ -33,10 +34,10 @@ function dayTable(dayId) {
     const swap = swapText(ex);
     return h("tr", {},
       h("td", {}, slot.slot === "D" ? "D" : slot.slot),
-      h("td", {},
+      h("td", {}, h("div", { class: "ex-cell" }, thumb(slot.ex, "no-print"), h("div", {},
         h("strong", {}, ex.name),
         h("div", { class: "small muted" }, ex.equipment),
-        swap ? h("div", { class: "small muted" }, `Swap: ${swap}`) : null),
+        swap ? h("div", { class: "small muted" }, `Swap: ${swap}`) : null))),
       h("td", { class: "nowrap" }, `${slot.sets} × ${repText(ex)}`),
       h("td", {}, restText(slot)));
   });
@@ -44,7 +45,8 @@ function dayTable(dayId) {
     ? `Walk: easier (${walkRules.legDaySlopeLess_pct} % less slope, effort ${walkRules.legDayEffort.join(" to ")} of 10)`
     : `Walk: normal (effort ${walkRules.normalEffort.join(" to ")} of 10)`;
   return h("section", { class: "card" },
-    h("h2", {}, `${day.name}: ${day.focus}`),
+    h("span", { class: "eyebrow brand" }, day.name),
+    h("h2", {}, day.focus),
     h("p", { class: "small muted" }, walkText),
     h("div", { class: "table-wrap" },
       h("table", {},
@@ -73,14 +75,16 @@ function weeksTable() {
 }
 
 export function renderPlan() {
-  return screen(
-    h("h1", {}, "Plan"),
-    h("p", { class: "muted" }, "Monday to Friday. Walk first, then weights in pairs."),
-    h("button", { class: "button secondary no-print", type: "button", onclick: () => window.print() }, "Print"),
+  const main = screen(
+    h("div", { class: "page-head" }, h("div", {}, h("span", { class: "eyebrow" }, "12 weeks · Monday to Friday"), h("h1", {}, "Plan")),
+      h("button", { class: "text-button no-print", type: "button", onclick: () => window.print() }, "Print")),
+    h("p", { class: "muted" }, "Walk first, then weights in pairs."),
     h("h2", {}, "The week"),
     h("div", { class: "card" },
       h("table", {}, h("tbody", {}, DAY_IDS.map((id) =>
         h("tr", {}, h("td", {}, h("strong", {}, days[id].name)), h("td", {}, days[id].focus)))))),
     DAY_IDS.map(dayTable),
     weeksTable());
+  main.dataset.view = "plan";
+  return main;
 }

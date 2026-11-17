@@ -7,6 +7,7 @@ import { store, model, rerender } from "./app.js";
 import { syncer, fakeInfo } from "../syncer.js";
 import { saveConnection, forgetKey, statusText, keyEndsSoon, connectionOf } from "../sync/sync.js";
 import { today } from "../clock.js";
+import { icon } from "./icons.js";
 
 let draft = null; // { owner, repo, token, expires } while the form is open
 let message = null; // { kind: "ok" | "error", text }
@@ -85,7 +86,7 @@ export function syncCard() {
   const ends = keyEndsSoon(device, today());
   const disabled = busy !== null;
   return h("div", { class: "card" },
-    h("h2", {}, "GitHub sync"),
+    h("div", { class: "set-head" }, icon("github"), h("h2", {}, "GitHub sync")),
     h("p", { class: busy || (device.last_sync_result && device.last_sync_result !== "ok") ? "status-warning" : "muted", role: "status" }, busy ? "Working…" : statusText(device, unsynced)),
     ends ? h("p", { class: "status-warning" }, ends.days < 0 ? `The GitHub key ended on ${ends.date}. Make a new one.` : `The GitHub key ends on ${ends.date}.`) : null,
     h("p", { class: "small muted" }, "Your data syncs to your private GitHub repo when you save a workout and when you open the app. It can not sync while the app is closed."),

@@ -440,8 +440,8 @@ input.step-input::-webkit-outer-spin-button, input.step-input::-webkit-inner-spi
 .collage { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--s2); margin: var(--s4) 0; }
 .collage .demo { border-radius: var(--r-input); }
 .choice-card { display: flex; align-items: center; gap: var(--s4); width: 100%; text-align: left; padding: var(--s4); min-height: 88px; }
-.choice-card .ico-box { width: 48px; height: 48px; border-radius: 14px; background: var(--bg-tint); color: var(--brand-primary); display: flex; align-items: center; justify-content: center; flex: none; }
-.choice-card .ico-box svg { width: 26px; height: 26px; }
+.ico-box, .choice-card .ico-box { width: 48px; height: 48px; border-radius: 14px; background: var(--bg-tint); color: var(--brand-primary); display: flex; align-items: center; justify-content: center; flex: none; }
+.ico-box svg, .choice-card .ico-box svg { width: 26px; height: 26px; }
 .progress-top { display: flex; align-items: center; gap: var(--s3); margin: var(--s2) 0 var(--s6); }
 .progress-track { flex: 1; height: 6px; border-radius: 3px; background: var(--border-default); overflow: hidden; }
 .progress-track i { display: block; height: 100%; background: var(--brand-primary); border-radius: 3px; transform-origin: left; transition: transform var(--t-slow) var(--ease); }
@@ -510,3 +510,10 @@ a.card:active { transform: scale(0.99); }
 .card-row > svg.ico { width: 24px; height: 24px; color: var(--brand-primary); flex: none; }
 .where-add { padding: 0; margin-top: var(--s2); justify-content: flex-start; font-size: 15px; gap: 6px; }
 .where-add svg { width: 18px; height: 18px; }
+
+/* settings: icon headings and groups */
+.set-head { display: flex; align-items: center; gap: 10px; margin-bottom: var(--s2); }
+.set-head h2 { margin: 0; }
+.set-head svg { width: 22px; height: 22px; color: var(--brand-primary); flex: none; }
+.group-head { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin: var(--s6) 0 var(--s2) var(--s1); }
+.page-head + .group-head { margin-top: var(--s2); }
