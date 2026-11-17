@@ -1,12 +1,13 @@
 // Swap an exercise: "Machine busy", "Don't like it", "It hurts" (WORKFLOW D5).
+// Redesign B: the reasons and the swaps are inset lists in the sheet (an icon per reason, a photo per swap). Same steps.
 import { MAX_TEXT } from "../validate.js";
 import { h } from "../h.js";
-import { openSheet } from "./parts.js";
+import { openSheet, group, row, iconTile, exerciseMedia } from "./parts.js";
 import { model, rerender } from "./app.js";
 import { exercises } from "../plan/plan-v2.js";
 import { lighterFor, workSets } from "../engine/workout.js";
 
-const REASONS = [["busy", "Machine busy"], ["dislike", "Don't like it"], ["hurts", "It hurts"]];
+const REASONS = [["busy", "Machine busy", "clock", ""], ["dislike", "Don't like it", "swap", "orange"], ["hurts", "It hurts", "info", "red"]];
 
 // Swaps for a slot: the plan's swaps, plus the planned exercise itself when something else is being done now.
 // An extra machine (question 17) only shows once the first visit found it.
@@ -21,13 +22,13 @@ export function openSwap(ctx, rec) {
   const reasons = () => openSheet(
     h("h2", {}, "Swap this exercise"),
     h("p", { class: "muted" }, "Why do you want to swap?"),
-    REASONS.map(([id, label]) => h("button", { class: "button secondary", type: "button", onclick: () => choose(id) }, label)));
+    group(REASONS.map(([id, label, iconName, color]) => row({ title: label, lead: iconTile(iconName, color), onclick: () => choose(id), chevron: true }))));
 
   const choose = (reason) => {
     const options = swapChoices(rec, ctx.settings);
     let note = "";
     const hurts = reason === "hurts";
-    const list = h("div", { class: "choices" });
+    const list = h("div", { class: "group" });
     const noteBox = hurts ? h("textarea", { id: "swap-note", maxlength: MAX_TEXT, "aria-label": "What hurts?", placeholder: "What hurts? Where?", oninput: (e) => { note = e.target.value.trim(); } }) : null;
     const go = (id) => {
       if (hurts && !note) { warn.textContent = "Write a short note first, so you remember what hurt."; return; }
@@ -42,14 +43,14 @@ export function openSwap(ctx, rec) {
     const warn = h("div", { class: "error-text", role: "alert" }, "");
     options.forEach((id) => {
       const ex = exercises[id];
-      list.append(h("button", { class: "choice", type: "button", onclick: () => go(id) }, h("span", {}, ex.name, h("br"), h("span", { class: "small muted" }, ex.equipment))));
+      list.append(row({ title: ex.name, sub: ex.equipment, lead: exerciseMedia(id, ex.name, "thumb"), onclick: () => go(id), chevron: true }));
     });
     openSheet(
       h("h2", {}, hurts ? "Stop this exercise" : "Pick a swap"),
-      hurts ? h("p", {}, "Stop now. Joint pain is not normal. The swap starts with a lighter weight. Write down what hurt.") : null,
-      options.length ? list : h("p", { class: "muted" }, "No swap is available for this exercise."),
+      hurts ? h("div", { class: "card warn" }, h("p", {}, "Stop now. Joint pain is not normal. The swap starts with a lighter weight. Write down what hurt.")) : null,
       noteBox, warn,
-      h("button", { class: "button secondary", type: "button", onclick: reasons }, "Back"));
+      options.length ? list : h("p", { class: "muted" }, "No swap is available for this exercise."),
+      h("button", { class: "button gray", type: "button", onclick: reasons }, "Back"));
   };
   reasons();
 }

@@ -618,3 +618,17 @@ tr:last-child td { border-bottom: 0; }
 .field-row input.wide { width: 60%; }
 .section > .button, .section > .group + .button { margin-top: var(--s3); }
 .nav-head .row-2 { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); }
+
+/* First start and intake */
+.welcome { padding-top: var(--s8); margin-bottom: var(--s6); }
+.app-icon { display: block; width: 96px; height: 96px; margin: 0 auto var(--s4); border-radius: 22px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); }
+.intake-progress { height: 4px; border-radius: 2px; background: var(--fill-strong); overflow: hidden; margin: var(--s2) 0 var(--s2); }
+.intake-fill { display: block; height: 100%; background: var(--accent); transform-origin: left; transition: transform var(--t-mid) var(--spring); }
+.row-2 > .field { display: flex; flex-direction: column; justify-content: flex-end; }
+.field-row input[type="date"] { width: auto; min-width: 150px; }
+.nav-head .row-2 > * { flex: none; }
+/* Small photos fill their box (no thin letterbox lines); big ones still show the whole picture */
+.media.thumb img, .media.strip img { object-fit: cover; }
+/* The floating Start button on Today: content fades out under it instead of showing through */
+.bar.action-bar:not(.no-tabs) { background: linear-gradient(to top, var(--bg) 55%, transparent); }
+.section > .group + .card, .section > .card + .group { margin-top: var(--s3); }

@@ -10,11 +10,13 @@ import { hasPhotos, photoUrl, artFor } from "../plan/media.js";
 
 const TABS = [["today", "Today", "today"], ["progress", "Progress", "progress"], ["plan", "Plan", "plan"], ["settings", "Settings", "settings"]];
 
+// Line icons (plan, progress) can not be filled: the picked tab draws them with a thicker line instead.
+const FILLABLE = new Set(["today", "settings"]);
 export function tabBar(active) {
   return h("nav", { class: "bar", "aria-label": "Main" },
     h("div", { class: "tabs" },
       TABS.map(([id, label, ic]) =>
-        h("a", { class: "tab", href: `#/${id}`, "aria-current": id === active ? "page" : false }, icon(ic, 26, { filled: id === active, stroke: 1.8 }), label))));
+        h("a", { class: "tab", href: `#/${id}`, "aria-current": id === active ? "page" : false }, icon(ic, 26, { filled: id === active && FILLABLE.has(ic), stroke: id === active ? 2.4 : 1.8 }), label))));
 }
 
 // A standard tab screen (room for the tab bar).

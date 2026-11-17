@@ -1,5 +1,7 @@
 // Intake: one question per page (WORKFLOW section A, questions 20 to 38). Defaults are the recommended answers.
 // The answers are saved only at the end, in the shape of docs/ARCHITECTURE.md section 4.2.
+// Redesign B: a thin progress bar with "3 of 19" over a large question title; the answers are iOS check rows
+// (a blue tick on the picked one); Next and Back stay at the bottom, in reach of the thumb.
 import { h } from "../h.js";
 import { flowScreen, actionBar, mainButton, secondaryButton } from "./parts.js";
 import { model, go, rerender } from "./app.js";
@@ -258,12 +260,17 @@ export function renderIntake() {
     rerender();
   };
 
-  return flowScreen(
+  const fill = h("span", { class: "intake-fill" });
+  fill.style.transform = `scaleX(${(draft.step + 1) / QUESTIONS.length})`;
+  const main = flowScreen(
+    h("div", { class: "intake-progress", role: "progressbar", "aria-valuemin": 1, "aria-valuemax": QUESTIONS.length, "aria-valuenow": draft.step + 1, "aria-label": "Question" }, fill),
     h("div", { class: "progress-line" }, `${draft.step + 1} of ${QUESTIONS.length}`),
-    h("h1", {}, q.title),
-    q.help ? h("p", { class: "muted" }, q.help) : null,
+    h("h1", { class: "title1" }, q.title),
+    q.help ? h("p", { class: "subhead muted" }, q.help) : null,
     ...q.view(),
-    errorText ? h("p", { class: "error-text", role: "alert" }, errorText) : null,
-    actionBar(mainButton(last ? "Finish" : "Next", next), secondaryButton("Back", back)));
+    errorText ? h("p", { class: "error-text", role: "alert" }, errorText) : null);
+  main.dataset.screen = `q${draft.step}`;
+  main.classList.add("two-buttons");
+  return [main, actionBar(mainButton(last ? "Finish" : "Next", next, { iconName: last ? "check" : null }), secondaryButton("Back", back, { kind: "gray" }))];
 }
 

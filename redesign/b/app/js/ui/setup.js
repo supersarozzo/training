@@ -1,6 +1,9 @@
 // First start: Start fresh, Restore from file, Restore from GitHub.
+// Redesign B: a welcome like a new iPhone app (app icon, big title, one line), Start fresh as the big button,
+// the two restores as an inset list under it. The GitHub form opens in place, as before.
 import { h } from "../h.js";
-import { flowScreen } from "./parts.js";
+import { flowScreen, section, group, row, foot, iconTile, actionBar, mainButton } from "./parts.js";
+import { icon } from "./icons.js";
 import { model, go, rerender } from "./app.js";
 import { resetDraft } from "./intake.js";
 import { connectionFields, restoreFromGithub, syncMessage, syncBusy, resetSyncDraft } from "./settings-sync.js";
@@ -37,20 +40,23 @@ export function renderSetup() {
     type: "file", accept: ".json,application/json", class: "no-print", hidden: true,
     onchange: (e) => restoreFromFile(e.target.files[0]),
   });
-  return flowScreen(
-    h("h1", {}, "Training"),
-    h("p", { class: "muted" }, "A 12-week gym plan, Monday to Friday. Your data stays on this phone."),
-    h("div", { class: "card" },
-      h("h2", {}, "Start fresh"),
-      h("p", { class: "muted" }, "Answer 19 short questions (about 5 minutes). The app works out your numbers."),
-      h("button", { class: "button", type: "button", onclick: () => { resetDraft(); go("#/intake"); } }, "Start fresh")),
-    h("div", { class: "card" },
-      h("h2", {}, "Restore from file"),
-      h("p", { class: "muted" }, "Use a training backup file or the starter file. It is checked first, then merged into this phone."),
-      input,
-      h("button", { class: "button secondary", type: "button", onclick: () => input.click() }, "Choose file"),
-      message ? h("p", { class: message.kind === "error" ? "error-text" : "status-success", role: "alert" }, message.text) : null),
-    githubCard());
+  const fresh = () => { resetDraft(); go("#/intake"); };
+  return [
+    flowScreen(
+      h("div", { class: "welcome center" },
+        h("img", { class: "app-icon", src: "icons/icon-192.png", alt: "", width: 96, height: 96 }),
+        h("h1", { class: "large-title" }, "Training"),
+        h("p", { class: "subhead muted" }, "A 12-week gym plan, Monday to Friday. Your data stays on this phone."),
+        h("p", { class: "subhead muted" }, "New here? Start fresh: answer 19 short questions (about 5 minutes). The app works out your numbers.")),
+      section("Already have data",
+        group(
+          row({ title: "Restore from file", sub: "A training backup file or the starter file. It is checked first, then merged into this phone.", lead: iconTile("upload", "green"), onclick: () => input.click(), chevron: true }),
+          githubOpen ? null : row({ title: "Restore from GitHub", sub: "Get your saved data from your private GitHub repo. You need your GitHub key.", lead: iconTile("cloud", ""), onclick: () => { githubOpen = true; rerender(); }, chevron: true })),
+        input,
+        message ? h("p", { class: message.kind === "error" ? "error-text" : "status-success", role: "alert" }, message.text) : null),
+      githubOpen ? githubCard() : null),
+    actionBar(mainButton("Start fresh", fresh, { iconName: "play" })),
+  ];
 }
 
 function afterRestore(doc) {
@@ -60,14 +66,8 @@ function afterRestore(doc) {
 
 function githubCard() {
   const msg = syncMessage();
-  if (!githubOpen) {
-    return h("div", { class: "card" },
-      h("h2", {}, "Restore from GitHub"),
-      h("p", { class: "muted" }, "Get your saved data from your private GitHub repo. You need your GitHub key."),
-      h("button", { class: "button secondary", type: "button", onclick: () => { githubOpen = true; rerender(); } }, "Restore from GitHub"));
-  }
   return h("div", { class: "card" },
-    h("h2", {}, "Restore from GitHub"),
+    h("div", { class: "card-title" }, icon("cloud", 18), "Restore from GitHub"),
     h("p", { class: "muted" }, "Type where your data is saved and paste your GitHub key. The key stays on this phone only."),
     connectionFields(),
     msg ? h("p", { class: msg.kind === "error" ? "error-text" : "status-success", role: "alert" }, msg.text) : null,

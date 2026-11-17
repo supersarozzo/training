@@ -1,6 +1,8 @@
 // Targets: shows the numbers the formulas give. Rosario confirms or changes them.
+// Redesign B: the goal as a card, the numbers as tiles (kcal orange, protein green, walk cyan), notes as warning lines.
 import { h } from "../h.js";
-import { flowScreen, actionBar, mainButton, secondaryButton } from "./parts.js";
+import { flowScreen, actionBar, mainButton, secondaryButton, tile, section, group, foot } from "./parts.js";
+import { icon } from "./icons.js";
 import { model, go, rerender } from "./app.js";
 import { computeTargets, safetyCheck } from "../engine/nutrition.js";
 
@@ -10,18 +12,12 @@ let editing = false;
 let edit = null; // { kcal, protein_g, speed_kmh, slope_pct }
 let problems = [];
 
-function metric(label, value, unit, note) {
-  return h("div", { class: "metric" },
-    h("div", { class: "label" }, label),
-    h("div", { class: "value" }, String(value), unit ? h("span", { class: "unit" }, ` ${unit}`) : null),
-    note ? h("div", { class: "small muted" }, note) : null);
-}
-
-function numInput(key, label, { min, max, step }) {
-  return h("div", { class: "field" },
+function numInput(key, label, unit, { min, max, step }) {
+  return h("div", { class: "field-row" },
     h("label", { for: `t-${key}` }, label),
     h("input", { type: "number", id: `t-${key}`, inputmode: "decimal", min, max, step, value: edit[key] ?? "",
-      oninput: (e) => { edit[key] = e.target.value === "" ? null : Number(e.target.value); } }));
+      oninput: (e) => { edit[key] = e.target.value === "" ? null : Number(e.target.value); } }),
+    h("span", { class: "unit" }, unit));
 }
 
 export function renderTargets() {
@@ -67,32 +63,40 @@ export function renderTargets() {
 
   const body = editing
     ? [
-      h("h1", {}, "Change your numbers"),
-      showKcal ? numInput("kcal", "Calories a day", { min: 800, max: 6000, step: 50 }) : null,
-      showProtein ? numInput("protein_g", "Protein a day (g)", { min: 20, max: 400, step: 5 }) : null,
-      numInput("speed_kmh", "Starting walk speed (km/h)", { min: 2, max: 8, step: 0.1 }),
-      numInput("slope_pct", "Starting walk slope (%)", { min: 0, max: 15, step: 1 }),
+      h("h1", { class: "title1" }, "Change your numbers"),
+      section(null,
+        group(
+          showKcal ? numInput("kcal", "Calories a day", "kcal", { min: 800, max: 6000, step: 50 }) : null,
+          showProtein ? numInput("protein_g", "Protein a day", "g", { min: 20, max: 400, step: 5 }) : null,
+          numInput("speed_kmh", "Starting walk speed", "km/h", { min: 2, max: 8, step: 0.1 }),
+          numInput("slope_pct", "Starting walk slope", "%", { min: 0, max: 15, step: 1 }))),
       ...problems.map((p) => h("p", { class: "error-text", role: "alert" }, p)),
     ]
     : [
-      h("h1", {}, "Your numbers"),
-      h("p", { class: "muted" }, "The app worked these out from your answers. They are a first guess. Your weigh-ins correct them after about 3 weeks."),
-      h("div", { class: "card" },
-        h("div", { class: "label" }, "Goal"),
-        h("div", { class: "value" }, GOAL_TEXT[shown.goal] ?? shown.goal),
+      h("p", { class: "eyebrow" }, "From your answers"),
+      h("h1", { class: "title1" }, "Your numbers"),
+      h("p", { class: "subhead muted" }, "The app worked these out from your answers. They are a first guess. Your weigh-ins correct them after about 3 weeks."),
+      h("div", { class: "card info" },
+        h("p", { class: "eyebrow" }, "Goal"),
+        h("div", { class: "headline" }, GOAL_TEXT[shown.goal] ?? shown.goal),
         computed.suggested_goal && intake.q26_goal === "suggest" ? h("p", { class: "small muted" }, "Suggested from your BMI and waist. You can change it by asking the Training chat.") : null),
-      h("div", { class: "card" },
-        showKcal ? metric("Calories a day", shown.kcal, "kcal") : null,
-        showProtein ? metric("Protein a day", shown.protein_g, "g", "Split over 3 to 5 meals.") : null,
-        !showKcal && !showProtein ? h("p", { class: "muted" }, "No food numbers (your choice).") : null,
-        metric("Starting walk", `${shown.walk_start.speed_kmh} km/h, ${shown.walk_start.slope_pct} % slope`, null, "Leg days (Tuesday, Friday): 2 % less slope.")),
-      ...computed.notes.map((n) => h("p", { class: "small status-warning" }, n)),
-      h("p", { class: "small muted" }, "General guidance, not medical advice."),
+      showKcal || showProtein
+        ? h("div", { class: "tiles" },
+          showKcal ? tile({ label: "Calories a day", value: String(shown.kcal), unit: "kcal", color: "orange", iconName: "flame" }) : null,
+          showProtein ? tile({ label: "Protein a day", value: String(shown.protein_g), unit: "g", note: "Split over 3 to 5 meals.", color: "green", iconName: "food" }) : null)
+        : h("p", { class: "muted" }, "No food numbers (your choice)."),
+      h("div", { class: "tiles" },
+        tile({ label: "Walk speed", value: String(shown.walk_start.speed_kmh), unit: "km/h", color: "cardio", iconName: "walk" }),
+        tile({ label: "Walk slope", value: String(shown.walk_start.slope_pct), unit: "%", note: "Leg days (Tuesday, Friday): 2 % less slope.", color: "cardio", iconName: "progress" })),
+      ...computed.notes.map((n) => h("div", { class: "info-line warn" }, icon("info", 17), h("span", {}, n))),
+      foot("General guidance, not medical advice."),
     ];
 
   const buttons = editing
     ? [mainButton("Save my numbers", saveEdit), secondaryButton("Cancel", () => { editing = false; rerender(); })]
     : [mainButton(profile.targets ? "Keep these" : "Looks right", profile.targets ? () => go("#/today") : confirmComputed), secondaryButton("Change numbers", startEdit)];
 
-  return flowScreen(...body, actionBar(...buttons));
+  const main = flowScreen(...body);
+  main.classList.add("two-buttons");
+  return [main, actionBar(...buttons)];
 }
