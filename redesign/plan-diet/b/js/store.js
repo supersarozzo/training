@@ -54,7 +54,7 @@ function sampleFoods() {
 export function entryFrom(food, amount_g, date, meal, at) {
   const k = amount_g / 100;
   return {
-    id: `f-${date.replaceAll("-", "")}-${Math.random().toString(36).slice(2, 8)}`, updated_at: at ?? stamp(), date, meal,
+    id: `f-${date.replaceAll("-", "")}-${Math.random().toString(36).slice(2, 8)}`, updated_at: stamp(), eaten_at: at ?? stamp(), date, meal,
     food: food.id, name: food.name, amount_g, servings: null,
     kcal: Math.round(food.per100g.kcal * k), protein_g: Math.round(food.per100g.protein_g * k * 10) / 10,
     carbs_g: Math.round(food.per100g.carbs_g * k * 10) / 10, fat_g: Math.round(food.per100g.fat_g * k * 10) / 10, source: food.source,
@@ -73,8 +73,8 @@ function sampleLog(foods) {
     const day = dayStr(-i);
     for (const [name, g, meal] of week[i % 2]) log.push(entryFrom(by[name], g + (i % 3) * 10, day, meal));
   }
-  for (const [name, g, meal] of [["Porridge oats", 60, "breakfast"], ["Semi-skimmed milk", 250, "breakfast"], ["Chicken breast", 150, "lunch"], ["Basmati rice", 180, "lunch"], ["Greek-style yogurt 0 %", 170, "snack"]]) {
-    log.push(entryFrom(by[name], g, TODAY, meal));
+  for (const [name, g, meal, hm] of [["Porridge oats", 60, "breakfast", "07:40"], ["Semi-skimmed milk", 250, "breakfast", "07:41"], ["Chicken breast", 150, "lunch", "13:05"], ["Basmati rice", 180, "lunch", "13:06"], ["Greek-style yogurt 0 %", 170, "snack", "16:20"]]) {
+    log.push(entryFrom(by[name], g, TODAY, meal, new Date(`${TODAY}T${hm}:00`).toISOString()));
   }
   return log;
 }

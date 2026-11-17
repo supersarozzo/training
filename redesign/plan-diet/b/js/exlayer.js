@@ -35,13 +35,6 @@ export function machineRow(exId, onSaved) {
     h("span", { class: "muted" }, icon("chevron", 18)));
 }
 
-export function videoButton(id) {
-  const v = videoFor(id);
-  if (!v) return null;
-  return h("a", { class: "button secondary", href: v.url, target: "_blank", rel: "noopener noreferrer", "aria-label": `Watch a form video of ${nameOf(id)} (opens Safari)` },
-    icon("play", 18), "Watch video", icon("external", 16));
-}
-
 // The two maps side by side. `upTo`: the day's slots up to and with this one (null: no day, e.g. from the Gym tab).
 export function mapPair(exId, upTo, prevUpTo = null) {
   const m = EX_MUSCLES[exId];
@@ -85,7 +78,20 @@ function usedOn(exId) {
   return list.length ? `In your plan on ${list.join(", ")}.` : "Not in your plan now: a swap or an add.";
 }
 
-// Day context: { dayId, week, slots (with week sets), index, onSwap(slot), onRemove(slot) }.
+// Swap · Remove · Video in one row under the title. From the Gym tab (no day) only Video shows.
+// While the day's workout is running, Swap and Remove are replaced by a short note.
+function quickActions(id, slot, ctx) {
+  const v = videoFor(id);
+  const video = v ? h("a", { class: "chip qa", href: v.url, target: "_blank", rel: "noopener noreferrer", "aria-label": `Watch a form video of ${nameOf(id)} (opens Safari)` }, icon("play", 16), "Video") : null;
+  if (ctx?.locked) return h("div", { class: "qa-row" }, h("p", { class: "small muted grow" }, icon("clock", 14), " Running now: change it after the workout."), video);
+  if (!ctx) return video ? h("div", { class: "qa-row" }, video) : null;
+  return h("div", { class: "qa-row" },
+    h("button", { class: "chip qa", type: "button", onclick: () => ctx.onSwap(slot), "aria-label": `Swap ${nameOf(id)} for good` }, icon("swap", 16), "Swap"),
+    h("button", { class: "chip qa danger-text", type: "button", onclick: () => ctx.onRemove(slot), "aria-label": `Remove ${nameOf(id)} from ${days[ctx.dayId].name}` }, icon("trash", 16), "Remove"),
+    video);
+}
+
+// Day context: { dayId, week, slots (with week sets), index, locked, onSwap(slot), onRemove(slot) }.
 export function openExerciseLayer(exId, ctx = null) {
   let index = ctx ? ctx.index : 0;
   let sheet = null;
@@ -103,6 +109,8 @@ export function openExerciseLayer(exId, ctx = null) {
     sheet.fill([
       h("div", { class: "eyebrow accent" }, ctx ? `${days[ctx.dayId].name} · ${slotLabel(slot)}` : `${EQUIP[m.equip].name} · ${ex.equipment}`),
       h("h2", { class: "layer-title" }, ex.name),
+      // The actions sit at the top, before the maps and photos, so a swap needs no scrolling (idea from builder A).
+      quickActions(id, slot, ctx),
       mapPair(id, upTo, prevUpTo),
       legend(ctx ? ["A little", "More", "Most"] : ["Helper", "", "Main"]),
       ctx ? numberTiles(ex, slot, ctx.dayId, ctx.week) : h("p", { class: "small muted" }, `${repText(ex)} ${repWord(ex)}${ex.perSide ? " each side" : ""} · ${usedOn(id)}`),
@@ -112,14 +120,10 @@ export function openExerciseLayer(exId, ctx = null) {
       photoPair(id),
       h("h3", {}, "How to do it"),
       h("p", {}, cues[id] ?? "Move slowly and keep good form."),
-      videoButton(id),
-      v ? h("p", { class: "small muted" }, `Video by ${v.channel}. Opens in Safari; needs signal.`) : null,
+      v ? h("p", { class: "small muted" }, icon("play", 14), ` Form video by ${v.channel} (the Video button at the top). Opens in Safari; needs signal.`) : null,
       h("h3", {}, "Machine"),
       h("div", { class: "card" }, machineRow(id, () => draw())),
       planSwapsLine(id),
-      ctx ? h("div", { class: "layer-actions" },
-        h("button", { class: "button secondary", type: "button", onclick: () => ctx.onSwap(slot) }, icon("swap", 18), "Swap for good"),
-        h("button", { class: "button secondary danger-text", type: "button", onclick: () => ctx.onRemove(slot) }, icon("trash", 18), `Remove from ${days[ctx.dayId].name}`)) : null,
       nav,
     ]);
   };

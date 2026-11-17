@@ -87,6 +87,12 @@ function logAgainTile(f) {
 }
 
 // ---------- sheets ----------
+// "13:05" from the entry's time stamp (local time), or nothing when the stamp is missing or odd.
+function timeOf(e) {
+  const d = new Date(e.eaten_at ?? e.updated_at);
+  return Number.isFinite(d.getTime()) ? `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}` : "";
+}
+
 function mealRow(current, onPick) {
   const row = h("div", { class: "choice-row meal-row" }, MEALS.map(([v, label]) => h("button", { class: "pick", type: "button", "aria-pressed": v === current ? "true" : "false", onclick: () => onPick(v) }, label)));
   row.style.gridTemplateColumns = "repeat(4, 1fr)";
@@ -150,7 +156,7 @@ export function openCheck(draft, warnings, { source = "off", note = null } = {})
   const meals = h("div", {});
   const drawMeals = () => meals.replaceChildren(mealRow(meal, (v) => { meal = v; drawMeals(); }));
   drawMeals(); drawWarn(); drawResult();
-  const save = () => {
+  const save = (andAdd = true) => {
     const w = checkNumbers(d.per100g);
     if (w.some((x) => x.startsWith("Missing"))) { warnBox.querySelector(".card")?.classList.add("shake"); return; }
     let food = null;
@@ -160,8 +166,10 @@ export function openCheck(draft, warnings, { source = "off", note = null } = {})
       const i = doc.foods.findIndex((x) => x.id === id);
       if (i >= 0) doc.foods[i] = food; else doc.foods.push(food);
     });
+    closeSheets();
+    if (!andAdd) { rerender(); toast(`Saved ${food.name} to your foods. Nothing added to today.`); return; }
     const id = addEntry(food, grams, meal);
-    closeSheets(); rerender();
+    rerender();
     toast(`Saved ${food.name} to your foods and added ${grams} g.`, () => { tombstone(id); rerender(); });
   };
   openSheet([
@@ -177,7 +185,8 @@ export function openCheck(draft, warnings, { source = "off", note = null } = {})
     h("div", { class: "chips" }, [d.serving_g ? [d.serving_g, `1 serving ${d.serving_g} g`] : null, [30, "30 g"], [50, "50 g"], [100, "100 g"]].filter(Boolean).map(([g, label]) => h("button", { class: "chip", type: "button", onclick: () => st.set(g) }, label))),
     result,
     h("label", { class: "label" }, "Meal"), meals,
-    h("button", { class: "button", type: "button", onclick: save }, icon("check", 20), "Save food and add"),
+    h("button", { class: "button", type: "button", onclick: () => save(true) }, icon("check", 20), "Save food and add"),
+    h("button", { class: "button secondary", type: "button", onclick: () => save(false) }, "Save without adding"),
     h("p", { class: "small muted center" }, "Saved to your foods, so it works with no signal next time."),
     source === "off" ? credit() : null,
   ], { tall: true, label: "Check the food" });
@@ -230,6 +239,13 @@ function openSearch(initial = "") {
       h("span", { class: "grow" }, h("b", {}, f.name), h("span", { class: "small muted" }, `${f.per100g.kcal} kcal · ${f.per100g.protein_g} g protein per 100 g`)), icon("chevron", 18)))) : h("p", { class: "small muted" }, "None of your foods match."));
   };
   const runOff = async () => {
+    const digits = word.replace(/\s/g, "");
+    if (/^\d{8,13}$/.test(digits)) {
+      // Digits in the search box are a barcode: same path as a scan (saved foods first, then Open Food Facts).
+      const r = await handleBarcode(digits, { from: "typed" });
+      if (!r.ok) offBox.replaceChildren(h("p", { class: "error-text", role: "alert" }, r.message));
+      return;
+    }
     if (word.trim().length < 2) return;
     offBox.replaceChildren(h("p", { class: "muted loading-line" }, h("span", { class: "spinner", "aria-hidden": "true" }), `Searching Open Food Facts for “${cleanText(word, 60)}”. Only this word is sent.`));
     const res = await searchFoods(word);
@@ -239,12 +255,12 @@ function openSearch(initial = "") {
       h("span", { class: "grow" }, h("b", {}, it.draft.name), h("span", { class: "small muted" }, [it.draft.brand, it.draft.per100g.kcal !== null ? `${it.draft.per100g.kcal} kcal / 100 g` : "no calories listed"].filter(Boolean).join(" · ")),
         it.warnings.length ? h("span", { class: "small status-warning" }, "Numbers need a check") : null), icon("chevron", 18)))) : h("p", { class: "small muted" }, "Nothing found. Try another word, or make your own food."), credit());
   };
-  const input = h("input", { type: "search", value: word, placeholder: "For example: porridge oats", enterkeyhint: "search", "aria-label": "Food name", oninput: (e) => { word = e.target.value; drawMine(); }, onkeydown: (e) => { if (e.key === "Enter") runOff(); } });
+  const input = h("input", { type: "search", value: word, placeholder: "Food name or barcode digits", enterkeyhint: "search", "aria-label": "Food name", oninput: (e) => { word = e.target.value; drawMine(); }, onkeydown: (e) => { if (e.key === "Enter") runOff(); } });
   drawMine();
   openSheet([
     h("h2", {}, "Search foods"),
     h("div", { class: "search-row" }, input, h("button", { class: "button search-go", type: "button", onclick: runOff }, "Search")),
-    h("p", { class: "small muted" }, "Your foods show as you type. Open Food Facts is asked only when you tap Search."),
+    h("p", { class: "small muted" }, "Your foods show as you type. Open Food Facts is asked only when you tap Search. Digits look up a barcode."),
     mine, offBox,
     h("button", { class: "button secondary", type: "button", onclick: () => openCheck({ name: cleanText(word), brand: "", barcode: null, per100g: { kcal: null, protein_g: null, carbs_g: null, fat_g: null }, serving_g: null, serving_label: null }, [], { source: "own" }) }, icon("plus", 18), "Make my own food"),
   ], { tall: true, label: "Search foods" });
@@ -350,7 +366,7 @@ export function renderDiet() {
       return h("div", { class: "card meal-card" },
         h("div", { class: "meal-head" }, h("b", {}, label), h("span", { class: "small muted" }, `${fmt(sum(list, "kcal"))} kcal · ${fmt(Math.round(sum(list, "protein_g")))} g protein`)),
         list.map((e) => h("button", { class: "food-row", type: "button", onclick: () => openEntry(e), "aria-label": `${e.name}, ${e.kcal} kcal, ${e.protein_g} g protein. Change or delete.` },
-          h("span", { class: "grow" }, h("b", {}, e.name), h("span", { class: "small muted" }, e.amount_g ? `${e.amount_g} g` : "Quick add")),
+          h("span", { class: "grow" }, h("b", {}, e.name), h("span", { class: "small muted" }, [timeOf(e), e.amount_g ? `${e.amount_g} g` : "Quick add"].filter(Boolean).join(" · "))),
           h("span", { class: "food-nums" }, h("b", {}, `${e.protein_g} g`), h("span", { class: "small muted" }, `${e.kcal} kcal`)))));
     }) : h("div", { class: "card" }, h("p", { class: "muted" }, "Nothing logged today. Scan a pack, or tap + on a food you had before.")),
     credit(),

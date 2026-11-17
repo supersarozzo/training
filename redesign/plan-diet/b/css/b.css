@@ -316,3 +316,14 @@ html[data-motion="off"] .laser { animation: none; }
 .vol-row.sub .vol-bar { height: 6px; }
 .vol-bar .fill.sub { background: var(--border-strong); }
 .verdict.sub { color: var(--text-muted); font-weight: 650; }
+
+/* ---------- changes after the cross-review (ideas from builder A, drawn our way) ---------- */
+/* Done days get a small tick in the strip (the today bar and the changed dot keep their places). */
+.done-tick { position: absolute; top: -6px; left: -5px; display: inline-flex; width: 18px; height: 18px; border: 2px solid var(--bg-canvas); align-items: center; justify-content: center; border-radius: 50%; background: var(--status-success); color: var(--bg-canvas); }
+/* Running workout: the day is locked, said in one card. */
+.running-card { display: flex; gap: var(--s3); align-items: flex-start; border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.running-card p { margin: 0; }
+/* Swap · Remove · Video under the layer title. */
+.qa-row { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; margin: var(--s2) 0 var(--s3); }
+.qa-row .chip.qa { min-height: 44px; padding: 0 var(--s4); gap: 6px; font-weight: 700; }
+.qa-row p { margin: 0; }

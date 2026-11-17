@@ -7,7 +7,7 @@ import { icon } from "./app/icons.js";
 import { weeks, weekInfo, walkRules, days, exercises, DAY_IDS } from "./app/plan-v2.js";
 import { liftWarmup } from "./app/schedule.js";
 import { stagger, onMount, reduced } from "./app/motion.js";
-import { loadDoc, TODAY } from "./store.js";
+import { loadDoc, loadDevice, TODAY } from "./store.js";
 import { blockPosition } from "./app/schedule.js";
 import { EX_MUSCLES, GROUPS, EQUIP, names, joinWords } from "./data/muscles.js";
 import { bodyMap, bestView, legend, levelWords } from "./bodymap.js";
@@ -23,6 +23,17 @@ import {
 const pos = () => blockPosition(loadDoc().block.start_monday, TODAY);
 const thisWeek = () => Math.min(Math.max(pos().week, 1), 12);
 const todayDay = () => pos().planDay;
+
+// Days done in the week shown: a finished workout for that plan day and week (idea from builder A: ticks in the strip).
+const doneDays = (doc, w) => new Set((doc.sessions ?? []).filter((s) => s.status === "finished" && s.week === w).map((s) => s.plan_day));
+// A day whose workout is running now cannot be edited (a running workout never changes). The app keeps the running
+// workout in trn.device.v1.active. Prototype only: ?running=1 pretends today's workout is running.
+function runningDay(doc) {
+  const a = loadDevice().active;
+  const s = a && (doc.sessions ?? []).find((x) => x.id === a.session_id && x.status !== "finished");
+  if (s) return s.plan_day;
+  return new URLSearchParams(location.search).has("running") ? todayDay() : null;
+}
 
 let dayId = null;
 let week = null;
@@ -49,11 +60,13 @@ function moveDay(step) {
 function dayStrip() {
   const t = todayDay();
   const doc = loadDoc();
+  const done = doneDays(doc, week);
   return h("div", { class: "day-strip", role: "tablist", "aria-label": "Day of the plan" }, DAY_IDS.map((d) =>
     h("button", { type: "button", role: "tab", class: `${d === dayId ? "on" : ""} ${d === t && week === thisWeek() ? "today" : ""}`, "aria-selected": d === dayId ? "true" : "false",
-      "aria-label": `${days[d].name}${d === t ? ", today" : ""}${isEdited(doc, d) ? ", changed by you" : ""}`, onclick: () => { slideDir = DAY_IDS.indexOf(d) - DAY_IDS.indexOf(dayId); dayId = d; rerender(); } },
+      "aria-label": `${days[d].name}${d === t ? ", today" : ""}${done.has(d) ? ", done this week" : ""}${isEdited(doc, d) ? ", changed by you" : ""}`, onclick: () => { slideDir = DAY_IDS.indexOf(d) - DAY_IDS.indexOf(dayId); dayId = d; rerender(); } },
     h("span", { class: "d" }, days[d].name.slice(0, 3)),
     h("span", { class: "f" }, days[d].focus.replace("body ", "").replace(" (a bit lighter)", "")),
+    done.has(d) ? h("span", { class: "done-tick", "aria-hidden": "true" }, icon("check", 12, { strokeWidth: 3 })) : null,
     isEdited(doc, d) ? h("i", { class: "edited-dot", "aria-hidden": "true" }) : null)));
 }
 
@@ -129,7 +142,8 @@ function exCard(doc, slot, index, slots) {
   const ex = exercises[slot.ex];
   const m = EX_MUSCLES[slot.ex];
   const lv = exerciseLevels(slot.ex);
-  const open = () => openExerciseLayer(slot.ex, { dayId, week, slots, index, onSwap: (s) => openSwap(s), onRemove: (s) => doRemove(s) });
+  const locked = runningDay(doc) === dayId && week === thisWeek();
+  const open = () => openExerciseLayer(slot.ex, { dayId, week, slots, index, locked, onSwap: (s) => openSwap(s), onRemove: (s) => doRemove(s) });
   const setsChanged = slot.sets !== slot.base;
   const card = h("div", { class: `xcard ${editing ? "editing" : ""}` },
     h("button", { class: "xcard-main", type: "button", onclick: open, "aria-label": `${ex.name}: ${slot.sets} sets of ${repText(ex)} ${repWord(ex)}. ${restText(slot)}. Works ${names(m.p).join(", ")}. Open details.` },
@@ -204,6 +218,30 @@ function swapRow(doc, item, slot) {
   bodyMap(lv, { view: bestView(lv), cls: "mini", label: "" }));
 }
 
+// True when the exercise needs no extra machine, or the first gym visit confirmed it.
+function gymHas(doc, id) {
+  const need = Object.values(exercises).flatMap((e) => e.swaps).find((s) => s.id === id && s.needsMachine);
+  return !need || doc.shared_settings?.extra_machines?.[need.needsMachine] === true;
+}
+
+// The way out when the matches do not suit (idea from builder A): every other exercise, grouped by main muscle,
+// behind a button, with a plain warning that it changes what the day works.
+function otherMusclesBox(doc, slot, res) {
+  const box = h("div", {});
+  const inDay = new Set(daySlots(doc, dayId, week).map((s) => s.ex));
+  const shown = new Set([slot.ex, ...res.same, ...res.other, ...res.hidden].map((x) => x.id ?? x));
+  const ids = Object.keys(exercises).filter((id) => !shown.has(id) && !inDay.has(id) && gymHas(doc, id));
+  if (!ids.length) return null;
+  const draw = (open) => box.replaceChildren(...(open
+    ? [h("h3", {}, "Other muscles"),
+      h("p", { class: "small status-warning" }, icon("warn", 14), " These change what the day works. The body map and the whole plan check will show it."),
+      h("div", { class: "card" }, ids.sort((a, b) => GROUPS[EX_MUSCLES[a].p[0]].name.localeCompare(GROUPS[EX_MUSCLES[b].p[0]].name) || exercises[a].name.localeCompare(exercises[b].name))
+        .map((id) => swapRow(doc, { id, equip: EQUIP[EX_MUSCLES[id].equip].name }, slot)))]
+    : [h("button", { class: "button secondary", type: "button", onclick: () => draw(true) }, icon("body", 18), "Show exercises for other muscles")]));
+  draw(false);
+  return box;
+}
+
 function openSwap(slot) {
   const doc = loadDoc();
   const ex = exercises[slot.ex];
@@ -222,8 +260,9 @@ function openSwap(slot) {
     h("p", { class: "small muted" }, `Shown: exercises whose main muscle is the ${muscle}, and the plan's own swaps. It keeps ${slot.base} sets and its rest; reps come from the new exercise.`),
     !res.same.length && !res.other.length ? null : section(`Similar equipment (${EQUIP[m.equip].name.toLowerCase()})`, res.same, `No other exercise in the app works the ${muscle} with ${m.equip === "bodyweight" ? "body weight" : "this kind of equipment"}. The ones below use other equipment.`),
     !res.same.length && !res.other.length ? null : section("Other equipment", res.other, `Nothing with other equipment either.`),
-    !res.same.length && !res.other.length ? h("div", { class: "card warn" }, h("p", {}, `Nothing in the app matches ${ex.name}. You can remove it, or ask the Training chat to add a new exercise (with photos) for the ${muscle}.`)) : null,
+    !res.same.length && !res.other.length ? h("div", { class: "card warn" }, h("p", {}, `Nothing in the app matches ${ex.name}. You can remove it, pick one for another muscle below, or ask the Training chat to add a new exercise (with photos) for the ${muscle}.`)) : null,
     res.hidden.length ? h("p", { class: "small muted" }, icon("info", 14), ` Hidden: ${res.hidden.map((x) => exercises[x.id].name).join(", ")}. ${res.hidden.some((x) => x.state === "no") ? "Your gym does not have that machine." : "It needs a machine your first gym visit has not confirmed (Settings > Gym)."}`) : null,
+    otherMusclesBox(doc, slot, res),
   ], { tall: true, label: "Swap for good" });
 }
 
@@ -241,10 +280,7 @@ function openAdd(free) {
     const groups = ["chest", "lats", "mid_back", "front_delts", "side_delts", "rear_delts", "biceps", "triceps", "quads", "hamstrings", "glutes", "calves", "abs"];
     const forMuscle = addMuscle ? Object.keys(exercises).filter((id) => EX_MUSCLES[id].p.includes(addMuscle)) : [];
     const hidden = new Set(matchesFor(doc, forMuscle[0] ?? "plank").hidden.map((x) => x.id));
-    const gymOk = (id) => {
-      const need = Object.values(exercises).flatMap((e) => e.swaps).find((s) => s.id === id && s.needsMachine);
-      return !need || doc.shared_settings?.extra_machines?.[need.needsMachine] === true;
-    };
+    const gymOk = (id) => gymHas(doc, id);
     sheet.fill([
       h("div", { class: "eyebrow accent" }, `${days[dayId].name} · add for good`),
       h("h2", {}, "Add an exercise"),
@@ -309,6 +345,8 @@ export function renderPlan() {
   const doc = loadDoc();
   const slots = daySlots(doc, dayId, week);
   const notThisWeek = week !== thisWeek();
+  const locked = runningDay(doc) === dayId && !notThisWeek;
+  if (locked) editing = false;
   const weekChip = h("button", { class: "chip week-chip", type: "button", onclick: openWeeks, "aria-label": `Showing week ${week}. Change week.` }, `Week ${week}`, icon("chevron", 14));
   const children = [
     head(`Plan · ${weekInfo(week).phase}`, "", weekChip),
@@ -316,6 +354,7 @@ export function renderPlan() {
     dayStrip(),
     notThisWeek ? h("div", { class: "card week-note" }, h("p", { class: "small" }, `Showing week ${week}, not this week (${thisWeek()}). Sets follow week ${week}'s rules.`), h("button", { class: "text-button", type: "button", onclick: () => { week = thisWeek(); rerender(); } }, "Back to this week")) : null,
     editing ? h("div", { class: "lasts-box edit-banner" }, icon("edit", 18), h("p", {}, h("b", {}, `Editing ${days[dayId].name}. `), lastsLine())) : null,
+    locked ? h("div", { class: "card running-card" }, icon("clock", 20), h("p", {}, h("b", {}, `${days[dayId].name}'s workout is running. `), "It keeps its exercises. You can change this day after you finish it, or swap for this workout only from the workout screen.")) : null,
   ];
   const content = h("div", { class: `day-content ${slideDir > 0 ? "from-right" : slideDir < 0 ? "from-left" : ""}` },
     editing ? null : heroCard(doc, slots),
@@ -331,7 +370,9 @@ export function renderPlan() {
       icon("chevron", 18)));
   slideDir = 0;
   children.push(content);
-  const bar = editing
+  const bar = locked
+    ? tabActionBar(secondaryButton([icon("play", 18), "Back to the workout"], () => go("#/today"), "edit-btn"))
+    : editing
     ? tabActionBar(mainButton(["Done", icon("check", 20, { strokeWidth: 2.6 })], () => { editing = false; rerender(); }))
     : tabActionBar(secondaryButton([icon("edit", 18), `Edit ${days[dayId].name}`], () => { editing = true; rerender(); }, "edit-btn"));
   const main = screenWithBar(...children);

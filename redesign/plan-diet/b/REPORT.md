@@ -21,15 +21,16 @@ document: `plan_days`, `foods` and `food_log`.
 
 ## Screenshots
 
-`shots/` has 46 screens and opened layers in light and dark (92 files). Size: 375 x 812, taken at 2x. Every one was
+`shots/` has 49 screens and opened layers in light and dark (98 files). Size: 375 x 812, taken at 2x. Every one was
 taken with Reduce Motion on, so no frame is caught half-way through an animation.
 
 | Prefix | What |
 |---|---|
 | p01-p18 | Plan: day page, Thursday, exercise layer (maps, numbers, photos, build-up, machine), swap (normal, nothing similar, nothing at all), edit mode, add, the changed day, "back to the plan", the 12 weeks, week 9 |
 | p19-p21 | Whole plan check |
+| p22-p23 | After the review: the running workout locks its day; the swap sheet's "other muscles" list |
 | g01-g06 | Gym: machines, machine card, exercises, filter, exercise layer |
-| d01-d16 | Diet: totals, meals, scanner, misread, saved food, real Open Food Facts product, unknown barcode, product with no numbers, digits, search (own and Open Food Facts), quick add, copy yesterday, edit entry, "log again" with Undo |
+| d01-d16 | Diet: totals, meals, scanner, misread, saved food, real Open Food Facts product, unknown barcode, product with no numbers, digits, search (own and Open Food Facts), quick add, copy yesterday, edit entry, "log again" with Undo; d17 barcode digits typed into the search box |
 | o01-o03 | Today stub, Settings (now behind the gear), Progress stub |
 
 ## My design choices
@@ -66,7 +67,7 @@ Tuesday from now on, in all weeks. Workouts already done, and a workout you have
 - There is no "just today" choice. The one-workout swap stays in the running workout, as decided.
 - Past and running workouts never change: an edit only writes a `plan_days` record, never a session.
 
-**6. Swaps that match.** "Swap for good" shows exercises whose main muscle is the same (lats and mid back count as
+**6. Swaps that match.** "Swap" (at the top of the exercise layer, or on the card in edit mode) shows exercises whose main muscle is the same (lats and mid back count as
 "back"), plus the plan's own swaps.
 - Two groups: "Similar equipment (machine)" and "Other equipment".
 - Each row shows its main muscle and a mini map.
@@ -175,7 +176,7 @@ Diet sits next to Today because both are used every day.
 | Task | Taps | Path |
 |---|---|---|
 | See Thursday | **2** | Plan tab → "Thu" in the strip (or the → arrow twice) |
-| Swap an exercise | **4** | Plan → the card → "Swap for good" → pick one. Edit mode: Plan → Edit → Swap → pick = 4 too |
+| Swap an exercise | **4** | Plan → the card → "Swap" (top of the layer, no scrolling) → pick one. Edit mode: Plan → Edit → Swap → pick = 4 too |
 | Log a scanned food (saved before) | **3** | Diet → Scan a barcode → (camera reads by itself) → Add |
 | Log a scanned food (new) | **3** | Diet → Scan a barcode → (lookup) → Save food and add. Plus a few taps if numbers need fixing |
 
@@ -266,3 +267,35 @@ The master gives them numbers. B1 to B6 are my labels.
 
 - `openAddMenu` in `js/diet.js` is not used any more (the 4 big "ways" replaced it). It is harmless.
 - The app's Settings switch is 34 px tall. A taller hit area would meet the 44 px rule.
+
+## Changes after review
+
+Builder A was reviewed on 2026-11-17 (`REVIEW-of-A.md`). I took A's better ideas and drew them B's way. I copied no
+files from `a/`.
+
+1. **Swap, Remove and Video move to the top of the exercise layer**, under the title. A swap needs no scrolling now.
+   The buttons at the bottom of the layer are gone, and the video note stays under the tips.
+2. **Pair headers spell out the workout:** "Back and forth · 3 rounds · rest 90 s after each round". "On its own"
+   says "3 sets · rest 60 s between sets". Abs say "One after the other · rest 30 s between sets". The numbers follow
+   the week shown.
+3. **Done days get a green tick** at the corner of their day in the strip (Monday in the sample data).
+4. **A running workout locks its day.**
+   - The page says: "Tuesday's workout is running. It keeps its exercises. You can change this day after you finish
+     it, or swap for this workout only from the workout screen."
+   - The bottom button becomes "Back to the workout".
+   - In the layer, Swap and Remove are replaced by "Running now: change it after the workout".
+   - The running workout is read from `trn.device.v1.active`, as in the app. `?running=1` pretends one is running.
+5. **"Show exercises for other muscles"** sits at the end of the swap sheet. It lists every other exercise the gym
+   has, sorted by main muscle, with a warning: "These change what the day works."
+6. **Diet:**
+   - the search box also takes barcode digits (same path as a scan: saved foods first, then Open Food Facts);
+   - the check step has "Save without adding";
+   - today's entries show the time eaten (a new `eaten_at` field, kept apart from `updated_at`).
+7. **Not taken, on purpose:**
+   - A's denser cards without maps (against B's angle);
+   - the day arrows at the bottom (B's bottom bar holds Edit);
+   - A's two-number rows on the check screen. These are good candidates for the merged version (`REVIEW-of-A.md`).
+
+All 49 screens were re-taken in light and dark after these changes. They were checked again for sideways scroll and
+44 px targets. One name search ("skyr", light set) ran into Open Food Facts not answering, so that screenshot shows
+the failure message. That is a real state, and it is left as it is.

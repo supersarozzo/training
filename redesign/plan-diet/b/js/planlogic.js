@@ -55,12 +55,19 @@ export function units(slots) {
   const out = [];
   for (const letter of ["A", "B", "C"]) {
     const list = slots.filter((s) => s.slot[0] === letter && s.slot.length === 2);
-    if (list.length) out.push({ id: letter, title: `Pair ${letter}`, sub: list.length === 2 ? "Back to back, then rest" : "One exercise: rest after each set", slots: list });
+    if (!list.length) continue;
+    // Spelled out the way the workout runs it (idea from builder A): "back and forth · 3 rounds · rest 90 s after each round".
+    const rounds = Math.max(...list.map((s) => s.sets));
+    const rest = list.map((s) => s.rest).find((r) => r !== null && r !== undefined);
+    out.push({ id: letter, title: `Pair ${letter}`, sub: list.length === 2 ? `Back and forth · ${rounds} rounds · rest ${rest} s after each round` : `${rounds} sets · rest ${rest} s after each set`, slots: list });
   }
   const d = slots.filter((s) => s.slot === "D");
-  if (d.length) out.push({ id: "D", title: "On its own", sub: "Rest between sets", slots: d });
+  if (d.length) out.push({ id: "D", title: "On its own", sub: `${d[0].sets} sets · rest ${d[0].rest ?? 60} s between sets`, slots: d });
   const abs = slots.filter((s) => s.slot.startsWith("Abs"));
-  if (abs.length) out.push({ id: "Abs", title: "Abs and holds", sub: "Short rests", slots: abs });
+  if (abs.length) {
+    const rest = abs.map((s) => s.rest).find((r) => r !== null && r !== undefined);
+    out.push({ id: "Abs", title: "Abs and holds", sub: rest ? `One after the other · rest ${rest} s between sets` : "Short rests", slots: abs });
+  }
   return out;
 }
 
