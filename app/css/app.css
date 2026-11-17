@@ -83,6 +83,7 @@ body {
   margin: 0; background: var(--bg-canvas) var(--canvas-glow) no-repeat; color: var(--text-primary);
   font: 400 17px/1.5 var(--font); font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+  overflow-wrap: anywhere; /* a long word or a pasted link in a note wraps; it never widens the screen (review 8.25 R3) */
 }
 #app { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
 img { display: block; max-width: 100%; }
