@@ -195,15 +195,42 @@ clipped and checked before it is shown or saved; it is only ever put in text nod
 
 ## 9. Screenshots (`shots/`)
 
-33 dark and 22 light, at 375 x 812, with Animations off (the Browser pane was hidden, which pauses the entrance
+35 dark and 24 light (after the review), at 375 x 812, with Animations off (the Browser pane was hidden, which pauses the entrance
 animations; motion was checked in the code). Light versions were not taken for: 02 plan bottom, 04 layer photos,
 13 week 7, 16 running block, 22 amount sheet, 24 quick add, 26 type digits, 27 looking up, 29 check bottom,
 30 search results, 33 Progress. The scan layer is dark in both modes on purpose (camera view).
-Three files were captured at device scale (600 x 1299 instead of 375 x 812): 01-plan-day-light, 16-running-block-dark,
+Two files were captured at device scale (600 x 1299 instead of 375 x 812): 16-running-block-dark,
 19-gym-exercise-layer-light; same 375 x 812 layout, just a larger picture. Shrinking them by script was blocked by
 the permission check, so they are left as captured.
 
-## 10. Checked and not checked
+## 10. Changes after review (cross-review of builder B, 2026-11-17)
+
+Full review: [REVIEW-of-B.md](REVIEW-of-B.md). I took five of B's ideas, written my own way (no files copied from `b/`):
+
+1. **Small body map on every exercise card** and every swap row: one view, the side where the main muscle is
+   (`miniMap()` in `js/proto/bodymap.js`). Decorative; the words stay next to it.
+2. **Previous / Next in the exercise layer**, right under the two maps, named with the neighbour exercise
+   ("‹ Cable crunch", "Face pull ›"). The "Day so far" map grows as you walk the day without closing the layer.
+3. **Each day's focus in the strip** ("Upper A", "Lower A", "Full", …).
+4. **"Plan's pick"** tag in the swap list for the plan's own swap (and "The plan's exercise" when the slot was swapped).
+5. **Four ways on the Diet screen**: Search (opens the search box ready to type), Digits (opens the scanner with the
+   digits box ready), Quick add, Copy yesterday (with Undo). The bottom bar keeps Scan as the main button; the other
+   button is now "Your foods".
+
+Also fixed: the "Not shown" line in the Add sheet now reads like the swap sheet's line.
+
+Not taken, on purpose: the big day map at the top (pushes the first exercise below the fold), a confirm step on
+"Back to the plan's day" (Undo stays), meals (more taps per food).
+
+Tap counts after the changes: see Thursday 2; swap 4 from another tab (3 from the day page); log a scanned food 3 +
+the scan; **search a food or type digits: 2 from another tab** (was 3).
+
+Re-taken shots: 01 plan day, 03 layer maps, new 03b layer Previous/Next, 05 swap list (Plan's pick), 20 Diet top;
+dark and light (03 dark only). Checked in the browser: Previous/Next walks Leg press › Cable crunch › Romanian
+deadlift; Digits opens the scanner with the digits box focused; Search focuses the search box; Quick add opens;
+Copy yesterday adds 8 foods and Undo removes them.
+
+## 11. Checked and not checked
 
 Checked in the browser: swap (3 taps, lasting text, Undo toast, changed card, reaches Today), remove + Undo, add +
 the "Added" card, "Back to the plan's day" + Undo, running-workout block, no-match swap, week sheet and week 7 view,

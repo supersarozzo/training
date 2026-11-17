@@ -235,3 +235,20 @@ input[type="search"] { flex: 1; min-width: 0; height: 52px; padding: 0 var(--s4)
 .cc-flags li > .small { flex: none; white-space: nowrap; }
 .bm.wide .bm-pair { max-width: 220px; }
 .mach-row .small.plain-line { display: block; }
+
+/* ---------- changes after the cross-review of builder B (2026-11-17) ---------- */
+.day-strip button { min-height: 58px; }
+.day-strip button .f { font: 600 11px/1 var(--font); color: var(--text-muted); white-space: nowrap; }
+.day-strip button[aria-selected="true"] .f { color: inherit; opacity: .8; }
+.bm-mini { flex: none; display: block; width: 26px; }
+.bm-mini .bm-side { width: 26px; height: auto; }
+.bm-mini .bm-side polygon { stroke-width: 10; }
+.mach-row .bm-mini { margin-left: var(--s2); }
+.layer-nav { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); margin: var(--s3) 0; }
+.layer-nav .button { min-width: 0; margin: 0; padding: 0 var(--s2); font-size: 15px; gap: 4px; }
+.layer-nav .button + .button { margin: 0; }
+.layer-nav .button span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.layer-nav .button[disabled] { opacity: .45; }
+.add-ways.four { grid-template-columns: repeat(4, 1fr); margin: var(--s3) 0 var(--s2); }
+.add-ways.four .way { min-height: 68px; font-size: 13px; }
+.add-ways.four .way:first-child { background: var(--bg-raised); color: var(--text-primary); border-color: var(--border-default); }

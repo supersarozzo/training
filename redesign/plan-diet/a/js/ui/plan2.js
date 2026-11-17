@@ -22,10 +22,10 @@ import { videoButton, machineRow } from "./exinfo.js";
 import { icon } from "./icons.js";
 import { onMount, stagger } from "./motion.js";
 import { musclesOf, muscleWords, GROUPS, GROUP_NAME, EQ_NAME, eqOf, mainGroup } from "../proto/muscles.js";
-import { bodyMap, exerciseLevels, setsByGroup, levelFor, legend } from "../proto/bodymap.js";
+import { bodyMap, exerciseLevels, setsByGroup, levelFor, legend, miniMap } from "../proto/bodymap.js";
 import {
   slotsOf, weekSets, editRecord, runningWorkout, swapSlot, removeSlot, addExercise, restoreSlots, resetDay,
-  changeSummary, matchesFor, freeAddSlot, extraMinutes, MAX_ADDED, hiddenByGym, machineNeeded,
+  changeSummary, matchesFor, freeAddSlot, extraMinutes, MAX_ADDED, hiddenByGym,
 } from "../proto/plandays.js";
 import { undoToast } from "../proto/toast.js";
 import { renderMuscles, weeklyCounts } from "./crosscheck.js";
@@ -48,6 +48,8 @@ function restWords(slot) {
   return `rest ${slot.rest} s`;
 }
 const dayShort = (d) => days[d].name.slice(0, 3);
+// "Upper body A" -> "Upper A", "Full body (a bit lighter)" -> "Full" (strip label; idea from builder B).
+const focusShort = (d) => days[d].focus.replace(/\s*\(.*\)/, "").replace(" body", "");
 const fmtDate = (iso) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
 function currentPos(doc) {
@@ -123,6 +125,7 @@ export function openExerciseLayer(exId, ctx = null) {
       h("button", { class: "chip", type: "button", onclick: () => { close(); doRemove(ctx.day, ctx.slot); } }, icon("close", 17), "Remove"),
       video ? videoButton(exId, { chip: true }) : null) : null,
     exerciseMaps(exId, slot ? { doc, day: ctx.day, week: ctx.week, slot: ctx.slot } : {}),
+    slot ? layerNav(doc, ctx, () => close()) : null,
     flip(exId, { cls: "big-flip", tag: true }),
     photoNote(exId),
     photoPair(exId),
@@ -134,6 +137,21 @@ export function openExerciseLayer(exId, ctx = null) {
     h("div", { class: "card" }, machineRow(exId, { onSaved: () => { closeSheets(); rerender(); } })),
     planSwaps.length ? h("p", { class: "small muted" }, `The plan's own swap: ${planSwaps.join("; ")}.`) : null);
   return close;
+}
+
+// Previous / Next: walk the day card by card without closing the layer; the "Day so far" map grows as you go
+// (idea from builder B's review; here the buttons sit right under the maps, where the eye already is).
+function layerNav(doc, ctx, close) {
+  const all = weekSlots(doc, ctx.day, ctx.week);
+  const i = all.findIndex((s) => s.slot === ctx.slot);
+  const go = (s) => { close(); openExerciseLayer(s.ex, { ...ctx, slot: s.slot }); };
+  const prev = all[i - 1];
+  const next = all[i + 1];
+  return h("div", { class: "layer-nav" },
+    h("button", { class: "button secondary", type: "button", disabled: !prev, onclick: () => prev && go(prev), "aria-label": prev ? `Previous exercise: ${exercises[prev.ex].name}` : "No previous exercise" },
+      icon("back", 18), h("span", {}, prev ? exercises[prev.ex].name : "First")),
+    h("button", { class: "button secondary", type: "button", disabled: !next, onclick: () => next && go(next), "aria-label": next ? `Next exercise: ${exercises[next.ex].name}` : "No next exercise" },
+      h("span", {}, next ? exercises[next.ex].name : "Last"), icon("chevron", 18)));
 }
 
 // ---------- changes (saved at once, permanent, with Undo) ----------
@@ -151,14 +169,15 @@ function doRemove(day, slotName) {
   withUndo(day, () => removeSlot(day, slotName), `Removed ${ex.name} from every ${days[day].name} from now on.`);
 }
 
-function swapRow(day, slotName, id, fromName) {
+function swapRow(day, slotName, id, fromName, tag = null) {
   const ex = exercises[id];
   return h("button", { class: "mach-row", type: "button", onclick: () => {
     closeSheets();
     withUndo(day, () => swapSlot(day, slotName, id), `Every ${days[day].name} from now on: ${ex.name} instead of ${fromName}.`);
   } },
   thumb(id, { small: true }),
-  h("span", { class: "grow" }, h("b", {}, ex.name), h("span", { class: "small muted" }, `${ex.equipment} · ${repText(ex)} ${repWord(ex)}`)),
+  h("span", { class: "grow" }, h("b", {}, ex.name, tag ? h("span", { class: "badge slot inline" }, tag) : null), h("span", { class: "small muted" }, `${ex.equipment} · ${repText(ex)} ${repWord(ex)}`)),
+  miniMap(id),
   h("span", { class: "muted" }, icon("chevron", 18)));
 }
 
@@ -173,6 +192,10 @@ export function openSwapList(day, slotName, week) {
   const m = matchesFor(doc, day, slot.ex);
   const eq = EQ_NAME[eqOf(slot.ex)];
   const muscle = GROUP_NAME[m.group]?.toLowerCase() ?? from.muscle;
+  // "Plan's pick" (idea from builder B): the plan's own swap for this slot, or the plan's exercise if it was swapped out.
+  const planEx = days[day].slots.find((s) => s.slot === slotName)?.ex;
+  const picks = new Set(planEx ? [planEx, ...exercises[planEx].swaps.map((sw) => sw.id)] : []);
+  const tagFor = (id) => (id === planEx ? "The plan's exercise" : picks.has(id) ? "Plan's pick" : null);
   const all = h("div", {});
   const showAll = () => {
     const inDay = new Set(slotsOf(doc, day).map((s) => s.ex));
@@ -184,8 +207,8 @@ export function openSwapList(day, slotName, week) {
     h("h2", {}, `Swap ${from.name}`),
     lastsLine(day),
     h("p", { class: "small muted" }, `Keeps the slot's ${slot.sets} sets and its rest. The reps come from the new exercise.`),
-    m.same.length ? [h("div", { class: "eyebrow" }, `Same muscle (${muscle}), same kind (${eq})`), h("div", { class: "card" }, m.same.map((id) => swapRow(day, slotName, id, from.name)))] : null,
-    m.other.length ? [h("div", { class: "eyebrow" }, `Same muscle (${muscle}), other equipment`), h("div", { class: "card" }, m.other.map((id) => swapRow(day, slotName, id, from.name)))] : null,
+    m.same.length ? [h("div", { class: "eyebrow" }, `Same muscle (${muscle}), same kind (${eq})`), h("div", { class: "card" }, m.same.map((id) => swapRow(day, slotName, id, from.name, tagFor(id))))] : null,
+    m.other.length ? [h("div", { class: "eyebrow" }, `Same muscle (${muscle}), other equipment`), h("div", { class: "card" }, m.other.map((id) => swapRow(day, slotName, id, from.name, tagFor(id))))] : null,
     !m.same.length && !m.other.length ? h("div", { class: "card warn" },
       h("p", {}, h("b", {}, `No other exercise in the app works the ${muscle} as the main muscle`), m.hidden.length ? " with the machines your gym is known to have." : "."),
       h("p", { class: "small muted" }, `Keep ${from.name}, remove it, or pick from another muscle below.`)) : null,
@@ -218,7 +241,7 @@ function openAdd(day, week) {
         withUndo(day, () => addExercise(day, id), `Added ${exercises[id].name} to the end of every ${days[day].name} from now on.`);
       } }, thumb(id, { small: true }), h("span", { class: "grow" }, h("b", {}, exercises[id].name), h("span", { class: "small muted" }, exercises[id].equipment)), h("span", { class: "muted" }, icon("plus", 18)))))
         : h("p", { class: "muted" }, `${days[day].name} already has every ${GROUP_NAME[pick].toLowerCase()} exercise the app knows.`),
-      hidden.length ? h("p", { class: "small muted" }, `Not shown: ${hidden.map((id) => exercises[id].name).join(", ")} (first visit has not found ${hidden.length > 1 ? "them" : "it"} yet: Settings > Gym; ${machineNeeded(hidden[0]) ? "a machine check" : ""}).`) : null);
+      hidden.length ? h("p", { class: "small muted" }, `Not shown: ${hidden.map((id) => exercises[id].name).join(", ")}. Your first visit has not found ${hidden.length > 1 ? "these machines" : "this machine"} yet (Settings > Gym).`) : null);
   };
   draw();
   openSheet(
@@ -269,9 +292,9 @@ function exCard(doc, day, week, slot, editing, canEdit, planSlot) {
   ];
   if (!editing) {
     return h("button", { class: "pcard", type: "button", "aria-label": `${ex.name}: ${slot.sets} sets of ${repText(ex)} ${repWord(ex)}${side(ex)}. Open details.`, onclick: () => openExerciseLayer(slot.ex, { day, week, slot: slot.slot }) },
-      ...body, h("span", { class: "muted" }, icon("chevron", 18)));
+      ...body, miniMap(slot.ex), h("span", { class: "muted" }, icon("chevron", 18)));
   }
-  return h("div", { class: "pcard editing" }, ...body,
+  return h("div", { class: "pcard editing" }, ...body, miniMap(slot.ex),
     h("span", { class: "edit-btns" },
       h("button", { class: "icon-btn", type: "button", disabled: !canEdit, "aria-label": `Swap ${ex.name}`, onclick: () => openSwapList(day, slot.slot, week) }, icon("swap", 20), h("span", {}, "Swap")),
       h("button", { class: "icon-btn", type: "button", disabled: !canEdit, "aria-label": `Remove ${ex.name}`, onclick: () => doRemove(day, slot.slot) }, icon("close", 20), h("span", {}, "Remove"))));
@@ -284,7 +307,7 @@ function dayStrip(doc, shownDay, todayDay, week) {
       class: `${d === todayDay ? "is-today" : ""} ${done.has(d) ? "is-done" : ""} ${editRecord(doc, d) ? "is-changed" : ""}`, type: "button", role: "tab",
       "aria-selected": d === shownDay ? "true" : "false", "aria-label": `${days[d].name}${d === todayDay ? ", today" : ""}${done.has(d) ? ", done" : ""}${editRecord(doc, d) ? ", changed by you" : ""}`,
       onclick: () => { state.day = d; state.editing = false; rerender(); },
-    }, h("span", { class: "d" }, dayShort(d)), h("i", { "aria-hidden": "true" }, done.has(d) ? icon("check", 14, { strokeWidth: 3 }) : null))));
+    }, h("span", { class: "d" }, dayShort(d)), h("span", { class: "f" }, focusShort(d)), h("i", { "aria-hidden": "true" }, done.has(d) ? icon("check", 14, { strokeWidth: 3 }) : null))));
 }
 
 export function renderPlan() {

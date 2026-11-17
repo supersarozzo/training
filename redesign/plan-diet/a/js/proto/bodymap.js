@@ -24,6 +24,17 @@ export function bodyMap(groupLevels, { title, words, cls = "" } = {}) {
     words ? h("div", { class: "bm-words small" }, words) : null);
 }
 
+// Small one-view map for an exercise card or a swap row (idea taken from builder B's review, drawn our way): the view
+// (front or back) where the main muscle is. Decorative: the card says the muscles in words next to it.
+export function miniMap(exId) {
+  const lv = exerciseLevels(exId);
+  const levels = {};
+  for (const [g, l] of Object.entries(lv)) for (const r of REGIONS[g] ?? []) levels[r] = Math.max(levels[r] ?? 0, l);
+  const strong = new Set(Object.entries(levels).filter(([, l]) => l === 3).map(([r]) => r));
+  const onFront = FRONT.some((r) => strong.has(r.muscle));
+  return h("span", { class: "bm-mini", "aria-hidden": "true" }, side(onFront ? FRONT : BACK, levels, onFront ? "Front" : "Back"));
+}
+
 // This exercise: main muscles strong (3), helpers light (1).
 export function exerciseLevels(exId) {
   const { main, helpers } = musclesOf(exId);

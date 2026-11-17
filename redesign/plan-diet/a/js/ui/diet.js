@@ -181,7 +181,7 @@ function messageSheet(title, text, onOwn = null) {
 // ---------- the scanner layer (camera drawn; real decoding is a later build step) ----------
 let scanLayer = null;
 function closeScanner() { if (scanLayer) { scanLayer.remove(); scanLayer = null; } }
-export function openScanner() {
+export function openScanner({ typed: typeFirst = false } = {}) {
   closeScanner();
   const digits = h("input", { type: "text", inputmode: "numeric", pattern: "[0-9]*", maxlength: "13", id: "scan-digits", placeholder: "8, 12 or 13 digits", autocomplete: "off" });
   const typed = h("form", { class: "scan-type", hidden: true, onsubmit: (e) => { e.preventDefault(); const c = digits.value.replace(/\D/g, ""); if (!c) return; closeScanner(); doLookup(c); } },
@@ -206,12 +206,13 @@ export function openScanner() {
         h("button", { class: "button ghost", type: "button", onclick: () => undoToast("Take a photo: opens the camera app for one still picture; the reader looks at that. Comes with the real build.") }, "Take a photo")),
       typed));
   document.body.append(scanLayer);
+  if (typeFirst) { typed.hidden = false; scanLayer.querySelector(".scan-two").hidden = true; digits.focus(); }
 }
 // The router closes sheets on every screen change; the scanner closes the same way (and stops the camera, in the real build).
 window.addEventListener("hashchange", closeScanner);
 
 // ---------- add sheet ----------
-export function openAdd() {
+export function openAdd({ focus = false } = {}) {
   const doc = model.doc();
   const t = todayStr();
   const yest = dayEntries(doc, addDays(t, -1));
@@ -242,6 +243,7 @@ export function openAdd() {
       h("span", { class: "muted" }, icon("chevron", 18))))),
     h("button", { class: "button secondary", type: "button", onclick: () => ownFoodSheet() }, "Make a new food"),
     offCredit());
+  if (focus) setTimeout(() => q.focus(), 50);
 }
 
 function quickSheet() {
@@ -268,6 +270,7 @@ export function renderDiet() {
   const entries = dayEntries(doc, t);
   const tot = totals(entries);
   const avg = average7(doc, t);
+  const yest = dayEntries(doc, addDays(t, -1));
   const loggedToday = new Set(entries.map((e) => e.food));
   // Foods not eaten yet today come first: they are the likely next ones.
   const recent = recentFoods(doc, 8).sort((a, b) => loggedToday.has(a.id) - loggedToday.has(b.id)).slice(0, 6);
@@ -280,6 +283,15 @@ export function renderDiet() {
       targets.protein_g ? meter("Protein", tot.protein_g, targets.protein_g, "g", "to go", "protein") : null,
       targets.kcal ? meter("Calories", tot.kcal, targets.kcal, "kcal", "left", "kcal") : null,
       avg ? h("p", { class: "small muted avg" }, `Last ${avg.n} days: ${fmt(avg.kcal)} kcal and ${fmt(avg.protein_g)} g protein a day on average.`) : null),
+    // The other ways, one tap from the tab (idea from builder B's review). Scan stays the big button in the bottom bar.
+    h("div", { class: "add-ways four" },
+      h("button", { class: "way", type: "button", onclick: () => openAdd({ focus: true }) }, icon("food", 20), h("span", {}, "Search")),
+      h("button", { class: "way", type: "button", onclick: () => openScanner({ typed: true }) }, icon("note", 20), h("span", {}, "Digits")),
+      h("button", { class: "way", type: "button", onclick: quickSheet }, icon("plus", 20), h("span", {}, "Quick add")),
+      h("button", { class: "way", type: "button", disabled: !yest.length, onclick: () => {
+        const ids = copyDay(addDays(t, -1), t); rerender();
+        undoToast(`Copied yesterday's ${ids.length} foods to today.`, () => { ids.forEach(deleteEntry); rerender(); });
+      } }, icon("undo", 20), h("span", {}, "Copy yesterday"))),
     recent.length ? [h("div", { class: "eyebrow list-eyebrow" }, "Log again · one tap"),
       h("div", { class: "card again" }, recent.map((f) => {
         const g = f.last_amount_g ?? f.serving_g ?? 100;
@@ -305,7 +317,7 @@ export function renderDiet() {
   main.className = "screen has-bar diet";
   onMount(() => stagger(main.querySelectorAll(".again-row, .log-row")));
   return [main, tabActionBar(h("div", { class: "day-nav diet-nav" },
-    h("button", { class: "button secondary", type: "button", onclick: openAdd }, icon("plus", 20), "Add food"),
+    h("button", { class: "button secondary", type: "button", onclick: () => openAdd() }, icon("plus", 20), "Your foods"),
     h("button", { class: "button", type: "button", onclick: openScanner }, icon("bolt", 20), "Scan")))];
 }
 
