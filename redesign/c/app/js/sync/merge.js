@@ -2,7 +2,7 @@
 // No page, no storage, no network. It never changes its inputs.
 //
 // Rules:
-//  - Lists (sessions, weighins, measurements, exercise_state): join by `id`. A record on one side only is kept.
+//  - Lists (sessions, weighins, measurements, exercise_state, gym_spots): join by `id`. A record on one side only is kept.
 //    On both sides the later `updated_at` wins. Same time: the tombstone wins. Still the same: the record whose
 //    JSON text sorts first, so both phones pick the same one.
 //  - Single objects (profile, shared_settings, block): the later `updated_at` wins as a whole.
@@ -10,7 +10,7 @@
 //  - The result lists are sorted by id, so merge(a, b) and merge(b, a) are exactly equal.
 import { FORMAT } from "../validate.js";
 
-export const LISTS = ["sessions", "weighins", "measurements", "exercise_state"];
+export const LISTS = ["sessions", "weighins", "measurements", "exercise_state", "gym_spots"];
 export const SINGLES = ["profile", "shared_settings", "block"];
 
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);

@@ -6,7 +6,7 @@
 export const FORMAT = 1;
 const APP = "training";
 const BAD_KEYS = new Set(["__proto__", "constructor", "prototype"]);
-const LISTS = ["sessions", "weighins", "measurements", "exercise_state"];
+const LISTS = ["sessions", "weighins", "measurements", "exercise_state", "gym_spots"]; // gym_spots: added by redesign C, old files without it still load
 // Same list as LEFT_CHOICES in engine/week1.js (kept here so this file stays small; tests/review-low.test.mjs checks they match).
 const LEFT_CHOICES = ["0-1", "2-3", "4-6", "7+"];
 export const MAX_TEXT = 2000;
@@ -32,6 +32,7 @@ export function emptyDoc() {
     weighins: [],
     measurements: [],
     exercise_state: [],
+    gym_spots: [],
   };
 }
 
@@ -232,6 +233,11 @@ const CHECKS = {
     text(x.machine_note ?? "", `exercise state ${n} note`);
     numOrNull(x.fail_streak ?? 0, `exercise state ${n} fail streak`, 0, 100);
   }),
+  // "Where it is in my gym": one note per machine (id "g-<machine>").
+  gym_spots: (r, n) => checkRecord(r, `gym note ${n}`, (x) => {
+    text(x.machine, `gym note ${n} machine`, { max: 60, allowEmpty: false });
+    text(x.where, `gym note ${n}`);
+  }),
 };
 
 const MAX_RECORDS = 20000;
@@ -255,6 +261,7 @@ export function validateDocument(raw) {
     delete doc.device; // never load device data (token) from a file
     delete doc.token;
     for (const name of LISTS) {
+      if (name === "gym_spots" && src[name] === undefined) continue; // optional new list: an old file comes back unchanged
       const list = src[name] ?? [];
       if (!Array.isArray(list)) fail(`${name} must be a list`);
       if (list.length > MAX_RECORDS) fail(`${name} has too many records`);

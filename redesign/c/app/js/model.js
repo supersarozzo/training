@@ -4,6 +4,7 @@ import { nowUtc, newId, exerciseStateId, weighinId, localDate } from "./ids.js";
 import { hasData } from "./store.js";
 import { validateDocument, clipText } from "./validate.js";
 import { mergeDocs } from "./sync/merge.js";
+import { machines } from "./plan/media.js";
 
 // Monday of the current week (local), or the next Monday. Used for a new block's start.
 // If today is Monday, the block starts today. Otherwise the next Monday.
@@ -169,6 +170,19 @@ ${note}` : note);
         const next = { ...base, ...patch, id, updated_at: t };
         if (typeof next.machine_note === "string") next.machine_note = clipText(next.machine_note);
         if (i >= 0) doc.exercise_state[i] = next; else doc.exercise_state.push(next);
+      });
+    },
+
+    // "Where it is in my gym" for one machine (redesign C). One note per machine: saving again replaces it.
+    // An old document without the list gets one here. The note is cut to the check's limit.
+    setGymSpot(machineId, where) {
+      if (typeof machineId !== "string" || !Object.hasOwn(machines, machineId)) throw new Error("Unknown machine");
+      return update((doc, t) => {
+        if (!Array.isArray(doc.gym_spots)) doc.gym_spots = [];
+        const id = `g-${machineId}`;
+        const rec = { id, updated_at: t, machine: machineId, where: clipText(String(where ?? "").trim()) };
+        const i = doc.gym_spots.findIndex((x) => x.id === id);
+        if (i >= 0) doc.gym_spots[i] = rec; else doc.gym_spots.push(rec);
       });
     },
 

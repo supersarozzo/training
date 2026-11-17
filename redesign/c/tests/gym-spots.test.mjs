@@ -20,12 +20,13 @@ test("a new phone has an empty gym_spots list", () => {
   assert.deepEqual(emptyDoc().gym_spots, []);
 });
 
-test("old data with no gym_spots list still passes the check and gets an empty list", () => {
+test("old data with no gym_spots list still passes the check, unchanged (the list counts as empty)", () => {
   const old = validDoc();
   delete old.gym_spots;
   const r = validateDocument(old);
   assert.equal(r.ok, true);
-  assert.deepEqual(r.doc.gym_spots, []);
+  assert.deepEqual(r.doc, old); // an old file comes back exactly as it was (tests/validate.test.mjs)
+  assert.deepEqual(r.doc.gym_spots ?? [], []);
 });
 
 test("old data with no gym_spots list still loads on the phone, and the first note adds the list", () => {
