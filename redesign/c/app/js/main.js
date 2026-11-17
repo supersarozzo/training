@@ -11,6 +11,8 @@ import { renderTargets } from "./ui/targets.js";
 import { renderWorkout } from "./ui/workout.js";
 import { renderWeighin } from "./ui/weighin.js";
 import { renderWeekly } from "./ui/weekly.js";
+import { renderGym } from "./ui/gym.js";
+import { applyPrefs, motionOk } from "./ui/prefs.js";
 import { tabBar, errorState } from "./ui/parts.js";
 import { model, setRedraw } from "./ui/app.js";
 import { clearTickers } from "./timer.js";
@@ -24,7 +26,7 @@ import { getActive } from "./active.js";
 import { watchStoreErrors } from "./errors.js";
 import { resetSyncDraft } from "./ui/settings-sync.js";
 
-const tabRoutes = { today: renderToday, progress: renderProgress, plan: renderPlan, settings: renderSettings };
+const tabRoutes = { today: renderToday, progress: renderProgress, gym: renderGym, plan: renderPlan, settings: renderSettings };
 const flowRoutes = { setup: renderSetup, intake: renderIntake, targets: renderTargets, workout: renderWorkout, weighin: renderWeighin, weekly: renderWeekly };
 const DEFAULT_ROUTE = "today";
 
@@ -42,6 +44,7 @@ function guard(name) {
   return name;
 }
 
+let lastKey = null;
 function render() {
   const root = document.getElementById("app");
   clearTickers(); // timers of the old screen stop
@@ -53,7 +56,11 @@ function render() {
     if (name !== wanted) history.replaceState(null, "", `#/${name}`);
     if (Object.hasOwn(flowRoutes, name)) mount(root, flowRoutes[name]());
     else mount(root, tabRoutes[name](), updateBanner(), tabBar(name));
-    window.scrollTo(0, 0);
+    // Screen change: a short rise and fade, only when the screen really changes (not on every redraw).
+    const main = root.querySelector("main");
+    const key = main ? main.dataset.key || name : name;
+    if (key !== lastKey) { window.scrollTo(0, 0); if (main && motionOk()) main.classList.add("enter"); }
+    lastKey = key;
   } catch (e) {
     mount(root, errorState(e && e.message ? e.message : "The app could not start."));
   }
@@ -64,6 +71,8 @@ watchStoreErrors(window, (text) => {
   const close = openSheet(h("h2", {}, "Not saved"), h("p", {}, text), h("button", { class: "button", type: "button", onclick: () => close() }, "OK"));
 });
 
+applyPrefs();
+window.matchMedia?.("(prefers-color-scheme: dark)").addEventListener?.("change", applyPrefs);
 try { setSoundOn(soundOn()); } catch { /* storage blocked: default sound on */ }
 setRedraw(render);
 window.addEventListener("hashchange", render);
@@ -72,4 +81,4 @@ registerWorker();
 // Sync when the app opens, comes to the front, or gets signal back. Never during a workout.
 startAutoSync({ syncer, win: window, inWorkout: () => getActive() !== null });
 // When a sync ends, redraw the quiet screens so the status line is right (never a workout or a form being filled in).
-syncer.subscribe(() => { if (["#/today", "#/settings", "#/progress"].includes(location.hash) || location.hash === "") render(); });
+syncer.subscribe(() => { if (["#/today", "#/settings", "#/progress", "#/gym"].includes(location.hash) || location.hash === "") render(); });
