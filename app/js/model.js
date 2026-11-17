@@ -1,6 +1,7 @@
 // Create, update and delete records. Screens never write storage directly: they call these.
 // Every change stamps `updated_at` and is saved at once (docs/ARCHITECTURE.md section 6).
-import { nowUtc, newId, exerciseStateId, weighinId, localDate } from "./ids.js";
+import { nowUtc, newId, exerciseStateId, gymSpotId, weighinId, localDate } from "./ids.js";
+import { MACHINE_IDS } from "./plan/machine-ids.js";
 import { hasData } from "./store.js";
 import { validateDocument, clipText } from "./validate.js";
 import { mergeDocs } from "./sync/merge.js";
@@ -176,6 +177,22 @@ ${note}` : note);
         const next = { ...base, ...patch, id, updated_at: t };
         if (typeof next.machine_note === "string") next.machine_note = clipText(next.machine_note);
         if (i >= 0) doc.exercise_state[i] = next; else doc.exercise_state.push(next);
+      });
+    },
+
+    // "Where it is in my gym" for one machine (gym_spots, JUDGING.md 3.3). One record per machine: g-<machine>.
+    // Only ids from the machine list are saved (any other id would make the file fail its own check).
+    // Old data has no list yet: it is added here. Unknown fields of the old record are kept; a tombstone is cleared.
+    // An empty note is kept as "" so the clear reaches the other copy.
+    setGymSpot(machineId, where) {
+      if (typeof machineId !== "string" || !/^[a-z0-9_]{1,50}$/.test(machineId) || !MACHINE_IDS.includes(machineId)) throw new Error("Unknown machine");
+      return update((doc, t) => {
+        if (!Array.isArray(doc.gym_spots)) doc.gym_spots = [];
+        const id = gymSpotId(machineId);
+        const i = doc.gym_spots.findIndex((x) => x.id === id);
+        const next = { ...(i >= 0 ? doc.gym_spots[i] : {}), id, updated_at: t, machine: machineId, where: clipText(String(where ?? "").trim()) };
+        delete next.deleted; delete next.deleted_at;
+        if (i >= 0) doc.gym_spots[i] = next; else doc.gym_spots.push(next);
       });
     },
 

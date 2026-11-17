@@ -83,5 +83,5 @@ export function hasData(doc) {
   if (doc.profile) return true;
   if (doc.block) return true;
   if (doc.shared_settings && doc.shared_settings.updated_at) return true;
-  return ["sessions", "weighins", "measurements", "exercise_state"].some((k) => Array.isArray(doc[k]) && doc[k].length > 0);
+  return ["sessions", "weighins", "measurements", "exercise_state", "gym_spots"].some((k) => Array.isArray(doc[k]) && doc[k].length > 0);
 }

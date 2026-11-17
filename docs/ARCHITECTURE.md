@@ -97,6 +97,7 @@ app/
     model.js             create/update/delete records
     plan/plan-v2.js      the plan as data (no body data)
     plan/cues.js         form tips, warm-up moves
+    plan/machine-ids.js  the one frozen list of machine ids (gym_spots notes use them)
     engine/schedule.js   week, day, short day, swap, gaps
     engine/workout.js    pair order, resume position, suggestions, walk suggestion
     active.js            the running workout screen and timer end times (device box)
@@ -200,9 +201,13 @@ One JSON document holds everything that syncs. It has the same shape on the phon
                       "thigh_cm": 0 } ],
   "exercise_state": [ { "id": "x-chest_press", "updated_at": "…",
                         "start_weight_kg": 0, "machine_note": "",
-                        "fail_streak": 0 } ]
+                        "fail_streak": 0 } ],
+  "gym_spots": [ { "id": "g-leg_press", "updated_at": "…",
+                   "machine": "leg_press", "where": "…" } ]
 }
 ```
+
+**`gym_spots`** (added 2026-11-17, app 0.4.0, same format 1): the "Where it is in my gym" note, one record per machine or station. `id` is `g-<machine>` (`ids.js gymSpotId`); `machine` is an id from the ONE frozen list in `plan/machine-ids.js` (15 ids, the last five equal the `extra_machines` keys); `where` is optional text up to `MAX_TEXT`; a tombstone has `deleted` / `deleted_at`; unknown fields are kept. `model.setGymSpot(machineId, where)` refuses an id that is not in the list or not `^[a-z0-9_]{1,50}$`, trims and clips the text, keeps the old record's unknown fields and clears a tombstone. The list is optional: a file without it validates and comes back unchanged (`OPTIONAL_LISTS` in `validate.js`); the first saved note adds it. It is merged like every list, counted by `hasData`, and backed up and synced with no other change. Not the same as `exercise_state.machine_note` (seat and pin settings of one exercise). A machine id must never be renamed once a note exists (tests/gym-spots.test.mjs test 17).
 
 All `0` and `"…"` above are placeholders, not real values. Body weight is always stored in kg; stones and pounds are only for display.
 
@@ -273,7 +278,7 @@ Rules:
 
 ### 5.3 Merge rules (`sync/merge.js`, pure)
 
-- **Lists** (`sessions`, `weighins`, `measurements`, `exercise_state`): join by `id`. A record on one side only is kept. On both sides: the later `updated_at` wins. Same time: the tombstone wins; still the same: the one whose JSON text sorts first (so both devices pick the same).
+- **Lists** (`sessions`, `weighins`, `measurements`, `exercise_state`, `gym_spots`): join by `id`. A record on one side only is kept. On both sides: the later `updated_at` wins. Same time: the tombstone wins; still the same: the one whose JSON text sorts first (so both devices pick the same).
 - **Single objects** (`profile`, `shared_settings`, `block`): the later `updated_at` wins, as a whole.
 - **`format`:** if the remote `format` is higher than the app knows, stop ("Update the app first").
 - **Properties the merge must have** (unit tests): nothing is ever dropped; merging twice gives the same result; `merge(a, b)` equals `merge(b, a)`; a tombstone is never brought back to life by an older copy.
