@@ -4,7 +4,12 @@
 // Where an exercise stands is worked out from the saved sets (engine/week1.js week1Stage), so a reload continues in place.
 import { MAX_TEXT } from "../validate.js";
 import { h } from "../h.js";
-import { workoutScreen, topBar, actionBar, mainButton, stepper, choiceRow } from "./parts.js";
+import { workoutScreen, topBar, actionBar, mainButton, stepper, choiceRow, exerciseMedia, chip } from "./parts.js";
+import { icon } from "./icons.js";
+import { openExercise } from "./exsheet.js";
+import { videoFor } from "../plan/media.js";
+import { machinesFor } from "../plan/machines.js";
+import { openMachine, spotFor } from "./machines.js";
 import { model, rerender } from "./app.js";
 import { patchActive } from "../active.js";
 import { exercises } from "../plan/plan-v2.js";
@@ -45,12 +50,24 @@ export function renderWeek1(ctx) {
   const title = `Exercise ${index + 1} of ${recs.length}`;
   const sets = 2;
 
+  // Redesign B: the same header as the set screen (photo, name, chips), so week 1 feels like the weeks after it.
+  const mainMachine = machinesFor(exId)[0];
+  const where = mainMachine ? spotFor(ctx.doc, mainMachine) : "";
+  const video = videoFor(exId);
+  const openHow = () => openExercise(exId, { cue: cues[exId] });
   const header = (extra) => [
-    topBar(title, () => askEnd(ctx)),
-    h("h1", {}, ex.name),
-    h("div", { class: "small muted" }, `${ex.equipment}${rec.swap_reason ? " · swapped in" : ""}`),
-    h("div", { class: "links" },
-      h("button", { class: "text-button", type: "button", onclick: () => openSwap(ctx, rec) }, "Swap")),
+    topBar(title, () => askEnd(ctx), recs.length ? index / recs.length : null),
+    h("div", { class: "ex-head" },
+      exerciseMedia(exId, ex.name, "mid", { onclick: openHow }),
+      h("div", { class: "grow" },
+        h("div", { class: "ex-slot" }, `Week 1 · learn${rec.swap_reason ? " · swapped in" : ""}`),
+        h("h1", {}, ex.name),
+        h("div", { class: "subhead muted" }, ex.equipment))),
+    h("div", { class: "chips" },
+      chip("How to", openHow, "info"),
+      video ? h("a", { class: "chip", href: video.url, target: "_blank", rel: "noopener noreferrer" }, icon("play", 15), "Video") : null,
+      mainMachine ? chip(where ? "Machine" : "Where is it?", () => openMachine(mainMachine), "pin", where ? "" : "warn") : null,
+      chip("Swap", () => openSwap(ctx, rec), "swap")),
     extra,
   ];
   const setRest = () => {
@@ -79,7 +96,7 @@ export function renderWeek1(ctx) {
     return [
       workoutScreen(...header(null),
         h("div", { class: "card" },
-          h("h2", {}, "Learn the move"),
+          h("div", { class: "card-title" }, icon("info", 18), "Learn the move"),
           h("p", {}, cues[exId] ?? "Move slowly and keep good form."),
           weighted ? h("p", { class: "small muted" }, "Set up the machine or the bench. Ask the staff if you are not sure how.") : null),
         weighted ? h("div", { class: "field" },
@@ -99,7 +116,7 @@ export function renderWeek1(ctx) {
     const d = fresh(`${session.id}:${rec.slot}:warmup:${exId}`, { weight: 0, reps: 10 });
     return [
       workoutScreen(...header(h("p", {}, "Warm-up: a light weight, 10 reps. It should feel very easy.")),
-        weightStepper(d),
+        h("div", { class: "steppers" }, weightStepper(d)),
         h("div", { class: "text-link-row" }, h("button", { class: "text-button", type: "button", onclick: () => { model.skipWarmup(session.id, rec.slot); rerender(); } }, "Skip warm-up"))),
       actionBar(mainButton("Done · warm-up", () => {
         model.logSet(session.id, rec.slot, { type: "warmup", weight_kg: d.weight, reps: 10 });
@@ -133,9 +150,8 @@ export function renderWeek1(ctx) {
         n === 1 && weighted ? h("p", { class: "small muted" }, "Pick a weight that feels easy. You find the right one in these two sets.") : null,
         n === 2 && first ? h("p", { class: "small muted" }, `Set 1: ${hold ? `${first.seconds} s` : weighted ? `${first.weight_kg} kg × ${first.reps}, ${first.left} left` : `${first.reps} reps`}.`) : null,
         suggestion ? h("p", { class: "small" }, `${suggestion.note} Suggested: ${suggestion.weight_kg} kg.`) : null)),
-      weighted ? weightStepper(d) : null,
-      repsStepper(d)),
-      actionBar(mainButton(`Done · set ${n}`, save)),
+      h("div", { class: "steppers" }, weighted ? weightStepper(d) : null, repsStepper(d))),
+      actionBar(mainButton(`Done · set ${n}`, save, { iconName: "check" })),
     ];
   }
 
@@ -148,9 +164,11 @@ export function renderWeek1(ctx) {
       rerender();
     };
     return [
-      workoutScreen(...header(h("div", {},
+      workoutScreen(...header(h("div", { class: "center" },
+        h("div", { class: "hero-icon small green check-draw", "aria-hidden": "true" }, icon("check", 36, { stroke: 3 })),
+        h("p", { class: "eyebrow" }, `Set ${n} saved`),
         h("h2", {}, "How many more could you have done?"),
-        h("p", { class: "muted" }, "Think about the last set: how many more good reps before you had to stop?"))),
+        h("p", { class: "subhead muted" }, "Think about the last set: how many more good reps before you had to stop?"))),
       bigRow(pick)),
       actionBar(h("p", { class: "small muted center" }, "Tap one to go on.")),
     ];
@@ -160,8 +178,8 @@ export function renderWeek1(ctx) {
   const res = week1Result(rec, exId, settings);
   const d = fresh(`${session.id}:${rec.slot}:result:${exId}`, { note: ctx.state(exId)?.machine_note ?? "" });
   return [
-    workoutScreen(...header(h("div", { class: "card" },
-      h("div", { class: "label" }, "Your starting weight for week 2"),
+    workoutScreen(...header(h("div", { class: "card result-card" },
+      h("p", { class: "eyebrow" }, "Your starting weight for week 2"),
       h("div", { class: "display" }, String(res.start_weight_kg), h("span", { class: "unit" }, " kg")),
       h("p", { class: "small muted" }, res.note))),
     h("div", { class: "field" },

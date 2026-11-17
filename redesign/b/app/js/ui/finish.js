@@ -2,7 +2,9 @@
 // Save writes on the phone first, then starts a sync (if GitHub is set up). The sync never blocks the screen.
 import { MAX_TEXT } from "../validate.js";
 import { h } from "../h.js";
-import { workoutScreen, topBar, actionBar, mainButton, choiceRow } from "./parts.js";
+import { workoutScreen, topBar, actionBar, mainButton, choiceRow, tile, section, group, row, iconTile } from "./parts.js";
+import { icon } from "./icons.js";
+import { countUp } from "./motion.js";
 import { model, go, rerender } from "./app.js";
 import { exercises } from "../plan/plan-v2.js";
 import { leaveWorkout } from "./flow.js";
@@ -57,22 +59,28 @@ export function renderFinish(ctx) {
     if (syncer.isConfigured()) syncer.request("full");
   };
 
+  const minutesEl = h("span", {}, sum.minutes ? String(sum.minutes) : "–");
+  const setsEl = h("span", {}, String(sum.sets));
+  requestAnimationFrame(() => { if (sum.minutes) countUp(minutesEl, sum.minutes); countUp(setsEl, sum.sets); });
+  const pickEffort = (v) => { draft.effort = draft.effort === v ? null : v; rerender(); };
   return [
     workoutScreen(
       topBar("Finish"),
-      h("h1", {}, "Well done"),
-      h("div", { class: "card" },
-        h("div", { class: "row" },
-          h("div", { class: "metric" }, h("div", { class: "label" }, "Time"), h("div", { class: "value" }, sum.minutes ? String(sum.minutes) : "–", h("span", { class: "unit" }, " min"))),
-          h("div", { class: "metric" }, h("div", { class: "label" }, "Sets"), h("div", { class: "value" }, String(sum.sets))))),
-      sum.bests.length ? h("div", { class: "card" }, h("h2", {}, "New bests"), h("ul", { class: "list-plain" }, sum.bests.map((b) => h("li", {}, b)))) : null,
-      sum.next.length ? h("div", { class: "card" }, h("h2", {}, "Next time"), h("ul", { class: "list-plain" }, sum.next.map((n) => h("li", {}, n)))) : null,
-      h("h3", {}, "How hard was the whole workout? (optional)"),
-      choiceRow([[1, "1"], [2, "2"], [3, "3"], [4, "4"], [5, "5"]], draft.effort, (v) => { draft.effort = draft.effort === v ? null : v; rerender(); }),
-      choiceRow([[6, "6"], [7, "7"], [8, "8"], [9, "9"], [10, "10"]], draft.effort, (v) => { draft.effort = draft.effort === v ? null : v; rerender(); }),
+      h("div", { class: "center" },
+        h("div", { class: "hero-icon green check-draw", "aria-hidden": "true" }, icon("check", 52, { stroke: 3 })),
+        h("h1", { class: "title1" }, "Well done"),
+        h("p", { class: "subhead muted" }, "Check the summary, then save.")),
+      h("div", { class: "tiles" },
+        tile({ label: "Time", value: minutesEl, unit: "min", color: "accent", iconName: "clock" }),
+        tile({ label: "Sets", value: setsEl, color: "green", iconName: "check" })),
+      sum.bests.length ? section("New bests", group(sum.bests.map((b) => row({ title: b, lead: iconTile("star", "orange") })))) : null,
+      sum.next.length ? section("Next time", group(sum.next.map((n) => row({ title: n })))) : null,
+      h("h2", { class: "group-head" }, "How hard was the whole workout? (optional)"),
+      choiceRow([[1, "1"], [2, "2"], [3, "3"], [4, "4"], [5, "5"]], draft.effort, pickEffort),
+      choiceRow([[6, "6"], [7, "7"], [8, "8"], [9, "9"], [10, "10"]], draft.effort, pickEffort),
       h("div", { class: "field" }, h("label", { for: "f-note" }, "Note (optional)"),
         h("textarea", { id: "f-note", maxlength: MAX_TEXT, value: draft.note, oninput: (e) => { draft.note = e.target.value; } })),
-      h("p", { class: "small muted" }, "Stop the workout on your Apple Watch now.")),
-    actionBar(mainButton("Save", save)),
+      h("div", { class: "card info" }, h("div", { class: "card-title" }, icon("watch", 18), "Apple Watch"), h("p", {}, "Stop the workout on your Apple Watch now."))),
+    actionBar(mainButton("Save workout", save, { iconName: "check" })),
   ];
 }
