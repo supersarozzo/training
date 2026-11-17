@@ -1,0 +1,1309 @@
+<title>Plan and Diet Pick</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one column of screen groups; each group = OLD frames then NEW frames (light, dark), notes under them. */
+:root {
+  --bg: #eef0f4; --panel: #ffffff; --ink: #14161c; --soft: #5a6070; --line: #d7dbe3;
+  --accent: #2b47c9; --accent-ink: #ffffff; --q: #e4572e; --q-ink: #ffffff; --ok: #1f7a3a; --warn: #a3520a;
+  --sans: -apple-system, "SF Pro Text", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111318; --panel: #1a1d24; --ink: #eef0f4; --soft: #a3a9b6; --line: #2c313b;
+  --accent: #8ea2ff; --accent-ink: #0d1020; --q: #ff7a52; --q-ink: #1a0c06; --ok: #5fd38a; --warn: #ffb35c; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111318; --panel: #1a1d24; --ink: #eef0f4; --soft: #a3a9b6; --line: #2c313b;
+  --accent: #8ea2ff; --accent-ink: #0d1020; --q: #ff7a52; --q-ink: #1a0c06; --ok: #5fd38a; --warn: #ffb35c; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.5 var(--sans); margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 1600px; margin: 0 auto; }
+header.top { padding-block: 28px 8px; max-width: 760px; }
+header.top h1 { font-size: 30px; line-height: 1.15; margin: 4px 0 8px; text-wrap: balance; letter-spacing: -.01em; }
+.kicker { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--soft); }
+.lead { font-size: 17px; margin: 0 0 8px; max-width: 68ch; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  padding-block: 10px; background: var(--bg); border-bottom: 1px solid var(--line); }
+.bar button, .qbtn, .pickbtn { font: 600 15px/1.2 var(--sans); min-height: 44px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); cursor: pointer; }
+.bar button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.bar .seg { display: inline-flex; gap: 0; }
+.bar .seg button { border-radius: 0; margin-left: -1px; }
+.bar .seg button:first-child { border-radius: 12px 0 0 12px; margin-left: 0; }
+.bar .seg button:last-child { border-radius: 0 12px 12px 0; }
+.bar #qswitch[aria-pressed="true"] { background: var(--q); border-color: var(--q); color: var(--q-ink); }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.bar .long { display: inline; } .bar .short { display: none; }
+@media (max-width: 640px) {
+  .bar { gap: 6px; flex-wrap: nowrap; }
+  .bar button { font-size: 14px; padding: 10px 9px; }
+  .bar .long, .bar #copy1, .bar .ver { display: none; } .bar .short { display: inline; }
+}
+.ver { margin-left: auto; font-size: 13px; color: var(--soft); }
+section.grp { padding-block: 28px 8px; border-bottom: 1px solid var(--line); }
+section.grp > h2 { font-size: 23px; margin: 0 0 4px; text-wrap: balance; }
+section.grp > p.sub { margin: 0 0 14px; color: var(--soft); max-width: 75ch; }
+.frames { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 22px 18px; align-items: start; }
+figure.cell { margin: 0; min-width: 0; }
+figure.cell figcaption { font-size: 13px; font-weight: 700; margin-bottom: 6px; display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+figure.cell figcaption .tagold, figure.cell figcaption .tagnew { font-size: 11px; letter-spacing: .08em; padding: 2px 7px; border-radius: 999px; }
+.tagold { background: var(--line); color: var(--ink); }
+.tagnew { background: var(--accent); color: var(--accent-ink); }
+.phw { position: relative; width: 100%; max-width: 375px; }
+.phw > .ph { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.notes { margin-top: 16px; display: grid; gap: 10px; max-width: 90ch; }
+.notes h3 { font-size: 15px; margin: 6px 0 0; }
+.notes p, .notes li { margin: 0; font-size: 15px; }
+.notes ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.new-ok { font-size: 12px; font-weight: 700; color: var(--warn); border: 1px solid currentColor; border-radius: 999px; padding: 0 6px; white-space: nowrap; }
+.empty-old { width: 375px; height: 812px; display: grid; place-items: center; padding: 32px; text-align: center; background: repeating-linear-gradient(45deg, transparent 0 14px, rgba(128,128,128,.08) 14px 28px), var(--panel); border: 1px dashed var(--line); border-radius: 28px; color: var(--soft); font-size: 20px; }
+body.only-lt .cell.dk, body.only-dk .cell.lt { display: none; }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+.intro-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); margin-top: 12px; }
+.intro-grid .box h3 { margin: 0 0 6px; font-size: 16px; }
+.intro-grid .box p, .intro-grid .box li { font-size: 15px; margin: 0; }
+.intro-grid ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+/* question list at the end */
+.qlist { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); }
+.qitem { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 8px; align-content: start; }
+.qitem h3 { margin: 0; font-size: 16px; }
+.qitem .qn, .qcard .qn { display: inline-grid; place-items: center; min-width: 28px; height: 28px; border-radius: 999px; background: var(--q); color: var(--q-ink); font-weight: 800; font-size: 14px; margin-right: 6px; padding: 0 6px; }
+.pickbtn { text-align: left; width: 100%; font-weight: 500; display: block; }
+.pickbtn[aria-pressed="true"] { border: 2px solid var(--q); background: color-mix(in srgb, var(--q) 12%, var(--panel)); font-weight: 700; }
+.pickbtn .rec { font-size: 12px; font-weight: 700; color: var(--ok); margin-left: 6px; }
+.why { font-size: 14px; color: var(--soft); margin: 0; }
+.copyrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 16px 0; }
+#copyout { width: 100%; min-height: 160px; font: 13px/1.45 ui-monospace, Menlo, Consolas, monospace; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 10px; }
+.copied { color: var(--ok); font-weight: 700; }
+
+/* ===== the phone frames: the app's own tokens (docs/DESIGN.md section 2) ===== */
+.ph { width: 375px; height: 812px; overflow: hidden; border-radius: 28px; outline: 1px solid var(--line);
+  font: 400 17px/1.35 -apple-system, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif; text-align: left; }
+.ph.lt { --canvas: #f2f3f5; --surface: #ffffff; --raised: #ffffff; --subtle: #e9ebef; --text: #0b0c0f; --muted: #545a66; --bstrong: #737985;
+  --border: rgba(10,12,16,.09); --acc: #4d7c0f; --acct: #3f6212; --soft: rgba(77,124,15,.12); --onsoft: #365314; --btn: #0b0c0f; --btnt: #d7ff3c;
+  --warnc: #b45309; --okc: #15803d; --mapb: #e3e6eb; --mapm: #cfd4dc; --mapl: #ffffff; --shadow: 0 1px 2px rgba(10,12,16,.06), 0 4px 14px rgba(10,12,16,.05); --day-on: #0b0c0f; --day-on-t: #d7ff3c; --frost: rgba(242,243,245,.92); }
+.ph.dk { --canvas: #08090c; --surface: #121419; --raised: #1a1d24; --subtle: #23272f; --text: #f5f6f8; --muted: #a0a6b2; --bstrong: #6b7280;
+  --border: rgba(255,255,255,.08); --acc: #d7ff3c; --acct: #d7ff3c; --soft: rgba(215,255,60,.12); --onsoft: #d7ff3c; --btn: #d7ff3c; --btnt: #0a0b0d;
+  --warnc: #fbbf24; --okc: #4ade80; --mapb: #1c1f26; --mapm: #2c313b; --mapl: #121419; --shadow: none; --day-on: #d7ff3c; --day-on-t: #0a0b0d; --frost: rgba(8,9,12,.9); }
+.ph { background: var(--canvas); color: var(--text); position: relative; }
+.ph img.shot { width: 375px; height: auto; display: block; }
+.ph * { box-sizing: border-box; }
+.ph .scr { position: absolute; inset: 0; padding: 20px 16px 0; display: flex; flex-direction: column; gap: 10px; }
+.ph .mut { color: var(--muted); }
+.ph small, .ph .small { font-size: 14px; }
+.ph .eb { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--acct); }
+.ph .eb.m { color: var(--muted); }
+.ph .row { display: flex; align-items: center; gap: 8px; }
+.ph .sp { flex: 1; }
+.ph .ic { width: 20px; height: 20px; flex: none; }
+.ph .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border-radius: 999px; background: var(--raised); color: var(--text); font: 700 16px/1 inherit; border: 1px solid var(--border); box-shadow: var(--shadow); white-space: nowrap; }
+.ph .chip.sm { min-height: 40px; padding: 0 12px; font-size: 15px; }
+.ph .chip.on { background: var(--soft); color: var(--onsoft); border-color: transparent; }
+.ph .gear { width: 44px; height: 44px; border-radius: 999px; display: grid; place-items: center; background: var(--raised); border: 1px solid var(--border); color: var(--text); box-shadow: var(--shadow); flex: none; }
+.ph .wk { font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--acct); display: inline-flex; align-items: center; gap: 2px; min-height: 44px; }
+.ph .wk .ic { width: 16px; height: 16px; }
+.ph .dayrow { display: flex; align-items: center; gap: 10px; }
+.ph .day { font-size: 40px; font-weight: 800; letter-spacing: -.02em; line-height: 1; }
+.ph .tag { font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--onsoft); background: var(--soft); border-radius: 999px; padding: 5px 10px; }
+.ph .tag.plain { text-transform: none; letter-spacing: 0; font-size: 14px; }
+.ph .arrows .day { flex: 1; text-align: center; font-size: 36px; }
+.ph .rnd { width: 44px; height: 44px; border-radius: 999px; background: var(--raised); border: 1px solid var(--border); display: grid; place-items: center; color: var(--text); flex: none; box-shadow: var(--shadow); }
+.ph .strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.ph .strip .d { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; text-align: center; padding: 6px 2px 8px; min-height: 64px; box-shadow: var(--shadow); }
+.ph .strip .d b { display: block; font-size: 16px; }
+.ph .strip .d small { display: block; font-size: 12px; color: var(--muted); }
+.ph .strip .d.on { background: var(--day-on); color: var(--day-on-t); border-color: transparent; }
+.ph .strip .d.on small { color: var(--day-on-t); }
+.ph .strip .d .st { display: block; margin: 4px auto 0; width: 18px; height: 18px; border-radius: 999px; border: 2px solid var(--bstrong); opacity: .7; }
+.ph .strip .d.done .st { background: var(--acc); border-color: var(--acc); opacity: 1; position: relative; }
+.ph .strip .d.done .st::after { content: ""; position: absolute; left: 4px; top: 1px; width: 5px; height: 9px; border: solid var(--day-on-t); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.ph.lt .strip .d.done .st::after { border-color: #fff; }
+.ph .strip .d.on .st { border-color: var(--day-on-t); opacity: 1; }
+.ph .focus { font-size: 18px; font-weight: 700; }
+.ph .meta { font-size: 17px; color: var(--muted); }
+.ph .meta b { color: var(--text); font-weight: 800; }
+.ph .card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 14px 16px; box-shadow: var(--shadow); }
+.ph .card.tight { padding: 12px; }
+.ph .walk { display: flex; gap: 14px; align-items: center; }
+.ph .tile-ic { width: 56px; height: 56px; border-radius: 14px; background: var(--soft); color: var(--acc); display: grid; place-items: center; flex: none; }
+.ph .tile-ic .ic { width: 26px; height: 26px; }
+.ph .walk b { font-size: 18px; }
+.ph .walk .big { font-size: 18px; }
+.ph .walk .big b { font-size: 22px; font-weight: 800; }
+.ph .pairh { font-size: 14px; font-weight: 700; color: var(--muted); padding: 2px 4px 0; }
+.ph .ex { display: flex; gap: 12px; align-items: center; padding: 12px; }
+.ph .th { width: 64px; height: 64px; border-radius: 14px; object-fit: cover; flex: none; background: var(--subtle); }
+.ph .th.sm { width: 52px; height: 52px; border-radius: 12px; }
+.ph .tx { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.ph .tx > b { font-size: 18px; }
+.ph .dose { font-size: 17px; }
+.ph .dose b { font-weight: 800; font-size: 19px; }
+.ph .chev { color: var(--muted); }
+.ph .bm.mini { width: 26px; flex: none; display: block; }
+.ph .bm svg { display: block; width: 100%; height: auto; }
+.ph .bm .pair { display: flex; gap: 4%; }
+.ph .bm .pair svg { width: 48%; }
+.ph .bm path, .ph .bm polygon { stroke: var(--mapl); stroke-linejoin: round; }
+.ph .bm path { stroke-width: .18; }
+.ph .bm polygon { stroke-width: 6; }
+.ph .bm .body { fill: var(--mapb); }
+.ph .bm .l0 { fill: var(--mapm); }
+.ph .bm .l1 { fill: color-mix(in srgb, var(--acc) 30%, var(--mapm)); }
+.ph .bm .l2 { fill: color-mix(in srgb, var(--acc) 62%, var(--mapm)); }
+.ph .bm .l3 { fill: var(--acc); }
+.ph .bbar { position: absolute; left: 0; right: 0; bottom: 76px; padding: 8px 16px; background: var(--frost); border-top: 1px solid var(--border); display: flex; gap: 10px; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.ph .btn { flex: 1; min-height: 58px; border-radius: 16px; background: var(--btn); color: var(--btnt); font: 800 17px/1 inherit; display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; }
+.ph .btn2 { flex: 1; min-height: 58px; border-radius: 16px; background: var(--surface); color: var(--text); font: 800 17px/1 inherit; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--bstrong); }
+.ph .btn.sec { background: transparent; color: var(--text); border: 1px solid var(--bstrong); }
+.ph .tabbar { position: absolute; left: 0; right: 0; bottom: 0; height: 76px; background: var(--frost); border-top: 1px solid var(--border); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.ph .tabbar nav { display: grid; grid-template-columns: repeat(5, 1fr); height: 100%; }
+.ph .tabbar nav.six { grid-template-columns: repeat(6, 1fr); }
+.ph .tabbar nav.six .t { font-size: 12px; }
+.ph .tabbar .t { display: grid; justify-items: center; align-content: center; gap: 3px; font-size: 13px; font-weight: 700; color: var(--muted); position: relative; }
+.ph .tabbar .t .ic { width: 24px; height: 24px; }
+.ph .tabbar .t.on { color: var(--acct); }
+.ph .tabbar .t.on::before { content: ""; position: absolute; top: 0; width: 30px; height: 3px; border-radius: 3px; background: var(--acc); }
+.ph .scrim { position: absolute; inset: 0; background: rgba(0,0,0,.45); }
+.ph .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: 20px 20px 0 0; padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+.ph.dk .sheet { background: var(--surface); border-top: 1px solid var(--border); }
+.ph .grab { width: 40px; height: 5px; border-radius: 9px; background: var(--bstrong); opacity: .5; margin: 0 auto; flex: none; }
+.ph .close { align-self: flex-end; color: var(--acct); font-weight: 700; font-size: 17px; min-height: 30px; }
+.ph h2.s { font-size: 24px; font-weight: 800; margin: 0; line-height: 1.15; }
+.ph h3.s { font-size: 18px; font-weight: 700; margin: 0; }
+.ph .lasts { background: var(--soft); color: var(--onsoft); border-radius: 14px; padding: 10px 12px; font-size: 15px; display: flex; gap: 8px; }
+.ph .lasts .ic { width: 18px; height: 18px; margin-top: 2px; }
+.ph.lt .lasts { color: #2f4a0b; }
+.ph .badge { font-size: 12px; font-weight: 800; color: var(--onsoft); background: var(--soft); border-radius: 999px; padding: 3px 8px; white-space: nowrap; }
+.ph .badge.m { color: var(--muted); background: var(--subtle); }
+.ph .list { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow); padding: 0 14px; }
+.ph .li { display: flex; gap: 12px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--border); }
+.ph .li:last-child { border-bottom: 0; }
+.ph .li .tx > b { font-size: 17px; }
+.ph .li .plus { width: 44px; height: 44px; border-radius: 12px; background: var(--btn); color: var(--btnt); display: grid; place-items: center; flex: none; }
+.ph .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ph .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.ph .tl { background: var(--canvas); border: 1px solid var(--border); border-radius: 14px; padding: 8px; }
+.ph .tl .eb { font-size: 11px; color: var(--muted); }
+.ph .tl b { display: block; font-size: 20px; font-weight: 800; }
+.ph .tl small { font-size: 12px; color: var(--muted); }
+.ph .maps { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ph .mp { background: var(--canvas); border: 1px solid var(--border); border-radius: 20px; padding: 10px 8px 8px; display: grid; gap: 6px; min-width: 0; }
+.ph .mp .eb { font-size: 11px; text-align: center; color: var(--muted); }
+.ph .mp .bm { width: 100%; }
+.ph .mp p { margin: 0; font-size: 13px; line-height: 1.3; }
+.ph .legend { display: flex; gap: 14px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.ph .legend span { display: inline-flex; gap: 6px; align-items: center; }
+.ph .legend i { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+.ph .legend .k1 { background: color-mix(in srgb, var(--acc) 30%, var(--mapm)); }
+.ph .legend .k2 { background: color-mix(in srgb, var(--acc) 62%, var(--mapm)); }
+.ph .legend .k3 { background: var(--acc); }
+.ph .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--subtle); border-radius: 16px; padding: 4px; }
+.ph .seg span { text-align: center; font-weight: 700; font-size: 16px; padding: 11px 0; border-radius: 12px; color: var(--muted); }
+.ph .seg span.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.ph.dk .seg span.on { background: var(--canvas); }
+.ph h1.p { font-size: 40px; font-weight: 800; margin: 0; line-height: 1.05; letter-spacing: -.02em; }
+.ph .toast { position: absolute; left: 16px; right: 16px; bottom: 170px; background: #1f232b; color: #fff; border-radius: 16px; padding: 14px 16px; font-size: 15px; font-weight: 600; display: flex; gap: 12px; align-items: center; border: 1px solid rgba(255,255,255,.14); }
+.ph .toast u { color: #d7ff3c; text-decoration: underline; font-weight: 800; }
+.ph .changed { border: 1.5px solid var(--acc); }
+.ph .tbtn { color: var(--acct); font-weight: 700; display: inline-flex; gap: 6px; align-items: center; min-height: 44px; }
+.ph .tbtn .ic { width: 18px; height: 18px; }
+.ph .ebtns { display: flex; gap: 8px; margin-top: 10px; }
+.ph .ebtns span { flex: 1; min-height: 44px; border-radius: 14px; border: 1px solid var(--bstrong); display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; font-size: 15px; }
+.ph .ebtns .ic { width: 17px; height: 17px; }
+/* muscle check rows */
+.ph .ccrow { padding: 11px 0; border-bottom: 1px solid var(--border); display: grid; gap: 5px; }
+.ph .ccrow:last-child { border-bottom: 0; }
+.ph .ccrow .top { display: flex; align-items: baseline; gap: 8px; }
+.ph .ccrow .top b { flex: 1; font-size: 16px; }
+.ph .ccrow .num { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ph .ccrow .num small { font-size: 14px; color: var(--muted); font-weight: 700; }
+.ph .ccbar { position: relative; height: 10px; border-radius: 6px; background: var(--subtle); }
+.ph .ccbar .w, .ph .ccbar .dd { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; }
+.ph .ccbar .w { background: color-mix(in srgb, var(--acc) 40%, var(--subtle)); }
+.ph .ccbar .dd { background: var(--acc); }
+.ph .ccbar .tk { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--bstrong); }
+.ph .ccrow .vd { display: flex; gap: 8px; font-size: 13px; }
+.ph .ccrow .vd .v { font-weight: 700; flex: 1; }
+.ph .ccrow .vd .v.lo { color: var(--warnc); }
+.ph .ccrow .vd .v.ok { color: var(--okc); }
+.ph .ccrow .vd .v.n { color: var(--muted); }
+.ph .ccrow.part { padding-left: 14px; }
+.ph .ccrow.part .top b { font-size: 15px; font-weight: 600; }
+.ph .ccrow.part .num { font-size: 17px; }
+.ph .standout { border: 1.5px solid var(--warnc); }
+.ph .so { display: flex; gap: 8px; padding: 6px 0; font-size: 15px; border-bottom: 1px solid var(--border); }
+.ph .so:last-child { border-bottom: 0; }
+.ph .so span:first-child { flex: 1; }
+.ph .so .f { color: var(--muted); font-size: 14px; }
+/* gym */
+.ph .areah { display: flex; gap: 10px; align-items: center; font-size: 22px; font-weight: 800; }
+.ph .areah .ai { width: 44px; height: 44px; border-radius: 12px; background: var(--soft); color: var(--acc); display: grid; place-items: center; }
+.ph .areah .n { font-size: 14px; background: var(--subtle); color: var(--muted); border-radius: 999px; padding: 2px 9px; }
+.ph .addw { color: var(--acct); font-weight: 700; font-size: 15px; display: inline-flex; gap: 4px; align-items: center; }
+.ph .where { font-weight: 600; font-size: 15px; display: inline-flex; gap: 4px; align-items: center; }
+.ph .addw .ic, .ph .where .ic { width: 16px; height: 16px; }
+.ph .noted { display: grid; gap: 8px; }
+.ph .noted .big { font-size: 40px; font-weight: 800; line-height: 1; }
+.ph .pbar { height: 8px; border-radius: 6px; background: var(--subtle); position: relative; overflow: hidden; }
+.ph .pbar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--acc); border-radius: 6px; }
+/* diet */
+.ph .tot { display: grid; gap: 10px; }
+.ph .tot .lab { display: flex; justify-content: space-between; align-items: baseline; }
+.ph .tot .val { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ph .tot .val small { font-size: 16px; color: var(--muted); font-weight: 600; }
+.ph .rings { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: center; }
+.ph .ring { position: relative; width: 132px; height: 132px; margin: 0 auto; }
+.ph .ring svg { width: 132px; height: 132px; transform: rotate(-90deg); }
+.ph .ring circle { fill: none; stroke-width: 12; }
+.ph .ring .tr { stroke: var(--subtle); }
+.ph .ring .pr { stroke: var(--acc); stroke-linecap: round; }
+.ph .ring .pr.k { stroke: var(--text); opacity: .75; }
+.ph .ring .in { position: absolute; inset: 0; display: grid; place-content: center; }
+.ph .ring .in b { font-size: 30px; font-weight: 800; line-height: 1; }
+.ph .ways { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.ph .way { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; min-height: 64px; display: grid; justify-items: center; align-content: center; gap: 4px; font-size: 13px; font-weight: 700; text-align: center; box-shadow: var(--shadow); padding: 6px 2px; }
+.ph .fl { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.ph .fl:last-child { border-bottom: 0; }
+.ph .fl .tm { font-size: 14px; color: var(--muted); width: 44px; font-variant-numeric: tabular-nums; }
+.ph .fl .nm { flex: 1; min-width: 0; }
+.ph .fl .nm b { display: block; font-size: 16px; }
+.ph .fl .kc { text-align: right; font-variant-numeric: tabular-nums; }
+.ph .fl .kc b { display: block; font-size: 17px; }
+.ph .mealh { display: flex; justify-content: space-between; font-weight: 800; font-size: 17px; padding-top: 4px; }
+.ph .mealh small { font-weight: 500; color: var(--muted); }
+.ph .credit { font-size: 13px; color: var(--muted); }
+.ph .credit u { color: var(--acct); }
+.ph .fld { display: grid; gap: 4px; }
+.ph .fld label { font-size: 14px; color: var(--muted); }
+.ph .inp { min-height: 48px; border-radius: 14px; border: 1px solid var(--bstrong); background: var(--surface); padding: 0 14px; display: flex; align-items: center; font-size: 17px; }
+.ph .inp.err { border: 2px solid var(--warnc); }
+.ph .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ph .warnbox { border: 1.5px solid var(--warnc); border-radius: 14px; padding: 10px 12px; font-size: 15px; }
+.ph .warnbox b { color: var(--warnc); }
+.ph .okline { color: var(--okc); font-weight: 700; font-size: 15px; }
+.ph .stepper { display: flex; align-items: center; border: 1px solid var(--bstrong); border-radius: 16px; min-height: 60px; padding: 2px; }
+.ph .stepper .sb { width: 56px; height: 54px; border-radius: 13px; background: var(--subtle); display: grid; place-items: center; font-size: 26px; font-weight: 700; }
+.ph .stepper .sv { flex: 1; text-align: center; font-size: 30px; font-weight: 800; }
+.ph .stepper .sv small { font-size: 15px; color: var(--muted); }
+/* scanner (camera view is dark in both looks, as both builders drew it) */
+.ph .scan { position: absolute; inset: 0; background: #050608; color: #fff; display: flex; flex-direction: column; }
+.ph .scan .head { display: flex; align-items: center; justify-content: space-between; padding: 16px; }
+.ph .scan .x { border: 1px solid rgba(255,255,255,.3); border-radius: 999px; padding: 10px 14px; font-weight: 700; display: inline-flex; gap: 6px; align-items: center; }
+.ph .scan .cam { position: relative; height: 330px; margin: 0 16px; border-radius: 20px; overflow: hidden; background: radial-gradient(circle at 50% 40%, #3a2a22 0%, #16110e 70%); }
+.ph .scan .pack { position: absolute; left: 70px; top: 40px; width: 200px; height: 250px; border-radius: 14px; background: #b8452c; transform: rotate(-6deg); }
+.ph .scan .code { position: absolute; left: 105px; top: 140px; width: 150px; height: 74px; background: #fff; border-radius: 4px; transform: rotate(-6deg); display: grid; place-items: end center; color: #111; font: 600 11px/1 monospace; padding-bottom: 4px;
+  background-image: repeating-linear-gradient(90deg, #111 0 2px, #fff 2px 4px, #111 4px 5px, #fff 5px 8px, #111 8px 11px, #fff 11px 12px); background-size: 100% 52px; background-repeat: no-repeat; background-position: 0 6px; }
+.ph .scan .fr { position: absolute; left: 50px; right: 50px; top: 95px; height: 150px; border: 3px solid #d7ff3c; border-radius: 16px; clip-path: polygon(0 0,22% 0,22% 3px,78% 3px,78% 0,100% 0,100% 22%,calc(100% - 3px) 22%,calc(100% - 3px) 78%,100% 78%,100% 100%,78% 100%,78% calc(100% - 3px),22% calc(100% - 3px),22% 100%,0 100%,0 78%,3px 78%,3px 22%,0 22%); }
+.ph .scan .laser { position: absolute; left: 60px; right: 60px; top: 168px; height: 2px; background: #d7ff3c; box-shadow: 0 0 12px #d7ff3c; }
+.ph .scan .proto { position: absolute; left: 10px; bottom: 10px; font-size: 12px; font-weight: 700; background: rgba(0,0,0,.6); padding: 5px 9px; border-radius: 999px; }
+.ph .scan .low { background: var(--surface); color: var(--text); margin-top: auto; border-radius: 20px 20px 0 0; padding: 16px; display: grid; gap: 12px; min-height: 360px; align-content: start; }
+.ph .hide { display: none !important; }
+
+/* ===== question layer (hidden until the switch is on) ===== */
+.qov { display: none; }
+body.showq .qov { display: block; }
+.qring { position: absolute; border: 3px solid var(--q); border-radius: 16px; box-shadow: 0 0 0 3px rgba(255,255,255,.65); pointer-events: none; z-index: 5; }
+.qring .qnum { position: absolute; top: -14px; right: -12px; min-width: 30px; height: 30px; border-radius: 999px; background: var(--q); color: var(--q-ink); font: 800 14px/30px var(--sans); text-align: center; padding: 0 6px; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+.qcard { position: absolute; left: 12px; right: 12px; z-index: 6; background: #ffffff; color: #14161c; border: 3px solid var(--q); border-radius: 18px; padding: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.35); font: 14px/1.35 var(--sans); display: grid; gap: 7px; }
+.qcard h4 { margin: 0; font-size: 15px; line-height: 1.3; }
+.qcard .pickbtn { font-size: 14px; min-height: 40px; padding: 8px 10px; background: #f4f5f8; color: #14161c; border-color: #cfd3db; border-radius: 10px; }
+.qcard .pickbtn[aria-pressed="true"] { background: #fde6dd; border-color: #e4572e; }
+.qcard .pickbtn .rec { color: #1f7a3a; }
+.qcard .why { color: #4b5060; font-size: 13px; }
+@media (prefers-reduced-motion: no-preference) { .pickbtn { transition: background-color .15s ease; } }
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div class="kicker">Training app · judge 8.30 · version v1 · 17 Nov 2026</div>
+  <h1>Plan, Gym and Diet: the merged pick</h1>
+  <p class="lead">Two builders made the new Plan, Gym and Diet tabs. I tested both and merged the best of each. Every screen shows <b>OLD</b> (the real app 0.4.1, screenshots) next to <b>NEW</b> (my merged pick), in light and dark.</p>
+  <p class="lead">Turn on <b>Questions</b> to see 13 numbered questions drawn on the screens. They are drawn on the light frames. One tap picks an answer; tap another to change it. <b>Copy my picks</b> copies all answers as text to paste into the Training chat. All numbers on the screens are made up.</p>
+</header>
+
+<div class="bar" role="toolbar" aria-label="Page controls">
+  <button id="qswitch" type="button" aria-pressed="false"><span id="qstate">Show questions</span> (<span id="qopen">13</span><span class="long"> open</span>)</button>
+  <span class="seg" role="group" aria-label="Which look to show">
+    <button type="button" id="th-both" aria-pressed="true"><span class="long">Light + dark</span><span class="short">Both</span></button>
+    <button type="button" id="th-lt" aria-pressed="false">Light</button>
+    <button type="button" id="th-dk" aria-pressed="false">Dark</button>
+  </span>
+  <button type="button" id="copy1">Copy my picks</button>
+  <span class="ver" id="copied1" aria-live="polite"></span>
+</div>
+
+<section class="grp" id="in-short">
+  <h2>In short</h2>
+  <div class="intro-grid">
+    <div class="box"><h3>The pick</h3><p>A mix. <b>A</b> (“fastest at the gym”) gives the Plan day, the edit rules and the muscle check. <b>B</b> (“see your body”) gives the body drawing, the opened exercise, the scanner and the gear for Settings. Both builders’ bugs are fixed in the merge.</p></div>
+    <div class="box"><h3>Bugs found</h3><ul><li><b>B</b>: Swap and Add can put the same exercise twice in a day (2 bugs, still in B’s latest version).</li><li><b>A</b>: the plan’s own swap is hidden for the Romanian deadlift; the day arrows have no background; the Add sheet prints “null”.</li></ul></div>
+    <div class="box"><h3>Measured taps</h3><ul><li>See Thursday: 2 in both.</li><li>Swap an exercise: 3 from the day page in both.</li><li>Log a scanned food: 3 plus the scan in both.</li><li>Log a usual food again: 2 in both.</li></ul></div>
+    <div class="box"><h3>⚠️ Where I disagree with you</h3><ul><li>The muscle check only shows numbers, as you asked. But the numbers show real gaps (calves and back thighs 3 sets a week, abs 27). Question 74 asks if the plan should be reviewed.</li><li>Search by food name (answer 64) works badly in Open Food Facts: “skyr” gave French and Arabic products first. So scan and your own foods come first, search last (question 79).</li></ul></div>
+  </div>
+</section>
+
+<!-- ============ PLAN DAY ============ -->
+<section class="grp" id="plan-day">
+  <h2>Plan day</h2>
+  <p class="sub">OLD: one long scroll of all 5 days. NEW: one day per page that reads like Today, opened on today, with the real sets of this week.</p>
+  <div class="frames">
+    <figure class="cell lt"><figcaption><span class="tagold">OLD</span> Plan tab, top · light</figcaption><div class="phw"><div class="ph lt"><img class="shot" src="shots/old-plan-top-light.jpg" alt="Live app 0.4.1 Plan tab, top, light"></div></div></figure>
+    <figure class="cell dk"><figcaption><span class="tagold">OLD</span> Plan tab, top · dark</figcaption><div class="phw"><div class="ph dk"><img class="shot" src="shots/old-plan-top-dark.jpg" alt="Live app 0.4.1 Plan tab, top, dark"></div></div></figure>
+    <figure class="cell lt"><figcaption><span class="tagold">OLD</span> Plan tab, Tuesday · light</figcaption><div class="phw"><div class="ph lt"><img class="shot" src="shots/old-plan-tue-light.jpg" alt="Live app 0.4.1 Plan tab, Tuesday list, light"></div></div></figure>
+    <figure class="cell dk"><figcaption><span class="tagold">OLD</span> Plan tab, Tuesday · dark</figcaption><div class="phw"><div class="ph dk"><img class="shot" src="shots/old-plan-tue-dark.jpg" alt="Live app 0.4.1 Plan tab, Tuesday list, dark"></div></div></figure>
+    <div class="new" data-tpl="t-plan" data-cap="Plan day, top"></div>
+    <div class="new" data-tpl="t-plan2" data-cap="Plan day, scrolled down"></div>
+  </div>
+  <div class="notes">
+    <h3>What NEW takes from whom</h3>
+    <ul>
+      <li><b>A</b>: the header (“Week 3 · Build 1 ›”, big day name, TODAY), the meta line, the walk card first, pair headers in words, dense cards with plain muscle words, the day arrows at the bottom.</li>
+      <li><b>B</b>: focus words and done ticks in the day strip (A took them too), the gear, the “Whole plan check” card at the end of the day.</li>
+      <li>Fixed: A’s arrow bar now has a solid frosted background, so cards no longer show through.</li>
+      <li>Moved: A’s “Muscles” chip goes to the end of the day (B’s place). The top row has no room for 4 buttons at 375 px.</li>
+    </ul>
+    <h3>Nothing lost</h3>
+    <p>Day focus, walk text, sets × reps, rest and swaps are all still here. “A1 · 30 s to move” becomes “Pair A · back and forth · 3 rounds · rest 90 s after each round”. The “Swap:” line moves into the opened exercise (“The plan’s own swap”) and the Swap list (“Plan’s pick”). Print is gone, as you decided.</p>
+    <h3>Not taken</h3>
+    <p>B’s warm-up step on the day page (Today already shows it). B’s big day map: question 70.</p>
+  </div>
+</section>
+
+<!-- ============ EXERCISE OPEN ============ -->
+<section class="grp" id="exercise">
+  <h2>Exercise card: closed and open</h2>
+  <p class="sub">The closed card is on the Plan day above (photo, sets, muscles in words, a small map). Tap it and this opens: two body maps, this exercise and the day so far.</p>
+  <div class="frames">
+    <figure class="cell lt"><figcaption><span class="tagold">OLD</span> Exercise sheet · light</figcaption><div class="phw"><div class="ph lt"><img class="shot" src="shots/old-exsheet-light.jpg" alt="Live app 0.4.1 exercise sheet, light"></div></div></figure>
+    <figure class="cell dk"><figcaption><span class="tagold">OLD</span> Exercise sheet · dark</figcaption><div class="phw"><div class="ph dk"><img class="shot" src="shots/old-exsheet-dark.jpg" alt="Live app 0.4.1 exercise sheet, dark"></div></div></figure>
+    <div class="new" data-tpl="t-layer" data-cap="Exercise open: Romanian deadlift"></div>
+  </div>
+  <div class="notes">
+    <h3>What NEW takes from whom</h3>
+    <ul>
+      <li><b>B</b>: the layout (Swap, Remove, Video at the top; two big maps; the “A little · More · Most” legend; the 4 number tiles; “Day so far · 3 of 7”).</li>
+      <li><b>A</b>: plain words (“back thighs”, not “hamstrings”), Previous and Next named after the neighbour exercise.</li>
+      <li>Below the tiles, unchanged from 0.4.1: the moving photo, start and end photos, “How to do it”, the video link, the machine row, plus “The plan’s own swap: Cable pull-through.”</li>
+      <li>Fixed: A’s “Day so far” words left out lower back 1.5. NEW lists every muscle with sets.</li>
+    </ul>
+    <h3>Body maps: how they were checked</h3>
+    <p>Both builders’ muscle lists match the free exercise database exactly for all 27 plan exercises. The 9 swap-only exercises are each builder’s own reading and still need checking against the database (build step 1). Question 71 switches the drawing on the screen.</p>
+  </div>
+</section>
+
+<!-- ============ 12 WEEKS ============ -->
+<section class="grp" id="weeks">
+  <h2>The 12 weeks</h2>
+  <p class="sub">OLD: a list at the very bottom of the long scroll. NEW: the week chip at the top opens it; picking a week shows that week’s real sets on every day.</p>
+  <div class="frames">
+    <figure class="cell lt"><figcaption><span class="tagold">OLD</span> The 12 weeks · light</figcaption><div class="phw"><div class="ph lt"><img class="shot" src="shots/old-plan-weeks-light.jpg" alt="Live app 0.4.1 the 12 weeks list, light"></div></div></figure>
+    <figure class="cell dk"><figcaption><span class="tagold">OLD</span> The 12 weeks · dark</figcaption><div class="phw"><div class="ph dk"><img class="shot" src="shots/old-plan-weeks-dark.jpg" alt="Live app 0.4.1 the 12 weeks list, dark"></div></div></figure>
+    <div class="new" data-tpl="t-weeks" data-cap="Week chip › The 12 weeks"></div>
+  </div>
+  <div class="notes"><p>Same lines as 0.4.1 (phase, sets rule, RIR, walk note) and the RIR line. Both builders drew it this way. Another week shows “Showing week 7. This week is week 3.” with “Back to this week” on the day page.</p></div>
+</section>
+
+<!-- ============ EDIT ============ -->
+<section class="grp" id="edit">
+  <h2>Edit: swap, remove, add, back to the plan</h2>
+  <p class="sub">Every edit saves at once and lasts for that day of the plan (your answer 65). Past and running workouts never change.</p>
+  <div class="frames">
+    <figure class="cell lt dk-too"><figcaption><span class="tagold">OLD</span> 0.4.1</figcaption><div class="empty-old">0.4.1 has no Plan edit. The only swap is inside a workout, for that workout only. It stays as it is.</div></figure>
+    <div class="new" data-tpl="t-edit" data-cap="Edit mode"></div>
+    <div class="new" data-tpl="t-swap" data-cap="Swap sheet"></div>
+    <div class="new" data-tpl="t-add" data-cap="Add an exercise"></div>
+    <div class="new" data-tpl="t-changed" data-cap="Changed day › Back to the plan's Tuesday"></div>
+  </div>
+  <div class="notes">
+    <h3>What NEW takes from whom</h3>
+    <ul>
+      <li><b>A</b>: Edit mode with Swap and Remove on each card, “Add an exercise (2 of 2 left)”, “Done editing”; the green “Lasts” box; exercises already in the day are named but never offered; 8 s Undo; the “Changed by you · 17 Nov” card.</li>
+      <li><b>B</b>: the plan’s own swaps are always offered and marked “Plan’s pick”; the confirm step on “Back to the plan’s Tuesday” (question 73).</li>
+      <li>Fixed: B’s two bugs (the same exercise twice in a day), A’s hidden plan swap (the Romanian deadlift now offers Cable pull-through as Plan’s pick), A’s “null” in the Add sheet.</li>
+      <li>Machines your first visit has not found stay hidden, with one line saying which (as 0.4.1’s “only if the gym has it”).</li>
+    </ul>
+    <h3>Not taken</h3>
+    <p>B’s sets stepper on each card in Edit mode. You asked for add, remove and swap; changing sets touches the week rules.</p>
+  </div>
+</section>
+
+<!-- ============ MUSCLE CHECK ============ -->
+<section class="grp" id="check">
+  <h2>Whole-plan muscle check</h2>
+  <p class="sub">Weekly sets per muscle, Monday to Friday. It only shows numbers and never changes the plan. Numbers from research 5.3 (weeks 2 to 5).</p>
+  <div class="frames">
+    <figure class="cell lt dk-too"><figcaption><span class="tagold">OLD</span> 0.4.1</figcaption><div class="empty-old">0.4.1 shows no muscles anywhere. The plan data has one muscle word per exercise, never shown.</div></figure>
+    <div class="new" data-tpl="t-check1" data-cap="Muscles, top"></div>
+    <div class="new" data-tpl="t-check2" data-cap="Muscles, rows (upper body)"></div>
+    <div class="new" data-tpl="t-check3" data-cap="Muscles, rows (legs and abs)"></div>
+  </div>
+  <div class="notes">
+    <h3>What NEW takes from whom</h3>
+    <ul>
+      <li><b>A</b>: “4 things stand out”, two numbers per row (direct · with helpers), helper-only cases in grey (“Under 10 direct; 10+ counting helpers”), lower back without a warning.</li>
+      <li><b>B</b>: the shoulder parts as “Part of shoulders” rows, and “Not trained on purpose in this plan: traps, forearms, neck and inner thighs”.</li>
+      <li>Fixed: B called lower back “0 sets · Under 10”; B’s day map said “Hamstrings 6” while its check said 3.</li>
+    </ul>
+    <h3>The 3 gaps (research 5.4)</h3>
+    <p>Back thighs: 3 direct sets a week, Tuesday only. Calves: 3, Friday only (2 in weeks 7 to 11). Abs: 27, about 3 times the 10-set floor. Question 74 is drawn next to them.</p>
+  </div>
+</section>
+
+<!-- ============ GYM ============ -->
+<section class="grp" id="gym">
+  <h2>Gym: Machines and Exercises</h2>
+  <p class="sub">Exercises and Machines leave the Plan tab and live in Gym behind one switch. The Machines list is the same as 0.4.1.</p>
+  <div class="frames">
+    <figure class="cell lt"><figcaption><span class="tagold">OLD</span> Gym tab · light</figcaption><div class="phw"><div class="ph lt"><img class="shot" src="shots/old-gym-light.jpg" alt="Live app 0.4.1 Gym tab, light"></div></div></figure>
+    <figure class="cell dk"><figcaption><span class="tagold">OLD</span> Gym tab · dark</figcaption><div class="phw"><div class="ph dk"><img class="shot" src="shots/old-gym-dark.jpg" alt="Live app 0.4.1 Gym tab, dark"></div></div></figure>
+    <figure class="cell lt"><figcaption><span class="tagold">OLD</span> Plan › Exercises · light</figcaption><div class="phw"><div class="ph lt"><img class="shot" src="shots/old-plan-exercises-light.jpg" alt="Live app 0.4.1 Plan Exercises part, light"></div></div></figure>
+    <figure class="cell dk"><figcaption><span class="tagold">OLD</span> Plan › Exercises · dark</figcaption><div class="phw"><div class="ph dk"><img class="shot" src="shots/old-plan-exercises-dark.jpg" alt="Live app 0.4.1 Plan Exercises part, dark"></div></div></figure>
+    <figure class="cell lt"><figcaption><span class="tagold">OLD</span> Plan › Machines · light</figcaption><div class="phw"><div class="ph lt"><img class="shot" src="shots/old-plan-machines-light.jpg" alt="Live app 0.4.1 Plan Machines part, light"></div></div></figure>
+    <figure class="cell dk"><figcaption><span class="tagold">OLD</span> Plan › Machines · dark</figcaption><div class="phw"><div class="ph dk"><img class="shot" src="shots/old-plan-machines-dark.jpg" alt="Live app 0.4.1 Plan Machines part, dark"></div></div></figure>
+    <div class="new" data-tpl="t-gym1" data-cap="Gym › Machines"></div>
+    <div class="new" data-tpl="t-gym2" data-cap="Gym › Exercises"></div>
+  </div>
+  <div class="notes">
+    <ul>
+      <li>Machines: the 0.4.1 list and machine cards, word for word, under a Machines | Exercises switch (both builders). The Plan tab’s duplicate Machines part is gone.</li>
+      <li>Exercises: every exercise with “In the plan: Mon” or “Swap only”, a small map, tap = the same exercise layer with one map. Grouped by muscle (A) or A to Z with chips (B): question 75.</li>
+      <li>The gear for Settings is at the top right of every tab (B): question 67.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ DIET ============ -->
+<section class="grp" id="diet">
+  <h2>Diet day</h2>
+  <p class="sub">A new tab (your answer 62). Today against your targets first, then the fast ways to add food. Targets come from your plan; the numbers here are made up.</p>
+  <div class="frames">
+    <figure class="cell lt"><figcaption><span class="tagold">OLD</span> Today › Your numbers · light</figcaption><div class="phw"><div class="ph lt"><img class="shot" src="shots/old-today-food-light.jpg" alt="Live app 0.4.1 Today, Your numbers card, light"></div></div></figure>
+    <figure class="cell dk"><figcaption><span class="tagold">OLD</span> Today › Your numbers · dark</figcaption><div class="phw"><div class="ph dk"><img class="shot" src="shots/old-today-food-dark.jpg" alt="Live app 0.4.1 Today, Your numbers card, dark"></div></div></figure>
+    <div class="new" data-tpl="t-diet1" data-cap="Diet, top"></div>
+    <div class="new" data-tpl="t-diet2" data-cap="Diet, scrolled down"></div>
+  </div>
+  <div class="notes">
+    <h3>What NEW takes from whom</h3>
+    <ul>
+      <li><b>A</b>: the 4 ways row (Search, Digits, Quick add, Copy yesterday), “Log again · one tap” as a list with “had today”, the bottom bar “Your foods · Scan”.</li>
+      <li><b>B</b>: the 7-day average line, carbs and fat (with rings), meals (question 76).</li>
+      <li>Not taken: B’s second Scan button (B had Scan in the row and again at the bottom).</li>
+      <li>OLD has no food log: Today only shows the targets (“Food a day”, “Protein a day”). They stay on Today.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ ADD FOOD ============ -->
+<section class="grp" id="add-food">
+  <h2>Add food: scan, digits, search</h2>
+  <p class="sub">Scan is the main way. Typing the digits is always offered. Search runs only when you tap Search. Only the barcode or the word is sent to Open Food Facts (your answer 64).</p>
+  <div class="frames">
+    <figure class="cell lt dk-too"><figcaption><span class="tagold">OLD</span> 0.4.1</figcaption><div class="empty-old">0.4.1 has no food logging and no scanner.</div></figure>
+    <div class="new" data-tpl="t-scan" data-cap="Scan a barcode"></div>
+    <div class="new" data-tpl="t-digits" data-cap="Type the digits"></div>
+    <div class="new" data-tpl="t-search" data-cap="Add food › search"></div>
+  </div>
+  <div class="notes">
+    <ul>
+      <li>Scanner: <b>B</b>’s layer (a misread keeps the camera open: “That read looks wrong. Hold the phone still and try again.”), plus <b>A</b>’s “Looking it up · Only the barcode number is sent.” while it waits.</li>
+      <li>The scanner stays on one screen while the camera runs (iPhone can stop the camera on a page change). The camera view is dark in both looks, as both builders drew it.</li>
+      <li>Digits: both builders test the last digit before any lookup, so a typo costs no lookup.</li>
+      <li>Search: <b>A</b>’s sheet. One box takes a food name or barcode digits. Your foods come first and work offline.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ CHECK STEP ============ -->
+<section class="grp" id="check-step">
+  <h2>Check before saving</h2>
+  <p class="sub">Every food from Open Food Facts is checked by you before it is saved. Anyone can add products there, so numbers can be wrong.</p>
+  <div class="frames">
+    <figure class="cell lt dk-too"><figcaption><span class="tagold">OLD</span> 0.4.1</figcaption><div class="empty-old">0.4.1 has no check step (no food logging).</div></figure>
+    <div class="new" data-tpl="t-checkstep" data-cap="Check before saving"></div>
+  </div>
+  <div class="notes">
+    <ul>
+      <li><b>A</b>: the header text, the soft warning (“The pack size says 1 gram. That is likely wrong.”), the portion starting at the pack’s serving (43.1 g).</li>
+      <li><b>B</b>: the 4 fields in a grid, “The numbers add up.”, the meal row (if question 76 is b).</li>
+      <li>Fixed: B started every new food at 100 g (Nutella: 539 kcal by default).</li>
+      <li>The Open Food Facts credit line is on every sheet that shows their data and at the foot of Diet.</li>
+      <li>Question 78 (where the saved food syncs) is drawn on “Save and add”.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ TAB BAR ============ -->
+<section class="grp" id="tabs">
+  <h2>Tab bar and Settings</h2>
+  <p class="sub">Diet would be a 6th tab. Both builders move Settings off the bar to a gear button, so the bar keeps 5 tabs.</p>
+  <div class="frames">
+    <figure class="cell lt"><figcaption><span class="tagold">OLD</span> Tab bar · light</figcaption><div class="phw strip"><div class="ph lt strip"><img class="shot" src="shots/old-light-tabbar.jpg" alt="Live app 0.4.1 tab bar, light"></div></div></figure>
+    <figure class="cell dk"><figcaption><span class="tagold">OLD</span> Tab bar · dark</figcaption><div class="phw strip"><div class="ph dk strip"><img class="shot" src="shots/old-dark-tabbar.jpg" alt="Live app 0.4.1 tab bar, dark"></div></div></figure>
+    <div class="new" data-tpl="t-tabs" data-cap="Tab bar" data-strip="1"></div>
+  </div>
+  <div class="notes">
+    <ul>
+      <li>OLD: Today · Progress · Plan · Gym · Settings. NEW follows your answer to question 67. The recommended answer: Settings is the gear at the top right of every tab (<b>B</b>; <b>A</b> had it on Today and Progress only), and Settings keeps its own page with a “‹ Today” back link.</li>
+      <li>The order follows question 68 on every NEW screen of this page. Questions 67 and 68 are drawn on the Gym and Plan screens.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ PICKS ============ -->
+<section class="grp" id="picks">
+  <h2>Your picks</h2>
+  <p class="sub">The same 13 questions as on the screens. One tap picks; tap another answer to change it. Unpicked questions show the recommended answer on the screens.</p>
+  <div class="qlist" id="qlist"></div>
+  <div class="copyrow">
+    <button type="button" class="qbtn" id="copy2">Copy my picks</button>
+    <span id="copied2" aria-live="polite"></span>
+  </div>
+  <label for="copyout" class="kicker">Your picks as text (select and copy if the button does not work)</label>
+  <textarea id="copyout" readonly></textarea>
+</section>
+
+<section class="grp" id="sources">
+  <h2>Sources and what was not checked</h2>
+  <div class="notes">
+    <ul>
+      <li>OLD screens: screenshots of the live app 0.4.1 at 375 × 812, taken 17 Nov 2026 with made-up sample data.</li>
+      <li>NEW screens: drawn in HTML from the two prototypes (builder A at 2b37e94, builder B at 1f0b752), with their own words. Full scores and bugs: <code>redesign/plan-diet/judge/JUDGING.md</code>.</li>
+      <li>Body drawings: body-muscles by Ivan Vulović (Apache License 2.0, shapes unchanged) and react-body-highlighter (MIT, © 2020 GV79). Exercise photos: free-exercise-db (public domain), as in the app.</li>
+      <li>Not checked: a real camera and barcode reader, a real iPhone, VoiceOver, motion frame by frame, the 9 swap-only exercises’ muscles, Open Food Facts search limited to the UK.</li>
+    </ul>
+  </div>
+</section>
+</div>
+
+<!-- ===================== NEW screen templates ===================== -->
+<template id="t-plan">
+<div class="scr">
+  <div class="row"><span class="wk">Week 3 · Build 1 <i data-i="chevron"></i></span><span class="sp"></span><span class="chip sm">Edit</span><span class="gear"><i data-i="settings"></i></span></div>
+  <div class="dayrow v69a"><span class="day">Tuesday</span><span class="tag">Today</span></div>
+  <div class="dayrow arrows v69b"><span class="rnd"><i data-i="back"></i></span><span class="day">Tuesday</span><span class="rnd"><i data-i="chevron"></i></span></div>
+  <div data-strip="tue"></div>
+  <div class="v70a" id="q70t"><div class="focus">Lower body A</div><div class="meta">about <b>90</b> min &nbsp; <b>21</b> sets &nbsp; stop with <b>2</b> left</div></div>
+  <div class="card v70b row" id="q70t2">
+    <span class="bm" data-m="tue_b" data-v="both" style="width:120px;flex:none"></span>
+    <div class="tx"><span class="eb m">The plan's day</span><b style="font-size:22px">Lower body A</b><span><b>90</b> min · <b>7</b> exercises · <b>21</b> sets</span><span class="eb m">Works most</span><span class="chips"><span class="badge">Quads 6</span><span class="badge">Glutes 6</span><span class="badge">Hamstrings 6</span><span class="badge">Abs 6</span></span><small class="mut">Less: calves, rear shoulders, lower back and mid back</small></div>
+  </div>
+  <div class="card walk"><span class="tile-ic"><i data-i="walk"></i></span><div class="tx"><b>Walk first</b><span class="big"><b>30</b> min uphill</span><small class="mut">Easier: 2 % less slope, effort 4 to 5 of 10</small></div></div>
+  <div class="pairh">Pair A · back and forth · 3 rounds · rest 90 s after each round</div>
+  <div data-ex="leg_press"></div>
+  <div data-ex="cable_crunch"></div>
+  <div class="pairh">Pair B · back and forth · 3 rounds · rest 90 s after each round</div>
+  <div data-ex="romanian_deadlift"></div>
+</div>
+<div class="bbar two v69a"><span class="btn2"><i data-i="back"></i> Monday</span><span class="btn2">Wednesday <i data-i="chevron"></i></span></div>
+<div class="tabbar" data-on="plan"></div>
+<div class="qov" data-q="70" data-t="q70t" data-t2="q70t2" data-cy="430"></div>
+</template>
+
+<template id="t-plan2">
+<div class="scr">
+  <div data-ex="face_pull"></div>
+  <div class="pairh">Pair C · back and forth · 3 rounds · rest 75 s after each round</div>
+  <div data-ex="hip_thrust"></div>
+  <div data-ex="dead_bug"></div>
+  <div class="pairh">On its own · rest 60 s between sets</div>
+  <div data-ex="leg_extension"></div>
+  <div class="card row"><span class="tile-ic"><i data-i="body"></i></span><div class="tx"><b>Whole plan check</b><small class="mut">Weekly sets per muscle, Monday to Friday</small></div><i data-i="chevron" class="chev"></i></div>
+  <p class="small mut" style="text-align:center;margin:0">Tap an exercise for its muscles, photos and tips.</p>
+</div>
+<div class="bbar two v69a" id="q69t"><span class="btn2"><i data-i="back"></i> Monday</span><span class="btn2">Wednesday <i data-i="chevron"></i></span></div>
+<div class="tabbar" data-on="plan" id="q68t"></div>
+<div class="qov" data-q="69" data-t="q69t" data-cy="40"></div>
+<div class="qov" data-q="68" data-t="q68t" data-cy="320"></div>
+</template>
+
+<template id="t-layer">
+<div class="scr"><div class="row"><span class="wk">Week 3 · Build 1</span></div><div class="dayrow"><span class="day">Tuesday</span></div></div>
+<div class="scrim"></div>
+<div class="sheet" style="top:40px">
+  <div class="grab"></div><span class="close">Close</span>
+  <span class="eb">Tuesday · Pair B · first of the pair</span>
+  <h2 class="s">Romanian deadlift</h2>
+  <div class="chips"><span class="chip sm"><i data-i="swap"></i>Swap</span><span class="chip sm"><i data-i="close"></i>Remove</span><span class="chip sm"><i data-i="play"></i>Video</span></div>
+  <div class="maps" id="q71t">
+    <div class="mp"><span class="eb">This exercise</span><span class="bm" data-m="romanian_deadlift" data-v="both"></span><p><b>Main:</b> back thighs<br><b>Helps:</b> glutes, lower back</p></div>
+    <div class="mp"><span class="eb">Day so far · 3 of 7</span><span class="bm" data-m="tue_rdl" data-v="both"></span><p><b>Sets so far:</b> back thighs 4.5, front thighs 3, glutes 3, abs 3, calves 1.5, lower back 1.5</p></div>
+  </div>
+  <div class="legend"><span><i class="k1"></i>A little</span><span><i class="k2"></i>More</span><span><i class="k3"></i>Most</span><span>Helpers count half</span></div>
+  <div class="tiles"><div class="tl"><span class="eb">Sets</span><b>3</b></div><div class="tl"><span class="eb">Reps</span><b>8–12</b></div><div class="tl"><span class="eb">Rest</span><b>30 s</b><small>to move</small></div><div class="tl"><span class="eb">Stop with</span><b>2</b><small>reps left</small></div></div>
+  <div class="row"><span class="btn2" style="min-height:48px;font-size:15px"><i data-i="back"></i> Cable crunch</span><span class="btn2" style="min-height:48px;font-size:15px">Face pull <i data-i="chevron"></i></span></div>
+  <div class="card tight"><small class="mut">Below, as in 0.4.1: the moving photo, Start and End photos, How to do it, the video link, the machine row. New line: “The plan’s own swap: Cable pull-through.”</small></div>
+</div>
+<div class="qov" data-q="71" data-t="q71t" data-cy="470"></div>
+</template>
+
+<template id="t-weeks">
+<div class="scr"><div class="row"><span class="wk">Week 3 · Build 1 <i data-i="chevron"></i></span></div><div class="dayrow"><span class="day">Tuesday</span><span class="tag">Today</span></div></div>
+<div class="scrim"></div>
+<div class="sheet" style="top:84px">
+  <div class="grab"></div><span class="close">Close</span>
+  <h2 class="s">The 12 weeks</h2>
+  <p class="small mut" style="margin:0">Pick a week to see its real sets on every day.</p>
+  <div class="list">
+    <div class="li"><span class="badge m" style="min-width:34px;text-align:center">1</span><div class="tx"><b>Learn, find weights</b><small class="mut">2 per exercise · RIR 3 · Starting settings</small></div></div>
+    <div class="li"><span class="badge m" style="min-width:34px;text-align:center">2</span><div class="tx"><b>Build 1</b><small class="mut">As in the tables · RIR 2 (Wed 3) · Progress by the rule</small></div></div>
+    <div class="li"><span class="badge" style="min-width:34px;text-align:center">3</span><div class="tx"><b>Build 1 <span class="badge">This week</span></b><small class="mut">As in the tables · RIR 2 (Wed 3) · Progress by the rule</small></div></div>
+    <div class="li"><span class="badge m" style="min-width:34px;text-align:center">4</span><div class="tx"><b>Build 1</b><small class="mut">As in the tables · RIR 2 (Wed 3) · Progress by the rule</small></div></div>
+    <div class="li"><span class="badge m" style="min-width:34px;text-align:center">5</span><div class="tx"><b>Build 1</b><small class="mut">As in the tables · RIR 2 (Wed 3) · Progress by the rule</small></div></div>
+    <div class="li"><span class="badge m" style="min-width:34px;text-align:center">6</span><div class="tx"><b>Easier week (deload)</b><small class="mut">1 set less · RIR 4 · Same as week 5, no increase</small></div></div>
+    <div class="li"><span class="badge m" style="min-width:34px;text-align:center">7</span><div class="tx"><b>Build 2</b><small class="mut">Pair A: 4th set · RIR 2 (Wed 3) · Progress by the rule</small></div></div>
+  </div>
+</div>
+</template>
+
+<template id="t-edit">
+<div class="scr">
+  <div class="row"><span class="wk">Week 3 · Build 1 <i data-i="chevron"></i></span><span class="sp"></span><span class="chip sm on">Done</span><span class="gear"><i data-i="settings"></i></span></div>
+  <div class="dayrow"><span class="day">Tuesday</span><span class="tag">Today</span></div>
+  <div class="card changed"><p style="margin:0"><b>Editing Tuesday.</b> Each change saves at once and lasts: every Tuesday from now on, in every week. Past workouts stay as they were.</p><p class="small mut" style="margin:6px 0 0">About 90 minutes now; the plan's day is about 90.</p></div>
+  <div class="pairh">Pair A · back and forth · 3 rounds · rest 90 s after each round</div>
+  <div data-ex="leg_press" data-edit="1"></div>
+  <div data-ex="cable_crunch" data-edit="1"></div>
+  <div class="pairh">Pair B · back and forth · 3 rounds · rest 90 s after each round</div>
+  <div data-ex="romanian_deadlift" data-edit="1"></div>
+</div>
+<div class="bbar"><span class="btn"><i data-i="check"></i> Done editing</span></div>
+<div class="tabbar" data-on="plan"></div>
+</template>
+
+<template id="t-swap">
+<div class="scr"><div class="row"><span class="wk">Week 3 · Build 1</span></div><div class="dayrow"><span class="day">Tuesday</span></div></div>
+<div class="scrim"></div>
+<div class="sheet" style="top:96px">
+  <div class="grab"></div><span class="close">Close</span>
+  <h2 class="s">Swap Leg press</h2>
+  <div class="lasts"><i data-i="info"></i><span><b>Lasts: every Tuesday from now on.</b> Past workouts stay as they were. You can go back to the plan's day at any time.</span></div>
+  <p class="small mut" style="margin:0">Keeps the slot's 3 sets and its rest. The reps come from the new exercise.</p>
+  <span class="eb m">Same muscle (front thighs), other equipment</span>
+  <div class="list">
+    <div class="li"><img class="th sm" data-th="smith_squat" alt=""><div class="tx"><b>Smith machine squat <span class="badge">Plan's pick</span></b><small class="mut">Smith press station, safety stops set · 8–12 reps</small></div><span class="bm mini" data-m="smith_squat"></span><i data-i="chevron" class="chev"></i></div>
+    <div class="li"><img class="th sm" data-th="goblet_squat" alt=""><div class="tx"><b>Goblet squat</b><small class="mut">1 dumbbell or kettlebell · 8–12 reps</small></div><span class="bm mini" data-m="goblet_squat"></span><i data-i="chevron" class="chev"></i></div>
+  </div>
+  <p class="small mut" style="margin:0">Already in Tuesday: Leg extension.</p>
+  <span class="btn sec" style="flex:none;min-height:50px">Show exercises for other muscles</span>
+</div>
+</template>
+
+<template id="t-add">
+<div class="scr"><div class="row"><span class="wk">Week 3 · Build 1</span></div><div class="dayrow"><span class="day">Tuesday</span></div></div>
+<div class="scrim"></div>
+<div class="sheet" style="top:70px">
+  <div class="grab"></div><span class="close">Close</span>
+  <h2 class="s">Add to Tuesday</h2>
+  <div class="lasts"><i data-i="info"></i><span><b>Lasts: every Tuesday from now on.</b> Past workouts stay as they were. You can go back to the plan's day at any time.</span></div>
+  <div class="card tight v72a" id="q72t"><p style="margin:0;font-size:15px"><b>Where it goes:</b> at the end, after the abs, done on its own. 3 sets this week (3 in a normal week), 60 s rest. At most 2 added exercises a day.</p><p class="small mut" style="margin:6px 0 0">Adds about 8 minutes. "low" = the Muscles screen finds this muscle short in the whole plan.</p></div>
+  <div class="card tight v72b" id="q72t2"><p style="margin:0;font-size:15px"><b>Where it goes</b><br>A day has places for 3 pairs, 1 exercise on its own after the pairs, and 2 abs exercises. An add fills a free place, so the week's set rules keep working.</p><div class="chips" style="margin-top:6px"><span class="chip sm on">Abs, first</span><span class="chip sm">Abs, second</span></div></div>
+  <div class="chips"><span class="chip sm">Chest <span class="badge m">low</span></span><span class="chip sm">Back</span><span class="chip sm">Biceps</span><span class="chip sm">Triceps</span><span class="chip sm">Front thighs</span><span class="chip sm">Back thighs <span class="badge m">low</span></span><span class="chip sm">Glutes</span><span class="chip sm on">Calves <span class="badge">low</span></span><span class="chip sm">Abs</span></div>
+  <div class="list">
+    <div class="li"><img class="th sm" data-th="calf_raise_leg_press" alt=""><div class="tx"><b>Calf raise on the leg press</b><small class="mut">Leg press machine</small></div><i data-i="plus" class="chev"></i></div>
+    <div class="li"><img class="th sm" data-th="calf_raise_standing" alt=""><div class="tx"><b>Standing calf raise</b><small class="mut">Smith machine, step or plate under the toes</small></div><i data-i="plus" class="chev"></i></div>
+  </div>
+  <p class="small mut" style="margin:0">Not shown: Calf raise machine. Your first visit has not found this machine yet (Settings > Gym).</p>
+</div>
+<div class="qov" data-q="72" data-t="q72t" data-t2="q72t2" data-cy="500"></div>
+</template>
+
+<template id="t-changed">
+<div class="scr">
+  <div class="row"><span class="wk">Week 3 · Build 1 <i data-i="chevron"></i></span><span class="sp"></span><span class="chip sm">Edit</span><span class="gear"><i data-i="settings"></i></span></div>
+  <div class="dayrow"><span class="day">Tuesday</span><span class="tag">Today</span></div>
+  <div data-strip="tue-dot"></div>
+  <div class="card changed"><p style="margin:0"><b>Changed by you · 17 Nov</b><br>Leg press → Smith machine squat</p><p class="small mut" style="margin:6px 0 0">Lasts every Tuesday. Past workouts are not changed.</p><span class="tbtn"><i data-i="undo"></i> Back to the plan's Tuesday</span></div>
+  <div class="pairh">Pair A · back and forth · 3 rounds · rest 90 s after each round</div>
+  <div data-ex="smith_squat" data-swapped="1"></div>
+</div>
+<div class="tabbar" data-on="plan"></div>
+<div class="v73a"><div class="scrim"></div>
+<div class="sheet" style="top:470px">
+  <div class="grab"></div><span class="close">Close</span>
+  <h2 class="s" id="q73t">Back to the plan's Tuesday?</h2>
+  <p style="margin:0;font-size:15px">These changes go away:</p>
+  <p style="margin:0;font-size:15px">• Leg press → Smith machine squat</p>
+  <p class="small mut" style="margin:0">Workouts already done stay as they were. Your weights and history for each exercise are kept.</p>
+  <span class="btn" style="flex:none">Back to the plan's Tuesday</span>
+  <span class="btn sec" style="flex:none">Keep my Tuesday</span>
+</div></div>
+<div class="toast v73b" id="q73t2">Tuesday is back to the plan's version. <span class="sp"></span><u>Undo</u></div>
+<div class="qov" data-q="73" data-t="q73t" data-t2="q73t2" data-cy="12"></div>
+</template>
+
+<template id="t-check1">
+<div class="scr">
+  <span class="tbtn" style="min-height:30px"><i data-i="back"></i> Plan</span>
+  <span class="eb">Whole plan · Monday to Friday</span>
+  <h1 class="p">Muscles</h1>
+  <div class="chips"><span class="chip sm">Week 1</span><span class="chip sm on">Weeks 2–5</span><span class="chip sm">Week 6</span><span class="chip sm">Weeks 7–11</span><span class="chip sm">Week 12</span></div>
+  <p class="small mut" style="margin:0">Build 1. Sets a week, Monday to Friday.</p>
+  <div class="card standout" id="q74t">
+    <b style="font-size:18px">4 things stand out</b>
+    <div class="so"><span><b>Chest:</b> 9 direct sets on Mon, Wed, Thu</span><span class="f">low</span></div>
+    <div class="so"><span><b>Back thighs:</b> 3 direct sets on Tue</span><span class="f">low</span></div>
+    <div class="so"><span><b>Calves:</b> 3 direct sets on Fri</span><span class="f">low</span></div>
+    <div class="so"><span><b>Abs:</b> 27 direct sets on Mon, Tue, Wed, Thu, Fri</span><span class="f">a lot</span></div>
+  </div>
+  <div class="card"><span class="eb m">Direct sets this week</span><span class="bm" data-m="plan_week" data-v="both" style="width:250px;margin:6px auto 0"></span>
+  <div class="legend" style="justify-content:center;margin-top:6px"><span><i class="k3"></i>10 or more</span><span><i class="k2"></i>5–9</span><span><i class="k1"></i>under 5 / helping only</span></div></div>
+</div>
+<div class="tabbar" data-on="plan"></div>
+<div class="qov" data-q="74" data-t="q74t" data-cy="470"></div>
+</template>
+
+<template id="t-check2">
+<div class="scr">
+  <div class="legend"><span><i class="k3"></i>direct</span><span><i class="k1"></i>with helpers (½)</span><span>| 10–20</span></div>
+  <div class="list" data-cc="1"></div>
+</div>
+<div class="tabbar" data-on="plan"></div>
+</template>
+
+<template id="t-check3">
+<div class="scr">
+  <div class="list" data-cc="2"></div>
+  <p class="small mut" style="margin:0">Not trained on purpose in this plan: traps, forearms, neck and inner thighs.</p>
+  <p class="small mut" style="margin:0">This screen only shows numbers. It never changes the plan.</p>
+</div>
+<div class="tabbar" data-on="plan"></div>
+</template>
+
+<template id="t-gym1">
+<div class="scr">
+  <div class="row"><div><span class="eb">My gym</span><h1 class="p">Gym</h1></div><span class="sp"></span><span class="gear" id="q67t"><i data-i="settings"></i></span></div>
+  <div class="seg"><span class="on">Machines</span><span>Exercises</span></div>
+  <p class="mut" style="margin:0">What each one looks like, the usual name on its sign, and where it is in your gym.</p>
+  <div class="card noted"><div><span class="big">2</span> <span class="mut">of 15 noted</span></div><div class="pbar"><i style="width:13%"></i></div><small class="mut">Add where each one is on your first visit.</small></div>
+  <div class="areah"><span class="ai"><i data-i="cardio"></i></span>Cardio <span class="n">1</span></div>
+  <div class="list"><div class="li"><img class="th sm" data-th="uphill_walk" alt=""><div class="tx"><b>Treadmill</b><small class="mut">Usual sign: Treadmill</small><span class="addw"><i data-i="plus"></i>Add where it is</span></div><i data-i="chevron" class="chev"></i></div></div>
+  <div class="areah"><span class="ai"><i data-i="machines"></i></span>Resistance machines <span class="n">9</span></div>
+  <div class="list"><div class="li"><img class="th sm" data-th="chest_press" alt=""><div class="tx"><b>Chest press machine</b><small class="mut">Usual sign: Chest Press</small><span class="where"><i data-i="pin"></i>Upstairs, back left</span></div><i data-i="chevron" class="chev"></i></div>
+  <div class="li"><img class="th sm" data-th="shoulder_press_machine" alt=""><div class="tx"><b>Shoulder press machine</b><small class="mut">Usual sign: Shoulder Press</small><span class="addw"><i data-i="plus"></i>Add where it is</span></div><i data-i="chevron" class="chev"></i></div></div>
+</div>
+<div class="tabbar" data-on="gym" id="q67t2"></div>
+<div class="qov" data-q="67" data-t="q67t" data-t2="q67t2" data-cy="150"></div>
+</template>
+
+<template id="t-gym2">
+<div class="scr">
+  <div class="row"><div><span class="eb">My gym</span><h1 class="p">Gym</h1></div><span class="sp"></span><span class="gear"><i data-i="settings"></i></span></div>
+  <div class="seg"><span>Machines</span><span class="on">Exercises</span></div>
+  <div class="v75a">
+    <p class="mut" style="margin:0 0 10px">Every exercise in the app, with its swaps. Tap one for how to do it, its muscles and its machine.</p>
+    <div class="areah" style="font-size:20px" id="q75t">Chest <span class="n">3</span></div>
+    <div class="list" style="margin-top:8px">
+      <div class="li"><img class="th sm" data-th="chest_press" alt=""><div class="tx"><b>Chest press</b><small class="mut">Chest press machine</small><small>In the plan: Mon · helps front shoulders, triceps</small></div><span class="bm mini" data-m="chest_press"></span></div>
+      <div class="li"><img class="th sm" data-th="db_bench_press" alt=""><div class="tx"><b>Dumbbell bench press</b><small class="mut">Dumbbells + flat bench</small><small>In the plan: Wed · helps front shoulders, triceps</small></div><span class="bm mini" data-m="chest_press"></span></div>
+      <div class="li"><img class="th sm" data-th="incline_db_press" alt=""><div class="tx"><b>Incline dumbbell press</b><small class="mut">Dumbbells + bench at about 30 degrees</small><small>In the plan: Thu · helps front shoulders, triceps</small></div><span class="bm mini" data-m="chest_press"></span></div>
+    </div>
+    <div class="areah" style="font-size:20px;margin-top:10px">Back <span class="n">5</span></div>
+  </div>
+  <div class="v75b">
+    <p class="mut" style="margin:0 0 10px">Every exercise in the plan and its swaps. Tap one for pictures, tips and the muscles it works.</p>
+    <div class="chips" id="q75t2"><span class="chip sm on">All</span><span class="chip sm">Chest</span><span class="chip sm">Back</span><span class="chip sm">Shoulders</span><span class="chip sm">Arms</span><span class="chip sm">Legs</span><span class="chip sm">Abs</span></div>
+    <div class="list" style="margin-top:10px">
+      <div class="li"><img class="th sm" data-th="cable_crunch" alt=""><div class="tx"><b>Cable crunch</b><small class="mut">Cable · Abs</small><small style="color:var(--acct);font-weight:700">In the plan: Tue, Thu</small></div><span class="bm mini" data-m="cable_crunch"></span></div>
+      <div class="li"><img class="th sm" data-th="cable_curl" alt=""><div class="tx"><b>Cable curl</b><small class="mut">Cable · Biceps</small><small class="mut">Swap only</small></div><span class="bm mini" data-m="cable_curl"></span></div>
+      <div class="li"><img class="th sm" data-th="cable_lateral_raise" alt=""><div class="tx"><b>Cable lateral raise</b><small class="mut">Cable · Side shoulders</small><small class="mut">Swap only</small></div><span class="bm mini" data-m="cable_lateral_raise"></span></div>
+    </div>
+  </div>
+</div>
+<div class="tabbar" data-on="gym"></div>
+<div class="qov" data-q="75" data-t="q75t" data-t2="q75t2" data-cy="520"></div>
+</template>
+
+<template id="t-diet1">
+<div class="scr">
+  <div class="row"><div><span class="eb">Food · Tuesday 17 Nov</span><h1 class="p">Diet</h1></div><span class="sp"></span><span class="gear"><i data-i="settings"></i></span></div>
+  <div class="card tot v77a" id="q77t">
+    <div class="lab"><span class="eb m">Protein</span><small class="mut">target 140 g</small></div>
+    <div class="lab"><span class="val">64<small> g</small></span><b>76 g to go</b></div>
+    <div class="pbar"><i style="width:46%"></i></div>
+    <div class="lab"><span class="eb m">Calories</span><small class="mut">target 2,300 kcal</small></div>
+    <div class="lab"><span class="val" style="font-size:28px">750<small> kcal</small></span><b>1,550 kcal left</b></div>
+    <div class="pbar"><i style="width:33%;opacity:.6"></i></div>
+    <small class="mut">Last 7 days, average: 135 g protein · 1,556 kcal a day.</small>
+  </div>
+  <div class="card v77b" id="q77t2">
+    <div class="rings">
+      <div><div class="ring"><svg viewBox="0 0 132 132"><circle class="tr" cx="66" cy="66" r="58"/><circle class="pr" cx="66" cy="66" r="58" stroke-dasharray="168 364"/></svg><div class="in"><span class="eb m" style="font-size:11px">Protein</span><b>64</b><small class="mut">of 140 g</small></div></div><b style="color:var(--acct)">76 g to go</b></div>
+      <div><div class="ring"><svg viewBox="0 0 132 132"><circle class="tr" cx="66" cy="66" r="58"/><circle class="pr k" cx="66" cy="66" r="58" stroke-dasharray="119 364"/></svg><div class="in"><span class="eb m" style="font-size:11px">Calories</span><b>750</b><small class="mut">of 2,300 kcal</small></div></div><b>1,550 kcal left</b></div>
+    </div>
+    <p class="small mut" style="text-align:center;margin:8px 0 0">Carbs 92 g · Fat 13 g<br>Last 7 days, average: 135 g protein · 1,556 kcal</p>
+  </div>
+  <div class="ways"><span class="way"><i data-i="search"></i>Search</span><span class="way"><i data-i="keys"></i>Digits</span><span class="way"><i data-i="plus"></i>Quick add</span><span class="way"><i data-i="undo"></i>Copy yesterday</span></div>
+  <span class="eb m">Log again · one tap</span>
+  <div class="list">
+    <div class="li"><div class="tx"><b>Eggs</b><small class="mut">120 g · 172 kcal · 15.1 g protein</small></div><span class="plus"><i data-i="plus"></i></span></div>
+    <div class="li"><div class="tx"><b>Whey protein powder</b><small class="mut">30 g · 114 kcal · 22.5 g protein</small></div><span class="plus"><i data-i="plus"></i></span></div>
+    <div class="li"><div class="tx"><b>Greek-style yogurt 0 %</b><small class="mut">170 g · 97 kcal · 17 g protein</small></div><span class="plus"><i data-i="plus"></i></span></div>
+  </div>
+</div>
+<div class="bbar"><span class="btn2"><i data-i="plus"></i> Your foods</span><span class="btn"><i data-i="bolt"></i> Scan</span></div>
+<div class="tabbar" data-on="diet"></div>
+<div class="qov" data-q="77" data-t="q77t" data-t2="q77t2" data-cy="420"></div>
+</template>
+
+<template id="t-diet2">
+<div class="scr">
+  <div class="list">
+    <div class="li"><div class="tx"><b>Chicken breast, cooked</b><small class="mut">150 g · 240 kcal · 46.5 g protein · had today</small></div><span class="plus"><i data-i="plus"></i></span></div>
+    <div class="li"><div class="tx"><b>Semi-skimmed milk</b><small class="mut">200 g · 94 kcal · 7 g protein · had today</small></div><span class="plus"><i data-i="plus"></i></span></div>
+  </div>
+  <div>
+  <div class="v76a"><span class="eb m" id="q76t">Today · 4 foods</span>
+    <div class="list" style="margin-top:8px">
+      <div class="fl"><span class="tm">08:10</span><div class="nm"><b>Porridge oats</b><small class="mut">40 g</small></div><div class="kc"><b>150</b><small class="mut">4.4 g P</small></div></div>
+      <div class="fl"><span class="tm">08:11</span><div class="nm"><b>Semi-skimmed milk</b><small class="mut">200 g</small></div><div class="kc"><b>94</b><small class="mut">7 g P</small></div></div>
+      <div class="fl"><span class="tm">13:05</span><div class="nm"><b>Chicken breast, cooked</b><small class="mut">150 g</small></div><div class="kc"><b>240</b><small class="mut">46.5 g P</small></div></div>
+      <div class="fl"><span class="tm">13:06</span><div class="nm"><b>Basmati rice, dry</b><small class="mut">75 g</small></div><div class="kc"><b>266</b><small class="mut">6 g P</small></div></div>
+    </div></div>
+  <div class="v76b"><span class="eb m">Today</span>
+    <div class="list" style="margin-top:8px">
+      <div class="mealh" id="q76t2">Breakfast <small>244 kcal · 11.4 g protein</small></div>
+      <div class="fl"><div class="nm"><b>Porridge oats</b><small class="mut">08:10 · 40 g</small></div><div class="kc"><b>4.4 g</b><small class="mut">150 kcal</small></div></div>
+      <div class="fl"><div class="nm"><b>Semi-skimmed milk</b><small class="mut">08:11 · 200 g</small></div><div class="kc"><b>7 g</b><small class="mut">94 kcal</small></div></div>
+      <div class="mealh">Lunch <small>506 kcal · 52.5 g protein</small></div>
+      <div class="fl"><div class="nm"><b>Chicken breast, cooked</b><small class="mut">13:05 · 150 g</small></div><div class="kc"><b>46.5 g</b><small class="mut">240 kcal</small></div></div>
+      <div class="fl"><div class="nm"><b>Basmati rice, dry</b><small class="mut">13:06 · 75 g</small></div><div class="kc"><b>6 g</b><small class="mut">266 kcal</small></div></div>
+    </div></div>
+  </div>
+  <p class="small mut" style="margin:0">Targets come from your plan (Today shows the same). Food lives on this phone; in the real app it syncs to its own file.</p>
+  <p class="credit" style="margin:0">Contains data from <u>Open Food Facts</u>, available under the <u>Open Database License</u>.</p>
+</div>
+<div class="bbar"><span class="btn2"><i data-i="plus"></i> Your foods</span><span class="btn"><i data-i="bolt"></i> Scan</span></div>
+<div class="tabbar" data-on="diet"></div>
+<div class="qov" data-q="76" data-t="q76t" data-t2="q76t2" data-cy="8"></div>
+</template>
+
+<template id="t-scan">
+<div class="scan">
+  <div class="head"><span class="x"><i data-i="close"></i>Close</span><b>Scan a barcode</b></div>
+  <div class="cam"><div class="pack"></div><div class="code">5 000159 484695</div><div class="fr"></div><div class="laser"></div><span class="proto">Drawn camera view (prototype)</span></div>
+  <div class="low">
+    <b style="font-size:18px">Hold the barcode inside the frame. It reads by itself.</b>
+    <div class="row"><span class="btn2" style="min-height:48px;font-size:15px"><i data-i="keys"></i>Type the digits</span><span class="btn2" style="min-height:48px;font-size:15px"><i data-i="camera"></i>Take a photo</span></div>
+    <p class="small mut" style="margin:0">Your iPhone may ask for the camera each time you open the app. The camera stops when you close this.</p>
+    <div class="warnbox"><b>That read looks wrong.</b> Hold the phone still and try again. <span class="mut">(shown only after a misread)</span></div>
+  </div>
+</div>
+</template>
+
+<template id="t-digits">
+<div class="scan">
+  <div class="head"><span class="x"><i data-i="close"></i>Close</span><b>Scan a barcode</b></div>
+  <div class="low" style="min-height:640px">
+    <h3 class="s">Type the digits</h3>
+    <div class="fld"><label>Type the numbers under the barcode</label><div class="inp err">5000159484696</div></div>
+    <div class="warnbox"><b>That barcode does not look right</b><br>The last digit does not match the others. Scan again or check the digits. No lookup was made.</div>
+    <span class="btn" style="flex:none">Look it up</span>
+    <div class="card tight"><b>Looking it up</b><p class="small mut" style="margin:4px 0 0">Barcode 5000159484695 on Open Food Facts… Only the barcode number is sent.</p><small class="mut">(shown while a good barcode is looked up)</small></div>
+  </div>
+</div>
+</template>
+
+<template id="t-search">
+<div class="scr"><div class="row"><div><span class="eb">Food · Tuesday 17 Nov</span><h1 class="p">Diet</h1></div></div></div>
+<div class="scrim"></div>
+<div class="sheet" style="top:60px">
+  <div class="grab"></div><span class="close">Close</span>
+  <h2 class="s">Add food</h2>
+  <div class="ways" style="grid-template-columns:repeat(3,1fr)"><span class="way"><i data-i="bolt"></i>Scan barcode</span><span class="way"><i data-i="plus"></i>Quick add</span><span class="way"><i data-i="undo"></i>Copy yesterday (8)</span></div>
+  <div class="fld" id="q79t"><label>Search Open Food Facts</label><div class="row"><div class="inp" style="flex:1">skyr</div><span class="btn" style="flex:none;min-height:48px;padding:0 16px">Search</span></div></div>
+  <p class="small mut" style="margin:0">Search runs when you tap Search, never while typing. Only the word or the barcode is sent.</p>
+  <span class="eb m">Your foods (work offline)</span>
+  <div class="list">
+    <div class="li"><div class="tx"><b>Eggs</b><small class="mut">120 g · 172 kcal · 15.1 g protein</small></div><i data-i="chevron" class="chev"></i></div>
+    <div class="li"><div class="tx"><b>Greek-style yogurt 0 %</b><small class="mut">170 g · 97 kcal · 17 g protein</small></div><i data-i="chevron" class="chev"></i></div>
+    <div class="li"><div class="tx"><b>Porridge oats</b><small class="mut">40 g · 150 kcal · 4.4 g protein</small></div><i data-i="chevron" class="chev"></i></div>
+  </div>
+  <span class="btn sec" style="flex:none;min-height:50px">Make a new food</span>
+  <p class="credit" style="margin:0">Contains data from <u>Open Food Facts</u>, available under the <u>Open Database License</u>.</p>
+</div>
+<div class="qov" data-q="79" data-t="q79t" data-cy="430"></div>
+</template>
+
+<template id="t-checkstep">
+<div class="scr"><div class="row"><div><span class="eb">Food · Tuesday 17 Nov</span><h1 class="p">Diet</h1></div></div></div>
+<div class="scrim"></div>
+<div class="sheet" style="top:14px;gap:8px">
+  <div class="grab"></div><span class="close">Close</span>
+  <span class="eb">From Open Food Facts · check before saving</span>
+  <h2 class="s">Check before saving</h2>
+  <p class="small mut" style="margin:0">Anyone can add products to Open Food Facts, so numbers can be wrong. Compare with the pack. You can change anything.</p>
+  <div class="fld"><label>Name</label><div class="inp">Twix glacé</div></div>
+  <small class="mut">Brand: Twix · pack: 1 gram · Barcode 5000159484695</small>
+  <span class="eb m">Per 100 g</span>
+  <div class="grid2"><div class="fld"><label>Calories (kcal)</label><div class="inp">281</div></div><div class="fld"><label>Protein (g)</label><div class="inp">2.8</div></div><div class="fld"><label>Carbs (g)</label><div class="inp">34.8</div></div><div class="fld"><label>Fat (g)</label><div class="inp">14.6</div></div></div>
+  <span class="okline">✓ The numbers add up.</span>
+  <div class="warnbox"><b>Check these numbers</b><br>The pack size says 1 gram. That is likely wrong.</div>
+  <div class="fld"><label>Your portion (g) · pack says one serving is 43.1 g</label><div class="stepper"><span class="sb">−</span><span class="sv">43.1 <small>g</small></span><span class="sb">+</span></div></div>
+  <div class="chips v76b"><span class="chip sm">Breakfast</span><span class="chip sm">Lunch</span><span class="chip sm">Dinner</span><span class="chip sm on">Snacks</span></div>
+  <span class="btn" style="flex:none" id="q78t">Save and add 43.1 g</span>
+</div>
+<div class="qov" data-q="78" data-t="q78t" data-cy="430"></div>
+</template>
+
+<template id="t-tabs">
+<div class="tabbar" data-on="plan" style="top:0;bottom:auto;position:relative"></div>
+</template>
+
+<script>
+"use strict";
+const SB = /*SHAPES_B*/null;
+const SA = /*SHAPES_A*/null;
+const TH = /*THUMBS*/null;
+
+/* The app's icon strokes (app/js/ui/icons.js, builder C's set, plus B's additions) */
+const IC = {
+  today: ["M4 6.5h16v13H4z", "M4 10h16", "M8 4v4", "M16 4v4"],
+  progress: ["M4 19h16", "M6 15l4-5 3 3 5-7"],
+  plan: ["M8 6h12", "M8 12h12", "M8 18h12", "M4 6h.01", "M4 12h.01", "M4 18h.01"],
+  gym: ["M3 10v4", "M6 7v10", "M18 7v10", "M21 10v4", "M6 12h12"],
+  settings: ["M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z", "M12 2.8v2.4", "M12 18.8v2.4", "M2.8 12h2.4", "M18.8 12h2.4", "M5.5 5.5l1.7 1.7", "M16.8 16.8l1.7 1.7", "M5.5 18.5l1.7-1.7", "M16.8 7.2l1.7-1.7"],
+  food: ["M7 3v8", "M5 3v5a2 2 0 0 0 4 0V3", "M7 11v10", "M16 3c-2 2-2.5 5-2.5 8h4V3z", "M17.5 11v10"],
+  check: ["M5 12.5l4.5 4.5L19 7.5"], info: ["M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z", "M12 11v5", "M12 7.5h.01"],
+  play: ["M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z", "M10 8.5l5.5 3.5L10 15.5z"],
+  pin: ["M12 21s-6.5-6.2-6.5-11A6.5 6.5 0 0 1 18.5 10c0 4.8-6.5 11-6.5 11z", "M12 7.8a2.2 2.2 0 1 0 0 4.4a2.2 2.2 0 1 0 0-4.4z"],
+  swap: ["M7 4L4 7l3 3", "M4 7h13", "M17 20l3-3-3-3", "M20 17H7"], undo: ["M9 7L5 11l4 4", "M5 11h9a5 5 0 0 1 0 10h-2"],
+  close: ["M6 6l12 12", "M18 6L6 18"], chevron: ["M9 6l6 6-6 6"], back: ["M15 6l-6 6 6 6"],
+  walk: ["M13 4.5a1.5 1.5 0 1 0 0 .01", "M10 21l2-6 3 3v3", "M12 15l-1-5 4 1 2 3", "M11 10l-3 2v3"],
+  plus: ["M12 5v14", "M5 12h14"], bolt: ["M13 3 5 14h6l-1 7 8-11h-6z"],
+  cardio: ["M3 18h13l3-6", "M6 18l2-8h8", "M17 6.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z", "M19 18h2"],
+  machines: ["M5 3v18", "M5 6h9", "M14 4v4", "M5 18h14", "M17 8v10", "M14 12h6"],
+  search: ["M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14z", "M20 20l-4-4"],
+  keys: ["M3 6h18v12H3z", "M7 10h.01", "M11 10h.01", "M15 10h.01", "M7 14h10"],
+  camera: ["M4 8h4l2-3h4l2 3h4v11H4z", "M12 10a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7z"],
+  body: ["M12 3a2 2 0 1 0 0 4a2 2 0 1 0 0-4z", "M6 9h12", "M12 9v6", "M9 21l3-6 3 6"],
+  more: ["M5 12h.01", "M12 12h.01", "M19 12h.01"],
+};
+const NS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+function icon(name) {
+  const s = svgEl("svg", { viewBox: "0 0 24 24", class: "ic", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true" });
+  (IC[name] || IC.info).forEach((d) => s.appendChild(svgEl("path", { d })));
+  return s;
+}
+
+/* ---- body maps. Groups follow builder B's muscle groups. ---- */
+const PART_RULES = [["chest-", "chest"], ["shoulder-front-", "front_delts"], ["shoulder-side-", "side_delts"], ["deltoid-rear-", "rear_delts"],
+  ["biceps-", "biceps"], ["triceps-", "triceps"], ["forearm-", "forearms"], ["abs-", "abs"], ["obliques-", "abs"], ["lats-", "lats"],
+  ["traps-upper-", "traps"], ["traps-mid-", "mid_back"], ["traps-lower-", "mid_back"], ["lower-back-", "lower_back"], ["spine", "lower_back"],
+  ["gluteus-", "glutes"], ["quads-", "quads"], ["hamstrings-", "hamstrings"], ["calves-", "calves"], ["adductors-", "adductors"], ["neck-", "neck"], ["nape", "neck"]];
+const groupOfPart = (id) => { const r = PART_RULES.find(([s]) => id.startsWith(s)); return r ? r[1] : null; };
+const FRONT_GROUPS = new Set(["chest", "front_delts", "side_delts", "biceps", "forearms", "abs", "quads", "adductors", "neck"]);
+/* builder A's regions (react-body-highlighter names) -> our groups */
+const A_REG = { chest: ["chest"], obliques: ["abs"], abs: ["abs"], biceps: ["biceps"], triceps: ["triceps"], neck: ["neck"], front_deltoids: ["front_delts", "side_delts"],
+  back_deltoids: ["rear_delts", "side_delts"], quadriceps: ["quads"], calves: ["calves"], left_soleus: ["calves"], right_soleus: ["calves"], forearm: ["forearms"],
+  trapezius: ["traps"], upper_back: ["lats", "mid_back"], lower_back: ["lower_back"], gluteal: ["glutes"], hamstring: ["hamstrings"], adductor: ["adductors"] };
+/* levels: 3 = main / most, 2 = more, 1 = helper / a little (made from free-exercise-db lists; research 5.3 for the plan week) */
+const MAPS = {
+  leg_press: { quads: 3, calves: 1, glutes: 1, hamstrings: 1 }, cable_crunch: { abs: 3 }, romanian_deadlift: { hamstrings: 3, glutes: 1, lower_back: 1 },
+  face_pull: { rear_delts: 3, mid_back: 1 }, hip_thrust: { glutes: 3, calves: 1, hamstrings: 1 }, dead_bug: { abs: 3 }, leg_extension: { quads: 3 },
+  smith_squat: { quads: 3, calves: 1, glutes: 1, hamstrings: 1, lower_back: 1 }, goblet_squat: { quads: 3, calves: 1, glutes: 1, hamstrings: 1, front_delts: 1 },
+  chest_press: { chest: 3, front_delts: 1, triceps: 1 }, cable_curl: { biceps: 3 }, cable_lateral_raise: { side_delts: 3 },
+  tue_rdl: { hamstrings: 2, quads: 2, glutes: 2, abs: 2, calves: 1, lower_back: 1 },
+  tue_b: { quads: 3, glutes: 3, hamstrings: 3, abs: 3, calves: 2, rear_delts: 2, lower_back: 1, mid_back: 1 },
+  plan_week: { chest: 2, lats: 3, mid_back: 3, front_delts: 2, side_delts: 2, rear_delts: 2, biceps: 2, triceps: 2, quads: 3, hamstrings: 1, glutes: 2, calves: 1, abs: 3, lower_back: 1, forearms: 1 },
+};
+function mainView(lv) { let f = 0, b = 0; for (const g in lv) { const w = lv[g] === 3 ? 10 : lv[g] === 2 ? 3 : 1; if (FRONT_GROUPS.has(g)) f += w; else b += w; } return b > f ? "back" : "front"; }
+function drawB(lv, view) {
+  const box = { front: "0 0 35 93", back: "37 0 35 93", both: "0 0 72 93" }[view];
+  const parts = view === "front" ? SB.front : view === "back" ? SB.back : SB.front.concat(SB.back);
+  const s = svgEl("svg", { viewBox: box, "aria-hidden": "true" });
+  for (const [id, d] of parts) { const g = groupOfPart(id); s.appendChild(svgEl("path", { d, class: g ? "l" + (lv[g] || 0) : "body" })); }
+  return s;
+}
+function drawASide(shapes, lv) {
+  const s = svgEl("svg", { viewBox: "-10 -10 1020 2230", "aria-hidden": "true" });
+  for (const r of shapes) { const gs = A_REG[r.muscle]; const l = gs ? Math.max(...gs.map((g) => lv[g] || 0)) : null;
+    for (const p of r.polys) s.appendChild(svgEl("polygon", { points: p, class: gs ? "l" + l : "body" })); }
+  return s;
+}
+function drawA(lv, view) {
+  if (view !== "both") return drawASide(view === "front" ? SA.front : SA.back, lv);
+  const w = document.createElement("span"); w.className = "pair"; w.appendChild(drawASide(SA.front, lv)); w.appendChild(drawASide(SA.back, lv)); return w;
+}
+function fillMap(el) {
+  const lv = MAPS[el.dataset.m] || {};
+  const view = el.dataset.v || mainView(lv);
+  const a = document.createElement("span"); a.className = "v71a"; a.appendChild(drawA(lv, view));
+  const b = document.createElement("span"); b.className = "v71b"; b.appendChild(drawB(lv, view));
+  el.replaceChildren(b, a);
+}
+
+/* ---- exercise cards (words from builder A) ---- */
+const EX = {
+  leg_press: ["Leg press", "3", "10–12", "Front thighs · helps calves, glutes, back thighs"],
+  cable_crunch: ["Cable crunch", "3", "10–15", "Abs"],
+  romanian_deadlift: ["Romanian deadlift", "3", "8–12", "Back thighs · helps glutes, lower back"],
+  face_pull: ["Face pull", "3", "12–15", "Rear shoulders · helps back"],
+  hip_thrust: ["Hip thrust", "3", "8–12", "Glutes · helps calves, back thighs"],
+  dead_bug: ["Dead bug", "3", "8", "Abs", " each side"],
+  leg_extension: ["Leg extension", "3", "12–15", "Front thighs"],
+  smith_squat: ["Smith machine squat", "3", "8–12", "Front thighs · helps calves, glutes, back thighs, lower back"],
+};
+function exCard(slot) {
+  const id = slot.dataset.ex; const [name, sets, reps, words, side] = EX[id];
+  const card = document.createElement("div"); card.className = "card ex";
+  const img = document.createElement("img"); img.className = "th"; img.alt = ""; img.dataset.th = id;
+  const tx = document.createElement("div"); tx.className = "tx";
+  const b = document.createElement("b"); b.textContent = name;
+  if (slot.dataset.swapped) { const t = document.createElement("span"); t.className = "badge"; t.textContent = "Swapped"; b.append(" ", t); }
+  const dose = document.createElement("div"); dose.className = "dose";
+  const s1 = document.createElement("b"); s1.textContent = sets; const s2 = document.createElement("b"); s2.textContent = reps;
+  dose.append(s1, " sets × ", s2, " reps" + (side || ""));
+  const w = document.createElement("small"); w.className = "mut"; w.textContent = words;
+  tx.append(b, dose, w);
+  const map = document.createElement("span"); map.className = "bm mini"; map.dataset.m = id;
+  card.append(img, tx, map);
+  if (slot.dataset.edit) {
+    const wrap = document.createElement("div"); wrap.className = "card"; wrap.style.padding = "12px";
+    card.className = "ex"; card.style.padding = "0";
+    const btns = document.createElement("div"); btns.className = "ebtns";
+    const sw = document.createElement("span"); sw.append(icon("swap"), "Swap");
+    const rm = document.createElement("span"); rm.append(icon("close"), "Remove");
+    btns.append(sw, rm); wrap.append(card, btns); slot.replaceWith(wrap); return;
+  }
+  const ch = icon("chevron"); ch.classList.add("chev"); card.appendChild(ch);
+  slot.replaceWith(card);
+}
+function strip(slot) {
+  const days = [["Mon", "Upper A", "done"], ["Tue", "Lower A", "on"], ["Wed", "Full", ""], ["Thu", "Upper B", ""], ["Fri", "Lower B", ""]];
+  const g = document.createElement("div"); g.className = "strip";
+  for (const [d, f, c] of days) {
+    const e = document.createElement("div"); e.className = "d " + c;
+    const b = document.createElement("b"); b.textContent = d; const s = document.createElement("small"); s.textContent = f;
+    const st = document.createElement("i"); st.className = "st"; e.append(b, s, st);
+    if (slot.dataset.strip === "tue-dot" && d === "Tue") { const dot = document.createElement("span"); dot.className = "badge"; dot.textContent = "changed"; dot.style.cssText = "position:absolute;top:-9px;right:-6px;font-size:10px;padding:1px 5px;background:var(--surface);color:var(--acct);border:1px solid var(--acc)"; e.appendChild(dot); }
+    g.appendChild(e);
+  }
+  slot.replaceWith(g);
+}
+function tabbar(el) {
+  const on = el.dataset.on;
+  const orders = { a: ["today", "plan", "gym", "diet", "progress"], b: ["today", "diet", "plan", "gym", "progress"] };
+  const label = { today: "Today", plan: "Plan", gym: "Gym", diet: "Diet", progress: "Progress", more: "More", settings: "Settings" };
+  const ic = { today: "today", plan: "plan", gym: "gym", diet: "food", progress: "progress", more: "more", settings: "settings" };
+  el.replaceChildren();
+  for (const s67 of ["a", "b", "c"]) for (const k of ["a", "b"]) {
+    let order = orders[k];
+    if (s67 === "b") order = order.map((t) => (t === "progress" ? "more" : t));
+    if (s67 === "c") order = order.concat(["settings"]);
+    const nav = document.createElement("nav"); nav.className = "v68" + k + " v67" + s67 + (s67 === "c" ? " six" : "");
+    for (const t of order) { const s = document.createElement("span"); s.className = "t" + (t === on ? " on" : ""); s.append(icon(ic[t]), label[t]); nav.appendChild(s); }
+    el.appendChild(nav);
+  }
+}
+/* muscle check rows (A's words and numbers, B's shoulder parts) */
+const CC = [
+  ["Chest", 9, 9, "Under 10", "lo", "Mon Wed Thu"], ["Back (lats, middle back)", 12, 15, "In range", "ok", "Mon Wed Thu"],
+  ["Shoulders (all)", 20, 34.5, "In range", "ok", "Mon Tue Wed Thu Fri"],
+  ["Front shoulders", 6, null, "Part of shoulders", "n", "", 1], ["Side shoulders", 8, null, "Part of shoulders", "n", "", 1], ["Rear shoulders", 6, null, "Part of shoulders", "n", "", 1],
+  ["Biceps", 5, 11, "Under 10 direct; 10+ counting helpers", "n", "Mon Wed"], ["Triceps", 8, 15.5, "Under 10 direct; 10+ counting helpers", "n", "Mon Wed Thu"],
+];
+const CC2 = [
+  ["Front thighs (quads)", 12, 12, "In range", "ok", "Tue Wed Fri"], ["Back thighs (hamstrings)", 3, 12, "Under 10 direct; 10+ counting helpers · only 1 day", "lo", "Tue"],
+  ["Glutes", 9, 15, "Under 10 direct; 10+ counting helpers", "n", "Tue Fri"], ["Calves", 3, 10.5, "Under 10 direct; 10+ counting helpers · only 1 day", "lo", "Fri"],
+  ["Abs", 27, 27, "More than 20: more than needed", "lo", "Mon Tue Wed Thu Fri"], ["Lower back", 0, 4.5, "No own exercise; fine for a beginner", "n", ""],
+];
+function ccRows(el) {
+  for (const [name, d, w, verdict, cls, days, part] of (el.dataset.cc === "2" ? CC2 : CC)) {
+    const r = document.createElement("div"); r.className = "ccrow" + (part ? " part" : "");
+    const top = document.createElement("div"); top.className = "top";
+    const b = document.createElement("b"); b.textContent = name;
+    const n = document.createElement("span"); n.className = "num"; n.textContent = String(d); if (w !== null) { const sm = document.createElement("small"); sm.textContent = " · " + w; n.appendChild(sm); }
+    top.append(b, n);
+    const bar = document.createElement("div"); bar.className = "ccbar";
+    const wi = document.createElement("i"); wi.className = "w"; wi.style.width = Math.min(100, (w ?? d) / 36 * 100) + "%";
+    const di = document.createElement("i"); di.className = "dd"; di.style.width = Math.min(100, d / 36 * 100) + "%";
+    const t1 = document.createElement("i"); t1.className = "tk"; t1.style.left = (10 / 36 * 100) + "%";
+    const t2 = document.createElement("i"); t2.className = "tk"; t2.style.left = (20 / 36 * 100) + "%";
+    bar.append(wi, di, t1, t2);
+    const vd = document.createElement("div"); vd.className = "vd";
+    const v = document.createElement("span"); v.className = "v " + cls; v.textContent = verdict;
+    const ds = document.createElement("span"); ds.className = "mut"; ds.textContent = days;
+    vd.append(v, ds);
+    r.append(top, bar, vd); el.appendChild(r);
+  }
+}
+
+/* ---- questions (numbers 67 and up) ---- */
+const QS = [
+  { n: 67, q: "Diet makes a 6th tab. How does the tab bar keep 5 tabs?", o: [["a", "Settings leaves the bar: a gear at the top right of every tab (B; A had it on Today and Progress only)"], ["b", "A “More” tab in Progress’s place, holding Progress and Settings (new, Rosario to approve)"], ["c", "Keep 6 tabs with Settings last (each tab gets narrower, about 62 px)"]], r: "a", why: "Settings is the least-used place, and the same gear on every tab is always one tap away." },
+  { n: 68, q: "Order of the 5 tabs?", o: [["a", "Today · Plan · Gym · Diet · Progress (A)"], ["b", "Today · Diet · Plan · Gym · Progress (B)"]], r: "a", why: "the three gym tabs stay side by side; Diet sits next to Progress, both used at home." },
+  { n: 69, q: "Where do the day arrows go (‹ Monday · Wednesday ›)?", o: [["a", "At the bottom, on a solid bar above the tabs (A, with its see-through bar fixed)"], ["b", "At the top, beside the day name (B)"]], r: "a", why: "the thumb reaches the bottom; the day strip at the top still jumps to any day in one tap." },
+  { n: 70, q: "A big body map of the whole day at the top of each Plan day?", o: [["a", "No: a small map on each card, the first exercise visible without scrolling (A)"], ["b", "Yes: the day map with “Works most” (B)"]], r: "a", why: "at the gym the next exercise matters most; the day’s map is one tap away (“Day so far” in each exercise)." },
+  { n: 71, q: "Which body drawing?", o: [["a", "A’s drawing (react-body-highlighter, MIT): angular shapes, 7 KB"], ["b", "B’s drawing (body-muscles, Apache-2.0): finer shapes, front / side / rear shoulders and lats / mid back apart, 17 KB"]], r: "b", why: "it reads as a body at phone size and shows the shoulder and back parts the plan counts." },
+  { n: 72, q: "Where does “Add an exercise” put it?", o: [["a", "At the end of the day, on its own, 3 sets, 60 s rest, at most 2 a day (A; needs a reviewed engine change, tests first)"], ["b", "Only into a free place the day already has, mostly the abs places (B; no engine change)"]], r: "a", why: "most days only have abs places free, and B put a Romanian deadlift into an abs place with abs rests." },
+  { n: 73, q: "“Back to the plan’s Tuesday” undoes all your changes to that day. Ask first?", o: [["a", "Yes: ask first and list what goes away, then Undo for 8 s (B’s question + A’s Undo)"], ["b", "No: no question, only Undo for 8 s (A)"]], r: "a", why: "it is the biggest change on the tab and it is rare, so one extra tap is cheap." },
+  { n: 74, q: "The check flags 4 things. The 3 big gaps in plan v2: back thighs 3 sets a week, calves 3, abs 27 (chest 9 is just under 10). What now?", o: [["a", "Keep the plan as it is; the screen only shows the numbers"], ["b", "Ask the Training chat for a plan review that moves some abs sets to calves and back thighs; nothing changes until you approve it"]], r: "b", why: "3 sets a week is far under every guideline the research read (about 10), and abs at 27 is the easiest time to free." },
+  { n: 75, q: "Gym › Exercises list:", o: [["a", "Grouped by main muscle, with “In the plan: Mon” (A)"], ["b", "A to Z with muscle filter chips (B)"]], r: "a", why: "the same groups as the swap list and the muscle check, and no extra tap on a chip. Both are good here." },
+  { n: 76, q: "Today’s food list on the Diet tab:", o: [["a", "One list by time (A)"], ["b", "Meals: Breakfast, Lunch, Dinner, Snacks, picked for you from the clock (B)"]], r: "b", why: "meals read faster and cost no tap, because the meal is picked from the time. Both are good here." },
+  { n: 77, q: "Today’s totals at the top of Diet:", o: [["a", "Two bars, protein first (A)"], ["b", "Two rings, protein first, plus carbs and fat (B)"]], r: "b", why: "rings match the app’s ring look (the rest timer). Both are good here; I could not pick firmly." },
+  { n: 78, q: "Where does the food log sync?", o: [["a", "Its own file in the private repo (food.json)"], ["b", "Inside the workout log file (progress.json)"]], r: "a", why: "food fills the file’s 800 KB warning in months (research 9.4); a food sync problem then never touches the workout log." },
+  { n: 79, q: "Open Food Facts name search:", o: [["a", "UK products only (B’s idea; not tested yet)"], ["b", "All countries (as both prototypes do now)"]], r: "a", why: "“skyr” gave French and Arabic products first in both prototypes; scanning a barcode is not affected." },
+];
+const QN = Object.fromEntries(QS.map((q) => [q.n, q]));
+let picks = {};
+try { picks = JSON.parse(localStorage.getItem("plan-diet-judge-picks") || "{}") || {}; } catch (e) { picks = {}; }
+const eff = (n) => picks[n] || QN[n].r;
+
+function qWidget(q, inCard) {
+  const box = document.createElement("div"); box.className = inCard ? "qcard" : "qitem"; box.dataset.qn = q.n;
+  const h = document.createElement(inCard ? "h4" : "h3");
+  const num = document.createElement("span"); num.className = "qn"; num.textContent = q.n;
+  h.append(num, q.q); box.appendChild(h);
+  for (const [k, text] of q.o) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "pickbtn"; b.dataset.q = q.n; b.dataset.o = k;
+    b.setAttribute("aria-pressed", "false");
+    b.append(k + ") " + text);
+    if (k === q.r) { const r = document.createElement("span"); r.className = "rec"; r.textContent = "Recommended"; b.appendChild(r); }
+    b.addEventListener("click", () => setPick(q.n, k));
+    box.appendChild(b);
+  }
+  const w = document.createElement("p"); w.className = "why"; w.textContent = "Recommended: " + q.r + ", because " + q.why; box.appendChild(w);
+  return box;
+}
+function setPick(n, k) {
+  picks[n] = k;
+  try { localStorage.setItem("plan-diet-judge-picks", JSON.stringify(picks)); } catch (e) { /* page works without storage */ }
+  apply();
+}
+function copyText() {
+  const lines = ["Plan and Diet mock-up v1 (judge 8.30), my picks:"];
+  for (const q of QS) {
+    const k = picks[q.n]; const opt = q.o.find(([o]) => o === (k || q.r))[1];
+    lines.push(k ? `${q.n} ${k}) ${opt}` : `${q.n} not picked (recommended ${q.r}) ${opt}`);
+  }
+  return lines.join("\n");
+}
+function apply() {
+  for (const q of QS) document.body.dataset["q" + q.n] = eff(q.n);
+  document.querySelectorAll(".pickbtn").forEach((b) => b.setAttribute("aria-pressed", picks[b.dataset.q] === b.dataset.o ? "true" : "false"));
+  const open = QS.filter((q) => !picks[q.n]).length;
+  document.getElementById("qopen").textContent = String(open);
+  document.getElementById("copyout").value = copyText();
+  placeAll(); requestAnimationFrame(placeAll);
+}
+/* variant rules: an element with class vNNk shows only when question NN's answer is k */
+(function variantCss() {
+  const css = [];
+  for (const q of QS) for (const [k] of q.o) css.push(`body:not([data-q${q.n}="${k}"]) .v${q.n}${k}{display:none!important}`);
+  const st = document.createElement("style"); st.textContent = css.join("\n"); document.head.appendChild(st);
+})();
+
+/* ---- build the NEW frames ---- */
+function buildFrame(tpl, theme, withQ) {
+  const ph = document.createElement("div"); ph.className = "ph " + theme;
+  ph.appendChild(document.getElementById(tpl).content.cloneNode(true));
+  if (!withQ) ph.querySelectorAll(".qov").forEach((e) => e.remove());
+  ph.querySelectorAll("[id]").forEach((e) => { e.dataset.tid = e.id; e.removeAttribute("id"); });
+  ph.querySelectorAll("[data-strip]").forEach(strip);
+  ph.querySelectorAll("[data-ex]").forEach(exCard);
+  ph.querySelectorAll("[data-cc]").forEach(ccRows);
+  ph.querySelectorAll(".tabbar").forEach(tabbar);
+  ph.querySelectorAll(".gear").forEach((g) => g.classList.add("v67a"));
+  ph.querySelectorAll(".bm[data-m]").forEach(fillMap);
+  ph.querySelectorAll("img[data-th]").forEach((i) => { i.src = TH[i.dataset.th]; });
+  ph.querySelectorAll("i[data-i]").forEach((i) => i.replaceWith(icon(i.dataset.i)));
+  ph.querySelectorAll(".qov").forEach((ov) => {
+    const q = QN[ov.dataset.q];
+    const ring = document.createElement("div"); ring.className = "qring"; const num = document.createElement("span"); num.className = "qnum"; num.textContent = q.n; ring.appendChild(num);
+    const card = qWidget(q, true);
+    ov.append(ring, card);
+  });
+  return ph;
+}
+function cell(ph, cap, theme, strip) {
+  const f = document.createElement("figure"); f.className = "cell " + theme;
+  const c = document.createElement("figcaption"); const t = document.createElement("span"); t.className = "tagnew"; t.textContent = "NEW";
+  c.append(t, " " + cap + " · " + (theme === "lt" ? "light" : "dark"));
+  const w = document.createElement("div"); w.className = "phw"; if (strip) { w.classList.add("strip"); ph.classList.add("strip"); }
+  w.appendChild(ph); f.append(c, w); return f;
+}
+document.querySelectorAll(".new").forEach((slot) => {
+  const tpl = slot.dataset.tpl, cap = slot.dataset.cap, st = !!slot.dataset.strip;
+  const a = cell(buildFrame(tpl, "lt", true), cap, "lt", st);
+  const b = cell(buildFrame(tpl, "dk", false), cap, "dk", st);
+  slot.replaceWith(a, b);
+});
+/* an OLD placeholder that stands for both looks */
+document.querySelectorAll(".cell.dk-too").forEach((c) => { c.classList.remove("lt"); c.classList.add("both"); const w = document.createElement("div"); w.className = "phw"; const e = c.querySelector(".empty-old"); e.classList.add("ph"); e.style.outline = "none"; c.appendChild(w); w.appendChild(e); });
+
+/* ---- question cards: ring around the target, card kept inside the frame ---- */
+function placeAll() {
+  document.querySelectorAll(".qov").forEach((ov) => {
+    const ph = ov.closest(".ph");
+    const n = ov.dataset.q; const k = eff(Number(n));
+    let target = ph.querySelector(`[data-tid="${ov.dataset.t}"]`);
+    const t2 = ov.dataset.t2 && ph.querySelector(`[data-tid="${ov.dataset.t2}"]`);
+    if (t2 && (!target || target.offsetParent === null || getComputedStyle(target).display === "none")) target = t2;
+    const ring = ov.querySelector(".qring"), card = ov.querySelector(".qcard");
+    if (target && target.getClientRects().length) {
+      const pr = ph.getBoundingClientRect(), tr = target.getBoundingClientRect(), s = pr.width / 375;
+      let x = (tr.left - pr.left) / s - 4, y = (tr.top - pr.top) / s - 4, w = tr.width / s + 8, h = tr.height / s + 8;
+      x = Math.max(4, x); y = Math.max(16, y); w = Math.min(w, 371 - x); h = Math.min(h, 808 - y);
+      Object.assign(ring.style, { left: x + "px", top: y + "px", width: w + "px", height: h + "px", display: "block" });
+    } else ring.style.display = "none";
+    let cy = Number(ov.dataset.cy || 400);
+    card.style.top = cy + "px";
+    const ch = card.offsetHeight;
+    if (ring.style.display !== "none") {
+      const ry = parseFloat(ring.style.top), rh = parseFloat(ring.style.height);
+      const overlaps = cy < ry + rh && cy + ch > ry;
+      if (overlaps) {
+        if (ry + rh + 10 + ch <= 804) cy = ry + rh + 10;          /* below the ring */
+        else if (ry - 10 - ch >= 8) cy = ry - 10 - ch;            /* above the ring */
+      }
+    }
+    if (cy + ch > 804) cy = Math.max(8, 804 - ch);
+    card.style.top = cy + "px";
+  });
+}
+
+/* ---- scaling the 375 px frames to the cell width ---- */
+function scaleAll() {
+  document.querySelectorAll(".phw").forEach((w) => {
+    const ph = w.firstElementChild; if (!ph) return;
+    const s = Math.min(1, w.clientWidth / 375);
+    const h = ph.classList.contains("strip") ? (ph.querySelector("img") ? 64 : 76) : 812;
+    ph.style.height = h + "px";
+    ph.style.transform = s < 1 ? `scale(${s})` : "";
+    w.style.height = (h * s) + "px";
+  });
+}
+new ResizeObserver(scaleAll).observe(document.body);
+window.addEventListener("load", () => { scaleAll(); placeAll(); });
+
+/* ---- toolbar ---- */
+const qs = document.getElementById("qswitch");
+qs.addEventListener("click", () => {
+  const on = !document.body.classList.contains("showq");
+  document.body.classList.toggle("showq", on);
+  qs.setAttribute("aria-pressed", on ? "true" : "false");
+  document.getElementById("qstate").textContent = on ? "Hide questions" : "Show questions";
+  placeAll(); requestAnimationFrame(placeAll);
+});
+function theme(which) {
+  document.body.classList.toggle("only-lt", which === "lt");
+  document.body.classList.toggle("only-dk", which === "dk");
+  for (const id of ["both", "lt", "dk"]) document.getElementById("th-" + id).setAttribute("aria-pressed", id === which ? "true" : "false");
+  scaleAll(); placeAll(); requestAnimationFrame(() => { scaleAll(); placeAll(); });
+}
+document.getElementById("th-both").addEventListener("click", () => theme("both"));
+document.getElementById("th-lt").addEventListener("click", () => theme("lt"));
+document.getElementById("th-dk").addEventListener("click", () => theme("dk"));
+function doCopy(out) {
+  const text = copyText(); const ta = document.getElementById("copyout"); ta.value = text;
+  const done = () => { out.textContent = "Copied. Paste it into the Training chat."; out.className = "copied"; };
+  const fail = () => { ta.focus(); ta.select(); out.textContent = "Copy is blocked here: the text is selected below, copy it by hand."; out.className = ""; };
+  try { navigator.clipboard.writeText(text).then(done, fail); } catch (e) { fail(); }
+}
+document.getElementById("copy1").addEventListener("click", () => doCopy(document.getElementById("copied1")));
+document.getElementById("copy2").addEventListener("click", () => doCopy(document.getElementById("copied2")));
+const ql = document.getElementById("qlist"); QS.forEach((q) => ql.appendChild(qWidget(q, false)));
+apply(); scaleAll();
+if (location.hash === "#questions") qs.click();
+</script>
