@@ -20,7 +20,7 @@ Exception: the project that owns the global setup (today Reels to Claude) states
 ## Project specifics
 - Tracker: none. STATUS.md is the tracker (the only roadmap).
 - Stack: plain HTML, CSS and JavaScript (ES modules) in `app/`; no framework, no build step, no npm packages, no third-party scripts. Data in the phone's localStorage; sync to the private repo through the GitHub REST contents API. Published to GitHub Pages by a copy-only workflow. See docs/ARCHITECTURE.md.
-- Run / test commands: unit tests `node --test` (Node 24, built in); run locally `python -m http.server 8000 --directory app`, then open http://localhost:8000/ at phone size (375 x 812), light and dark. Sync is tested against the fake GitHub (`tests/fake-github.mjs`; `?fake-github=1` on localhost), never a real repo before build step 12.
+- Run / test commands: unit tests `node --test` (Node 24, built in); run locally `python -m http.server 8000 --bind 127.0.0.1 --directory app`, then open http://localhost:8000/ at phone size (375 x 812), light and dark. Sync is tested against the fake GitHub (`tests/fake-github.mjs`; `?fake-github=1` on localhost), never a real repo before build step 12.
 - Git: GitHub remote not created yet; ask Rosario before any push (default: never force-push; never skip hooks)
 - Commit trailer: use the attribution trailer the app gives you
 - Touches files outside this folder: no (no change ledger needed)
@@ -30,3 +30,4 @@ Exception: the project that owns the global setup (today Reels to Claude) states
 - Out of scope: Apple Health or Watch data links (not possible for web apps), alerts while the app is closed, vibration, food logging, in-app photos, more than one user, any server or paid service, third-party scripts. Later (v2): automatic calorie changes, 12-week review screen, readiness check, streaks (docs/PRD.md sections 5 and 6).
 - Delicate areas (Opus + review): token handling, sync merge and sync flow, data loss on the phone (save per set, restore, migrations), untrusted data in the page, body data never in the public repo. List: docs/ARCHITECTURE.md section 12.
 - UI project: yes, a phone web app (docs/DESIGN.md, see global rules)
+- Preview servers listen on this PC only: bind to 127.0.0.1 (for example `python -m http.server <port> --bind 127.0.0.1`, or the dev server's localhost host option), never all network addresses. This also avoids the Windows firewall popup. Pages Rosario should see still go to Rosario as artifact links (global rule).
