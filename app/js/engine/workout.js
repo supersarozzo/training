@@ -67,6 +67,13 @@ export function buildSequence(slots, { setsOverride = null } = {}) {
 export function slotRecord(session, slot) {
   return session.exercises.find((e) => e.slot === slot);
 }
+// The current record of each slot, in order (the one slotRecord finds). A swap in the middle of an exercise keeps the
+// old record, with its saved sets, behind the new one (model.swapExercise); screens that step through the exercises
+// (week 1) use this list so they never go back to an exercise that was swapped away. Review 8.25 R1.
+export function currentRecords(session) {
+  const seen = new Set();
+  return session.exercises.filter((e) => (seen.has(e.slot) ? false : (seen.add(e.slot), true)));
+}
 export const workSets = (rec) => (rec ? rec.sets.filter((s) => s.type === "work") : []);
 export const warmupDone = (rec) => (rec ? rec.sets.filter((s) => s.type === "warmup").length : 0);
 

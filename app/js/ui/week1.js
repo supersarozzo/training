@@ -11,7 +11,7 @@ import { exercises } from "../plan/plan-v2.js";
 import { cues } from "../plan/cues.js";
 import { stepUp, stepDown } from "../engine/progression.js";
 import { week1NextSet, week1Stage, week1Result, LEFT_CHOICES, LEFT_TO_RIR } from "../engine/week1.js";
-import { workSets, targetText } from "../engine/workout.js";
+import { workSets, targetText, currentRecords } from "../engine/workout.js";
 import { startTimer } from "../timer.js";
 import { askEnd } from "./flow.js";
 import { openSwap } from "./swap.js";
@@ -30,7 +30,7 @@ const fresh = (key, patch) => { if (draft.key !== key) draft = { key, weight: 0,
 
 export function renderWeek1(ctx) {
   const { session, settings } = ctx;
-  const recs = session.exercises;
+  const recs = currentRecords(session); // not the swapped-out records (review 8.25 R1)
   const planSlots = new Map(ctx.plan.slots.map((s) => [s.slot, s]));
   const isWeighted = (rec) => exercises[rec.done_exercise].step !== "bodyweight";
   const index = recs.findIndex((r) => week1Stage(r, isWeighted(r)) !== "done");
