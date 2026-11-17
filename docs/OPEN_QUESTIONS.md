@@ -55,3 +55,5 @@ Full wording, reasons and options are in [WORKFLOW.md](WORKFLOW.md), section A. 
 46. Start the app design now: a) yes. (2026-11-16)
 47. How the first answers get onto the phone: a) a private starter file made from the answers, opened once on the phone; no retyping. (2026-11-16)
 48. Start building the app now: a) yes, steps 1 to 11, one worker after another, checked by the master. (2026-11-16)
+49. Commit email: a) switch to GitHub's private noreply address and rewrite the unpushed commits before the first push. (2026-11-17)
+50. GitHub set-up: a) do it now (build step 12). (2026-11-17)

@@ -60,7 +60,7 @@ git check-ignore private/starter-backup.json
 
 ## Back up
 
-- **The code and docs:** git (every build step is one commit). The GitHub copy comes at build step 12.
+- **The code and docs:** git (every build step is one commit). The GitHub copy is made at the first push (build step 12).
 - **Your private files** (`private/`): they are NOT in git on purpose. Copy the `private` folder to a safe place of your own now and then (for example a USB stick or your cloud drive). Nobody else has these files.
 - **The phone data:** Settings > Backup and restore > **Download backup** makes a file (on iPhone it goes to the Files app). It never holds the GitHub key. Make one now and then, and keep it outside the phone.
 
@@ -72,9 +72,26 @@ git check-ignore private/starter-backup.json
 
 ## Release / deploy
 
-Not yet. Build step 12 (with Rosario): the GitHub account, the public `training` repo with Pages set to "GitHub Actions", the private `training-data` repo, and a key. Code is pushed only after Rosario says yes.
+GitHub set-up (build step 12, 2026-11-17), as done:
+1. GitHub account `supersarozzo` (free plan). Turn on two-factor sign-in (Settings > Password and authentication). Status on 2026-11-17: **off**, Rosario was advised to turn it on.
+2. Settings > Emails: tick "Keep my email addresses private" and "Block command line pushes that expose my email". The noreply address is `151270675+supersarozzo@users.noreply.github.com`. This repo uses it (`git config user.email`, this repo only).
+3. Public repo `training`, made EMPTY (no README, licence or .gitignore). Settings > Pages > Source: **GitHub Actions**.
+4. Private repo `training-data`, made WITH "Add a README file" (so `main` exists; review F9).
+5. The local branch is `main`. Remote: `origin` = https://github.com/supersarozzo/training.git. Push only after Rosario says yes. Git Credential Manager opens a GitHub sign-in in the browser: Rosario signs in there.
 
-When you make the private `training-data` repo, tick **Add a README file**. Then the `main` branch exists from the start. An empty repo can make every sync end in "Sync clash" (review F9, 2026-11-16).
+**Pages address:** https://supersarozzo.github.io/training/ (opens after the first push and a green Actions run).
+
+### Token recipe (build step 13: make it in Safari on the iPhone, paste it straight into the app)
+It never touches the computer. Never put it in chat, a file, a commit, a URL or a log.
+1. In Safari on the iPhone: github.com > your picture > Settings > Developer settings > Personal access tokens > **Fine-grained tokens** > Generate new token.
+2. Name: `training-app`. Expiration: **1 year** (custom date). Resource owner: `supersarozzo`.
+3. Repository access: **Only select repositories** > `training-data` only.
+4. Repository permissions: **Contents: Read and write**. Nothing else (Metadata: Read-only is added by GitHub and is fine).
+5. Generate token, copy it, open the app > Settings > GitHub sync, paste it, Save and test.
+6. Put a reminder in your calendar for 1 year later. When it expires, make a new token the same way.
+
+### Restore the old history from the bundle
+Before the rewrite to the noreply address, all commits were saved in `private/training-before-rewrite-2026-11-17.bundle` (old head `90d9cf4`, tree `25ae3de`; the new head has the same tree). To look at it: `git clone private/training-before-rewrite-2026-11-17.bundle old-copy` in a new empty folder outside this project. The bundle holds the personal Gmail, so it stays in the git-ignored `private/` folder and never goes to GitHub.
 
 ## When something breaks
 
