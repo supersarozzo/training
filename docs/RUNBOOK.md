@@ -79,7 +79,7 @@ GitHub set-up (build step 12, 2026-11-17), as done:
 4. Private repo `training-data`, made WITH "Add a README file" (so `main` exists; review F9).
 5. The local branch is `main`. Remote: `origin` = https://github.com/supersarozzo/training.git. Push only after Rosario says yes. Git Credential Manager opens a GitHub sign-in in the browser: Rosario signs in there.
 
-**Pages address:** https://supersarozzo.github.io/training/ (opens after the first push and a green Actions run).
+**Pages address:** https://supersarozzo.github.io/training/ . First push 2026-11-17: Actions run "Publish app to Pages" passed, the address opens (HTTP 200), `sw.js` opens, and `private/` files are not on the site (404). Not yet tested on the iPhone (build step 13).
 
 ### Token recipe (build step 13: make it in Safari on the iPhone, paste it straight into the app)
 It never touches the computer. Never put it in chat, a file, a commit, a URL or a log.
