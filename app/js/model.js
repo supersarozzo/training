@@ -120,8 +120,15 @@ export function createModel(store, clock = () => new Date()) {
     },
     swapExercise(sessionId, slot, newExerciseId, reason, note = "", startKg = null) {
       return editSession(sessionId, (s) => {
-        const rec = s.exercises.find((e) => e.slot === slot);
+        let rec = s.exercises.find((e) => e.slot === slot);
         if (!rec) throw new Error(`No exercise ${slot} in this workout`);
+        // Sets already saved keep the exercise they were done on: the old record stays as it is,
+        // and a new record for the same slot goes in front of it (slot lookups find the first one).
+        if (rec.sets.length) {
+          const fresh = { slot, plan_exercise: rec.plan_exercise, done_exercise: newExerciseId, swap_reason: null, sets: [], note: "" };
+          s.exercises.splice(s.exercises.indexOf(rec), 0, fresh);
+          rec = fresh;
+        }
         rec.done_exercise = newExerciseId;
         rec.swap_reason = reason;
         if (note) rec.note = clipText(rec.note ? `${rec.note}
