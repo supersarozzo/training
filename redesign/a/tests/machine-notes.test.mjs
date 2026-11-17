@@ -77,12 +77,13 @@ test("clearing a where-note keeps the record with empty text (so the clear syncs
   assert.equal(notes[0].where, "");
 });
 
-test("an old file without machine_notes passes the check and gets an empty list", () => {
+test("an old file without machine_notes passes the check unchanged (screens read a missing list as empty)", () => {
   const old = validDoc();
   delete old.machine_notes;
   const r = validateDocument(old);
   assert.equal(r.ok, true);
-  assert.deepEqual(r.doc.machine_notes, []);
+  assert.deepEqual(r.doc, old);
+  assert.equal(mergeDocs(r.doc, emptyDoc()).machine_notes.length, 0); // a merge gives the list
 });
 
 test("the check accepts good machine notes and refuses bad ones in plain words", () => {

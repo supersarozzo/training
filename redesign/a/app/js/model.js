@@ -1,6 +1,6 @@
 // Create, update and delete records. Screens never write storage directly: they call these.
 // Every change stamps `updated_at` and is saved at once (docs/ARCHITECTURE.md section 6).
-import { nowUtc, newId, exerciseStateId, weighinId, localDate } from "./ids.js";
+import { nowUtc, newId, exerciseStateId, weighinId, localDate, machineNoteId } from "./ids.js";
 import { hasData } from "./store.js";
 import { validateDocument, clipText } from "./validate.js";
 import { mergeDocs } from "./sync/merge.js";
@@ -169,6 +169,18 @@ ${note}` : note);
         const next = { ...base, ...patch, id, updated_at: t };
         if (typeof next.machine_note === "string") next.machine_note = clipText(next.machine_note);
         if (i >= 0) doc.exercise_state[i] = next; else doc.exercise_state.push(next);
+      });
+    },
+
+    // "Where it is in my gym" note of one machine (redesign A). One record per machine; an empty text clears it
+    // but keeps the record, so the clear reaches the other copy too. Old data without the list still works.
+    setMachineWhere(machineId, where) {
+      return update((doc, t) => {
+        if (!Array.isArray(doc.machine_notes)) doc.machine_notes = [];
+        const id = machineNoteId(machineId);
+        const rec = { id, updated_at: t, machine: String(machineId), where: clipText(where) };
+        const i = doc.machine_notes.findIndex((x) => x.id === id);
+        if (i >= 0) doc.machine_notes[i] = rec; else doc.machine_notes.push(rec);
       });
     },
 
