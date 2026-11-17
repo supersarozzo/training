@@ -69,10 +69,10 @@ test("a very long note is cut to the text limit when saved", () => {
   assert.equal(p.store.load().machine_spots[0].where.length, MAX_TEXT);
 });
 
-test("the check accepts old files with no spots and gives an empty list", () => {
+test("the check accepts old files with no spots and leaves them exactly as they were", () => {
   const r = validateDocument(validDoc());
   assert.equal(r.ok, true);
-  assert.deepEqual(r.doc.machine_spots, []);
+  assert.equal("machine_spots" in r.doc, false); // the list is added on the first saved note (see setMachineSpot)
 });
 
 test("the check accepts good spots, tombstones and unknown extra fields", () => {

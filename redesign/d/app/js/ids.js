@@ -21,6 +21,8 @@ export function newId(kind, now = new Date(), bytes) {
 export function weighinId(dateStr) { return `w-${dateStr}`; }
 // Exercise state: one per exercise.
 export function exerciseStateId(exerciseId) { return `x-${exerciseId}`; }
+// "Where it is in my gym" note: one per machine (redesign D).
+export function machineSpotId(machineId) { return `g-${machineId}`; }
 
 // UTC time with milliseconds, e.g. 2026-11-17T18:42:07.311Z
 export function nowUtc(now = new Date()) { return now.toISOString(); }
