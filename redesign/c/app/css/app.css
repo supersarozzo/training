@@ -298,7 +298,7 @@ svg.figure .floor { stroke: #c9ced8; stroke-width: 3; }
 .set-line.current { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
 .set-line.current .check { background: var(--accent); color: var(--accent-ink); width: 48px; height: 44px; }
 .set-line.current .val { font-size: 21px; }
-.set-line .tags { position: absolute; right: 60px; top: 4px; display: flex; gap: 4px; pointer-events: none; }
+.set-line .tags { position: absolute; left: calc(var(--s3) - 3px); bottom: 3px; display: flex; gap: 4px; pointer-events: none; }
 .set-line .rir { font: 700 10px var(--font); color: var(--text-2); }
 .set-line.just-done .check { animation: pop .42s var(--ease-spring); }
 .set-line.just-done { animation: glow .9s ease-out; }
@@ -374,8 +374,8 @@ svg.figure .floor { stroke: #c9ced8; stroke-width: 3; }
 .timeline-legend b { font-weight: 650; color: var(--text); font-family: var(--font-num); }
 
 .blocks { list-style: none; margin: var(--s2) 0 var(--s3); padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; font-size: 13px; }
-.blocks li { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.blocks li span:first-of-type { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.blocks li { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.blocks li span:first-of-type { flex: 1; min-width: 0; line-height: 1.25; }
 .blocks li b { font-family: var(--font-num); font-weight: 700; }
 .blocks li i { width: 8px; height: 8px; border-radius: 2px; background: var(--accent); flex: none; }
 .blocks li i.walk { background: var(--done); }
@@ -623,3 +623,6 @@ td.num, .nowrap { white-space: nowrap; font-family: var(--font-num); }
 .intake-top { margin-bottom: var(--s3); }
 .intake-top .progress { margin-top: 6px; }
 .progress-line { font: 700 12px var(--font); letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); }
+.set-line .tags .badge { height: 15px; padding: 0 4px; font-size: 9.5px; }
+.set-line .n { align-self: center; margin-bottom: 8px; }
+.blocks li i { align-self: center; }
