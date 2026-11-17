@@ -4,7 +4,9 @@
 // Where an exercise stands is worked out from the saved sets (engine/week1.js week1Stage), so a reload continues in place.
 import { MAX_TEXT } from "../validate.js";
 import { h } from "../h.js";
-import { workoutScreen, topBar, actionBar, mainButton, stepper, choiceRow } from "./parts.js";
+import { guideScreen, actionBar, mainButton, stepper, choiceRow } from "./parts.js";
+import { guideTop, exerciseChips, whereLine, coachLine, firstTip } from "./coach.js";
+import { demo } from "./demo.js";
 import { model, rerender } from "./app.js";
 import { patchActive } from "../active.js";
 import { exercises } from "../plan/plan-v2.js";
@@ -45,12 +47,17 @@ export function renderWeek1(ctx) {
   const title = `Exercise ${index + 1} of ${recs.length}`;
   const sets = 2;
 
+  const STEP_NAMES = { learn: "learn the move", warmup: "warm-up", set1: "set 1", set2: "set 2", left1: "set 1 done", left2: "set 2 done", result: "your weight" };
   const header = (extra) => [
-    topBar(title, () => askEnd(ctx)),
-    h("h1", {}, ex.name),
-    h("div", { class: "small muted" }, `${ex.equipment}${rec.swap_reason ? " · swapped in" : ""}`),
-    h("div", { class: "links" },
-      h("button", { class: "text-button", type: "button", onclick: () => openSwap(ctx, rec) }, "Swap")),
+    guideTop(ctx, [h("b", {}, title), ` · ${STEP_NAMES[stage] ?? ""}`], () => askEnd(ctx)),
+    h("section", { class: "g-card" },
+      demo(exId),
+      h("div", { class: "g-body" },
+        h("span", { class: "eyebrow brand" }, "Week 1 · find your weight"),
+        h("h1", {}, ex.name),
+        h("div", { class: "g-sub" }, `${ex.equipment}${rec.swap_reason ? " · swapped in" : ""}`),
+        exerciseChips(ctx, exId, { onSwap: () => openSwap(ctx, rec) }),
+        whereLine(ctx.doc, exId))),
     extra,
   ];
   const setRest = () => {
@@ -77,9 +84,9 @@ export function renderWeek1(ctx) {
   if (stage === "learn") {
     const d = fresh(`${session.id}:${rec.slot}:learn:${exId}`, { note: ctx.state(exId)?.machine_note ?? "" });
     return [
-      workoutScreen(...header(null),
+      guideScreen(`w1:${session.id}:${rec.slot}:${stage}`, ...header(null),
         h("div", { class: "card" },
-          h("h2", {}, "Learn the move"),
+          h("span", { class: "eyebrow brand" }, "Step 1 · learn the move"),
           h("p", {}, cues[exId] ?? "Move slowly and keep good form."),
           weighted ? h("p", { class: "small muted" }, "Set up the machine or the bench. Ask the staff if you are not sure how.") : null),
         weighted ? h("div", { class: "field" },
@@ -98,8 +105,8 @@ export function renderWeek1(ctx) {
   if (stage === "warmup") {
     const d = fresh(`${session.id}:${rec.slot}:warmup:${exId}`, { weight: 0, reps: 10 });
     return [
-      workoutScreen(...header(h("p", {}, "Warm-up: a light weight, 10 reps. It should feel very easy.")),
-        weightStepper(d),
+      guideScreen(`w1:${session.id}:${rec.slot}:${stage}`, ...header(h("p", {}, "Warm-up: a light weight, 10 reps. It should feel very easy.")),
+        h("div", { class: "dials one" }, weightStepper(d)),
         h("div", { class: "text-link-row" }, h("button", { class: "text-button", type: "button", onclick: () => { model.skipWarmup(session.id, rec.slot); rerender(); } }, "Skip warm-up"))),
       actionBar(mainButton("Done · warm-up", () => {
         model.logSet(session.id, rec.slot, { type: "warmup", weight_kg: d.weight, reps: 10 });
@@ -128,13 +135,12 @@ export function renderWeek1(ctx) {
     };
     const first = work[0];
     return [
-      workoutScreen(...header(h("div", {},
+      guideScreen(`w1:${session.id}:${rec.slot}:${stage}`, ...header(h("div", {},
         h("div", { class: "target" }, `Set ${n} of ${sets} · stop with about 3 reps left`),
         n === 1 && weighted ? h("p", { class: "small muted" }, "Pick a weight that feels easy. You find the right one in these two sets.") : null,
         n === 2 && first ? h("p", { class: "small muted" }, `Set 1: ${hold ? `${first.seconds} s` : weighted ? `${first.weight_kg} kg × ${first.reps}, ${first.left} left` : `${first.reps} reps`}.`) : null,
         suggestion ? h("p", { class: "small" }, `${suggestion.note} Suggested: ${suggestion.weight_kg} kg.`) : null)),
-      weighted ? weightStepper(d) : null,
-      repsStepper(d)),
+      h("div", { class: `dials ${weighted ? "" : "one"}` }, weighted ? weightStepper(d) : null, repsStepper(d))),
       actionBar(mainButton(`Done · set ${n}`, save)),
     ];
   }
@@ -148,7 +154,7 @@ export function renderWeek1(ctx) {
       rerender();
     };
     return [
-      workoutScreen(...header(h("div", {},
+      guideScreen(`w1:${session.id}:${rec.slot}:${stage}`, ...header(h("div", {},
         h("h2", {}, "How many more could you have done?"),
         h("p", { class: "muted" }, "Think about the last set: how many more good reps before you had to stop?"))),
       bigRow(pick)),
@@ -160,7 +166,7 @@ export function renderWeek1(ctx) {
   const res = week1Result(rec, exId, settings);
   const d = fresh(`${session.id}:${rec.slot}:result:${exId}`, { note: ctx.state(exId)?.machine_note ?? "" });
   return [
-    workoutScreen(...header(h("div", { class: "card" },
+    guideScreen(`w1:${session.id}:${rec.slot}:${stage}`, ...header(h("div", { class: "card" },
       h("div", { class: "label" }, "Your starting weight for week 2"),
       h("div", { class: "display" }, String(res.start_weight_kg), h("span", { class: "unit" }, " kg")),
       h("p", { class: "small muted" }, res.note))),

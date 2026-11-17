@@ -1,6 +1,9 @@
 // The walk (first block, Rosario's choice 35 b): suggestion, 30-minute timer, then the result.
 import { h } from "../h.js";
-import { workoutScreen, topBar, actionBar, mainButton, secondaryButton, timerView, stepper, choiceRow } from "./parts.js";
+import { guideScreen, actionBar, mainButton, secondaryButton, timerView, stepper, choiceRow } from "./parts.js";
+import { guideTop, coachLine } from "./coach.js";
+import { demo } from "./demo.js";
+import { icon } from "./icons.js";
 import { model } from "./app.js";
 import { patchActive } from "../active.js";
 import { rerender } from "./app.js";
@@ -23,24 +26,27 @@ export function renderWalk(ctx) {
       rerender();
     };
     return [
-      workoutScreen(
-        topBar("Walk", () => askEnd(ctx)),
-        h("h1", {}, "Walk"),
-        h("div", { class: "card" },
-          h("div", { class: "label" }, "Fast uphill walk"),
-          h("div", { class: "row" },
-            h("div", { class: "metric" }, h("div", { class: "label" }, "Speed"), h("div", { class: "display" }, fmt(w.speed_kmh), h("span", { class: "unit" }, " km/h"))),
-            h("div", { class: "metric" }, h("div", { class: "label" }, "Slope"), h("div", { class: "display" }, String(w.slope_pct), h("span", { class: "unit" }, " %")))),
-          h("p", { class: "small muted" }, `${w.minutes} minutes. First ${w.buildUpMinutes} minutes are an easy build-up: ${fmt(w.buildUp.speed_kmh)} km/h, ${w.buildUp.slope_pct} %.`),
-          h("p", { class: "small muted" }, `${legText} ${w.note}`)),
-        h("div", { class: "card warn" }, h("p", {}, "Start a Strength workout on your Apple Watch now.")),
-        h("p", { class: "small muted" }, cues.uphill_walk)),
+      guideScreen("walk:ready",
+        guideTop(ctx, [h("b", {}, "Walk"), ` · ${w.minutes} minutes`], () => askEnd(ctx)),
+        h("section", { class: "g-card tall" },
+          demo("uphill_walk"),
+          h("div", { class: "g-body" },
+            h("span", { class: "eyebrow brand" }, "First: treadmill"),
+            h("h1", {}, "Fast uphill walk"),
+            h("div", { class: "g-sub" }, "Set these on the treadmill"),
+            h("div", { class: "big-pair" },
+              h("div", { class: "box" }, h("div", { class: "label" }, "Speed"), h("div", { class: "display" }, fmt(w.speed_kmh), h("span", { class: "unit" }, " km/h"))),
+              h("div", { class: "box" }, h("div", { class: "label" }, "Slope"), h("div", { class: "display" }, String(w.slope_pct), h("span", { class: "unit" }, " %")))),
+            h("p", { class: "small" }, `${w.minutes} minutes. First ${w.buildUpMinutes} minutes are an easy build-up: ${fmt(w.buildUp.speed_kmh)} km/h, ${w.buildUp.slope_pct} %.`),
+            h("p", { class: "small muted" }, `${legText} ${w.note}`),
+            coachLine(cues.uphill_walk))),
+        h("div", { class: "card tint card-row" }, icon("timer"), h("div", { class: "grow" }, h("b", {}, "Start a Strength workout on your Apple Watch now.")))),
       actionBar(mainButton("Start walk", start), secondaryButton("Skip walk", () => setPhase("changeover", session.kind === "short" ? 120 : 180))),
     ];
   }
 
   // Running: ring, and which part of the walk it is. The label is worked out from the end time on every tick.
-  const label = h("div", { class: "center" }, "");
+  const label = h("div", { class: "phase-pill" }, "");
   const total = act.timer_total;
   const extra = (now) => {
     const elapsed = total - remainingMs(act.timer_end, now);
@@ -50,11 +56,10 @@ export function renderWalk(ctx) {
       : `Fast walk: ${fmt(w.speed_kmh)} km/h · ${w.slope_pct} %`;
   };
   return [
-    workoutScreen(
-      topBar("Walk", () => askEnd(ctx)),
-      h("h1", { class: "center" }, "Walking"),
-      h("div", { class: "center" }, label),
-      timerView({ end: act.timer_end, total, extra }),
+    guideScreen("walk:running",
+      guideTop(ctx, [h("b", {}, "Walk"), " · keep a steady pace"], () => askEnd(ctx)),
+      h("div", { class: "rest-head" }, h("h1", {}, "Walking"), label),
+      timerView({ end: act.timer_end, total, extra, sub: "left" }),
       h("p", { class: "center muted small" }, "Time is up when the screen flashes. You can stop earlier with the button.")),
     actionBar(mainButton("Done walking", () => setPhase("walk_result"))),
   ];
@@ -85,10 +90,12 @@ export function renderWalkResult(ctx) {
   const pick = (v) => { draft.effort = v; rerender(); };
 
   return [
-    workoutScreen(
-      topBar("Walk result", () => askEnd(ctx)),
+    guideScreen("walk:result",
+      guideTop(ctx, [h("b", {}, "Walk"), " · how did it go?"], () => askEnd(ctx)),
+      h("span", { class: "eyebrow brand" }, "Walk done"),
       h("h1", {}, "How was the walk?"),
-      h("div", {},
+      h("p", { class: "muted" }, "Check the speed and slope you really used."),
+      h("div", { class: "dials" },
         stepper({ label: "Speed", unit: "km/h", value: draft.speed, step: 0.1, min: 2, max: 8, onChange: (v) => { draft.speed = v; } }),
         stepper({ label: "Slope", unit: "%", value: draft.slope, step: 1, min: 0, max: 15, decimals: 0, onChange: (v) => { draft.slope = v; } })),
       h("h3", {}, "How hard did it feel? (1 to 10)"),

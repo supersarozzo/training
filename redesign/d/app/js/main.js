@@ -11,6 +11,8 @@ import { renderTargets } from "./ui/targets.js";
 import { renderWorkout } from "./ui/workout.js";
 import { renderWeighin } from "./ui/weighin.js";
 import { renderWeekly } from "./ui/weekly.js";
+import { renderGym } from "./ui/gym.js";
+import { screenIn, applyMotionSetting } from "./ui/motion.js";
 import { tabBar, errorState } from "./ui/parts.js";
 import { model, setRedraw } from "./ui/app.js";
 import { clearTickers } from "./timer.js";
@@ -24,7 +26,7 @@ import { getActive } from "./active.js";
 import { watchStoreErrors } from "./errors.js";
 import { resetSyncDraft } from "./ui/settings-sync.js";
 
-const tabRoutes = { today: renderToday, progress: renderProgress, plan: renderPlan, settings: renderSettings };
+const tabRoutes = { today: renderToday, progress: renderProgress, plan: renderPlan, gym: renderGym, settings: renderSettings };
 const flowRoutes = { setup: renderSetup, intake: renderIntake, targets: renderTargets, workout: renderWorkout, weighin: renderWeighin, weekly: renderWeekly };
 const DEFAULT_ROUTE = "today";
 
@@ -42,6 +44,20 @@ function guard(name) {
   return name;
 }
 
+// The screen slides in only when the screen (or the workout step) really changes, never on a simple redraw.
+let lastView = null;
+const TAB_ORDER = ["today", "progress", "plan", "gym", "settings"];
+function animateView(root, name) {
+  const main = root.querySelector("main");
+  if (!main) return;
+  const view = main.dataset.view ?? name;
+  if (view !== lastView && lastView !== null) {
+    const back = TAB_ORDER.includes(name) && TAB_ORDER.includes(lastView) && TAB_ORDER.indexOf(name) < TAB_ORDER.indexOf(lastView);
+    screenIn(main, { back });
+  }
+  lastView = view;
+}
+
 function render() {
   const root = document.getElementById("app");
   clearTickers(); // timers of the old screen stop
@@ -53,7 +69,9 @@ function render() {
     if (name !== wanted) history.replaceState(null, "", `#/${name}`);
     if (Object.hasOwn(flowRoutes, name)) mount(root, flowRoutes[name]());
     else mount(root, tabRoutes[name](), updateBanner(), tabBar(name));
-    window.scrollTo(0, 0);
+    const view = root.querySelector("main")?.dataset.view ?? name;
+    if (view !== lastView) window.scrollTo(0, 0); // a redraw of the same screen keeps its scroll place
+    animateView(root, name);
   } catch (e) {
     mount(root, errorState(e && e.message ? e.message : "The app could not start."));
   }
@@ -65,6 +83,7 @@ watchStoreErrors(window, (text) => {
 });
 
 try { setSoundOn(soundOn()); } catch { /* storage blocked: default sound on */ }
+applyMotionSetting();
 setRedraw(render);
 window.addEventListener("hashchange", render);
 render();
