@@ -145,6 +145,8 @@ Recommended by Judge 4; it combines the safe parts of all four.
 
 ## 4. Questions for Rosario (through the master)
 
+**Answered by Rosario on 2026-11-17: "All recommended"** → 1 a (volt accent), 2 a (keep the photos at 850 px; shrink only the two dead-bug photos), 3 a (display fix only; no engine change). The master records these in docs/DECISIONS.md.
+
 1. **Accent colour.** A's look uses a bright volt yellow-green accent. docs/DECISIONS.md (2026-11-16) says "one flat teal accent". a) Volt (A's look, the judges' choice for "premium"). b) Teal-mint (D's, closest to the old decision). Recommended: a, because it is the look that won; Rosario sees it on the phone before the push.
 2. **Photo size.** a) Keep sharp photos (about 5.4 MB, downloaded once). b) Smaller photos (about 3.9 MB, a little softer). Recommended: a, because the download is once and the photos are already below full sharpness on an iPhone.
 3. **Walk build-up.** For the "No" answer to intake question 36, WORKFLOW says "build up from 20 minutes", but the engine jumps from 20 to 30 minutes after the first walk. a) Fix only the display now (both screens show the same number); keep the engine. b) Also add a slow build-up (for example +5 minutes a week until 30): an engine change with tests and an Opus review, as its own task. Recommended: a, because the redesign must not change engine logic; b can follow if Rosario wants it.
