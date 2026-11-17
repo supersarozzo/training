@@ -172,6 +172,21 @@ ${note}` : note);
       });
     },
 
+    // "Where it is in my gym" for one machine or station (redesign B). One record per machine: id g-<machine>.
+    // Old data has no gym_spots list yet; it is added here. An empty note is kept as "" (shows "not filled in yet").
+    setGymSpot(machineId, where) {
+      if (typeof machineId !== "string" || !/^[a-z0-9_]{1,50}$/.test(machineId)) throw new Error("Unknown machine");
+      return update((doc, t) => {
+        if (!Array.isArray(doc.gym_spots)) doc.gym_spots = [];
+        const id = `g-${machineId}`;
+        const rec = { id, updated_at: t, machine: machineId, where: clipText(String(where ?? "").trim()) };
+        const i = doc.gym_spots.findIndex((x) => x.id === id);
+        if (i >= 0) doc.gym_spots[i] = { ...doc.gym_spots[i], ...rec, deleted: undefined, deleted_at: undefined };
+        else doc.gym_spots.push(rec);
+        if (i >= 0) { delete doc.gym_spots[i].deleted; delete doc.gym_spots[i].deleted_at; }
+      });
+    },
+
     // A profile needs a block (Today reads its start). A file from GitHub can bring a profile without one (review F4).
     ensureBlock() {
       const doc = store.load();

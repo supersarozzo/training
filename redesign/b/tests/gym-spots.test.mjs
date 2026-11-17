@@ -33,12 +33,12 @@ test("a new empty document has an empty gym_spots list, and merge knows the list
   assert.ok(LISTS.includes("gym_spots"));
 });
 
-test("old data without gym_spots still validates; the clean copy gets an empty list", () => {
+test("old data without gym_spots still validates and comes back unchanged (no list is added by the check)", () => {
   const old = validDoc();
   assert.equal("gym_spots" in old, false);
   const r = validateDocument(old);
   assert.equal(r.ok, true, r.error);
-  assert.deepEqual(r.doc.gym_spots, []);
+  assert.deepEqual(r.doc, old);
 });
 
 test("old data stored on the phone without gym_spots: setGymSpot works and keeps everything else", () => {
