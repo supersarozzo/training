@@ -1,6 +1,6 @@
 // Weigh-in: one number, under 10 seconds. Measurements (waist, chest, arm, thigh) every 4 weeks.
 import { h } from "../h.js";
-import { flowScreen, actionBar, mainButton, stepper } from "./parts.js";
+import { flowScreen, actionBar, mainButton, stepper, icon, stat, sparkline } from "./parts.js";
 import { model, go, rerender } from "./app.js";
 import { today } from "../clock.js";
 import { activeWeighins } from "../engine/trend.js";
@@ -42,20 +42,24 @@ export function renderWeighin() {
     const sp = kgToStonesPounds(draft.kg);
     const state = { st: sp.stones, lb: sp.pounds };
     const upd = () => { draft.kg = stonesPoundsToKg(state.st, state.lb); };
-    input = h("div", {},
+    input = h("div", { class: "editor" },
       stepper({ label: "Stones", unit: "st", value: state.st, step: 1, min: 3, max: 60, decimals: 0, onChange: (v) => { state.st = v; upd(); } }),
       stepper({ label: "Pounds", unit: "lb", value: state.lb, step: 0.2, min: 0, max: 13.9, decimals: 1, onChange: (v) => { state.lb = v; upd(); } }));
   } else {
-    input = stepper({ label: "Weight", unit: "kg", value: Math.round(draft.kg * 10) / 10, step: 0.1, min: 20, max: 400, decimals: 1, onChange: (v) => { draft.kg = v; } });
+    input = h("div", { class: "editor one big" }, stepper({ label: "Weight", unit: "kg", value: Math.round(draft.kg * 10) / 10, step: 0.1, min: 20, max: 400, decimals: 1, onChange: (v) => { draft.kg = v; } }));
   }
 
   const num = (key, label) => h("div", { class: "field" }, h("label", { for: `m-${key}` }, label),
     h("input", { type: "number", id: `m-${key}`, inputmode: "decimal", step: "any", min: 10, max: 300, value: measure[key], oninput: (e) => { measure[key] = e.target.value; } }));
 
-  return [
-    flowScreen(
-      h("a", { href: "#/progress", class: "text-button", onclick: () => { draft = null; message = null; } }, "‹ Back"),
+  const recent = list.slice(-14).map((w) => w.kg);
+  const main = flowScreen(
+      h("a", { href: "#/progress", class: "text-button back", onclick: () => { draft = null; message = null; } }, icon("back", "sm"), "Back"),
+      h("div", { class: "eyebrow" }, "Body"),
       h("h1", {}, "Weigh-in"),
+      last ? h("div", { class: "stats two" },
+        stat("Last time", formatBody(last.kg, unit), null, { d: last.date }),
+        stat("Last 2 weeks", String(recent.length), "weigh-ins", { spark: sparkline(recent, { w: 120, h: 24, area: true }) })) : null,
       h("p", { class: "muted small" }, "After the toilet, before food and drink, in light clothes."),
       h("div", { class: "field" }, h("label", { for: "w-date" }, "Date"),
         h("input", { type: "date", id: "w-date", value: draft.date, max: today(), onchange: (e) => { if (e.target.value) { draft.date = e.target.value; rerender(); } } })),
@@ -67,7 +71,7 @@ export function renderWeighin() {
         h("h2", {}, "Measurements (every 4 weeks)"),
         h("p", { class: "small muted" }, "In cm. Waist at the belly button. Same time and same way each time."),
         num("waist_cm", "Waist (cm)"), num("chest_cm", "Chest (cm)"), num("arm_cm", "Upper arm (cm)"), num("thigh_cm", "Thigh (cm)"),
-        h("button", { class: "button secondary", type: "button", onclick: saveMeasure }, "Save measurements"))),
-    actionBar(mainButton("Save weigh-in", save)),
-  ];
+        h("button", { class: "button secondary", type: "button", onclick: saveMeasure }, "Save measurements")));
+  main.dataset.key = "weighin";
+  return [main, actionBar(mainButton("Save weigh-in", save, { ic: "check" }))];
 }

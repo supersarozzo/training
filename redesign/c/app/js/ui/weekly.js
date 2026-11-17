@@ -1,7 +1,7 @@
 // Weekly summary (Monday, before the workout): last week in numbers, the trend against the target band, and a food
 // suggestion. The app only suggests; Rosario decides (version 1, WORKFLOW F2 and F3).
 import { h } from "../h.js";
-import { flowScreen, actionBar, mainButton } from "./parts.js";
+import { flowScreen, actionBar, mainButton, stat, icon } from "./parts.js";
 import { model, go, store } from "./app.js";
 import { today } from "../clock.js";
 import { weeklySummary, statusWords } from "../engine/trend.js";
@@ -53,12 +53,14 @@ export function renderWeekly() {
 
   return [
     flowScreen(
+      h("div", { class: "eyebrow" }, `Week ${sum.week - 1} · ${sum.from} to ${sum.to}`),
       h("h1", {}, "Last week"),
-      h("div", { class: "small muted" }, `Week ${sum.week - 1}, ${sum.from} to ${sum.to}`),
-      h("div", { class: "card" },
-        h("div", { class: "row" }, metric("Workouts", `${sum.workouts} of 5`), metric("Sets", sum.sets)),
-        h("div", { class: "row" }, metric("New bests", sum.newBests), metric("Walk", sum.walkMinutes, "min"))),
-      h("div", { class: "card" }, h("h2", {}, "Weight trend"), trendCard),
+      h("div", { class: "stats four" },
+        stat("Workouts", String(sum.workouts), "of 5", { spark: h("div", { class: "set-dots big", "aria-hidden": "true" }, Array.from({ length: 5 }, (_, i) => h("i", { class: i < sum.workouts ? "on" : "" }))) }),
+        stat("Sets", String(sum.sets)),
+        stat("New bests", String(sum.newBests)),
+        stat("Walk", String(sum.walkMinutes), "min")),
+      h("div", { class: "card" }, h("h2", {}, icon("progress", "sm"), " Weight trend"), trendCard),
       food),
     actionBar(mainButton("Got it", () => {
       store.saveDevice({ ...store.loadDevice(), weekly_seen: sum.week });

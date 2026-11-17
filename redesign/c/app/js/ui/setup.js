@@ -1,6 +1,6 @@
 // First start: Start fresh, Restore from file, Restore from GitHub.
 import { h } from "../h.js";
-import { flowScreen } from "./parts.js";
+import { flowScreen, icon } from "./parts.js";
 import { model, go, rerender } from "./app.js";
 import { resetDraft } from "./intake.js";
 import { connectionFields, restoreFromGithub, syncMessage, syncBusy, resetSyncDraft } from "./settings-sync.js";
@@ -38,9 +38,11 @@ export function renderSetup() {
     onchange: (e) => restoreFromFile(e.target.files[0]),
   });
   return flowScreen(
-    h("h1", {}, "Training"),
-    h("p", { class: "muted" }, "A 12-week gym plan, Monday to Friday. Your data stays on this phone."),
-    h("div", { class: "card" },
+    h("div", { class: "hero" },
+      h("div", { class: "hero-mark", "aria-hidden": "true" }, icon("progress", "lg")),
+      h("h1", {}, "Training"),
+      h("p", { class: "muted" }, "A 12-week gym plan, Monday to Friday. Your data stays on this phone.")),
+    h("div", { class: "card accent-card" },
       h("h2", {}, "Start fresh"),
       h("p", { class: "muted" }, "Answer 19 short questions (about 5 minutes). The app works out your numbers."),
       h("button", { class: "button", type: "button", onclick: () => { resetDraft(); go("#/intake"); } }, "Start fresh")),

@@ -1,6 +1,8 @@
-// Settings: GitHub sync, backup and restore, the Log to Health button, gym weights, body unit, sound.
+// Settings: look (theme, animations), GitHub sync, backup and restore, the Log to Health button, gym weights, body unit,
+// sound. Look settings stay on this phone only.
 import { h } from "../h.js";
-import { screen, choiceRow } from "./parts.js";
+import { screen, choiceRow, toggleRow, icon } from "./parts.js";
+import { prefs, setPref } from "./prefs.js";
 import { model, store, rerender } from "./app.js";
 import { soundOn, setSound } from "../active.js";
 import { setSoundOn, beep } from "../sound.js";
@@ -118,7 +120,7 @@ function shortcutCard(settings) {
     h("p", { class: "muted" }, "Off by default. When on, the Saved message after a workout shows a button that runs a Shortcut you made, with the start time and the minutes. Your Apple Watch workout already logs to Health by itself, so this is optional. Try it on the phone before you rely on it."),
     h("div", { class: "field" }, h("label", { for: "sc-name" }, "Name of your Shortcut"),
       h("input", { type: "text", id: "sc-name", maxlength: 80, autocomplete: "off", value: shortcutDraft, oninput: (e) => { shortcutDraft = e.target.value; } })),
-    h("button", { class: "choice", type: "button", "aria-pressed": on ? "true" : "false", onclick: () => saveShortcut(settings, !on) }, on ? "Button is on" : "Button is off"),
+    toggleRow(on ? "Button is on" : "Button is off", on, () => saveShortcut(settings, !on)),
     on ? h("button", { class: "button secondary", type: "button", onclick: () => saveShortcut(settings, true) }, "Save the name") : null);
 }
 
@@ -126,8 +128,17 @@ export function renderSettings() {
   const on = soundOn();
   const toggle = () => { setSound(!on); setSoundOn(!on); if (!on) beep(); rerender(); };
   const doc = model.doc();
-  return screen(
+  const look = prefs();
+  const main = screen(
+    h("div", { class: "eyebrow" }, "This app"),
     h("h1", {}, "Settings"),
+    h("div", { class: "card" },
+      h("h2", {}, "Look"),
+      h("div", { class: "label" }, "Colours"),
+      choiceRow([["auto", "Like the phone"], ["light", "Light"], ["dark", "Dark"]], look.theme, (v) => { setPref("theme", v); rerender(); }, { cls: "seg" }),
+      toggleRow("Animations", look.motion === "on", () => { setPref("motion", look.motion === "on" ? "off" : "on"); rerender(); },
+        "Small movements: the set check, the timer ring, charts drawing in. Off also when the phone asks for less motion."),
+      h("p", { class: "small muted" }, "Kept on this phone only.")),
     syncCard(),
     backupCard(),
     gymCard(doc.shared_settings),
@@ -140,5 +151,8 @@ export function renderSettings() {
     h("div", { class: "card" },
       h("h2", {}, "Sound"),
       h("p", { class: "muted" }, "A beep when a timer ends. It only plays with the app open and the phone's ring switch on. The screen flash always shows."),
-      h("button", { class: "choice", type: "button", "aria-pressed": on ? "true" : "false", onclick: toggle }, on ? "Sound is on" : "Sound is off")));
+      toggleRow(on ? "Sound is on" : "Sound is off", on, toggle)),
+    h("p", { class: "small muted center" }, icon("info", "sm"), " Training app, made for one person. Your data stays on this phone and in your own GitHub repo."));
+  main.dataset.key = "settings";
+  return main;
 }

@@ -1,6 +1,7 @@
 // Plan sheet: the whole plan v2 as tables. Prints on A4 (see the print rules in css/app.css).
 import { h } from "../h.js";
-import { screen } from "./parts.js";
+import { screen, icon, secondaryButton } from "./parts.js";
+import { thumb, openExercise } from "./media-ui.js";
 import { exercises, days, weeks, DAY_IDS, MOVE_SECONDS, walkRules } from "../plan/plan-v2.js";
 
 function repText(ex) {
@@ -26,30 +27,26 @@ function swapText(ex) {
   }).join("; ");
 }
 
-function dayTable(dayId) {
+function dayList(dayId) {
   const day = days[dayId];
-  const rows = day.slots.map((slot) => {
-    const ex = exercises[slot.ex];
-    const swap = swapText(ex);
-    return h("tr", {},
-      h("td", {}, slot.slot === "D" ? "D" : slot.slot),
-      h("td", {},
-        h("strong", {}, ex.name),
-        h("div", { class: "small muted" }, ex.equipment),
-        swap ? h("div", { class: "small muted" }, `Swap: ${swap}`) : null),
-      h("td", { class: "nowrap" }, `${slot.sets} × ${repText(ex)}`),
-      h("td", {}, restText(slot)));
-  });
   const walkText = day.walk === "easy"
     ? `Walk: easier (${walkRules.legDaySlopeLess_pct} % less slope, effort ${walkRules.legDayEffort.join(" to ")} of 10)`
     : `Walk: normal (effort ${walkRules.normalEffort.join(" to ")} of 10)`;
-  return h("section", { class: "card" },
-    h("h2", {}, `${day.name}: ${day.focus}`),
-    h("p", { class: "small muted" }, walkText),
-    h("div", { class: "table-wrap" },
-      h("table", {},
-        h("thead", {}, h("tr", {}, h("th", {}, "Slot"), h("th", {}, "Exercise"), h("th", {}, "Sets × reps"), h("th", {}, "Rest"))),
-        h("tbody", {}, rows))));
+  return h("section", { class: "plan-day", id: `day-${dayId}` },
+    h("div", { class: "section-head" }, h("h2", {}, h("span", { class: "eyebrow" }, day.name), h("br"), day.focus)),
+    h("p", { class: "small muted walk-line" }, icon("walk", "sm"), " ", walkText),
+    h("div", { class: "list" }, day.slots.map((slot) => {
+      const ex = exercises[slot.ex];
+      const swap = swapText(ex);
+      return h("button", { class: "ex-row plan-row", type: "button", onclick: () => openExercise(slot.ex) },
+        h("span", { class: "badge slot" }, slot.slot),
+        thumb(slot.ex, { size: "sm" }),
+        h("div", { class: "grow" },
+          h("div", { class: "title" }, ex.name),
+          h("div", { class: "sub" }, ex.equipment),
+          swap ? h("div", { class: "sub faint" }, `Swap: ${swap}`) : null),
+        h("div", { class: "end" }, h("div", { class: "num-strong" }, `${slot.sets} × ${repText(ex)}`), h("div", { class: "tiny muted" }, restText(slot))));
+    })));
 }
 
 function rirText(rir) { return Array.isArray(rir) ? `${rir[0]}-${rir[1]}` : String(rir); }
@@ -73,14 +70,17 @@ function weeksTable() {
 }
 
 export function renderPlan() {
-  return screen(
+  const main = screen(
+    h("div", { class: "eyebrow" }, "Plan v2 · 12 weeks"),
     h("h1", {}, "Plan"),
-    h("p", { class: "muted" }, "Monday to Friday. Walk first, then weights in pairs."),
-    h("button", { class: "button secondary no-print", type: "button", onclick: () => window.print() }, "Print"),
-    h("h2", {}, "The week"),
-    h("div", { class: "card" },
-      h("table", {}, h("tbody", {}, DAY_IDS.map((id) =>
-        h("tr", {}, h("td", {}, h("strong", {}, days[id].name)), h("td", {}, days[id].focus)))))),
-    DAY_IDS.map(dayTable),
-    weeksTable());
+    h("p", { class: "muted" }, "Monday to Friday. Walk first, then weights in pairs. Tap an exercise for photos and tips."),
+    h("div", { class: "list" }, DAY_IDS.map((id) => h("a", { class: "list-row", href: `#/plan`, onclick: (e) => { e.preventDefault(); document.getElementById(`day-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }); } },
+      h("div", { class: "date-box" }, h("b", {}, days[id].name.slice(0, 3))),
+      h("div", { class: "grow" }, h("div", { class: "title" }, days[id].focus), h("div", { class: "sub" }, `${days[id].slots.length} exercises · walk ${days[id].walk === "easy" ? "easier" : "normal"}`)),
+      icon("chev", "chev")))),
+    DAY_IDS.map(dayList),
+    weeksTable(),
+    h("div", { class: "no-print" }, secondaryButton("Print the plan", () => window.print(), { ic: "print" })));
+  main.dataset.key = "plan";
+  return main;
 }

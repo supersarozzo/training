@@ -1,7 +1,7 @@
 // Intake: one question per page (WORKFLOW section A, questions 20 to 38). Defaults are the recommended answers.
 // The answers are saved only at the end, in the shape of docs/ARCHITECTURE.md section 4.2.
 import { h } from "../h.js";
-import { flowScreen, actionBar, mainButton, secondaryButton } from "./parts.js";
+import { flowScreen, actionBar, mainButton, secondaryButton, progressBar } from "./parts.js";
 import { model, go, rerender } from "./app.js";
 import { stonesPoundsToKg } from "../engine/nutrition.js";
 
@@ -259,7 +259,9 @@ export function renderIntake() {
   };
 
   return flowScreen(
-    h("div", { class: "progress-line" }, `${draft.step + 1} of ${QUESTIONS.length}`),
+    h("div", { class: "intake-top" },
+      h("div", { class: "progress-line" }, `Question ${draft.step + 1} of ${QUESTIONS.length}`),
+      progressBar((draft.step + 1) / QUESTIONS.length)),
     h("h1", {}, q.title),
     q.help ? h("p", { class: "muted" }, q.help) : null,
     ...q.view(),
