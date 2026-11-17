@@ -491,3 +491,30 @@ a.text-button { display: inline-flex; align-items: center; gap: 2px; text-decora
 @media print { .plan-ex { min-height: 0; } .plan-ex strong { text-decoration: none; } }
 .qbar { height: 6px; border-radius: 3px; background: var(--ring-track); overflow: hidden; margin: 0 0 var(--s5); }
 .qbar .fill { display: block; height: 100%; background: var(--accent); transform-origin: left; transition: transform var(--t-slow) var(--ease); box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 60%, transparent); }
+
+/* pair screen, compact (redesign A, round 2): chips over the photo, sets as one row of tiles */
+.ex-hero .flip { height: 150px; }
+.ex-hero .flip img, .thumb img, .hero-strip img { object-fit: cover; object-position: center 28%; }
+.hero-chips { position: absolute; top: 0; left: 0; right: 0; margin: 0; padding: var(--s2); gap: 6px; }
+.hero-chips .chip { min-height: 40px; padding: 0 var(--s3); background: rgba(10, 11, 13, .62); color: #fff; border-color: rgba(255, 255, 255, .16); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); font-size: 14px; }
+.hero-chips .chip::after { content: ""; position: absolute; inset: -2px; } /* tap area >= 44 px */
+.hero-chips .chip { position: relative; }
+.set-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); gap: 6px; }
+.set-tile {
+  display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 58px; padding: 6px 10px;
+  border-radius: var(--r-input); background: var(--bg-surface); border: 1px solid var(--border-default); color: var(--text-muted); min-width: 0;
+}
+.set-tile .num { display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.set-tile .what { font-size: 15px; font-weight: 750; color: inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.set-tile .left { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.set-tile.done { background: var(--accent-soft); border-color: transparent; color: var(--text-primary); }
+.set-tile.done .num { color: var(--accent-text); }
+.set-tile.current { color: var(--text-primary); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset, 0 0 18px color-mix(in srgb, var(--accent) 22%, transparent); }
+.set-tile.current .what { font-size: 17px; }
+.set-tile.just { animation: set-in var(--t-slow) var(--spring) both; }
+.set-list .eyebrow { margin-bottom: 6px; }
+.warm-done { margin-bottom: var(--s3); }
+.stepper-block { margin-bottom: var(--s2); }
+.stepper-block .label { margin-bottom: 2px; }
+.info-lines { margin-bottom: var(--s2); }
+.big-number { font-size: 40px; white-space: nowrap; }

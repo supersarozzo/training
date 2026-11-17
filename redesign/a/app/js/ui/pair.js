@@ -43,15 +43,15 @@ export function exerciseHeader(ctx, rec, { tips = true } = {}) {
   const ex = exercises[rec.done_exercise];
   return [
     h("div", { class: "ex-hero" },
-      flip(rec.done_exercise, { smooth: true, tag: true }),
+      flip(rec.done_exercise, { smooth: true }),
       h("div", { class: "ex-hero-fade" }),
+      h("div", { class: "chips hero-chips" },
+        tips ? h("button", { class: "chip", type: "button", onclick: () => openTips(ctx, rec) }, icon("info", 17), "Tips") : null,
+        videoButton(rec.done_exercise, { chip: true }),
+        h("button", { class: "chip", type: "button", onclick: () => openSwap(ctx, rec) }, icon("swap", 17), "Swap")),
       h("div", { class: "ex-hero-text" },
         h("h1", {}, ex.name),
         h("div", { class: "small" }, `${ex.equipment}${rec.swap_reason ? " · swapped in" : ""}`))),
-    h("div", { class: "chips" },
-      tips ? h("button", { class: "chip", type: "button", onclick: () => openTips(ctx, rec) }, icon("info", 17), "Tips") : null,
-      videoButton(rec.done_exercise, { chip: true }),
-      h("button", { class: "chip", type: "button", onclick: () => openSwap(ctx, rec) }, icon("swap", 17), "Swap")),
   ];
 }
 
@@ -127,10 +127,10 @@ export function renderPair(ctx, pos) {
       const left = s.rir == null || hold ? "" : ` · ${s.rir >= 4 ? "4+" : s.rir} left`;
       const just = justDone === `${session.id}:${entry.slot}:${n}`;
       if (just) justDone = null;
-      rows.push(h("div", { class: `set-row done ${just ? "just" : ""}` }, h("span", { class: "num" }, String(n)), h("span", { class: "what" }, `${what}${left}`), h("span", { class: "tick", "aria-label": "done" }, icon("check", 16, { strokeWidth: 3 }))));
+      rows.push(h("div", { class: `set-tile done ${just ? "just" : ""}`, "aria-label": `Set ${n} done: ${what}${left}` }, h("span", { class: "num" }, icon("check", 13, { strokeWidth: 3.2 }), String(n)), h("span", { class: "what" }, what), left ? h("span", { class: "left" }, left.replace(" · ", "")) : null));
     } else {
       const cur = n === done.length + 1;
-      rows.push(h("div", { class: `set-row ${cur ? "current" : ""}` }, h("span", { class: "num" }, String(n)), h("span", { class: "what" }, cur ? "Now" : "Later"), cur ? h("span", { class: "small muted" }, `${entry.sets - done.length} to go`) : null));
+      rows.push(h("div", { class: `set-tile ${cur ? "current" : ""}` }, h("span", { class: "num" }, `Set ${n}`), h("span", { class: "what" }, cur ? "Now" : "Later")));
     }
   }
 
@@ -176,11 +176,13 @@ export function renderPair(ctx, pos) {
         whereLine(ctx, exId),
         rec.swap_reason === "hurts" ? h("div", { class: "warn" }, "You swapped because it hurt. Start light.") : null,
         unknown ? h("div", { class: "warn" }, "Pick a light weight you can lift with good form.") : null),
-      wsets.length ? h("div", { class: "set-list" },
+      // Warm-up sets: tiles while they are due, one short line once done (DESIGN.md: "collapsed after done").
+      wsets.length && warmupPending ? h("div", { class: "set-list" },
         h("span", { class: "eyebrow" }, "Warm-up sets"),
-        wsets.map((w, i) => h("div", { class: `set-row warmup ${i < wDone ? "done" : i === wDone ? "current" : ""}` },
-          h("span", { class: "num" }, `W${i + 1}`), h("span", { class: "what" }, `${w.weight_kg} kg × ${w.reps}`), i < wDone ? h("span", { class: "tick" }, icon("check", 16, { strokeWidth: 3 })) : null))) : null,
-      h("div", { class: "set-list" }, h("span", { class: "eyebrow" }, "Sets"), rows),
+        h("div", { class: "set-tiles" }, wsets.map((w, i) => h("div", { class: `set-tile warmup ${i < wDone ? "done" : i === wDone ? "current" : ""}` },
+          h("span", { class: "num" }, i < wDone ? icon("check", 13, { strokeWidth: 3.2 }) : null, `W${i + 1}`), h("span", { class: "what" }, `${w.weight_kg} kg × ${w.reps}`))))) : null,
+      wsets.length && !warmupPending ? h("div", { class: "small muted status-line warm-done" }, h("span", { class: "tick-sm" }, icon("check", 14, { strokeWidth: 3 })), `Warm-up done: ${wsets.map((w) => `${w.weight_kg} kg × ${w.reps}`).join(", ")}`) : null,
+      h("div", { class: "set-list" }, h("span", { class: "eyebrow" }, `Sets · ${done.length} of ${entry.sets} done`), h("div", { class: "set-tiles" }, rows)),
       controls,
       nextLine ? h("div", { class: "next-card" }, nextRec ? thumb(nextRec.done_exercise, { small: true }) : null,
         h("div", { class: "what" }, h("span", { class: "eyebrow" }, "Next"), h("b", {}, nextLine))) : null,
