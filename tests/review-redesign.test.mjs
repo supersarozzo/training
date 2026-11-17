@@ -72,3 +72,28 @@ test("R1: currentRecords on a workout without swaps is the list itself, and igno
   const session = store.load().sessions.find((x) => x.id === s.id);
   assert.deepEqual(workout.currentRecords(session), session.exercises);
 });
+
+// ---------- R2: the Done button after a "Not saved" error ----------
+// lockedButton (the 170 ms double-tap lock) turns the button off before it saves. When the save throws (phone full,
+// storage blocked: review F2 shows "Not saved"), the button stayed off, so Done could not be tapped again after
+// freeing space; only leaving the screen helped. In 0.3 the plain button could simply be tapped again.
+test("R2: when the save fails, the Done button can be tapped again, and the error still reaches the page", async () => {
+  const { installFakeDom } = await import("./fixtures/fake-dom.mjs");
+  installFakeDom();
+  const { lockedButton } = await import("../app/js/ui/parts.js");
+  const { StoreError } = await import("../app/js/store.js");
+  let tries = 0;
+  let after = 0;
+  const btn = lockedButton("Done", {
+    key: "r2-test", armMs: 0, doneText: "Saved",
+    work: () => { tries += 1; if (tries === 1) throw new StoreError("full", "Phone storage is full."); },
+    after: () => { after += 1; },
+  });
+  assert.throws(() => btn.click(), StoreError, "the error goes on to the page's 'Not saved' message");
+  assert.equal(btn.disabled, false, "the button works again after a failed save");
+  btn.click();
+  assert.equal(tries, 2, "the second tap saves");
+  assert.equal(btn.disabled, true, "after a good save the lock holds until the next screen");
+  await new Promise((r) => setTimeout(r, 200));
+  assert.equal(after, 1, "the next screen is drawn once, only after the good save");
+});
