@@ -13,7 +13,7 @@ export function renderChangeover(ctx) {
     guideScreen("changeover",
       guideTop(ctx, [h("b", {}, "Change-over"), " · water and towel"], () => askEnd(ctx)),
       h("div", { class: "rest-head" },
-        h("span", { class: "eyebrow brand" }, "Nice walk"),
+        h("span", { class: "eyebrow brand" }, session.walk ? "Nice walk" : "Walk skipped"),
         h("h1", {}, "Change-over"),
         h("p", { class: "muted" }, "Drink water, dry off, walk to the weights. Let your heart rate settle.")),
       timerView({ end: act.timer_end, total: act.timer_total, sub: "left" }),

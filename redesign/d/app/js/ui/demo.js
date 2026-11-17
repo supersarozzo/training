@@ -30,6 +30,7 @@ export function demo(id, { label = true, cls = "" } = {}) {
   let el;
   if (pics) {
     el = h("div", { class: `demo ${cls}`, role: "img", "aria-label": `${name}: start and end position` },
+      h("img", { src: pics[0], alt: "", class: "fill", decoding: "async" }),
       h("img", { src: pics[0], alt: "", decoding: "async" }),
       h("img", { src: pics[1], alt: "", class: "b", decoding: "async" }));
   } else if (id === "hip_hinge") {

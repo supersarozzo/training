@@ -551,3 +551,8 @@ a.card:active { transform: scale(0.99); }
 .card-row:has(> .ico-box) { align-items: flex-start; margin-bottom: var(--s3); }
 .card-row > .grow > h2:first-child { margin-top: 2px; }
 .progress-top .text-button { font-size: 32px; line-height: 1; min-width: 44px; min-height: 44px; padding: 0; justify-content: flex-start; }
+
+/* the side bands of a photo show a soft blurred copy of the same photo (same file, no extra download) */
+.demo img.fill { object-fit: cover; filter: blur(18px) brightness(0.8) saturate(1.1); transform: scale(1.2); }
+.rest-head .tag, .rest-head .phase-pill { margin-top: var(--s2); }
+.row:has(> .field) { align-items: flex-end; }
