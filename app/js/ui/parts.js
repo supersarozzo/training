@@ -53,7 +53,9 @@ export function lockedButton(label, { key, work, after, doneText = null, sub = n
   const btn = mainButton(label, () => {
     if (btn.disabled || Date.now() - armAt < armMs) return;
     btn.disabled = true;
-    work();
+    // A save that fails (phone full) turns the button back on, so it can be tapped again; the error goes on to the
+    // page's "Not saved" message (errors.js). Review 8.25 R2.
+    try { work(); } catch (e) { btn.disabled = false; throw e; }
     if (doneText) { btn.classList.add("saved"); btn.replaceChildren(h("span", { class: "btn-main" }, icon("check", 22, { strokeWidth: 3 }), doneText)); }
     setTimeout(after, 170);
   }, { sub });
