@@ -1,4 +1,6 @@
 // Weigh-in: one number, under 10 seconds. Measurements (waist, chest, arm, thigh) every 4 weeks.
+// Look (redesign/JUDGING.md 3.2): builder B's layout (the number in its own card, last weigh-in under it) with
+// builder D's wide − and + buttons under the number, far from the Save button.
 import { h } from "../h.js";
 import { flowScreen, actionBar, mainButton, stepper } from "./parts.js";
 import { model, go, rerender } from "./app.js";
@@ -60,7 +62,8 @@ export function renderWeighin() {
       h("div", { class: "field" }, h("label", { for: "w-date" }, "Date"),
         h("input", { type: "date", id: "w-date", value: draft.date, max: today(), onchange: (e) => { if (e.target.value) { draft.date = e.target.value; rerender(); } } })),
       existing ? h("p", { class: "small status-warning" }, `You already weighed in on this day: ${formatBody(existing.kg, unit)}. Saving replaces it.`) : null,
-      input,
+      h("div", { class: "card weigh-input" }, input,
+        last && last.date !== draft.date ? h("p", { class: "small muted center" }, `Last weigh-in: ${formatBody(last.kg, unit)} on ${last.date}`) : null),
       message ? h("div", { class: message.kind === "error" ? "error-text" : "status-success", role: "status" }, message.text) : null,
       existing ? h("div", { class: "text-link-row" }, h("button", { class: "text-button", type: "button", onclick: remove }, "Delete this weigh-in")) : null,
       h("div", { class: "card" },

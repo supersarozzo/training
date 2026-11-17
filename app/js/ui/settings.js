@@ -1,4 +1,6 @@
-// Settings: GitHub sync, backup and restore, the Log to Health button, gym weights, body unit, sound.
+// Settings: GitHub sync, backup and restore, the Log to Health button, gym weights, body unit, Look and Animations,
+// sound. Look (Auto / Light / Dark, builder C) and the Animations switch (builder D) stay on this phone only: they are
+// in the device box, never synced or backed up (prefs.js). The sync card (settings-sync.js) is unchanged.
 import { h } from "../h.js";
 import { screen, choiceRow } from "./parts.js";
 import { model, store, rerender } from "./app.js";
@@ -10,6 +12,8 @@ import { syncer } from "../syncer.js";
 import { makeBackup, downloadText, BACKUP_WARN_BYTES } from "../backup.js";
 import { shortcutOn, shortcutName } from "../shortcuts.js";
 import { now } from "../clock.js";
+import { THEMES, currentTheme, setTheme, motionOff, setMotionOff } from "./theme.js";
+import { icon } from "./icons.js";
 
 const MACHINE_NAMES = { lat_pulldown: "Lat pulldown machine", seated_row: "Seated row machine", leg_curl: "Leg curl machine", pec_deck: "Pec deck", calf_raise: "Calf raise machine" };
 let gymMessage = null;
@@ -40,6 +44,7 @@ function gymCard(settings) {
   return h("div", { class: "card" },
     h("h2", {}, "Gym weights"),
     h("p", { class: "muted" }, "From your first visit. Until you fill this in, the app guesses 2 kg steps for dumbbells and 5 kg for machines."),
+    h("a", { class: "button secondary", href: "#/gym" }, icon("pin", 18), "Machines and where they are"),
     h("div", { class: "field" }, h("label", { for: "g-db" }, "Dumbbell sizes in kg, separated by commas"),
       h("input", { type: "text", id: "g-db", inputmode: "decimal", value: draft.dumbbells, placeholder: "2, 4, 6, 8", oninput: (e) => { draft.dumbbells = e.target.value; } })),
     h("div", { class: "field" }, h("label", { for: "g-stack" }, "Smallest step on the weight stacks, in kg"),
@@ -122,11 +127,26 @@ function shortcutCard(settings) {
     on ? h("button", { class: "button secondary", type: "button", onclick: () => saveShortcut(settings, true) }, "Save the name") : null);
 }
 
+// Look and Animations, in one card. The switch is a real switch for screen readers (role="switch").
+function lookCard() {
+  const off = motionOff();
+  return h("div", { class: "card" },
+    h("h2", {}, "Look"),
+    h("p", { class: "muted" }, "Auto follows the phone. Dark is easiest on the eyes in the gym."),
+    choiceRow(THEMES, currentTheme(), (value) => { setTheme(value); rerender(); }),
+    h("div", { class: "switch-row" },
+      h("span", { class: "grow" }, h("b", { id: "anim-label" }, "Animations"),
+        h("span", { class: "small muted" }, off ? "Off: screens and photos stay still. Tap a photo to see the end position." : "On: short movements and moving photos. The phone's Reduce Motion also turns them off.")),
+      h("button", { class: "switch", type: "button", role: "switch", "aria-checked": off ? "false" : "true", "aria-labelledby": "anim-label", onclick: () => { setMotionOff(!off); rerender(); } }, h("span", { class: "knob" }))),
+    h("p", { class: "small muted" }, "These two choices stay on this phone only."));
+}
+
 export function renderSettings() {
   const on = soundOn();
   const toggle = () => { setSound(!on); setSoundOn(!on); if (!on) beep(); rerender(); };
   const doc = model.doc();
   return screen(
+    h("span", { class: "eyebrow accent" }, "This phone and GitHub"),
     h("h1", {}, "Settings"),
     syncCard(),
     backupCard(),
@@ -137,6 +157,7 @@ export function renderSettings() {
       choiceRow([["kg", "Kilograms"], ["st", "Stones, pounds"]], doc.shared_settings.body_unit ?? "kg",
         (value) => { model.updateSettings({ body_unit: value }); rerender(); })),
     shortcutCard(doc.shared_settings),
+    lookCard(),
     h("div", { class: "card" },
       h("h2", {}, "Sound"),
       h("p", { class: "muted" }, "A beep when a timer ends. It only plays with the app open and the phone's ring switch on. The screen flash always shows."),

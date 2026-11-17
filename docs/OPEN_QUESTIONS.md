@@ -57,3 +57,7 @@ Full wording, reasons and options are in [WORKFLOW.md](WORKFLOW.md), section A. 
 48. Start building the app now: a) yes, steps 1 to 11, one worker after another, checked by the master. (2026-11-16)
 49. Commit email: a) switch to GitHub's private noreply address and rewrite the unpushed commits before the first push. (2026-11-17)
 50. GitHub set-up: a) do it now (build step 12). (2026-11-17)
+58. Redesign accent colour: a) volt (redesign A's look). (2026-11-17, "All recommended")
+59. Photo size: a) keep the sharp 850 px photos (about 5.4 MB); only the two oversized dead-bug photos shrunk to 850 px. (2026-11-17)
+60. Walk minutes on Today vs the walk screen: a) fix the display only, no engine change. (2026-11-17)
+61. Swap in the middle of an exercise: a) fix it first, tests in their own commit, then the fix. (2026-11-17)

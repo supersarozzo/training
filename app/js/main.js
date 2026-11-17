@@ -1,4 +1,4 @@
-// Start-up and router. Hash routes: #/today, #/progress, #/plan, #/settings (with tabs),
+// Start-up and router. Hash routes: #/today, #/progress, #/plan, #/gym, #/settings (with tabs),
 // and #/setup, #/intake, #/targets (the first-start flow, no tabs).
 import { mount, h } from "./h.js";
 import { renderToday } from "./ui/today.js";
@@ -23,13 +23,16 @@ import { startAutoSync } from "./autosync.js";
 import { getActive } from "./active.js";
 import { watchStoreErrors } from "./errors.js";
 import { resetSyncDraft } from "./ui/settings-sync.js";
+import { renderGym } from "./ui/machines.js";
+import { applyTheme, applyMotion } from "./ui/theme.js";
 
-const tabRoutes = { today: renderToday, progress: renderProgress, plan: renderPlan, settings: renderSettings };
+const tabRoutes = { today: renderToday, progress: renderProgress, plan: renderPlan, gym: renderGym, settings: renderSettings };
 const flowRoutes = { setup: renderSetup, intake: renderIntake, targets: renderTargets, workout: renderWorkout, weighin: renderWeighin, weekly: renderWeekly };
 const DEFAULT_ROUTE = "today";
 
 function routeName(hash) {
-  const name = hash.replace(/^#\/?/, "").split("/")[0];
+  let name = hash.replace(/^#\/?/, "").split("/")[0];
+  if (name === "machines") name = "gym"; // older link to the machines list
   return Object.hasOwn(tabRoutes, name) || Object.hasOwn(flowRoutes, name) ? name : DEFAULT_ROUTE;
 }
 
@@ -40,6 +43,20 @@ function guard(name) {
   if (!doc.profile.targets) return "targets";
   if (name === "setup" || name === "intake") return DEFAULT_ROUTE;
   return name;
+}
+
+// A screen slides in only when it is a NEW screen (a new route, workout step, exercise or set),
+// not when the same screen redraws after a tap (an effort pick, a sync status change).
+let lastKey = "";
+function screenKey(root) {
+  const act = getActive();
+  const h1 = root.querySelector("h1");
+  return [location.hash, act ? act.phase : "", act && act.rest ? "rest" : "", h1 ? h1.textContent : "", root.querySelector(".topbar-label")?.textContent ?? ""].join("|");
+}
+function enter(root) {
+  const key = screenKey(root);
+  if (key !== lastKey) root.querySelector(".screen")?.classList.add("enter");
+  lastKey = key;
 }
 
 function render() {
@@ -53,6 +70,7 @@ function render() {
     if (name !== wanted) history.replaceState(null, "", `#/${name}`);
     if (Object.hasOwn(flowRoutes, name)) mount(root, flowRoutes[name]());
     else mount(root, tabRoutes[name](), updateBanner(), tabBar(name));
+    enter(root);
     window.scrollTo(0, 0);
   } catch (e) {
     mount(root, errorState(e && e.message ? e.message : "The app could not start."));
@@ -65,6 +83,8 @@ watchStoreErrors(window, (text) => {
 });
 
 try { setSoundOn(soundOn()); } catch { /* storage blocked: default sound on */ }
+applyTheme();
+applyMotion();
 setRedraw(render);
 window.addEventListener("hashchange", render);
 render();

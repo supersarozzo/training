@@ -1,189 +1,219 @@
 # Training app design system
 
-Date: 2026-11-16. Written by the task chat "training-app-design" from the `ui-design-principles` template. Agents follow this file for all UI work in `app/`. What the app does: [PRD.md](PRD.md). Screens and flow: [WORKFLOW.md](WORKFLOW.md), section D.
+Date: 2026-11-17 (first version 2026-11-16). Rewritten by task chat 8.24 for the redesign merge (redesign/JUDGING.md section 3; Rosario's answers 55 to 61 in [DECISIONS.md](DECISIONS.md)). Agents follow this file for all UI work in `app/`. What the app does: [PRD.md](PRD.md). Screens and flow: [WORKFLOW.md](WORKFLOW.md), section D. Before and after pictures: [redesign-final/LOOK.md](redesign-final/LOOK.md).
 
 ## 1. Overview
 
 - **Product and audience:** a workout guide and log for one beginner (Rosario), used on an iPhone at the gym, one hand, often between sets, sometimes sweaty, the phone on a bench or treadmill shelf.
-- **Visual character:** calm, high contrast, big numbers, dark-first, one flat teal accent.
+- **Visual character:** "dark premium sport" (base: redesign A). A deep near-black canvas, bold heavy numbers, one **volt** accent (#d7ff3c, a bright yellow-green) for progress and the main action, glowing rings in dark mode, real photos of every move, short motion. Light mode is a full second map of the same roles: white cards on a light grey canvas, a black main button with volt text, a darker olive-green accent for graphics and links.
 - **Principles:**
   - **Readable at arm's length.** The number you need now (weight, reps, time left) is the biggest thing on the screen.
   - **One main action per screen**, at the bottom, under the thumb.
-  - **Big targets.** Main buttons 56 px tall; nothing tappable under 44 px.
-  - One flat accent (no gradients); hierarchy through size and weight; hairline borders; shadow only on overlays.
+  - **Big targets.** Main buttons 58 px tall; steppers 56 px; nothing tappable under 44 px.
+  - **One accent.** Volt marks progress, the current set, the running timer and the main button. Everything else is neutral.
+  - **Pictures help, words decide.** Every exercise and machine has a photo; the words next to it (name, sign, where it is) carry the meaning.
   - No greeting filler, no emoji, no confetti. Plain words.
 
 ## 2. Tokens (machine-readable)
 
+The live values are the custom properties at the top of `app/css/app.css`; this block is the same set in one place.
+
 ```yaml
 colors:
-  brand:   { 50: "#f0fdfa", 100: "#ccfbf1", 200: "#99f6e4", 300: "#5eead4", 400: "#2dd4bf", 500: "#14b8a6", 600: "#0d9488", 700: "#0f766e", 800: "#115e59", 900: "#134e4a", 950: "#042f2e" }
-  neutral: { 50: "#fafafa", 100: "#f4f4f5", 200: "#e4e4e7", 300: "#d4d4d8", 400: "#a1a1aa", 500: "#71717a", 600: "#52525b", 700: "#3f3f46", 800: "#27272a", 900: "#18181b", 950: "#09090b" }
-  success: { 400: "#4ade80", 700: "#15803d" }
-  warning: { 400: "#fbbf24", 700: "#b45309" }
-  error:   { 400: "#f87171", 700: "#b91c1c" }
+  volt:      "#d7ff3c"     # the accent in dark mode; text colour of the black main button in light mode
+  volt_deep: "#b8e000"     # pressed main button, dark mode
+  ink:       "#0a0b0d"     # text on volt
+  light:
+    canvas: "#f2f3f5"   surface: "#ffffff"   subtle: "#e9ebef"
+    text: "#0b0c0f"     muted: "#545a66"     border_strong: "#737985"   border: "rgba(10,12,16,.09)"
+    accent: "#4d7c0f"   accent_text: "#3f6212"   accent_soft: "rgba(77,124,15,.12)"   accent_on_soft: "#365314"
+    gold: "#a16207"
+    button: { bg: "#0b0c0f", text: volt, pressed: "#2a2d33" }
+    status: { success: "#15803d", warning: "#b45309", error: "#c62828" }
+    photo_plate: "#ffffff"   photo_band: "#e9ebef"
+  dark:
+    canvas: "#08090c"   surface: "#121419"   raised: "#1a1d24"   subtle: "#23272f"
+    text: "#f5f6f8"     muted: "#a0a6b2"     border_strong: "#6b7280"   border: "rgba(255,255,255,.08)"
+    accent: volt        accent_text: volt     accent_soft: "rgba(215,255,60,.12)"   accent_on_soft: volt
+    gold: "#fbbf24"
+    button: { bg: volt, text: ink, pressed: volt_deep }
+    status: { success: "#4ade80", warning: "#fbbf24", error: "#ff6b6b" }
+    photo_plate: "#1a1d24"   photo_band: "#121419"
+    glow: "drop-shadow(0 0 10px rgba(215,255,60,.35))"   # rings and the main button only
+  scrim_text: "linear-gradient(180deg, transparent 0%, rgba(8,9,12,.55) 40%, rgba(8,9,12,.82) 100%)"  # under any text on a photo, both looks
+  flash: { bg: volt, text: ink }
 typography:
-  timer:   { size: 96px, weight: 600, line-height: 1.0, tracking: -0.03em, numerals: tabular }
-  display: { size: 40px, weight: 600, line-height: 1.1, tracking: -0.02em, numerals: tabular }
-  h1:      { size: 28px, weight: 600, line-height: 1.2, tracking: -0.01em }
-  h2:      { size: 20px, weight: 600, line-height: 1.3 }
-  body:    { size: 17px, weight: 400, line-height: 1.5 }
-  small:   { size: 14px, weight: 400, line-height: 1.4 }
-spacing: { 1: 4px, 2: 8px, 3: 12px, 4: 16px, 6: 24px, 8: 32px, 12: 48px }
-radius:  { badge: 6px, input: 10px, button: 12px, card: 14px, pill: 999px }
-border:  { hairline: "1px solid {border.default}", control: "1px solid {border.strong}" }
-shadow:  { none: none, overlay: "0 8px 24px rgba(0,0,0,0.28)" }
-tap:     { min: 44px, main: 56px, stepper: 56px }
-motion:  { fast: 120ms, normal: 200ms, flash: 2000ms, easing: "ease-out" }
+  family: system font (-apple-system, "SF Pro"); no web fonts
+  timer:   { size: 88-96px, weight: 800, numerals: tabular }
+  display: { size: 40px, weight: 800, numerals: tabular }
+  h1:      { size: 26-28px, weight: 800 }     # 22px beside the exercise photo on the set screen
+  h2:      { size: 20px, weight: 700 }
+  body:    { size: 17px, weight: 400 }
+  small:   { size: 14px }
+  eyebrow: { size: 12px, weight: 700, uppercase, letter-spacing: .08em }
+spacing: { s1: 4px, s2: 8px, s3: 12px, s4: 16px, s5: 20px, s6: 24px, s8: 32px, s12: 48px }
+radius:  { chip: 999px, input: 14px, button: 16px, card: 20px, hero: 24px }
+tap:     { min: 44px, main: 58px, stepper: 56px }
+motion:  { fast: 160ms, normal: 280ms, slow: 460ms, flash: 2000ms, ease: "cubic-bezier(.2,.8,.2,1)", spring: "cubic-bezier(.34,1.4,.64,1)" }
 ```
 
 Body text is 17 px (the iPhone's own default). Inputs are never under 16 px, or the iPhone zooms in on tap.
 
 ## 3. Colors (by job)
 
-Components use only these roles, as CSS custom properties (`--bg-canvas`, `--text-primary`, …). Dark mode is a second map of the same roles. The app follows the phone setting (`prefers-color-scheme`), with an override in Settings (Auto / Light / Dark).
+Components use only the role properties (`--bg-canvas`, `--text-primary`, `--accent`, …). Dark mode is a second map of the same roles. The app follows the phone setting (`prefers-color-scheme`), with an override in **Settings > Look** (Auto / Light / Dark).
 
-| Role | Light | Dark | Use |
-|---|---|---|---|
-| `bg.canvas` | neutral.50 | neutral.950 | page background |
-| `bg.surface` | #ffffff | neutral.900 | cards, set rows, sheets |
-| `bg.subtle` | neutral.100 | neutral.800 | pressed rows, secondary fills, done sets |
-| `border.default` | neutral.200 | neutral.800 | hairlines between rows and around cards |
-| `border.strong` | neutral.500 | neutral.500 | input and stepper outlines (needs 3:1) |
-| `text.primary` | neutral.900 | neutral.50 | body, all numbers |
-| `text.muted` | neutral.600 | neutral.400 | labels, "last time", captions |
-| `brand.primary` | brand.700 | brand.400 | the one accent: main button, current set, active timer ring, links |
-| `brand.on-primary` | #ffffff | neutral.950 | text on the main button |
-| `brand.primary-pressed` | brand.800 | brand.300 | pressed main button |
-| `status.success` | success.700 | success.400 | "Saved to GitHub", new best |
-| `status.warning` | warning.700 | warning.400 | timer at zero (flash), "not synced yet", key ends soon |
-| `status.error` | error.700 | error.400 | sync failed, "It hurts" |
-| `flash.bg` / `flash.text` | warning.400 / neutral.950 | warning.400 / neutral.950 | full-screen flash when a timer ends |
+| Role | Use |
+|---|---|
+| `--bg-canvas` | page background (with a faint accent glow at the top) |
+| `--bg-surface` / `--bg-raised` | cards, sheets / chips and raised controls |
+| `--bg-subtle` | done sets, secondary fills, empty bars |
+| `--border-default` / `--border-strong` | hairlines / input and stepper outlines (needs 3:1) |
+| `--text-primary` / `--text-muted` | body and all numbers / labels, captions, "last time" |
+| `--accent` | rings, progress bars, the current set's edge, chart line: graphics |
+| `--accent-text` | links and accent words (light mode uses a darker green than `--accent` so small text passes 7:1) |
+| `--accent-soft` + `--accent-on-soft` | soft accent fill (picked chip, "Saved" pill) and the words on it |
+| `--btn-bg` / `--btn-text` | the main button: volt with black text in dark mode, black with volt text in light mode |
+| `--gold` | "best" (personal record) dots and badges only |
+| `--status-*` | sync state, warnings, "It hurts"; always with words |
+| `--photo-plate` / `--photo-band` | the plate behind a photo; the band that fills the side of a portrait photo |
+| `--scrim-text` | the dark fade under white text on a photo (the same in both looks) |
 
-Balance: about 60 % neutral, 30 % surfaces, 10 % accent. Status colours mark state only, never decoration, and always come with words ("Not synced"), never colour alone.
+Balance: about 60 % neutral, 30 % surfaces and photos, 10 % accent. Status colours mark state only, never decoration, and always come with words ("Not synced"), never colour alone.
 
-**Checked contrast pairs** (WCAG ratio, computed 2026-11-16):
-- Light: text.primary on canvas 16.97, on surface 17.72; text.muted on surface 7.73, on canvas 7.41; on-primary on brand.primary 5.47; brand.primary on surface 5.47; error 6.47, warning 5.02, success 5.02 on surface; border.strong on surface 4.8 (neutral.500).
-- Dark: text.primary on canvas 19.06, on surface 16.97; text.muted on surface 6.91, on canvas 7.76; on-primary on brand.primary 10.69; brand.primary on surface 9.52; error 6.40, warning 10.61, success 10.17 on surface; border.strong on surface 3.67.
-- Flash: neutral.950 on warning.400 11.92.
+**Checked contrast pairs** (WCAG ratio, computed 2026-11-17 from the values above):
+- Light: text on canvas 17.62, on surface 19.56; muted on surface 6.93, on canvas 6.24; accent (graphics) on surface 4.99, on canvas 4.50; accent text on surface 7.08; accent-on-soft on its fill 7.46; volt text on the black button 17.01; gold on surface 4.92; border-strong on surface 4.37; success 5.02, warning 5.02, error 5.62 on surface.
+- Dark: text on canvas 18.41, on surface 17.04; muted on surface 7.54, on canvas 8.15; volt on surface 16.02, on canvas 17.31; ink on volt 17.12; volt on its soft fill 11.86; gold 11.04; border-strong 3.81; success 10.57, warning 11.04, error 6.64 on surface.
+- Text on a photo: white on the scrim's 82 % part 12.26 (titles sit there); at the 55 % point 4.42, so text never sits above that point.
+- Flash: ink on volt 17.12.
 
 ## 4. Typography
 
-- **Family:** the phone's system font: `-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif`. No web fonts (nothing to download, works offline). No mono font needed.
-- **Scale:** only the sizes in the tokens. `timer` only on timer screens; `display` for the current weight and reps; `h1` for the exercise name; `h2` for section heads; `body` for text and buttons; `small` for captions and "last time".
+- **Family:** the phone's system font. No web fonts (nothing to download, works offline, no third party).
+- **Scale:** only the sizes in the tokens. Heavy weights (800) for numbers and titles; `eyebrow` (small capitals) for section labels.
 - **Numbers:** always `font-variant-numeric: tabular-nums`, so timers and weights do not jump as digits change.
-- Sentence case for headings and buttons ("Start workout", not "START WORKOUT").
+- Sentence case for headings and buttons ("Start workout", not "START WORKOUT"). Eyebrows are the only capitals, and they come from CSS, not from the text.
 - Units in smaller, muted text next to the number: **32.5** kg, **10** reps, **1:30** left.
 
 ## 5. Layout and spacing
 
-- **One column**, full width, side gutters `spacing.4` (16 px). Max content width 520 px, centred on bigger screens.
+- **One column**, full width, side gutters 16 px. Max content width 520 px, centred on bigger screens.
 - **Safe areas:** pad top and bottom with `env(safe-area-inset-*)` (notch and home bar).
-- **Thumb zone:** the main action sits in a fixed bottom bar (height 56 px plus `spacing.4` padding plus the safe area). Back and Settings sit at the top, where mistakes are less likely.
-- **Spacing:** tight inside cards (`spacing.3`), generous between sections (`spacing.8`).
+- **Thumb zone:** the main action sits in a fixed bottom bar (58 px button plus padding plus the safe area), on a frosted glass bar. Back and End sit at the top.
 - **One focus per screen:** the current set or the timer. Everything else is smaller and muted.
-- **No horizontal scrolling** anywhere, at 320 px wide too.
+- **No horizontal scrolling** anywhere, at 320 px wide too. Chip rows wrap or shrink.
+- **The set screen must fit at 375 × 812 without scrolling** down to the reps stepper (measured 2026-11-17: the reps stepper ends at about 691 px, above the Done bar). This is why the exercise photo sits beside the name, not above it.
 
 ## 6. Elevation and shape
 
 | Level | Treatment | Use |
 |---|---|---|
-| 0 flat | surface + hairline border | cards, set rows, inputs, chips |
-| 1 overlay | `shadow.overlay` + hairline | the update banner, toasts |
-| 2 modal | overlay shadow + scrim (black 50 %) | bottom sheets (swap, "how many more?", form tips), confirm dialogs |
+| 0 flat | surface + hairline; a soft card shadow in light mode only | cards, set tiles, inputs, chips |
+| 1 overlay | `--shadow-overlay` + hairline | the update banner, toasts |
+| 2 modal | overlay shadow + scrim | bottom sheets (swap, exercise info, machine card, end workout), confirm dialogs |
 
-Radius grows with size: badge 6 < input 10 < button 12 < card 14. Full round only for the timer ring and the small pill toggles.
+Radius grows with size: chip full round, input 14 < button 16 < card 20 < hero photo 24. Glow (dark mode only) is kept for the timer ring when it is ending and for the main button.
 
-## 7. Components
+## 7. Motion
 
-- **Main button:** `brand.primary` fill, `brand.on-primary` text, `body` size weight 600, height 56 px, full width, radius `button`. One per screen. Pressed: `brand.primary-pressed`. Disabled: `bg.subtle` fill, `text.muted`.
-- **Secondary button:** hairline `border.strong`, no fill, `text.primary`, height 48 to 56 px. For Short day, Swap day, Skip.
-- **Text button:** `brand.primary` text, no border, at least 44 × 44 px tap area.
-- **Stepper (weight and reps):** big value in `display` size between a − and a + button (each 56 × 56 px, hairline `border.strong`, radius `input`). Weight steps by the exercise's smallest step; reps by 1. Tapping the value opens the number keypad (`inputmode="decimal"` for weight, `"numeric"` for reps).
-- **Set row:** set number, weight × reps, and a Done button on the right (56 × 56 px). The **current set** has a 2 px `brand.primary` left edge and full-size numbers. Done sets turn `bg.subtle` with a check mark and smaller text. Future sets are muted.
-- **"Last time" line:** `small`, `text.muted`, right under the target: "Last time: 30 kg × 12, 12, 11".
-- **Timer:** a ring (stroke 8 px, `brand.primary` on `border.default`) around `timer`-size digits (m:ss). Under it: −30 s and +30 s (secondary buttons, 56 px), then "Next: A2 Pulldown · 30 kg × 10" in `body`.
-- **Flash:** when a timer ends, the whole screen turns `flash.bg` with "Go" in `display` size for 2 seconds (`motion.flash`), then back. Respect `prefers-reduced-motion`: show the colour without the blink.
-- **Bottom sheet:** slides up from the bottom (`motion.normal`), radius `card` on the top corners, a 44 px close area, scrim behind. For "How many more?" (0 / 1 / 2 / 3 / 4+ as five 56 px buttons in one row), swap choices, form tips.
-- **Card:** `bg.surface`, hairline, radius `card`, padding `spacing.4`, no shadow.
-- **Sync status line:** one line of `small` text with a dot: "● Saved to GitHub at 18:42" (`status.success`), "● 3 workouts not synced yet" (`status.warning`), "● Sync failed: GitHub key expired" (`status.error`). Always words, never only a dot.
-- **Metric (Today and weekly):** label `small` muted above the value in `h1` or `display`, tabular. Changes name their baseline: "−0.4 kg vs last week". Plain text, no coloured pills.
-- **Chart:** SVG drawn by our own code, one `brand.primary` line, 2 px; single points as small `text.muted` dots; no fill, no gradient; axis labels `small` muted; at most 4 horizontal grid lines in `border.default`. Empty state: "No data yet. Log a weigh-in to start the line."
-- **Inputs (intake, settings):** `bg.surface`, hairline `border.strong`, radius `input`, height 48 px, 17 px text, label above in `small`. Focus ring 2 px `brand.primary`. Error text below in `status.error` with words.
-- **Empty, loading, error states:** every list and chart has all three (see section 10 for the copy rules).
+Motion explains what changed; it never decorates. All of it is CSS or the Web Animations API (`app/js/ui/motion.js`), and only `transform` and `opacity` move, so it stays smooth on the phone.
 
-## 8. Screens (from WORKFLOW D and the PRD)
+- **What moves:** screens fade and slide in (`--t-normal`); sheets slide up; list rows come in one after another (`stagger`, 45 ms apart); a changed stepper number pops (`bump`); totals count up once (`countUp`); chart lines draw in (`drawIn`); the rest ring runs down and glows in its last seconds; exercise photos flip between the start and end position (two real photos, 1.6 s each way).
+- **Turned off** when either: the phone asks for less motion (Settings > Accessibility > Motion > Reduce Motion), or **Settings > Look > Animations** is off. The app setting lives on the phone only (the device box, never synced) and is put on `<html data-motion="off">` by `boot.js` before the first paint, so nothing flashes. When off, every animation and transition takes 1 ms, and photos show the start position (a tap shows the end position).
+- **Never:** motion that blocks a tap, loops that do not stop (except the photo flip, which a tap pauses), bounce on anything you read, or animation of layout (width, height, top, left).
+
+## 8. Components
+
+- **Main button:** `--btn-bg` fill, `--btn-text` text, 17 px weight 800, 58 px tall, full width, radius `button`. One per screen. Pressed: `--btn-pressed`. Disabled: `--bg-subtle`, muted text. A "locked" main button (Done, Skip) ignores taps for 400 ms after the screen changes, so the second tap of a double tap never hits the next screen's button; it shows "Saved" for a moment after a set.
+- **Secondary button:** hairline `--border-strong`, no fill, 48 to 58 px.
+- **Text button:** `--accent-text` words, no border, at least 44 × 44 px.
+- **Chip:** full round, 44 px tall, raised fill, an icon and a word (Tips, Video, Where?, Swap). A picked chip uses the soft accent fill.
+- **Choice row:** equal buttons in one row (0 / 1 / 2 / 3 / 4+ for "How many more?"; Auto / Light / Dark), 56 px tall, the picked one in the soft accent fill.
+- **Switch:** `role="switch"` button with a knob, 44 px tall, for Animations.
+- **Stepper (weight and reps):** the big value between − and + (each 56 × 56 px). The label (Weight, Reps) sits inside the box. Weight steps by the exercise's smallest step; reps by 1. Tapping the value opens the number keypad.
+- **"Last time" button:** under the steppers on the set screen: "Last time 30 kg × 12, 12, 11 · Use". One tap copies last time's weight and reps for this set.
+- **Set tiles:** one small tile per set; done ones show a check, the current one has the accent edge.
+- **Exercise header (set screen):** the moving photo (half the width, 3:2) with the name and equipment beside it; under it the chip row Tips · Video · Where? · Swap; under that, when the photo is a close match and not the exact machine, a one-line note.
+- **Photo (flip):** two real photos on `--photo-plate`. Portrait photos get `--photo-band` at the sides. Any text on a photo sits on `--scrim-text` and is white.
+- **Timer:** a ring (accent on `--ring-track`) around timer-size digits. Under it −30 s and +30 s as round buttons. On the rest screen: the "Saved · 12 kg × 8" line above the ring, the optional "How many more could you do?" choice row, the Next card (moving thumb, name, and the next machine's where-note), and "Undo that set" kept at least 40 px away from Skip.
+- **Flash:** when a timer ends, the screen turns volt with "Go" for 2 seconds. With motion off: the colour without the blink.
+- **Bottom sheet:** slides up, radius `card` on the top corners, a 44 px close area, scrim behind.
+- **Card:** `--bg-surface`, hairline, radius `card`, padding 16 px. A card head is an icon plus a short title.
+- **Machine row and card:** the photo thumb, the name, "Usual sign: …", and either Rosario's where-note (with a pin icon) or "Add where it is". The card adds the big photo, Usual sign and Usual area with the caveat that the sign may differ, one set-up tip, and the "Where it is in my gym" box with quick-word chips.
+- **Badge:** small round count or slot label (A1, B2); gold "Best" badge for a personal record.
+- **Sync status line:** one line of small text with a dot and words. Always words, never only a dot.
+- **Tiles (Today, Weekly, Progress):** label in eyebrow style above a big number; changes name their baseline ("−0.4 kg vs last week"). The weekly tiles carry a 5-segment bar.
+- **Chart:** SVG drawn by our own code, one accent line, 2 px, drawn in once; best points as gold dots; axis labels small and muted; at most 4 grid lines. Empty state: "No data yet. Log a weigh-in to start the line."
+- **Inputs:** `--bg-surface`, `--border-strong`, radius `input`, 48 px, 17 px text, label above. Focus ring 2 px accent. Error text below with words.
+- **Empty, loading, error states:** every list and chart has all three (section 11).
+
+## 9. Screens (from WORKFLOW D and the PRD)
 
 | Screen | The one big thing | Main action (bottom bar) |
 |---|---|---|
-| First start | "Start fresh" / "Restore" choice | Continue |
-| Intake (one question per page, progress "4 of 19") | the question | Next |
-| Targets | calorie and protein numbers, walk start | Looks right |
-| Today | day and week ("Monday · Week 3 · Build 1"), blocks with times, food numbers, sync line, Watch reminder | Start workout |
+| First start | "Start fresh" / "Restore" choice, app tile | Continue |
+| Intake (one question per page) | the question | Next |
+| Targets | calorie, protein and walk tiles | Looks right |
+| Today | day and week, the day's blocks with minutes, the exercise list with photos and suggested weights, food numbers, sync line | Start workout |
 | Walk | timer; speed and slope above it | Done walking |
-| Walk result | effort 1 to 10 (ten 44 px buttons, two rows) | Save walk |
-| Change-over, lift warm-up | timer; move list for the warm-up | Start weights |
-| Pair (exercise and sets) | current set's weight and reps steppers | Done (set) |
-| Rest | timer ring | Skip |
-| Week 1 "find your weight" | the step ("Set 1: pick a weight") | Done |
+| Lift warm-up | timer; move list with moving thumbs | Start weights |
+| Set screen (pair) | the current set's weight and reps steppers | Done |
+| Rest | timer ring, "How many more?" inline | Skip rest |
+| Week 1 "find your weight" | the step | Done |
 | Finish | summary: time, sets, new bests, next time | Save |
-| Weigh-in | one number stepper with keypad | Save |
-| Progress | weight trend chart; exercise list with charts | – |
-| Weekly summary (Monday) | trend change vs the target band | Got it |
-| Plan sheet | the week as tables; print layout | Print |
-| Settings | groups: Sync, Backup, Gym (steps, machines), Sound, Theme, Shortcuts | – |
+| Weigh-in | one number with keypad, last weigh-in | Save |
+| Progress | totals, weight chart, exercise list with chart and the last 3 workouts | – |
+| Weekly summary | tiles with a 5-segment bar | Got it |
+| Plan | Week / Exercises / Machines switch; print tables | Print |
+| Gym | machines by area, "x of N noted", where-notes | – |
+| Settings | Sync, Backup, Look (theme, Animations), Gym, Sound, Shortcuts | – |
 
-**Navigation:** a bottom tab bar only outside a workout: Today · Progress · Plan · Settings (4 tabs, 56 px tall, icon plus label). During a workout the tab bar is hidden; the top bar shows "Pair B · 3 of 6" and a small "End" text button (with a confirm sheet).
+**Navigation:** a bottom tab bar outside a workout: Today · Progress · Plan · Gym · Settings (icon plus label). During a workout the tab bar is hidden; the top bar shows the progress and an "End" button (44 px, with a confirm sheet).
 
-**The pair screen at 375 px, top to bottom:** top bar (pair and progress) → exercise name (`h1`) with equipment and a "Tips" text button → target line and "last time" → warm-up sets (collapsed after done) → set rows → the current set's steppers → bottom bar with Done. Swap sits as a text button next to Tips.
-
-## 9. Do / Don't
+## 10. Do / Don't
 
 Do
 - Use tokens for every colour, size, space and radius.
-- Keep the accent for the main action, the current set and the running timer.
-- Put the main action at the bottom; make it 56 px tall.
+- Keep the accent for progress, the main action, the current set and the running timer.
+- Put the main action at the bottom.
 - Show units, the baseline of every change, and words with every status colour.
-- Test at 375 × 812 and 320 wide, light and dark, and with the phone's text size one step larger.
+- Set sizes that come from data (bar widths) through CSSOM (`el.style.width`), never a `style` attribute: the page's security rules (CSP) block style attributes.
+- Test at 375 × 812, light and dark, motion on and off.
 
 Don't
-- Gradients, icon tiles, rows of identical cards, shadows on cards.
-- Tiny tap targets, buttons near the top edge for frequent actions, swipe-only actions.
-- Rely on sound or colour alone for anything important (the beep may be muted; some people do not see colours well).
-- Use `innerHTML` with data (security rule in ARCHITECTURE.md).
+- Gradients other than the photo scrim and the faint canvas glow; shadows on cards in dark mode.
+- Tiny tap targets, swipe-only actions, buttons near the top edge for frequent actions.
+- Rely on sound, colour or a picture alone for anything important.
+- Use `innerHTML` with data (security rule in ARCHITECTURE.md). All text goes in through `h()`.
 - Celebrations, streak nags, or emoji in the interface.
+- Third-party fonts, scripts or images from other sites at run time. Photos ship inside the app (`app/media/`).
 
-## 10. Copy (words on screen)
+## 11. Copy (words on screen)
 
-- Short and plain. Verbs on buttons ("Save walk", "Start weights").
+- Short and plain. Verbs on buttons ("Save walk", "Start weights", "Save where it is").
 - Errors say what happened and what to do: "GitHub key expired. Make a new one in Settings."
 - Empty states say how to fill them: "No weigh-ins yet. Weigh in tomorrow morning."
+- Machine signs are "usual" names, never stated as fact: "Usual sign: Chest Press" plus the caveat that the gym's sign may differ.
 - Numbers keep their units. Body weight follows the chosen unit; gym weights are always kg.
 
-## 11. Responsive behaviour
+## 12. Responsive behaviour
 
 | Name | Width | Changes |
 |---|---|---|
 | phone | < 640 px | the only target; one column, bottom bar, bottom sheets |
-| tablet / desktop | ≥ 640 px | same layout, centred at 520 px; the Plan sheet may use the full width for tables |
-| print | – | Plan sheet only: black on white, no bars, tables not split across pages |
-
-Landscape on the phone: the timer screen puts the ring left and the buttons right; other screens scroll.
-
-## 12. Mockups
-
-One throwaway mockup was made to check the pair and rest screens at 375 px: `work/mockups/pair-and-rest.html` (git-ignored, not committed). It uses the tokens above. Result (measured in the browser at 375 × 812): the whole pair screen (5 set rows, two steppers, Done bar) fits without scrolling and with no sideways scroll; all buttons are 56 px tall. One catch: short text buttons ("Tips", "Swap", "End") were 44 px tall but only 23 to 33 px wide, so text buttons need `min-width: 44px` and padding. Build from this file, not from the mockup.
+| tablet / desktop | ≥ 640 px | same layout, centred at 520 px |
+| print | – | Plan only: black on white, no bars, no photos, tables not split across pages |
 
 ## 13. Known gaps
 
-- App icon not designed yet (build step 8 makes a simple one; the `logo-design` skill can make a better one later).
-- Landscape layouts are only sketched in words.
-- Exact chart axis rules for very short data (1 to 3 points) are left to the builder, inside the chart rules above.
+- The app icon is still the old teal one; it should move to volt (follow-up, `logo-design` skill).
+- Landscape layouts are not designed; screens scroll.
 - Text-size scaling above "one step larger" is not checked.
+- Print preview and the phone's Reduce Motion setting were checked in code and CSS, not on the phone.
 
 ## 14. Iteration guide
 
-1. Change a token here first, then in `app/css/app.css`.
+1. Change a token here first, then in `app/css/app.css` (all three maps: light, dark by phone setting, dark by choice).
 2. Never add a one-off value in a component; add a token or reuse one.
 3. Re-check contrast after any colour change and update the list in section 3.
-4. Date this file when edited: 2026-11-16.
+4. Date this file when edited.

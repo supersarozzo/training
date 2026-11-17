@@ -10,6 +10,20 @@ import { performances, suggestFor, workSets, isNewBest } from "../engine/workout
 import { setSavedMessage } from "./today.js";
 import { syncer } from "../syncer.js";
 import { shortcutUrl } from "../shortcuts.js";
+import { s as svg } from "./svg.js";
+import { icon } from "./icons.js";
+import { countUp, onMount, stagger } from "./motion.js";
+
+// A closed ring that draws itself once: the "workout complete" mark (redesign A). No confetti, no sound.
+function doneRing() {
+  const R = 52, C = 2 * Math.PI * R;
+  const arc = svg("circle", { class: "arc", cx: 60, cy: 60, r: R, fill: "none", stroke: "var(--accent)", "stroke-width": 9, "stroke-linecap": "round", "stroke-dasharray": C, "stroke-dashoffset": 0, transform: "rotate(-90 60 60)" });
+  const el = svg("svg", { viewBox: "0 0 120 120", width: 104, height: 104, "aria-hidden": "true", class: "done-ring" },
+    svg("circle", { cx: 60, cy: 60, r: R, fill: "none", stroke: "var(--ring-track)", "stroke-width": 9 }), arc,
+    svg("path", { d: "M40 61l13 13 27-28", fill: "none", stroke: "var(--accent)", "stroke-width": 9, "stroke-linecap": "round", "stroke-linejoin": "round" }));
+  onMount(() => { if (arc.animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) arc.animate([{ strokeDashoffset: C }, { strokeDashoffset: 0 }], { duration: 900, easing: "cubic-bezier(.2,.8,.2,1)" }); });
+  return el;
+}
 
 let draft = null;
 
@@ -57,22 +71,32 @@ export function renderFinish(ctx) {
     if (syncer.isConfigured()) syncer.request("full");
   };
 
+  const minEl = h("span", {}, sum.minutes ? String(sum.minutes) : "–");
+  const setEl = h("span", {}, String(sum.sets));
+  const bestEl = h("span", {}, String(sum.bests.length));
+  onMount(() => {
+    if (sum.minutes) countUp(minEl, sum.minutes);
+    countUp(setEl, sum.sets);
+    stagger(document.querySelectorAll(".tile, .finish-list li"));
+  });
   return [
     workoutScreen(
       topBar("Finish"),
-      h("h1", {}, "Well done"),
-      h("div", { class: "card" },
-        h("div", { class: "row" },
-          h("div", { class: "metric" }, h("div", { class: "label" }, "Time"), h("div", { class: "value" }, sum.minutes ? String(sum.minutes) : "–", h("span", { class: "unit" }, " min"))),
-          h("div", { class: "metric" }, h("div", { class: "label" }, "Sets"), h("div", { class: "value" }, String(sum.sets))))),
-      sum.bests.length ? h("div", { class: "card" }, h("h2", {}, "New bests"), h("ul", { class: "list-plain" }, sum.bests.map((b) => h("li", {}, b)))) : null,
-      sum.next.length ? h("div", { class: "card" }, h("h2", {}, "Next time"), h("ul", { class: "list-plain" }, sum.next.map((n) => h("li", {}, n)))) : null,
+      h("div", { class: "center" }, doneRing()),
+      h("h1", { class: "center" }, "Well done"),
+      h("p", { class: "center muted" }, "Workout complete. Save it to keep it."),
+      h("div", { class: "tiles" },
+        h("div", { class: "tile" }, h("div", { class: "label" }, "Time"), h("div", { class: "value" }, minEl, h("span", { class: "unit" }, " min"))),
+        h("div", { class: "tile" }, h("div", { class: "label" }, "Sets"), h("div", { class: "value" }, setEl)),
+        sum.bests.length ? h("div", { class: "tile wide" }, h("div", { class: "label" }, "New bests"), h("div", { class: "value" }, bestEl)) : null),
+      sum.bests.length ? h("div", { class: "card accent" }, h("h2", {}, "New bests"), h("ul", { class: "list-plain finish-list" }, sum.bests.map((b) => h("li", {}, h("span", { class: "status-line" }, h("span", { class: "tick-sm" }, icon("bolt", 16)), b))))) : null,
+      sum.next.length ? h("div", { class: "card" }, h("h2", {}, "Next time"), h("ul", { class: "list-plain finish-list" }, sum.next.map((n) => h("li", {}, n)))) : null,
       h("h3", {}, "How hard was the whole workout? (optional)"),
       choiceRow([[1, "1"], [2, "2"], [3, "3"], [4, "4"], [5, "5"]], draft.effort, (v) => { draft.effort = draft.effort === v ? null : v; rerender(); }),
       choiceRow([[6, "6"], [7, "7"], [8, "8"], [9, "9"], [10, "10"]], draft.effort, (v) => { draft.effort = draft.effort === v ? null : v; rerender(); }),
       h("div", { class: "field" }, h("label", { for: "f-note" }, "Note (optional)"),
         h("textarea", { id: "f-note", maxlength: MAX_TEXT, value: draft.note, oninput: (e) => { draft.note = e.target.value; } })),
       h("p", { class: "small muted" }, "Stop the workout on your Apple Watch now.")),
-    actionBar(mainButton("Save", save)),
+    actionBar(mainButton([icon("check", 22, { strokeWidth: 3 }), "Save"], save)),
   ];
 }

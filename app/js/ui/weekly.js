@@ -1,5 +1,6 @@
 // Weekly summary (Monday, before the workout): last week in numbers, the trend against the target band, and a food
 // suggestion. The app only suggests; Rosario decides (version 1, WORKFLOW F2 and F3).
+// Look from builder C (redesign/JUDGING.md 3.2): number tiles, the workouts tile with a 5-segment bar.
 import { h } from "../h.js";
 import { flowScreen, actionBar, mainButton } from "./parts.js";
 import { model, go, store } from "./app.js";
@@ -9,6 +10,10 @@ import { formatChange } from "./units.js";
 
 export function seenWeek() {
   try { return store.loadDevice().weekly_seen ?? null; } catch { return null; }
+}
+
+function tile(label, value, unit = null, extra = null) {
+  return h("div", { class: "tile" }, h("div", { class: "label" }, label), h("div", { class: "value" }, String(value), unit ? h("span", { class: "unit" }, ` ${unit}`) : null), extra);
 }
 
 function metric(label, value, unit) {
@@ -53,11 +58,13 @@ export function renderWeekly() {
 
   return [
     flowScreen(
+      h("span", { class: "eyebrow accent" }, `Week ${sum.week - 1} · ${sum.from} to ${sum.to}`),
       h("h1", {}, "Last week"),
-      h("div", { class: "small muted" }, `Week ${sum.week - 1}, ${sum.from} to ${sum.to}`),
-      h("div", { class: "card" },
-        h("div", { class: "row" }, metric("Workouts", `${sum.workouts} of 5`), metric("Sets", sum.sets)),
-        h("div", { class: "row" }, metric("New bests", sum.newBests), metric("Walk", sum.walkMinutes, "min"))),
+      h("div", { class: "tiles" },
+        tile("Workouts", sum.workouts, "of 5", h("div", { class: "seg-bar", role: "img", "aria-label": `${sum.workouts} of 5 workouts` }, Array.from({ length: 5 }, (_, i) => h("i", { class: i < sum.workouts ? "on" : "" })))),
+        tile("Sets", sum.sets),
+        tile("New bests", sum.newBests),
+        tile("Walk", sum.walkMinutes, "min")),
       h("div", { class: "card" }, h("h2", {}, "Weight trend"), trendCard),
       food),
     actionBar(mainButton("Got it", () => {

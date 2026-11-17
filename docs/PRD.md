@@ -53,6 +53,9 @@ Each feature has a "done when" line: the test that says it is finished. The scre
 | F19 | **Offline and screen on.** The app opens and works with no signal after the first visit; the screen stays awake during a workout. | With the network off the whole workout works; the screen does not lock during a workout. |
 | F20 | **Update banner.** A new app version shows "New version ready" and installs on a tap, never in the middle of a workout. | Changing the version number shows the banner; tapping it loads the new version with no data lost. |
 | F21 | **Shortcuts "Log to Health" button** (Rosario's choice, question 40 b). Off by default. When on, the Finish screen shows a button that opens Rosario's Shortcut with the workout's start time and minutes. | After Rosario builds the Shortcut, one test workout appears in Apple Health with the right length. If the phone test fails, the button stays off and the Watch workout by hand is enough. |
+| F22 | **Gym tab and machine notes** (redesign, 2026-11-17, Rosario's choice 55 a). A Gym tab lists every machine and station the plan uses, grouped by gym area, with its photo, the usual name on its sign (with a note that the gym's sign may differ) and a "x of N noted" counter. Each machine card has one set-up tip and Rosario's own "Where it is in my gym" note (quick-word chips, typed text). The set and rest screens show the note of the current and next machine. Machines the first visit said the gym does not have are hidden. | A note saved on a machine shows on its card, in the Gym list, on the set screen and on the rest screen; it is synced and backed up like other records (`gym_spots`); a file without notes still opens. |
+| F23 | **Look and Animations** (redesign, 2026-11-17). Settings > Look: Auto / Light / Dark and an Animations switch. Both stay on the phone (never synced). Animations off, or the phone's Reduce Motion, stops every animation. | The chosen look shows from the first frame after a reload; with Animations off nothing moves and photos are still. |
+| F24 | **Exercise photos and videos** (redesign, 2026-11-17). Every exercise and machine has two real photos (start and end position) that flip to show the move, shipped inside the app so they work offline; a "Video" chip opens a checked YouTube video outside the app. | Every exercise in the plan has photos; all video links answer (record in docs/redesign-final/videos-checked.json); with the network off the photos still show. |
 
 ## 5. Later (version 2 and on)
 
@@ -68,7 +71,7 @@ From WORKFLOW H, unchanged:
 - Reading or writing Apple Health directly, or a Watch app (a web app cannot; see the research).
 - Reminders or "rest over" alerts while the app is closed (needs a server).
 - Vibration (iPhones do not allow it for web apps).
-- Food logging (use another app if wanted). Photos inside the app (they stay in the Photos app).
+- Food logging (use another app if wanted). Progress photos inside the app (they stay in the Photos app; the exercise photos of F24 are different).
 - More than one user, accounts, log-in pages, social features.
 - Any paid service, any server of our own, any third-party script or tracker.
 - An Android or desktop version (it may work in a browser, but it is not tested).

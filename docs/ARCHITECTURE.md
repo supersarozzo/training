@@ -86,9 +86,13 @@ app/
   manifest.webmanifest   name, icons, colors, start_url
   sw.js                  service worker (cache list, version)
   icons/                 180, 192, 512 px PNG, maskable 512
+  media/                 exercise and machine photos (two per move, 850 px, public domain), see docs/MEDIA.md
   css/app.css            tokens from DESIGN.md + components
   js/
-    main.js              start-up, router (#/today ...)
+    boot.js              runs first (plain script): puts the Look theme and Animations setting on <html> before paint
+    main.js              start-up, router (#/today, #/progress, #/plan, #/gym, #/settings ...)
+    prefs.js             reads and saves theme / motion_off in the device box (pure, tested)
+    dayplan.js           Today's blocks and minutes, walk minutes from walkSuggestion() (pure, tested)
     version.js           APP_VERSION (same as in sw.js)
     h.js                 h(tag, props, ...children) helper
     store.js             load/save, schema, migrations
@@ -98,6 +102,7 @@ app/
     plan/plan-v2.js      the plan as data (no body data)
     plan/cues.js         form tips, warm-up moves
     plan/machine-ids.js  the one frozen list of machine ids (gym_spots notes use them)
+    plan/media.js        which photos, machine, area, usual sign, tip and video belong to each exercise (public data)
     engine/schedule.js   week, day, short day, swap, gaps
     engine/workout.js    pair order, resume position, suggestions, walk suggestion
     active.js            the running workout screen and timer end times (device box)
@@ -120,6 +125,9 @@ app/
     sound.js             beep (Web Audio)
     shortcuts.js         "Log to Health" link
     ui/                  one file per screen + parts (workout.js picks the workout screen; flow.js shares its helpers)
+                         redesign helpers: icons.js (inline SVG icons), media.js (photo flip, thumbs), drawings.js
+                         (line drawings for warm-up moves without photos), exinfo.js (exercise sheet, video link),
+                         machines.js (Gym tab, machine card, where-notes), motion.js, theme.js, stats.js (last time, bests)
 tests/
   *.test.mjs             node --test (pure modules)
   fake-github.mjs        fake GitHub contents API
@@ -218,6 +226,7 @@ All `0` and `"…"` above are placeholders, not real values. Body weight is alwa
 - `token_expires` (date, typed by Rosario or read from GitHub if possible), `device_id`.
 - `last_sha`, `last_sync_at`, `last_sync_result` (`ok`, `offline`, `auth`, `conflict`, `broken_remote`, `too_new`, `error`).
 - `sound_on`, `active` (the running workout: session id, screen, timer end time), `last_backup_at`.
+- `theme` (`auto` / `light` / `dark`) and `motion_off` (true when Settings > Look > Animations is off), added 2026-11-17 (`prefs.js`). Read by `boot.js` before the first paint.
 
 `localStorage` key `trn.prev.v1`: a full copy of the data from just before the last merge or restore (one-step safety net).
 
@@ -316,6 +325,8 @@ Rules:
 - `sw.js` keeps a cache named `training-<APP_VERSION>` with a fixed list of every app file. **Cache first** for app files; **network only, never cached** for `api.github.com`.
 - On a new version: the new service worker installs and waits. The app shows **"New version ready · Update"**, but only on the Today, Settings or progress screens, never during a workout. Tapping Update tells the worker to take over, then reloads. Old caches are deleted.
 - `APP_VERSION` lives in `js/version.js` and at the top of `sw.js`. A unit test checks that both match and that every file in `app/` is in the cache list.
+- Since 0.4.0 (redesign) the list has 164 files, including every photo in `app/media/` (about 5.4 MB of the 5.9 MB app), so the photos work offline. The first open downloads all of it once (Rosario's question 59 a: keep the sharp photos).
+- Exercise videos are plain links to YouTube that open outside the app; nothing from YouTube loads in the page, so the CSP line is unchanged.
 - The data lives in localStorage, not in the cache, so an update never touches it.
 
 ## 8. Timers, screen and sound

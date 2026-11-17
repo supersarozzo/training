@@ -8,6 +8,9 @@ import { setPhase, askEnd } from "./flow.js";
 import { startTimer, remainingMs } from "../timer.js";
 import { prime } from "../sound.js";
 import { cues } from "../plan/cues.js";
+import { flip } from "./media.js";
+import { machineRow, videoButton } from "./exinfo.js";
+import { icon } from "./icons.js";
 
 const fmt = (n) => (Number.isInteger(n) ? n.toFixed(1) : String(n));
 
@@ -25,16 +28,20 @@ export function renderWalk(ctx) {
     return [
       workoutScreen(
         topBar("Walk", () => askEnd(ctx)),
-        h("h1", {}, "Walk"),
-        h("div", { class: "card" },
-          h("div", { class: "label" }, "Fast uphill walk"),
-          h("div", { class: "row" },
-            h("div", { class: "metric" }, h("div", { class: "label" }, "Speed"), h("div", { class: "display" }, fmt(w.speed_kmh), h("span", { class: "unit" }, " km/h"))),
-            h("div", { class: "metric" }, h("div", { class: "label" }, "Slope"), h("div", { class: "display" }, String(w.slope_pct), h("span", { class: "unit" }, " %")))),
-          h("p", { class: "small muted" }, `${w.minutes} minutes. First ${w.buildUpMinutes} minutes are an easy build-up: ${fmt(w.buildUp.speed_kmh)} km/h, ${w.buildUp.slope_pct} %.`),
-          h("p", { class: "small muted" }, `${legText} ${w.note}`)),
+        h("div", { class: "ex-hero" },
+          flip("uphill_walk"),
+          h("div", { class: "ex-hero-fade" }),
+          h("div", { class: "ex-hero-text" }, h("span", { class: "eyebrow accent" }, "Block 1 · Treadmill"), h("h1", {}, "Fast uphill walk"))),
+        h("div", { class: "metric-pair" },
+          h("div", { class: "tile" }, h("div", { class: "label" }, "Speed"), h("div", { class: "value" }, fmt(w.speed_kmh), h("span", { class: "unit" }, " km/h"))),
+          h("div", { class: "tile" }, h("div", { class: "label" }, "Slope"), h("div", { class: "value" }, String(w.slope_pct), h("span", { class: "unit" }, " %")))),
+        h("div", { class: "info-lines" },
+          h("div", {}, icon("clock", 16), `${w.minutes} minutes. First ${w.buildUpMinutes} minutes are an easy build-up: ${fmt(w.buildUp.speed_kmh)} km/h, ${w.buildUp.slope_pct} %.`),
+          h("div", {}, icon("bolt", 16), `${legText} ${w.note}`)),
         h("div", { class: "card warn" }, h("p", {}, "Start a Strength workout on your Apple Watch now.")),
-        h("p", { class: "small muted" }, cues.uphill_walk)),
+        h("p", { class: "small muted" }, cues.uphill_walk),
+        h("div", { class: "card" }, machineRow("uphill_walk")),
+        videoButton("uphill_walk")),
       actionBar(mainButton("Start walk", start), secondaryButton("Skip walk", () => setPhase("changeover", session.kind === "short" ? 120 : 180))),
     ];
   }
@@ -52,9 +59,9 @@ export function renderWalk(ctx) {
   return [
     workoutScreen(
       topBar("Walk", () => askEnd(ctx)),
-      h("h1", { class: "center" }, "Walking"),
-      h("div", { class: "center" }, label),
-      timerView({ end: act.timer_end, total, extra }),
+      h("h1", { class: "rest-title" }, "Walking"),
+      h("div", { class: "center target" }, label),
+      timerView({ end: act.timer_end, total, extra, sub: "left" }),
       h("p", { class: "center muted small" }, "Time is up when the screen flashes. You can stop earlier with the button.")),
     actionBar(mainButton("Done walking", () => setPhase("walk_result"))),
   ];
@@ -92,6 +99,7 @@ export function renderWalkResult(ctx) {
         stepper({ label: "Speed", unit: "km/h", value: draft.speed, step: 0.1, min: 2, max: 8, onChange: (v) => { draft.speed = v; } }),
         stepper({ label: "Slope", unit: "%", value: draft.slope, step: 1, min: 0, max: 15, decimals: 0, onChange: (v) => { draft.slope = v; } })),
       h("h3", {}, "How hard did it feel? (1 to 10)"),
+      h("p", { class: "small muted" }, "1 = very easy, 5 = you can talk in short sentences, 10 = all out."),
       choiceRow([[1, "1"], [2, "2"], [3, "3"], [4, "4"], [5, "5"]], draft.effort, pick),
       choiceRow([[6, "6"], [7, "7"], [8, "8"], [9, "9"], [10, "10"]], draft.effort, pick),
       h("button", { class: "choice", type: "button", "aria-pressed": draft.breathless ? "true" : "false", onclick: () => { draft.breathless = !draft.breathless; rerender(); } }, "I ended out of breath"),

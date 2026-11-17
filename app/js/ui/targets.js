@@ -1,6 +1,7 @@
 // Targets: shows the numbers the formulas give. Rosario confirms or changes them.
 import { h } from "../h.js";
 import { flowScreen, actionBar, mainButton, secondaryButton } from "./parts.js";
+import { icon } from "./icons.js";
 import { model, go, rerender } from "./app.js";
 import { computeTargets, safetyCheck } from "../engine/nutrition.js";
 
@@ -10,12 +11,14 @@ let editing = false;
 let edit = null; // { kcal, protein_g, speed_kmh, slope_pct }
 let problems = [];
 
-function metric(label, value, unit, note) {
-  return h("div", { class: "metric" },
-    h("div", { class: "label" }, label),
+// Number tiles with a small icon (builder B's targets look, redesign/JUDGING.md 3.2).
+function numTile(ic, label, value, unit, note, wide = false) {
+  return h("div", { class: `tile${wide ? " wide" : ""}` },
+    h("div", { class: "label" }, icon(ic, 16), " ", label),
     h("div", { class: "value" }, String(value), unit ? h("span", { class: "unit" }, ` ${unit}`) : null),
     note ? h("div", { class: "small muted" }, note) : null);
 }
+
 
 function numInput(key, label, { min, max, step }) {
   return h("div", { class: "field" },
@@ -81,11 +84,11 @@ export function renderTargets() {
         h("div", { class: "label" }, "Goal"),
         h("div", { class: "value" }, GOAL_TEXT[shown.goal] ?? shown.goal),
         computed.suggested_goal && intake.q26_goal === "suggest" ? h("p", { class: "small muted" }, "Suggested from your BMI and waist. You can change it by asking the Training chat.") : null),
-      h("div", { class: "card" },
-        showKcal ? metric("Calories a day", shown.kcal, "kcal") : null,
-        showProtein ? metric("Protein a day", shown.protein_g, "g", "Split over 3 to 5 meals.") : null,
-        !showKcal && !showProtein ? h("p", { class: "muted" }, "No food numbers (your choice).") : null,
-        metric("Starting walk", `${shown.walk_start.speed_kmh} km/h, ${shown.walk_start.slope_pct} % slope`, null, "Leg days (Tuesday, Friday): 2 % less slope.")),
+      h("div", { class: "tiles" },
+        showKcal ? numTile("flame", "Calories a day", shown.kcal, "kcal") : null,
+        showProtein ? numTile("food", "Protein a day", shown.protein_g, "g", "Split over 3 to 5 meals.") : null,
+        !showKcal && !showProtein ? h("p", { class: "muted tile wide" }, "No food numbers (your choice).") : null,
+        numTile("walk", "Starting walk", `${shown.walk_start.speed_kmh} km/h · ${shown.walk_start.slope_pct} %`, null, "Leg days (Tuesday, Friday): 2 % less slope.", true)),
       ...computed.notes.map((n) => h("p", { class: "small status-warning" }, n)),
       h("p", { class: "small muted" }, "General guidance, not medical advice."),
     ];

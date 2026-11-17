@@ -2,14 +2,16 @@ import { h } from "../h.js";
 import { s } from "./svg.js";
 import { addTicker, remainingMs, formatClock, ringFraction, endedLongAgo } from "../timer.js";
 import { beep } from "../sound.js";
+import { icon } from "./icons.js";
+import { bump, reduced } from "./motion.js";
 
-const TABS = [["today", "Today"], ["progress", "Progress"], ["plan", "Plan"], ["settings", "Settings"]];
+const TABS = [["today", "Today"], ["progress", "Progress"], ["plan", "Plan"], ["gym", "Gym"], ["settings", "Settings"]];
 
 export function tabBar(active) {
   return h("nav", { class: "bar", "aria-label": "Main" },
     h("div", { class: "tabs" },
       TABS.map(([id, label]) =>
-        h("a", { class: "tab", href: `#/${id}`, "aria-current": id === active ? "page" : false }, label))));
+        h("a", { class: "tab", href: `#/${id}`, "aria-current": id === active ? "page" : false }, icon(id, 26, { strokeWidth: id === active ? 2.2 : 1.8 }), label))));
 }
 
 // A standard screen wrapper (with room for the tab bar).
@@ -32,8 +34,30 @@ export function tabActionBar(...buttons) {
   return h("div", { class: "bar action-bar" }, h("div", { class: "bar-inner" }, ...buttons));
 }
 
-export function mainButton(label, onclick, { disabled = false } = {}) {
-  return h("button", { class: "button", type: "button", disabled, onclick }, label);
+// `sub`: a second, smaller line on the button (the numbers that Done will save, from builder C).
+export function mainButton(label, onclick, { disabled = false, sub = null } = {}) {
+  const btn = h("button", { class: `button${sub ? " has-sub" : ""}`, type: "button", disabled, onclick }, h("span", { class: "btn-main" }, label));
+  if (sub) btn.append(h("span", { class: "sub" }, sub));
+  return btn;
+}
+
+// A main button that cannot be hit twice by a double tap (builder D's 170 ms lock, JUDGING.md 3.6 item 3).
+// - For `armMs` after a NEW screen state (`key` changed) the button ignores taps, so the second tap of a double tap on
+//   the button before it (Done, then Skip rest at the same place) does nothing.
+// - On a tap, `work()` runs at once (a set is saved the moment Done is tapped), the button shows a tick and the
+//   `doneText` for 170 ms, then `after()` draws the next screen.
+let armKey = null;
+let armAt = 0;
+export function lockedButton(label, { key, work, after, doneText = null, sub = null, armMs = 400 }) {
+  if (key !== armKey) { armKey = key; armAt = Date.now(); }
+  const btn = mainButton(label, () => {
+    if (btn.disabled || Date.now() - armAt < armMs) return;
+    btn.disabled = true;
+    work();
+    if (doneText) { btn.classList.add("saved"); btn.replaceChildren(h("span", { class: "btn-main" }, icon("check", 22, { strokeWidth: 3 }), doneText)); }
+    setTimeout(after, 170);
+  }, { sub });
+  return btn;
 }
 
 export function secondaryButton(label, onclick) {
@@ -54,10 +78,15 @@ export function errorState(message) {
 // ---------- workout parts ----------
 
 // Top bar of a workout screen: what we are doing on the left, a small End button on the right.
-export function topBar(label, onEnd) {
-  return h("div", { class: "topbar" },
+// `progress`: { done, total } draws a thin segmented bar of the whole workout under it (redesign A).
+export function topBar(label, onEnd, progress = null) {
+  const bar = h("div", { class: "topbar" },
     h("div", { class: "topbar-label" }, label),
-    onEnd ? h("button", { class: "text-button", type: "button", onclick: onEnd }, "End") : null);
+    onEnd ? h("button", { class: "text-button end-btn", type: "button", onclick: onEnd }, "End") : null);
+  if (!progress || !progress.total) return bar;
+  const segs = [];
+  for (let i = 0; i < progress.total; i++) segs.push(h("span", { class: i < progress.done ? "done" : i === progress.done ? "now" : "" }));
+  return [bar, h("div", { class: "seg", role: "progressbar", "aria-label": "Workout progress", "aria-valuemin": "0", "aria-valuemax": String(progress.total), "aria-valuenow": String(progress.done) }, segs)];
 }
 
 // A workout screen: no tab bar, room for the bottom bar.
@@ -66,9 +95,20 @@ export function workoutScreen(...children) {
 }
 
 // Bottom sheet over a scrim. Returns close(). Sheets live outside #app; the router closes them when it draws a screen.
+// Close sits top right, the same on every sheet. Closing slides the sheet down (builder B), unless motion is off.
 export function openSheet(...children) {
   closeSheets();
-  const close = () => { wrap.remove(); };
+  let closing = false;
+  const close = () => {
+    if (closing) return;
+    closing = true;
+    const sheet = wrap.querySelector(".sheet");
+    if (reduced() || !sheet || !sheet.animate) { wrap.remove(); return; }
+    wrap.querySelector(".scrim")?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: "forwards" });
+    const a = sheet.animate([{ transform: "none" }, { transform: "translateY(100%)" }], { duration: 220, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" });
+    a.onfinish = () => wrap.remove();
+    setTimeout(() => wrap.remove(), 400); // never leave a sheet behind
+  };
   const wrap = h("div", { class: "sheet-wrap", dataset: { sheet: "1" } },
     h("div", { class: "scrim", onclick: close }),
     h("div", { class: "sheet", role: "dialog", "aria-modal": "true" },
@@ -100,19 +140,24 @@ export function toast(text, ms = 6000) {
 // Ring plus big m:ss digits. `end` is epoch milliseconds. Calls onEnd once when the time is up
 // (after the flash and beep). If the phone was locked past the end, it calls onEnd quietly with no flash.
 // `extra(now)` runs on every tick (for labels that change with the time).
-export function timerView({ end, total, onEnd, extra, big = true }) {
+// A thick glowing ring that empties as the time runs out. The soft breathing glow behind it runs only in the last
+// 10 seconds (JUDGING.md 3.6 item 4), so it does not pulse for the whole rest.
+export function timerView({ end, total, onEnd, extra, big = true, sub = null }) {
   const R = 124;
   const C = 2 * Math.PI * R;
-  const arc = s("circle", { cx: 140, cy: 140, r: R, fill: "none", stroke: "var(--brand-primary)", "stroke-width": 8, "stroke-linecap": "round", "stroke-dasharray": C, "stroke-dashoffset": 0, transform: "rotate(-90 140 140)" });
-  const digits = h("div", { class: big ? "timer ring-digits" : "display ring-digits", role: "timer" }, "");
-  const el = h("div", { class: "ring" },
+  const arc = s("circle", { class: "arc", cx: 140, cy: 140, r: R, fill: "none", stroke: "var(--accent)", "stroke-width": big ? 14 : 12, "stroke-linecap": "round", "stroke-dasharray": C, "stroke-dashoffset": 0, transform: "rotate(-90 140 140)" });
+  const time = h("span", {}, "");
+  const digits = h("div", { class: big ? "timer ring-digits" : "display ring-digits", role: "timer" }, time, sub ? h("span", { class: "ring-sub" }, sub) : null);
+  const el = h("div", { class: big ? "ring" : "ring small" },
+    h("div", { class: "ring-glow", "aria-hidden": "true" }),
     s("svg", { viewBox: "0 0 280 280", "aria-hidden": "true" },
-      s("circle", { cx: 140, cy: 140, r: R, fill: "none", stroke: "var(--border-default)", "stroke-width": 8 }), arc),
+      s("circle", { cx: 140, cy: 140, r: R, fill: "none", stroke: "var(--ring-track)", "stroke-width": big ? 14 : 12 }), arc),
     digits);
   let fired = false;
   addTicker((now) => {
     const rem = remainingMs(end, now);
-    digits.textContent = formatClock(rem);
+    time.textContent = formatClock(rem);
+    el.classList.toggle("ending", rem > 0 && rem <= 10000);
     arc.setAttribute("stroke-dashoffset", String(C * ringFraction(end, total, now)));
     if (extra) extra(now);
     if (rem === 0 && !fired) {
@@ -137,6 +182,7 @@ export function stepper({ label, unit, value, step = 1, next, min = 0, max = 999
   const set = (n) => {
     v = Math.min(max, Math.max(min, Math.round(n * 10 ** decimals) / 10 ** decimals));
     input.value = fmt(v);
+    bump(input);
     onChange(v);
   };
   const move = (dir) => set(next ? next(v, dir) : v + dir * step);
