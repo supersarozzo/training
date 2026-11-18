@@ -33,3 +33,11 @@ test("R8-3 the Progress history row reads every record of the exercise in that w
   assert.doesNotMatch(t, /x\.exercises\.find\(\(r\) => r\.done_exercise === id && workSets\(r\)\.length\)/);
   assert.match(t, /x\.exercises\.filter\(\(r\) => r\.done_exercise === id\)\.flatMap\(\(r\) => workSets\(r\)\)/);
 });
+
+// C1 (HANDOVER Later list): Settings gets its own food line, like the Diet tab, so a failed food.json is never hidden
+// behind the workout line ("Synced"). Shown only when GitHub is set up (else the workout line says "set up below").
+test("C1-1 the Settings sync card shows the food status line", () => {
+  const t = readFileSync(new URL("../app/js/ui/settings-sync.js", import.meta.url), "utf8");
+  assert.match(t, /foodStatusText\(device, foodUnsynced\(\), "settings"\)/);
+  assert.match(t, /const foodUnsynced = \(\) => \{ try \{ return syncer\.food\.hasUnsynced\(\); \} catch \{ return false; \} \};/);
+});
