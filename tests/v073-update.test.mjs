@@ -301,36 +301,12 @@ test("U7 the very first install (no controller yet) shows no bar", async () => {
   assert.equal(p.u.waiting(), null);
 });
 
-test("U8 Check for update: newest / downloading then ready / could not check", async () => {
-  const none = page();
-  await none.u.start(); await tick();
-  await none.u.checkNow();
-  assert.equal(none.u.status(), "none");
-
-  const w = fakeWorker("installing");
-  const found = page({ update: (reg) => { reg.found(w); return Promise.resolve(); } });
-  await found.u.start(); await tick();
-  await found.u.checkNow();
-  assert.equal(found.u.status(), "downloading");
-  w.to("installed");
-  assert.equal(found.u.status(), "ready");
-
-  const off = page({ update: () => Promise.reject(new TypeError("offline")) });
-  await off.u.start(); await tick();
-  await off.u.checkNow();
-  assert.equal(off.u.status(), "failed");
-
-  const broke = fakeWorker("installing");
-  const fails = page({ update: (reg) => { reg.found(broke); return Promise.resolve(); } });
-  await fails.u.start(); await tick();
-  await fails.u.checkNow();
-  broke.to("redundant");
-  assert.equal(fails.u.status(), "failed");
-});
+// U8 (Check for update) was replaced by the Update button at the top of Settings (Training Agent, Rosario's wish,
+// 2026-11-18): tests/v073-update-button.test.mjs B1-B13.
 
 test("U9 the words for each check result are plain and short", () => {
   const words = need("updateWords");
-  for (const s of ["checking", "downloading", "ready", "none", "failed"]) {
+  for (const s of ["checking", "downloading", "ready", "none", "offline", "reinstalling", "workout"]) { // changed for the Update button (B tests)
     const t = words(s);
     assert.equal(typeof t, "string");
     assert.ok(t.length > 5 && t.length < 90, `${s}: ${t}`);
@@ -348,11 +324,10 @@ test("U10 the worker runs on https, and on localhost only with ?sw", () => {
 });
 
 // ---------- wiring ----------
-test("W1 update.js uses the updater; Settings shows the app version and a Check for update button", () => {
+test("W1 update.js uses the updater; Settings shows the app version (the Update button: B13)", () => {
   const upd = read("app/js/ui/update.js");
   assert.match(upd, /createUpdater\(/);
   assert.doesNotMatch(upd, /register\("sw\.js"\)/);
   const settings = read("app/js/ui/settings.js");
   assert.match(settings, /APP_VERSION/);
-  assert.match(settings, /Check for update/);
 });
