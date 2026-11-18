@@ -266,3 +266,20 @@ test("V18 the Change sheet checks every value before it writes, writes only what
   assert.match(save, /if \(!didSets && !didPrefs\)/, "nothing changed: no write, no Undo");
   assert.match(save, /const stNow = /, "old exercise values read at Save");
 });
+
+test("V19 a running workout keeps the reps and weight it started with: the Change sheet is closed while any workout runs (Training Agent, JUDGING step 3)", () => {
+  const { model } = setup();
+  assert.equal(view.workoutRunning(model.doc()), false);
+  const session = model.startSession({ planDay: "tue", week: 3, kind: "full" });
+  assert.equal(view.workoutRunning(model.doc()), true, "any running workout counts, on any day");
+  const done = copy(model.doc());
+  done.sessions.find((x) => x.id === session.id).status = "finished";
+  assert.equal(view.workoutRunning(done), false);
+  const s = src("ui/planedit.js");
+  const open = s.slice(s.indexOf("export function openDoseSheet"));
+  assert.ok(open.indexOf("workoutRunning(") > -1 && open.indexOf("workoutRunning(") < open.indexOf("openSheet("), "checked before the sheet opens");
+  const save = open.slice(open.indexOf("const saveIt"), open.indexOf("const hasOwnWeight"));
+  assert.ok(save.indexOf("workoutRunning(") > -1 && save.indexOf("workoutRunning(") < save.indexOf("savePlanDay("), "checked again at Save");
+  const reset = open.slice(open.indexOf("const resetWeight"));
+  assert.ok(reset.indexOf("workoutRunning(") > -1 && reset.indexOf("workoutRunning(") < reset.indexOf("setExercisePrefs("), "checked before the weight is reset");
+});
