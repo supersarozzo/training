@@ -59,7 +59,10 @@ test("D5 main.js stops the scanner first in render(), draws Diet, and redraws it
   const t = src("js/main.js");
   assert.match(t, /function render\(\) \{\s*const root = document\.getElementById\("app"\);\s*stopScanner\(\)/);
   assert.match(t, /diet: renderDiet/);
-  assert.match(t, /"#\/diet"/);
+  // Test change (0.7.2 review, checker 4): the "redraw after a sync" rule moved to autosync.js redrawAfterSync (no redraw
+  // while typing); main.js calls it. v072-autosync F7 checks the Diet case (redraw only with no sheet or scanner open).
+  assert.match(t, /redrawAfterSync\(location\.hash, document\)/);
+  assert.match(src("js/autosync.js"), /hash === "#\/diet" && !doc\.querySelector\("\[data-sheet\], \[data-scan\]"\)/);
 });
 
 test("D6 the tab order is Today, Plan, Gym, Diet, Progress", () => {

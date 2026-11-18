@@ -425,7 +425,8 @@ test("S25 food status line in words", () => {
   assert.equal(foodStatusText(dev), "Food: GitHub is set up. Not synced yet.");
   assert.equal(foodStatusText({ ...dev, food_last_sync_result: "broken_remote" }), FOOD_MESSAGES.broken_remote);
   assert.match(foodStatusText({ ...dev, food_last_sync_result: "ok", food_last_sync_at: "2026-03-02T09:00:00.000Z" }), /^Food synced /);
-  assert.match(foodStatusText({ ...dev, food_last_sync_result: "ok", food_last_sync_at: "2026-03-02T09:00:00.000Z" }, true), /Newer food not sent yet\.$/);
+  // Test change (0.7.2, auditor M4: the food line uses the same words as the workout line, Training Agent spec point 6)
+  assert.equal(foodStatusText({ ...dev, food_last_sync_result: "ok", food_last_sync_at: "2026-03-02T09:00:00.000Z" }, true), "Food: not sent yet, will send automatically.");
 });
 
 test("S26 a damaged food box never stops Today or Settings: hasUnsynced still answers for the workout log", async () => {

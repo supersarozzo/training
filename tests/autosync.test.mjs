@@ -66,5 +66,6 @@ test("status text uses the plain messages", () => {
   const base = { token: "x-test-key-1", owner: "o" };
   assert.match(statusText(base), /Not synced yet/);
   assert.equal(statusText({ ...base, last_sync_result: "auth" }), "GitHub key expired or wrong. Make a new one.");
-  assert.match(statusText({ ...base, last_sync_at: "2026-03-02T09:00:00.000Z", last_sync_result: "ok" }, true), /Newer changes not sent yet/);
+  // Test change (0.7.2, automatic sync, Training Agent spec point 6): unsent changes now say they go by themselves.
+  assert.equal(statusText({ ...base, last_sync_at: "2026-03-02T09:00:00.000Z", last_sync_result: "ok" }, true), "Not sent yet, will send automatically.");
 });
