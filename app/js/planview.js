@@ -12,7 +12,7 @@
 import { daySlots } from "./engine/schedule.js";
 import { findPlanDay, effectiveDay, planDaySlots, planSwapChoices, setsForSlot, ADDED_SLOTS, ADDED_SETS, ADDED_REST, MAX_ADDED } from "./engine/planedits.js";
 import { setsByMuscle, levelFor, soFarText, unitsOf, unitHeader, slotRole, GYM_GROUPS, gymGroupOf, fmtSets } from "./engine/planpage.js";
-import { days, exercises, weeks, weekInfo, DAY_IDS } from "./plan/plan-v2.js";
+import { days, exercises, weeks, weekInfo, DAY_IDS, MOVE_SECONDS } from "./plan/plan-v2.js";
 import { MUSCLES, EQUIPMENT, exerciseMuscles } from "./plan/muscles.js";
 
 const LAST_WEEK = weeks.length;
@@ -67,7 +67,7 @@ export function roleIn(slots, slotName) {
 // The Rest tile for a slot of this day (a pair exercise left on its own rests between its own sets).
 export function restIn(slots, slot) {
   const alone = isPairSlot(slot.slot) && slots.filter((s) => s.slot[0] === slot.slot[0] && isPairSlot(s.slot)).length === 1;
-  if (slot.rest === null) return { value: "30 s", note: "to move" };
+  if (slot.rest === null) return { value: `${MOVE_SECONDS} s`, note: "to move" };
   if (/^[A-C]2$/.test(slot.slot) && !alone) return { value: `${slot.rest} s`, note: "after the round" };
   return { value: `${slot.rest} s`, note: "between sets" };
 }

@@ -15,6 +15,9 @@ import { viewDay, swapSheet, addSheet, exName, dayChanges, changedOn } from "../
 
 const dayName = (day) => days[day].name;
 const clone = (x) => JSON.parse(JSON.stringify(x));
+// The day as it is saved now (for Undo): the record's own slots when the day is edited, else the plan's day. Not the
+// slots as shown, which fill in the rest of a pair exercise left alone (auditor note N1).
+const savedSlots = (day) => { const info = model.effectivePlanDay(day); return clone(info.edited ? info.record.slots : info.slots); };
 const repsText = (ex) => {
   const [lo, hi] = ex.range;
   const r = lo === hi ? `${lo}` : `${lo}–${hi}`;
@@ -59,7 +62,7 @@ export function undoToast(text, onUndo, ms = 8000) {
 function save(day, doneText, work) {
   let before;
   try {
-    before = clone(model.effectivePlanDay(day).slots);
+    before = savedSlots(day);
     work();
   } catch (e) { toast(e.message); return false; }
   closeSheets();
@@ -186,7 +189,7 @@ export function openBackToPlan(day) {
       // Read again at the tap: a day saved by a newer app (after a sync) or a day whose workout is running is never reset here.
       if (now.newerVersion) throw new Error("This day was changed on a newer app version. Update the app to change it.");
       if (now.locked) throw new Error("Workout running. This day can be changed after the workout ends.");
-      before = clone(model.effectivePlanDay(day).slots);
+      before = savedSlots(day);
       model.resetPlanDay(day);
     } catch (e) { toast(e.message); return; }
     closeSheets();
