@@ -216,3 +216,15 @@ test("D15-5 no table value (bodyweight or timed): the old rule", () => {
   assert.equal(gymFloor(13.9, "db_bench_press", fallbackGym), 12);
   assert.equal(gymFloor(13.9, "db_bench_press", { dumbbell_steps_kg: [5, 7.5, 10, 12.5, 15] }), 12.5);
 });
+
+test("D15-6 with no set today the swap converts the old exercise's LOG, never a heavier next suggestion (checker, D15 check)", () => {
+  // chest press logged at 50, progression suggests 55; D15 names the log: 50 x (10 / 20) x 0.7 = 17.5 -> 16 kg dumbbells
+  const origSugg = { action: "progress", weight_kg: 55, last: { weight_kg: 50 } };
+  assert.equal(painSwapStart("db_bench_press", { origId: "chest_press", origSugg, newSugg: { action: "first_try", weight_kg: 1 } }, fallbackGym), 16);
+  // a lower suggestion (a break, a lighter Plan weight) is used when it is lower than the log: never heavier than either
+  const lower = { action: "mine", weight_kg: 40, last: { weight_kg: 50 } };
+  assert.equal(painSwapStart("db_bench_press", { origId: "chest_press", origSugg: lower, newSugg: { action: "first_try", weight_kg: 1 } }, fallbackGym), 14);
+  // a set today still wins over both
+  assert.equal(painSwapStart("db_bench_press", { origId: "chest_press", lastWorkKg: 40, origSugg, newSugg: { action: "first_try", weight_kg: 1 } }, fallbackGym), 14);
+  assert.match(src("js/engine/workout.js"), /Math\.min\(origSugg\.last\.weight_kg, origSugg\.weight_kg\)/);
+});
