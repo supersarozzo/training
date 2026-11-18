@@ -287,7 +287,8 @@ test("V19 a running workout keeps the reps and weight it started with: the Chang
 });
 
 test("V20 screen check fixes: Plan keeps room above the tab bar (M1); the Settings button is the word only, no sun-like icon (m2); Settings goes back where it came from (m1); a hold says seconds left (m6)", () => {
-  assert.match(src("ui/planday.js"), /edit \? "screen has-bar plan-screen" : "screen has-tabs plan-screen"/);
+  // 0.7.1 (auditor finding 5): the edit mode has the action bar over the tab bar, like Today: class over-tabs.
+  assert.match(src("ui/planday.js"), /edit \? "screen has-bar over-tabs plan-screen" : "screen has-tabs plan-screen"/);
   const btn = src("ui/parts.js").match(/export function settingsButton\(\) \{[\s\S]*?\n\}/)[0];
   assert.doesNotMatch(btn, /icon\(/);
   assert.match(btn, /"Settings"/);
