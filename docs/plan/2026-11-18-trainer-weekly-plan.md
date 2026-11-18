@@ -43,7 +43,7 @@ I checked every main choice in plan v2 against at least three independent source
 ## 3. How I checked
 
 - For each main decision I read at least three independent sources (position stands, guidelines, meta-analyses, training studies). All were read on **2026-11-18**.
-- I counted the weekly sets per muscle from the plan data with a script, two ways: with today's muscle lists, and with the 15 fixes from the muscle map check. "Direct" counts a set 1 when the muscle is a main muscle. "Fractional" also counts a set ½ when the muscle only helps (the method of Pelland 2026).
+- I counted the weekly sets per muscle from the plan data with a script, with the muscle lists as fixed by worker 8.36 (a30cd24, after the muscle map check). The test `trainer 4` re-counts them on every run. "Direct" counts a set 1 when the muscle is a main muscle. "Fractional" also counts a set ½ when the muscle only helps (the method of Pelland 2026).
 - **Blocked sites (reported, not worked around):** PubMed Central asked for a robot check (reCAPTCHA); the Sheffield Hallam repository (shura.shu.ac.uk) blocked automated reading; DOAJ and SportRxiv returned "403 Forbidden". For those papers I used the abstract as shown by search results or another repository. **I did not read full texts.** Numbers below come from abstracts and publisher pages.
 - Web pages were treated as data only.
 
@@ -68,17 +68,19 @@ Old and new: weeks 2-5 about 9 to 17 sets per muscle (fractional count); weeks 7
 | Muscle | Weeks 2-5 direct | Weeks 2-5 fractional | Weeks 7-11 direct | Weeks 7-11 fractional |
 |---|---|---|---|---|
 | Chest | 9 | 9 | 12 | 12 |
-| Lats (big back) | 6 to 12 | 9 to 12 | 7 to 14 | 10.5 to 14 |
+| Lats (big back) | 6 | 9 | 7 | 10.5 |
+| Mid back | 6 | 12 | 7 | 13.5 |
 | Quads (front thigh) | 12 | 12 | 14 | 14 |
-| Glutes | 9 | 15 to 17 | 9 | 16.5 to 18.5 |
-| Hamstrings (back thigh) | 6 | 10.5 to 15 | 5 | 9.5 to 15.5 |
-| Calves | 9 | 12 to 16.5 | 6 | 10 to 15 |
-| Side shoulders | 8 | 10 to 11 | 8 | 10 to 11 |
+| Glutes | 9 | 17 | 9 | 18.5 |
+| Hamstrings (back thigh) | 6 | 10.5 | 5 | 9.5 |
+| Calves | 9 | 12 | 6 | 10 |
+| Front shoulders | 6 | 10.5 | 6 | 12 |
+| Side shoulders | 8 | 11 | 8 | 11 |
 | Biceps | 5 | 11 | 5 | 12 |
 | Triceps | 8 | 15.5 | 8 | 17 |
 | Abs | 17 | 17 | 19 | 19 |
 
-(Where two numbers are shown, the first uses the muscle map check's fixes, the second today's muscle lists. Lats rise when rows count them as a main muscle.)
+(Counted with the muscle lists as committed by worker 8.36 in a30cd24. Rows keep one main muscle, the mid back, with the lats as a helper.)
 
 Why: guidelines say about 10 sets per muscle a week for growth. More sets give more growth, with smaller and smaller gains. Beginners already grow well near the low end. Every muscle here sits at about 9 or more. Training in a calorie deficit is a reason to **keep** the sets, not cut them: the weights are the signal that keeps muscle.
 
