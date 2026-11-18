@@ -13,7 +13,7 @@ import { thumb } from "./media.js";
 import { icon } from "./icons.js";
 import { miniMap } from "./bodymap.js";
 import { viewDay, swapSheet, addSheet, exName, dayChanges, changedOn, rangeFor, rangeText, weightLine, workoutRunning, walkWords } from "../planview.js";
-import { withSets, setsForSlot, MIN_SETS, MAX_SETS, walkLimits, walkHint, withD18 } from "../engine/planedits.js";
+import { withSets, setsForSlot, MIN_SETS, MAX_SETS, walkLimits, walkHint, withD18, d18Offer, D18_OFFER_KEY } from "../engine/planedits.js";
 import { machines } from "../plan/media.js";
 import { saveOfferAnswer } from "../prefs.js";
 import { nSets, repWord } from "../words.js";
@@ -72,13 +72,21 @@ export function undoToast(text, onUndo, ms = 8000) {
   toastTimer = setTimeout(() => { el.remove(); if (toastEl === el) toastEl = null; }, ms);
 }
 
+// The day's saved record (or null), for the D18 card check below.
+const recordOf = (day) => model.effectivePlanDay(day).record ?? null;
+
 // Run one save. On a refusal the plain-words message is shown and nothing changed. Returns true when it saved.
 function save(day, doneText, work) {
-  let before;
+  let before, offerBefore;
   try {
     before = savedSlots(day);
+    offerBefore = d18Offer(day, recordOf(day), {});
     work();
   } catch (e) { toast(e.message); return false; }
+  // A save on this app that puts an old D18 exercise back in a D18 place is Rosario's own choice: the D18 card must not
+  // offer to undo it (review round 1, checker), so that day's D18 card counts as answered "Keep mine".
+  const offerAfter = d18Offer(day, recordOf(day), {});
+  if (offerAfter && offerAfter.swaps.some((sw) => !(offerBefore?.swaps ?? []).some((b) => b.slot === sw.slot))) saveOfferAnswer(store, D18_OFFER_KEY(day), "kept");
   closeSheets();
   rerender();
   undoToast(doneText, () => model.savePlanDay(day, before));
@@ -306,6 +314,9 @@ export function offerCard(day, offer) {
   const fromName = exName(offer.from);
   const article = /^[aeiou]/i.test(machine) ? "an" : "a";
   const use = () => {
+    // Checked again at the tap: a sync may have changed this place since the card was drawn (review round 1, auditor).
+    const now = model.effectivePlanDay(day).slots;
+    if (now.find((s) => s.slot === offer.slot)?.ex !== offer.from || now.some((s) => s.ex === offer.to)) { toast(`${dayName(day)} changed meanwhile. Nothing was swapped.`); rerender(); return; }
     if (save(day, `Swapped ${fromName} for ${exName(offer.to)}.`, () => model.swapPlanSlot(day, offer.slot, offer.to))) saveOfferAnswer(store, offer.key, "used");
   };
   const keep = () => { saveOfferAnswer(store, offer.key, "kept"); rerender(); };
@@ -322,7 +333,11 @@ export function offerCard(day, offer) {
 export function d18OfferCard(day, offer) {
   const name = dayName(day);
   const use = () => {
-    const ok = save(day, `${name} now uses the plan's new exercises.`, () => model.savePlanDay(day, withD18(savedSlots(day), offer.swaps)));
+    // Only the places that still hold the old exercise now (a sync may have changed one since the card was drawn).
+    const now = model.effectivePlanDay(day).slots;
+    const swaps = offer.swaps.filter((sw) => now.find((s) => s.slot === sw.slot)?.ex === sw.from && !now.some((s) => s.ex === sw.to));
+    if (!swaps.length) { toast(`${name} changed meanwhile. Nothing was swapped.`); rerender(); return; }
+    const ok = save(day, `${name} now uses the plan's new exercises.`, () => model.savePlanDay(day, withD18(savedSlots(day), swaps)));
     if (ok) saveOfferAnswer(store, offer.key, "used");
   };
   const keep = () => { saveOfferAnswer(store, offer.key, "kept"); rerender(); };
@@ -391,7 +406,7 @@ export function openDoseSheet(day, week, slotName) {
     const stNow = clone(model.doc().exercise_state.find((x) => x.id === `x-${slot.ex}` && !x.deleted) ?? null);
     let beforeSlots, didSets = false, didPrefs = false;
     try {
-      if (workoutRunning(model.doc())) throw new Error(RUNNING_TEXT);
+      if (workoutRunning(model.doc())) throw new Error(doseRunningText(exercises[slot.ex]));
       const now = dayState(model.doc(), day, week);
       if (!now.canEdit) throw new Error(lockedText(now));
       beforeSlots = savedSlots(day);
@@ -426,7 +441,7 @@ export function openDoseSheet(day, week, slotName) {
   const hasOwnWeight = typeof stOld?.my_weight_kg === "number";
   const resetWeight = () => {
     try {
-      if (workoutRunning(model.doc())) throw new Error(RUNNING_TEXT);
+      if (workoutRunning(model.doc())) throw new Error(doseRunningText(exercises[slot.ex]));
       model.setExercisePrefs(slot.ex, { weightKg: null });
     } catch (e) { toast(e.message); return; }
     closeSheets();

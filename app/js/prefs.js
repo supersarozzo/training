@@ -31,9 +31,12 @@ export function readOfferAnswers(store) {
 }
 export function saveOfferAnswer(store, key, answer) {
   if (!OFFER_KEY.test(key) || (answer !== "used" && answer !== "kept")) return;
-  const next = { ...store.loadDevice() };
-  next.machine_offers = { ...readOfferAnswers(store), [key]: answer };
-  store.saveDevice(next);
+  // A phone setting must never break a tap (a full phone): nothing is lost, the card may come back once.
+  try {
+    const next = { ...store.loadDevice() };
+    next.machine_offers = { ...readOfferAnswers(store), [key]: answer };
+    store.saveDevice(next);
+  } catch { /* full or blocked storage */ }
 }
 
 // patch: { theme?, motionOff? }. An unknown theme is saved as "auto".

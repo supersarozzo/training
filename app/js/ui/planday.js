@@ -21,7 +21,7 @@ import { openExerciseLayer, doseParts, changeLabel } from "./exlayer.js";
 import { pageFor, muscleWords } from "../engine/planpage.js";
 import { ADDED_SLOTS, MAX_ADDED, machineOffers, d18Offer } from "../engine/planedits.js";
 import { readOfferAnswers } from "../prefs.js";
-import { setWord } from "../words.js";
+import { setWord, repWord } from "../words.js";
 import { viewDay, unitsIn, editedMinutes, rangeFor, weightLine, soreNote, walkWords } from "../planview.js";
 import { renderMuscleCheck } from "./musclecheck.js";
 import { dayState, openSwapSheet, openAddSheet, removeSlot, changedCard, openDoseSheet, openWalkSheet, offerCard, d18OfferCard } from "./planedit.js";
@@ -99,7 +99,7 @@ function exCard(doc, day, week, slot, edit = false) {
   const badge = added ? "Added" : planned && planned.ex !== slot.ex ? "Swapped" : null;
   const card = h("button", {
     class: "pcard ex", type: "button",
-    "aria-label": `${ex.name}${badge ? ` (${badge.toLowerCase()})` : ""}: ${slot.sets} ${setWord(slot.sets)} of ${range[0] === range[1] ? range[0] : `${range[0]} to ${range[1]}`}${ex.kind === "hold" ? " seconds" : " reps"}${ex.perSide ? " each side" : ""}. Weight: ${wl.text}. ${words.card}. Open muscles, photos and tips.`,
+    "aria-label": `${ex.name}${badge ? ` (${badge.toLowerCase()})` : ""}: ${slot.sets} ${setWord(slot.sets)} of ${range[0] === range[1] ? range[0] : `${range[0]} to ${range[1]}`}${ex.kind === "hold" ? " seconds" : ` ${range[0] === range[1] ? repWord(range[0]) : "reps"}`}${ex.perSide ? " each side" : ""}. Weight: ${wl.text}. ${words.card}. Open muscles, photos and tips.`,
     onclick: () => openExerciseLayer(slot.ex, { day, week, slot: slot.slot }),
   },
   thumb(slot.ex),

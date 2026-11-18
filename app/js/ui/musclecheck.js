@@ -8,6 +8,7 @@ import { today } from "../clock.js";
 import { icon } from "./icons.js";
 import { bodyMap } from "./bodymap.js";
 import { pageFor, fmtSets } from "../engine/planpage.js";
+import { setWord } from "../words.js";
 import { MUSCLES } from "../plan/muscles.js";
 import { CHECK_WEEKS, checkChipFor, checkRows, standOut, checkLevels, checkSub } from "../planview.js";
 
@@ -40,8 +41,8 @@ function bar(row) {
 function rowLabel(r) {
   const days = r.days ? ` ${r.days.split(" ").map((d) => DAY_WORDS[d] ?? d).join(", ")}.` : "";
   const nums = r.weighted === null
-    ? `${fmtSets(r.direct)} direct sets.`
-    : `${fmtSets(r.direct)} direct sets, ${fmtSets(r.weighted)} with helpers.`;
+    ? `${fmtSets(r.direct)} direct ${setWord(r.direct)}.`
+    : `${fmtSets(r.direct)} direct ${setWord(r.direct)}, ${fmtSets(r.weighted)} with helpers.`;
   return `${r.name}: ${nums} ${r.verdict.text}.${days}`;
 }
 

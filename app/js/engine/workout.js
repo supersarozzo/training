@@ -5,7 +5,7 @@
 // - walk suggestion
 // Source: plan v2 sections 3 to 6, 8, 9, 11; WORKFLOW D.
 import { exercises, MOVE_SECONDS, weekInfo, walkRules, BIG_LIFTS, firstTryKg } from "../plan/plan-v2.js";
-import { nSets } from "../words.js";
+import { nSets, repWord } from "../words.js";
 import { exerciseMuscles } from "../plan/muscles.js";
 import { localDate } from "../ids.js";
 import { planForDay, missedRule } from "./schedule.js";
@@ -224,7 +224,7 @@ export function suggestFor(doc, exerciseId, ctx) {
     const conv = fromReplaced(doc, exerciseId);
     if (conv) {
       const from = `From your ${exercises[conv.from].name.toLowerCase()} weight.`;
-      return { ...base, weight_kg: conv.weight_kg, action: "first_try", note: ctx.week > 1 ? `${from} ${FIRST_TRY_NOTE_LATER.replace(/^First try. /, "")}` : `${from} Set 1 tells us if it is right.` };
+      return { ...base, weight_kg: conv.weight_kg, action: "first_try", from: conv.from, note: ctx.week > 1 ? `${from} ${FIRST_TRY_NOTE_LATER.replace(/^First try. /, "")}` : `${from} Set 1 tells us if it is right.` };
     }
     // Nothing known yet: the first-try weight (trainer D12, 0.7.1); the week-1 steps correct it from set 1.
     const first = firstTryWeight(exerciseId, settings, doc.profile);
@@ -305,7 +305,7 @@ export function targetText(exerciseId, sets, rir, myRange = null) {
   const [lo, hi] = validRange(myRange) ?? ex.range;
   const left = Array.isArray(rir) ? `${rir[0]} or ${rir[1]}` : String(rir);
   const range = lo === hi ? `${lo}` : `${lo} to ${hi}`;
-  const unit = ex.kind === "hold" ? "seconds" : "reps";
+  const unit = lo === hi ? (ex.kind === "hold" ? (lo === 1 ? "second" : "seconds") : repWord(lo)) : (ex.kind === "hold" ? "seconds" : "reps");
   const side = ex.perSide ? " each side" : "";
   return `${nSets(sets)} · ${range} ${unit}${side} · stop with ${left} left`;
 }

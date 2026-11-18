@@ -13,6 +13,7 @@ import { daySlots, blockPosition, canTrain, inWeekOf } from "./engine/schedule.j
 import { validRange, suggestFor } from "./engine/workout.js";
 import { findPlanDay, effectiveDay, planDaySlots, planSwapChoices, setsForSlot, ADDED_SLOTS, ADDED_SETS, ADDED_REST, MAX_ADDED } from "./engine/planedits.js";
 import { setsByMuscle, levelFor, soFarText, unitsOf, unitHeader, slotRole, GYM_GROUPS, gymGroupOf, fmtSets } from "./engine/planpage.js";
+import { setWord } from "./words.js";
 import { days, exercises, weeks, weekInfo, DAY_IDS, MOVE_SECONDS, soreNotes, SORE_NOTE_WEEKS } from "./plan/plan-v2.js";
 import { MUSCLES, EQUIPMENT, exerciseMuscles } from "./plan/muscles.js";
 
@@ -300,7 +301,7 @@ export function checkRows(doc, week) {
 export function standOut(rows) {
   return rows.filter((r) => !r.part && r.verdict.flag).map((r) => ({
     id: r.id, name: r.name.replace(/\s*\(.*\)/, ""), flag: r.verdict.flag,
-    text: `${fmtSets(r.direct)} direct sets${r.dayList.length ? ` on ${r.dayList.map(DAY3).join(", ")}` : ""}`,
+    text: `${fmtSets(r.direct)} direct ${setWord(r.direct)}${r.dayList.length ? ` on ${r.dayList.map(DAY3).join(", ")}` : ""}`,
   }));
 }
 

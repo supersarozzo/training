@@ -109,7 +109,7 @@ export function unitHeader(unit) {
     const rounds = Math.max(...unit.slots.map((s) => s.sets));
     const rest = unit.slots[unit.slots.length - 1].rest ?? MOVE_SECONDS;
     return unit.slots.length > 1
-      ? `Pair ${unit.id} · back and forth · ${rounds} rounds · rest ${rest} s after each round`
+      ? `Pair ${unit.id} · back and forth · ${rounds} ${rounds === 1 ? "round" : "rounds"} · rest ${rest} s after each round`
       : `Pair ${unit.id} · rest ${rest} s between sets`;
   }
   const rest = unit.slots[0].rest;

@@ -13,7 +13,7 @@ import { dayState, openSwapSheet, removeSlot, openDoseSheet } from "./planedit.j
 import { soFarIn, neighboursIn, roleIn, restIn, rangeFor, weightLine } from "../planview.js";
 import { exercises, days, rirFor } from "../plan/plan-v2.js";
 import { cues } from "../plan/cues.js";
-import { setWord } from "../words.js";
+import { setWord, repWord } from "../words.js";
 import { videoFor } from "../plan/media.js";
 import { flip, photoNote, photoPair } from "./media.js";
 import { videoButton, machineRow } from "./exinfo.js";
@@ -26,9 +26,10 @@ export function repRange(ex, range = ex.range) {
   return lo === hi ? `${lo}` : `${lo}–${hi}`;
 }
 // "3 sets × 10–12 reps", "3 sets × 20–40 s hold", "3 sets × 8 reps each side"
+// " reps", " rep" for a range of exactly 1, " s hold" for a hold.
+const repUnit = (ex, range) => (ex.kind === "hold" ? " s hold" : ` ${range[0] === range[1] ? repWord(range[0]) : "reps"}`);
 export function doseParts(ex, sets, range = ex.range) {
-  const unit = ex.kind === "hold" ? " s hold" : " reps";
-  return [h("b", {}, String(sets)), ` ${setWord(sets)} × `, h("b", {}, repRange(ex, range)), `${unit}${ex.perSide ? " each side" : ""}`];
+  return [h("b", {}, String(sets)), ` ${setWord(sets)} × `, h("b", {}, repRange(ex, range)), `${repUnit(ex, range)}${ex.perSide ? " each side" : ""}`];
 }
 
 // The plan's own swaps, with the 0.4.1 notes ("only if the gym has it", "light").
@@ -99,7 +100,7 @@ export function openExerciseLayer(exId, ctx = null) {
     ];
   } else {
     maps = h("div", { class: "maps one" }, thisMap);
-    extra = h("p", { class: "small muted" }, `${inPlanText(exId)} · ${repRange(ex, rangeFor(model.doc(), exId))}${ex.kind === "hold" ? " s hold" : " reps"}${ex.perSide ? " each side" : ""}`);
+    extra = h("p", { class: "small muted" }, `${inPlanText(exId)} · ${repRange(ex, rangeFor(model.doc(), exId))}${repUnit(ex, rangeFor(model.doc(), exId))}${ex.perSide ? " each side" : ""}`);
   }
 
   const editable = !!(slot && view.canEdit);
