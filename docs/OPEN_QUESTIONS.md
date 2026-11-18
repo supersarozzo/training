@@ -6,6 +6,9 @@ Numbered so Rosario can answer "1 yes, 2 a". Move answered ones to the bottom wi
 
 17. On the first visit, check if the gym has: lat pulldown machine, seated row machine, leg curl machine, pec deck, calf raise machine. The plan works without them (cable versions are used). If they exist, the plan can use them. Also note the dumbbell steps (for example 2, 4, 6 kg or 2, 3, 4 kg). Since 2026-11-18 (answer 82 a) also check: an ankle strap for the cables (for the cable leg curl) and a step or block for calf raises. (A first-visit check, not a question to answer now.)
 
+85. Build step 2 (Plan day page): the 12 weeks sheet still says "As in the tables", but the print tables are gone. a) change the words to "Sets as shown on each day" (words only, not the plan); b) keep them. Recommended: a. Asked on the step page (docs/steps/2026-11-18-step2-page.html), 2026-11-18.
+86. Build step 2: on Friday, should the "Monday ›" arrow open next week's Monday? a) yes, keep it: the arrows move into the next or previous week (built this way; only Monday of week 1 and Friday of week 12 stay in the week); b) no, the arrows always stay inside the shown week. Recommended: a. Asked on the step page, 2026-11-18.
+
 ## Answered
 
 6. Main goal: build muscle. (2026-11-16)
