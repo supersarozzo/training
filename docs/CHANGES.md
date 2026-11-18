@@ -23,7 +23,8 @@ Machines instead of awkward moves (trainer decision D18) and "1 set", built by c
   machine is a new line in the first-visit check.
 - **A Tuesday or Friday you changed yourself is never rewritten.** If your saved Tuesday or Friday still has an old
   move in a place D18 changed, the Plan day asks once: **Use them** (only those places change, your sets and rest stay)
-  or **Keep mine** (nothing changes, never asked again).
+  or **Keep mine** (nothing changes, never asked again). A place you swap back to the old move yourself is never
+  offered again.
 - Past workouts and a workout that is running keep their own moves.
 - **"1 set", not "1 sets".** Every screen now writes "1 set" and "1 rep" for one.
 - New photos and form videos for the 4 new moves.

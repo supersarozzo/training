@@ -13,7 +13,7 @@ import { thumb } from "./media.js";
 import { icon } from "./icons.js";
 import { miniMap } from "./bodymap.js";
 import { viewDay, swapSheet, addSheet, exName, dayChanges, changedOn, rangeFor, rangeText, weightLine, workoutRunning, walkWords } from "../planview.js";
-import { withSets, setsForSlot, MIN_SETS, MAX_SETS, walkLimits, walkHint, withD18, d18Offer, D18_OFFER_KEY } from "../engine/planedits.js";
+import { withSets, setsForSlot, MIN_SETS, MAX_SETS, walkLimits, walkHint, withD18, D18_PLACE_KEY } from "../engine/planedits.js";
 import { machines } from "../plan/media.js";
 import { saveOfferAnswer } from "../prefs.js";
 import { nSets, repWord } from "../words.js";
@@ -72,9 +72,6 @@ export function undoToast(text, onUndo, ms = 8000) {
   toastTimer = setTimeout(() => { el.remove(); if (toastEl === el) toastEl = null; }, ms);
 }
 
-// The day's saved record (or null), for the D18 card check below.
-const recordOf = (day) => model.effectivePlanDay(day).record ?? null;
-
 // Run one save. On a refusal the plain-words message is shown and nothing changed. Returns true when it saved.
 function save(day, doneText, work) {
   let before;
@@ -82,16 +79,15 @@ function save(day, doneText, work) {
     before = savedSlots(day);
     work();
   } catch (e) { toast(e.message); return false; }
-  // A save on this app that puts an old D18 exercise back in a D18 place is Rosario's own choice: the D18 card must not
-  // offer to undo it (review round 1, checker). It counts as "Keep mine" only when the card would then offer nothing but
-  // those just-made choices; a Remove, an Add or a freed place never answers it (round 2, checker and auditor).
+  // A save on this app that puts an old D18 exercise back in a D18 place is Rosario's own choice: the D18 card never
+  // offers that place back (rounds 1 to 3). Only that place is answered; a Remove, an Add or a freed place answers nothing,
+  // and the card still offers the other places until Rosario answers it.
   const changes = Object.hasOwn(d18Changes, day) ? d18Changes[day] : null;
   if (changes) {
     const after = savedSlots(day);
     const exAt = (slots, slot) => slots.find((s) => s.slot === slot)?.ex;
     const chosen = Object.keys(changes).filter((slot) => exAt(after, slot) === changes[slot].from && exAt(before, slot) !== changes[slot].from);
-    const offer = chosen.length ? d18Offer(day, recordOf(day), {}) : null;
-    if (offer && offer.swaps.every((sw) => chosen.includes(sw.slot))) saveOfferAnswer(store, D18_OFFER_KEY(day), "kept");
+    for (const slot of chosen) saveOfferAnswer(store, D18_PLACE_KEY(day, slot, changes[slot].to), "kept");
   }
   closeSheets();
   rerender();

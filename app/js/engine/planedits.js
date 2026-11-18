@@ -289,6 +289,8 @@ export function machineOffers(dayId, record, settings, answered = {}) {
 // for the places that still hold D18's old exercise and can take the new one (not already elsewhere in the day).
 // None for the plan's own day, a tombstone, a day saved by a newer app, or an answered offer (`answered`, prefs.js).
 export const D18_OFFER_KEY = (dayId) => `${dayId}:D18:plan`;
+// One place Rosario put back to its old exercise (round 3, both reviewers): the card never offers it back.
+export const D18_PLACE_KEY = (dayId, slot, to) => `${dayId}:${slot}:${to}`;
 export function d18Offer(dayId, record, answered = {}) {
   const changes = isPlanDayId(dayId) ? d18Changes[dayId] : null;
   if (!changes || !isObj(record) || record.deleted === true) return null;
@@ -300,7 +302,7 @@ export function d18Offer(dayId, record, answered = {}) {
   const swaps = [];
   for (const s of eff.slots) {
     const c = own(changes, s.slot) ? changes[s.slot] : null;
-    if (c && s.ex === c.from && !inDay.has(c.to)) swaps.push({ slot: s.slot, from: c.from, to: c.to });
+    if (c && s.ex === c.from && !inDay.has(c.to) && !(answered && own(answered, D18_PLACE_KEY(dayId, s.slot, c.to)))) swaps.push({ slot: s.slot, from: c.from, to: c.to });
   }
   return swaps.length ? { key, swaps } : null;
 }

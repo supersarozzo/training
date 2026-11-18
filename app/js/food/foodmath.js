@@ -171,7 +171,7 @@ const okPiece = (g) => typeof g === "number" && Number.isFinite(g) && g >= PIECE
 // 125g"). Returns { n, unit } with the single unit ("bite"), or null: no count, a count of 1, or a weight or volume
 // ("100 g", "30 g serving", "8 fl. oz", "250 ml": the FIRST word after the number is a weight or volume). The words come
 // from the pack or Open Food Facts: data only, shown as text.
-const MEASURE = /^(g|gr|grs|gm|gms|grams?|grammes?|kg|mg|ml|cl|dl|l|lit(?:re|er)s?|millilit(?:re|er)s?|fl|oz|ounces?|lbs?|pounds?|pints?|kcal|cals?|calories?)$/i;
+const MEASURE = /^(g|gr|grs|gm|gms|grams?|grammes?|gramm|kg|mg|ml|cl|dl|l|lit(?:re|er)s?|millilit(?:re|er)s?|fl|oz|ounces?|lbs?|pounds?|pints?|kcal|kj|cals?|calories?)$/i;
 const IRREGULAR = { loaves: "loaf", halves: "half", leaves: "leaf" };
 function singularWord(w) {
   const lower = w.toLowerCase();
