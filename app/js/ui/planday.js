@@ -2,7 +2,8 @@
 // today with the real sets of this week. Base: builder A's day page; B's focus words, done ticks and the "Whole plan
 // check" card. Top: week chip (opens the 12 weeks), the gear. Then the day name with "Today", the day strip, focus and
 // meta line, the walk card first, pair headers in words, cards with a small body map, the "Whole plan check" card.
-// Day arrows at the bottom on a solid frosted bar above the tabs (answer 69 a). No big day map (answer 70 a).
+// No day arrows at the bottom since 0.6.0 (Rosario: the day strip at the top already picks the day). Plan is the plan to
+// edit and the overview; the workout starts from Today. Each card shows the weight to use (0.6.0). No big day map (70 a).
 // Read-only in this step: Edit comes with build steps 3 and 4. No Print (removed by Rosario, PRD F3).
 // All text through h(); no innerHTML; no style attributes.
 import { h } from "../h.js";
@@ -16,11 +17,11 @@ import { icon } from "./icons.js";
 import { onMount, stagger } from "./motion.js";
 import { miniMap } from "./bodymap.js";
 import { openExerciseLayer, doseParts } from "./exlayer.js";
-import { pageFor, muscleWords, stepDay } from "../engine/planpage.js";
+import { pageFor, muscleWords } from "../engine/planpage.js";
 import { ADDED_SLOTS, MAX_ADDED } from "../engine/planedits.js";
-import { viewDay, unitsIn, editedMinutes } from "../planview.js";
+import { viewDay, unitsIn, editedMinutes, rangeFor, weightLine } from "../planview.js";
 import { renderMuscleCheck } from "./musclecheck.js";
-import { dayState, openSwapSheet, openAddSheet, removeSlot, changedCard } from "./planedit.js";
+import { dayState, openSwapSheet, openAddSheet, removeSlot, changedCard, openDoseSheet } from "./planedit.js";
 
 // The page remembers the picked day and week while you stay on the tab; coming back to the tab opens today again.
 // `edit`: Edit mode (build step 4). It is page state: it ends when the day changes or the tab is left.
@@ -76,27 +77,31 @@ function walkCard(minutes, day) {
 }
 
 // `edit`: Edit mode, with Swap and Remove under the card. A swapped or added place carries a badge (build step 4).
-function exCard(day, week, slot, edit = false) {
+function exCard(doc, day, week, slot, edit = false) {
   const ex = exercises[slot.ex];
+  const range = rangeFor(doc, slot.ex);
+  const wl = weightLine(doc, slot.ex, week);
   const words = muscleWords(slot.ex);
   const added = ADDED_SLOTS.includes(slot.slot);
   const planned = days[day].slots.find((x) => x.slot === slot.slot);
   const badge = added ? "Added" : planned && planned.ex !== slot.ex ? "Swapped" : null;
   const card = h("button", {
     class: "pcard ex", type: "button",
-    "aria-label": `${ex.name}${badge ? ` (${badge.toLowerCase()})` : ""}: ${slot.sets} sets of ${ex.range[0] === ex.range[1] ? ex.range[0] : `${ex.range[0]} to ${ex.range[1]}`}${ex.kind === "hold" ? " seconds" : " reps"}${ex.perSide ? " each side" : ""}. ${words.card}. Open muscles, photos and tips.`,
+    "aria-label": `${ex.name}${badge ? ` (${badge.toLowerCase()})` : ""}: ${slot.sets} sets of ${range[0] === range[1] ? range[0] : `${range[0]} to ${range[1]}`}${ex.kind === "hold" ? " seconds" : " reps"}${ex.perSide ? " each side" : ""}. Weight: ${wl.text}. ${words.card}. Open muscles, photos and tips.`,
     onclick: () => openExerciseLayer(slot.ex, { day, week, slot: slot.slot }),
   },
   thumb(slot.ex),
   h("span", { class: "grow" },
     h("b", { class: "pc-name" }, ex.name, badge ? h("span", { class: "badge inline acc" }, badge) : null),
-    h("span", { class: "dose" }, doseParts(ex, slot.sets)),
+    h("span", { class: "dose" }, doseParts(ex, slot.sets, range)),
+    h("span", { class: `weight-line${wl.kg ? "" : " muted"}` }, wl.kg ? [h("b", {}, wl.text), wl.note === "Your weight, set in the Plan." ? " · yours" : ""] : wl.text),
     h("span", { class: "small muted" }, words.card)),
   miniMap(slot.ex),
   h("span", { class: "chev" }, icon("chevron", 18)));
   if (!edit) return card;
   return h("div", { class: "ecard" }, card,
     h("div", { class: "ebtns" },
+      h("button", { type: "button", "aria-label": `Change sets, reps or weight of ${ex.name}`, onclick: () => openDoseSheet(day, week, slot.slot) }, icon("edit", 18), "Change"),
       h("button", { type: "button", "aria-label": `Swap ${ex.name}`, onclick: () => openSwapSheet(day, week, slot.slot) }, icon("swap", 18), "Swap"),
       h("button", { type: "button", "aria-label": `Remove ${ex.name} from ${days[day].name}`, onclick: () => removeSlot(day, slot.slot) }, icon("close", 18), "Remove")));
 }
@@ -121,14 +126,10 @@ export function renderPlan() {
   const addedLeft = MAX_ADDED - slots.filter((x) => ADDED_SLOTS.includes(x.slot)).length;
   const dayWord = days[day].name;
   const isToday = day === page.todayDay && week === page.week;
-  const prev = stepDay(day, week, -1);
-  const next = stepDay(day, week, 1);
-  const toDay = (to) => { state.edit = false; state.day = to.day; state.week = to.week === page.week ? null : to.week; rerender(); };
-  const weekWords = (to) => (to.week === week ? "" : `, week ${to.week}`);
 
   const units = unitsIn(slots).map((u) => [
     h("div", { class: "unit-head" }, u.title),
-    u.slots.map((x) => exCard(day, week, x, edit)),
+    u.slots.map((x) => exCard(doc, day, week, x, edit)),
   ]);
   const addButton = edit ? (addedLeft > 0
     ? h("button", { class: "button secondary add-ex", type: "button", onclick: () => openAddSheet(day, week) }, icon("plus", 20), `Add an exercise (${addedLeft} of ${MAX_ADDED} left)`)
@@ -174,13 +175,11 @@ export function renderPlan() {
         h("span", { class: "grow" }, h("b", {}, "Whole plan check"), h("span", { class: "small muted" }, "Weekly sets per muscle, Monday to Friday")),
         h("span", { class: "chev" }, icon("chevron", 18))),
       h("p", { class: "small muted center" }, "Tap an exercise for its muscles, photos and tips.")));
-  main.className = "screen has-bar plan-screen";
+  main.className = edit ? "screen has-bar plan-screen" : "screen plan-screen";
   onMount(() => stagger(main.querySelectorAll(".pcard")));
 
-  const bar = h("div", { class: "bar action-bar day-bar" }, h("div", { class: "bar-inner" }, edit
-    ? h("button", { class: "button", type: "button", onclick: () => { state.edit = false; rerender(); } }, icon("check", 22), "Done editing")
-    : h("nav", { class: "day-nav", "aria-label": "Other days" },
-      h("button", { class: "button secondary", type: "button", onclick: () => toDay(prev), "aria-label": `Previous day: ${days[prev.day].name}${weekWords(prev)}` }, icon("back", 20), days[prev.day].name),
-      h("button", { class: "button secondary", type: "button", onclick: () => toDay(next), "aria-label": `Next day: ${days[next.day].name}${weekWords(next)}` }, days[next.day].name, icon("chevron", 20)))));
+  if (!edit) return main;
+  const bar = h("div", { class: "bar action-bar day-bar" }, h("div", { class: "bar-inner" },
+    h("button", { class: "button", type: "button", onclick: () => { state.edit = false; rerender(); } }, icon("check", 22), "Done editing")));
   return [main, bar];
 }

@@ -11,3 +11,16 @@
 }
 .settings-btn:active { transform: scale(.96); }
 .screen > .settings-btn + .eyebrow { padding-right: 120px; min-height: 22px; display: block; }
+
+/* Plan cards: the weight to use under sets × reps. */
+.pcard .weight-line { display: block; font-size: 14px; color: var(--text-primary); }
+.pcard .weight-line.muted { color: var(--text-muted); }
+
+/* Edit mode: three buttons under a card (Change, Swap, Remove). */
+.ebtns button { min-width: 0; padding-left: 6px; padding-right: 6px; }
+
+/* Opened exercise: 5 tiles (Sets, Reps, Weight, Rest, Stop with) in rows of 3. */
+.ex-tiles { grid-template-columns: repeat(3, 1fr); }
+
+/* Change sheet: low and high reps one under the other (side by side hid the numbers at 375 px). */
+.dose-pair { display: grid; gap: 8px; }

@@ -17,8 +17,17 @@ export function bodyMap(levels, { view = "both", label = null, cls = "" } = {}) 
     role: label ? "img" : null, "aria-label": label, "aria-hidden": label ? null : "true", focusable: "false",
   }, parts.map(([id, d]) => {
     const g = partMuscle(id);
-    return s("path", { d, class: g ? `l${levels[g] ?? 0}` : "body" });
+    return s("path", { d, class: g ? `l${levelOf(levels, g)}` : "body" });
   }));
+}
+
+// In the drawing the big front shoulder cap is the "side" part and the front part is a thin strip, so a press (front
+// shoulders) looked weaker than a lateral raise. Both shoulder parts show the higher of the two (0.6.0, muscle-map check
+// docs/research/2026-11-18-muscle-map-check.md). The counts and the words are not changed.
+const SHOULDER_CAP = new Set(["front_delts", "side_delts"]);
+export function levelOf(levels, group) {
+  if (SHOULDER_CAP.has(group)) return Math.max(levels.front_delts ?? 0, levels.side_delts ?? 0);
+  return levels[group] ?? 0;
 }
 
 // The legend: one scale in 3 steps, with words (mock-up).

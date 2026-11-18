@@ -5,11 +5,12 @@
 // Below, unchanged from the 0.4.1 exercise sheet: the moving photo, start and end photos, How to do it, the video link,
 // the machine row; plus "The plan's own swap". It reads the day as it is trained (a saved Plan edit included). From a
 // Plan day that can be edited, Swap and Remove sit at the top beside Video (build step 4).
+// 0.6.0 (Rosario): the photo comes first, the muscle maps underneath; a Weight tile; Change (sets, reps, weight).
 import { h } from "../h.js";
 import { openSheet, closeSheets } from "./parts.js";
 import { model, rerender } from "./app.js";
-import { dayState, openSwapSheet, removeSlot } from "./planedit.js";
-import { soFarIn, neighboursIn, roleIn, restIn } from "../planview.js";
+import { dayState, openSwapSheet, removeSlot, openDoseSheet } from "./planedit.js";
+import { soFarIn, neighboursIn, roleIn, restIn, rangeFor, weightLine } from "../planview.js";
 import { exercises, days, rirFor } from "../plan/plan-v2.js";
 import { cues } from "../plan/cues.js";
 import { videoFor } from "../plan/media.js";
@@ -19,14 +20,14 @@ import { icon } from "./icons.js";
 import { bodyMap, mapLegend } from "./bodymap.js";
 import { exerciseLevels, muscleWords, planDaysOf } from "../engine/planpage.js";
 
-export function repRange(ex) {
-  const [lo, hi] = ex.range;
+export function repRange(ex, range = ex.range) {
+  const [lo, hi] = range;
   return lo === hi ? `${lo}` : `${lo}–${hi}`;
 }
 // "3 sets × 10–12 reps", "3 sets × 20–40 s hold", "3 sets × 8 reps each side"
-export function doseParts(ex, sets) {
+export function doseParts(ex, sets, range = ex.range) {
   const unit = ex.kind === "hold" ? " s hold" : " reps";
-  return [h("b", {}, String(sets)), " sets × ", h("b", {}, repRange(ex)), `${unit}${ex.perSide ? " each side" : ""}`];
+  return [h("b", {}, String(sets)), " sets × ", h("b", {}, repRange(ex, range)), `${unit}${ex.perSide ? " each side" : ""}`];
 }
 
 // The plan's own swaps, with the 0.4.1 notes ("only if the gym has it", "light").
@@ -45,6 +46,10 @@ export function inPlanText(exId) {
 }
 
 const tile = (label, value, note) => h("div", { class: "ex-tile" }, h("span", { class: "eyebrow" }, label), h("b", {}, value), note ? h("small", {}, note) : null);
+
+// The Weight tile: "40 kg" (with "yours" when set in the Plan), "Body" for body-weight work, "Find it" before any log.
+const weightTile = (wl) => (wl.kg ? tile("Weight", wl.text, wl.note === "Your weight, set in the Plan." ? "yours" : null)
+  : wl.text === "Your body weight" ? tile("Weight", "Body", "weight") : wl.text.startsWith("No weight") ? tile("Weight", "–", "a hold") : tile("Weight", "Find it", "start light"));
 
 export function openExerciseLayer(exId, ctx = null) {
   const ex = exercises[exId];
@@ -75,7 +80,8 @@ export function openExerciseLayer(exId, ctx = null) {
     extra = [
       h("div", { class: "ex-tiles" },
         tile("Sets", String(slot.sets)),
-        tile("Reps", repRange(ex), ex.kind === "hold" ? "seconds" : ex.perSide ? "each side" : null),
+        tile("Reps", repRange(ex, rangeFor(model.doc(), exId)), ex.kind === "hold" ? "seconds" : ex.perSide ? "each side" : null),
+        weightTile(weightLine(model.doc(), exId, ctx.week)),
         tile("Rest", rest.value, rest.note),
         tile("Stop with", Array.isArray(rir) ? `${rir[0]}–${rir[1]}` : String(rir), "reps left")),
       h("div", { class: "layer-nav" },
@@ -86,7 +92,7 @@ export function openExerciseLayer(exId, ctx = null) {
     ];
   } else {
     maps = h("div", { class: "maps one" }, thisMap);
-    extra = h("p", { class: "small muted" }, `${inPlanText(exId)} · ${repRange(ex)}${ex.kind === "hold" ? " s hold" : " reps"}${ex.perSide ? " each side" : ""}`);
+    extra = h("p", { class: "small muted" }, `${inPlanText(exId)} · ${repRange(ex, rangeFor(model.doc(), exId))}${ex.kind === "hold" ? " s hold" : " reps"}${ex.perSide ? " each side" : ""}`);
   }
 
   const editable = !!(slot && view.canEdit);
@@ -98,13 +104,14 @@ export function openExerciseLayer(exId, ctx = null) {
     h("p", { class: "small muted layer-equip" }, ex.equipment),
     video || editable ? h("div", { class: "chips layer-chips" },
       video ? videoButton(exId, { chip: true }) : null,
+      editable ? h("button", { class: "chip", type: "button", "aria-label": `Change sets, reps or weight of ${ex.name}`, onclick: () => openDoseSheet(ctx.day, ctx.week, ctx.slot) }, icon("edit", 18), "Change") : null,
       editable ? h("button", { class: "chip", type: "button", "aria-label": `Swap ${ex.name}`, onclick: () => openSwapSheet(ctx.day, ctx.week, ctx.slot) }, icon("swap", 18), "Swap") : null,
       editable ? h("button", { class: "chip", type: "button", "aria-label": `Remove ${ex.name} from ${days[ctx.day].name}`, onclick: () => removeSlot(ctx.day, ctx.slot) }, icon("close", 18), "Remove") : null) : null,
+    flip(exId, { cls: "big-flip", tag: true }),
+    photoNote(exId),
     maps,
     mapLegend(),
     extra,
-    flip(exId, { cls: "big-flip", tag: true }),
-    photoNote(exId),
     photoPair(exId),
     h("h3", {}, "How to do it"),
     h("p", {}, cues[exId] ?? "Move slowly and keep good form."),
