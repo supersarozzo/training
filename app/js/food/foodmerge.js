@@ -51,7 +51,9 @@ function time(r) {
 }
 
 // True when a food record was changed after `since` (an ISO time).
-export function foodChangesSince(doc, since) {
+// `until`: as hasChangesSince (merge.js).
+export function foodChangesSince(doc, since, until) {
   const limit = since ? Date.parse(since) : -Infinity;
-  return FOOD_LISTS.some((k) => (doc[k] ?? []).some((r) => time(r) > limit));
+  const upper = until ? Date.parse(until) : Infinity;
+  return FOOD_LISTS.some((k) => (doc[k] ?? []).some((r) => { const t = time(r); return t > limit && t <= upper; }));
 }

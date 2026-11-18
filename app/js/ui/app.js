@@ -2,6 +2,7 @@
 import { createStore } from "../store.js";
 import { createModel } from "../model.js";
 import { now } from "../clock.js";
+import { withSaveSignal, noteSaved } from "../autosync.js";
 
 function pickStorage() {
   try {
@@ -14,7 +15,10 @@ function pickStorage() {
   }
 }
 
-export const store = createStore(pickStorage());
+// Two handles on the same box (0.7.2, automatic sync): the syncer saves its merge results through the plain one;
+// everything else saves through `store`, whose saves start the automatic sync's quiet time (autosync.js).
+export const syncStore = createStore(pickStorage());
+export const store = withSaveSignal(syncStore, noteSaved);
 export const model = createModel(store, now);
 
 let redraw = () => {};

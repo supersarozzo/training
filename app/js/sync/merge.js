@@ -78,9 +78,11 @@ export function mergeDocs(a, b) {
 }
 
 // True when the document holds a record or setting newer than `since` (an ISO time). Used to decide if a sync is due.
-export function hasChangesSince(doc, since) {
+// `until` (optional, 0.7.2 review M3): records dated after it (another phone's clock far ahead) do not count.
+export function hasChangesSince(doc, since, until) {
   const limit = since ? Date.parse(since) : -Infinity;
-  const newer = (r) => time(r) > limit;
+  const upper = until ? Date.parse(until) : Infinity;
+  const newer = (r) => { const t = time(r); return t > limit && t <= upper; };
   if (SINGLES.some((k) => isObj(doc[k]) && newer(doc[k]))) return true;
   return LISTS.some((k) => (doc[k] ?? []).some(newer));
 }

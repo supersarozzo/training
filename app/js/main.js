@@ -12,14 +12,15 @@ import { renderWorkout } from "./ui/workout.js";
 import { renderWeighin } from "./ui/weighin.js";
 import { renderWeekly } from "./ui/weekly.js";
 import { tabBar, errorState } from "./ui/parts.js";
-import { model, setRedraw } from "./ui/app.js";
+import { model, setRedraw, store } from "./ui/app.js";
 import { clearTickers } from "./timer.js";
 import { closeSheets, openSheet } from "./ui/parts.js";
 import { setSoundOn } from "./sound.js";
 import { soundOn } from "./active.js";
 import { registerWorker, updateBanner } from "./ui/update.js";
 import { syncer } from "./syncer.js";
-import { startAutoSync } from "./autosync.js";
+import { startAutoSync, onDataSaved, redrawAfterSync } from "./autosync.js";
+import { syncProblem } from "./sync/sync.js";
 import { getActive } from "./active.js";
 import { watchStoreErrors } from "./errors.js";
 import { resetSyncDraft } from "./ui/settings-sync.js";
@@ -95,8 +96,11 @@ setRedraw(render);
 window.addEventListener("hashchange", render);
 render();
 registerWorker();
-// Sync when the app opens, comes to the front, or gets signal back. Never during a workout.
-startAutoSync({ syncer, win: window, inWorkout: () => getActive() !== null });
-// When a sync ends, redraw the quiet screens so the status line is right (never a workout or a form being filled in).
-// The Diet tab redraws after a sync only when no sheet or scanner is open (a redraw closes them: typed text would be lost).
-syncer.subscribe(() => { if (["#/today", "#/settings", "#/progress"].includes(location.hash) || location.hash === "" || (location.hash === "#/diet" && !document.querySelector("[data-sheet], [data-scan]"))) render(); });
+// Automatic sync (0.7.2): about 10 s after a change, on going to the background, when the app opens or comes to the
+// front with something not sent, and on signal back. Never during a workout (Finish syncs). After a failed sync it
+// backs off (syncProblem reads the saved result).
+const auto = startAutoSync({ syncer, win: window, inWorkout: () => getActive() !== null, problem: () => syncProblem(store.loadDevice()) });
+onDataSaved(auto.changed);
+// When a sync ends, redraw the quiet screens so the status line is right (never a workout, a sheet or the scanner,
+// never while a field is being typed in: autosync.js redrawAfterSync).
+syncer.subscribe(() => { if (redrawAfterSync(location.hash, document)) render(); });

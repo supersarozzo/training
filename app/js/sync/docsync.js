@@ -25,6 +25,8 @@ const storeCode = (e) => (e && e.code === "full" ? "full" : "local_problem");
 //   commitMessage(startedAt)
 // }
 // device = { loadDevice(), saveDevice(d) } (the device box: the key and the sync state)
+const AHEAD_MS = 10 * 60 * 1000;
+
 export function createDocSyncer({ kind, device, getFetch, nowIso = () => new Date().toISOString() }) {
   let running = null;
   let again = null;
@@ -126,13 +128,17 @@ export function createDocSyncer({ kind, device, getFetch, nowIso = () => new Dat
   return {
     request,
     isRunning: () => running !== null,
+    // The saved result of the last sync of this file (both.js: a stuck food file does not count as "not sent").
+    lastResult: () => device.loadDevice()[K.result] ?? null,
     subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
     isConfigured: () => kind.connection(device.loadDevice()) !== null,
-    // Is there something on the phone that was changed after the last good sync?
+    // Is there something on the phone that was changed after the last good sync? A record dated more than 10 minutes
+    // ahead came from a phone whose clock is wrong: it is not this phone's change, and counting it would say "Not sent
+    // yet" for ever and sync on every front (0.7.2 review M3). This phone's own changes carry its own time.
     hasUnsynced() {
       const dev = device.loadDevice();
       if (!kind.connection(dev)) return false;
-      return kind.changesSince(kind.load(), dev[K.at]);
+      return kind.changesSince(kind.load(), dev[K.at], new Date(Date.parse(nowIso()) + AHEAD_MS).toISOString());
     },
   };
 }

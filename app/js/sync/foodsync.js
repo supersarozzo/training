@@ -53,12 +53,15 @@ export function createFoodSyncer({ store, foodStore, getFetch, nowIso = () => ne
 }
 
 // A short line for the Diet tab. `unsynced` = food changed after the last good food sync.
-export function foodStatusText(device, unsynced = false, place = "elsewhere") {
+// 0.7.2 (review M4): the same words and order as the workout line (sync.js statusText): a problem, then "not sent
+// yet, will send automatically", then "Food synced 12:25." (today) or "Food synced 18 Nov, 12:25.".
+export function foodStatusText(device, unsynced = false, place = "elsewhere", now = new Date()) {
   if (!connectionOf(device)) return place === "settings" ? FOOD_MESSAGES.not_set_up_here : FOOD_MESSAGES.not_set_up;
   const r = device[RESULT];
   if (r && r !== "ok") return FOOD_MESSAGES[r] ?? FOOD_MESSAGES.error;
+  if (unsynced) return "Food: not sent yet, will send automatically.";
   if (!device[AT]) return "Food: GitHub is set up. Not synced yet.";
   const when = new Date(device[AT]);
-  const text = `Food synced ${when.toLocaleDateString(undefined, { day: "numeric", month: "short" })}, ${when.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}.`;
-  return unsynced ? `${text} Newer food not sent yet.` : text;
+  const time = when.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  return when.toDateString() === now.toDateString() ? `Food synced ${time}.` : `Food synced ${when.toLocaleDateString(undefined, { day: "numeric", month: "short" })}, ${time}.`;
 }

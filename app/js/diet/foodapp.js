@@ -5,6 +5,7 @@ import { createFoodModel } from "../food/foodmodel.js";
 import { createOff } from "../food/off.js";
 import { APP_VERSION } from "../version.js";
 import { now } from "../clock.js";
+import { withSaveSignal, noteSaved } from "../autosync.js";
 
 function pickStorage() {
   try {
@@ -17,7 +18,9 @@ function pickStorage() {
   }
 }
 
-export const foodStore = createFoodStore(pickStorage());
+// As in ui/app.js (0.7.2): the food syncer uses the plain handle, the screens the signalling one.
+export const foodSyncStore = createFoodStore(pickStorage());
+export const foodStore = withSaveSignal(foodSyncStore, noteSaved);
 export const food = createFoodModel(foodStore, now);
 // The only network call of the Diet tab besides the syncer. Only a barcode number or a typed word is sent.
 export const off = createOff({ fetch: (...args) => fetch(...args), version: APP_VERSION });

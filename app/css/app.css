@@ -869,3 +869,10 @@ button.pcard:active { transform: scale(.98); }
 .ccrow.part .top b { font-size: 15px; font-weight: 600; }
 .ccrow.part .num { font-size: 17px; }
 /* ===== end of build step 5 ===== */
+
+/* Settings > GitHub sync: the "More" fold with Get and Send (0.7.2, automatic sync) */
+.more-fold > summary { min-height: var(--tap-min); display: flex; align-items: center; gap: var(--s2); cursor: pointer; color: var(--text-muted); font-weight: 600; list-style: none; }
+.more-fold > * + * { margin-top: var(--s2); }
+.more-fold > summary::-webkit-details-marker { display: none; }
+.more-fold > summary::after { content: "▸"; font-size: 14px; }
+.more-fold[open] > summary::after { content: "▾"; }

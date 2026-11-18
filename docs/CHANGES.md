@@ -2,6 +2,24 @@
 
 What is new in each app version, in plain words. Newest first. Older versions: see `docs/HANDOVER.md` and the git log.
 
+## 0.7.2 · 2026-11-18
+
+Automatic sync, built by chat 8.39 on top of 0.7.1. Not pushed yet.
+
+- The app sends your changes to GitHub by itself while it is open: about 10 seconds after you change something, and
+  when you leave the app. A burst of changes is sent as one. You do not need to press anything.
+- It can not send while the app is closed: that is an iPhone limit. Open the app and it sends what is waiting.
+- During a workout nothing is sent; the workout goes when you finish it, as before.
+- No signal: nothing changes for you ("Saved on phone"). It sends when the signal is back or the next time you open the app.
+- Settings is simpler: one line says "Synced 12:25", "Not sent yet, will send automatically" or the problem in plain
+  words, and one button says "Sync now". "Get from GitHub" and "Send to GitHub" are still there, under "More".
+- Today's sync line uses the same words. The food line in Settings and on the Diet tab says "Food synced 12:25." or
+  "Food: not sent yet, will send automatically."
+- When a sync fails, the app does not keep trying every few seconds. It tries again when you open the app or come
+  back to it, when the signal is back, or when you tap "Sync now". If the GitHub key is wrong or the GitHub file
+  looks damaged, it waits until you tap "Sync now" or save a new key. The line says what is wrong.
+- Closing the app sends once, not twice. While you type in Settings, a finished sync no longer closes the keyboard.
+
 ## 0.7.1 · 2026-11-18
 
 Leftovers wave, built by chat 8.39 on top of 0.7.0. The trainer (8.37) decided every training rule. Not pushed yet.

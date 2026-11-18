@@ -18,6 +18,7 @@ let draft = null; // { owner, repo, token, expires } while the form is open
 let message = null; // { kind: "ok" | "error", text }
 let busy = null; // label of what is running
 let fakeHint = null; // text shown on localhost in fake mode only
+let moreOpen = false; // the "More" fold stays open across redraws (a sync ending redraws Settings)
 
 fakeInfo().then((info) => { if (info) { fakeHint = `Test mode (pretend GitHub). Account: ${info.fake.owner}. Key: ${info.token}.`; rerender(); } });
 
@@ -84,6 +85,8 @@ const getNow = () => run("get", async () => {
 });
 export { getNow as getFromGithub };
 const sendNow = () => run("send", async () => syncOutcome(await syncer.request("full"), "Synced: the phone and GitHub now have the same data."));
+// "Sync now" (0.7.2): the same full sync the app runs by itself (get, merge, send), at once.
+const syncNow = () => run("sync", async () => syncOutcome(await syncer.request("full"), "Synced: the phone and GitHub now have the same data."));
 
 function confirmForget() {
   const close = openSheet(
@@ -105,14 +108,17 @@ export function syncCard() {
     // Food has its own line (0.7.1), as on the Diet tab, so a failed food.json never hides behind "Synced".
     !busy && connectionOf(device) ? h("p", { class: device.food_last_sync_result && device.food_last_sync_result !== "ok" ? "small status-warning" : "small muted" }, foodWords(foodStatusText(device, foodUnsynced(), "settings"))) : null,
     ends ? h("p", { class: "status-warning" }, ends.days < 0 ? `The GitHub key ended on ${ends.date}. Make a new one.` : `The GitHub key ends on ${ends.date}.`) : null,
-    h("p", { class: "small muted" }, "Your data syncs to your private GitHub repo when you save a workout and when you open the app. It can not sync while the app is closed."),
-    connectionFields(),
+    h("p", { class: "small muted" }, "While the app is open, it sends your changes to your private GitHub repo by itself, about 10 seconds after a change, and when you leave the app. It can not sync while the app is closed (an iPhone limit). A workout is sent when you finish it."),
     message ? h("div", { class: message.kind === "error" ? "error-text" : "status-success", role: "status" }, message.text) : null,
-    h("button", { class: "button", type: "button", disabled, onclick: saveAndTest }, configured ? "Save and test connection" : "Connect to GitHub"),
+    configured ? h("button", { class: "button", type: "button", disabled, onclick: syncNow }, "Sync now") : null,
+    connectionFields(),
+    h("button", { class: configured ? "button secondary" : "button", type: "button", disabled, onclick: saveAndTest }, configured ? "Save and test connection" : "Connect to GitHub"),
     configured ? [
-      h("button", { class: "button secondary", type: "button", disabled, onclick: getNow }, "Get from GitHub"),
-      h("button", { class: "button secondary", type: "button", disabled, onclick: sendNow }, "Send to GitHub"),
-      h("p", { class: "small muted" }, "Both buttons merge. Neither one overwrites anything."),
+      // Kept, so nothing is lost (0.7.2): the two old buttons, folded away.
+      h("details", { class: "more-fold", open: moreOpen, ontoggle: (e) => { moreOpen = e.target.open; } }, h("summary", {}, "More"),
+        h("button", { class: "button secondary", type: "button", disabled, onclick: getNow }, "Get from GitHub"),
+        h("button", { class: "button secondary", type: "button", disabled, onclick: sendNow }, "Send to GitHub"),
+        h("p", { class: "small muted" }, "Both buttons merge. Neither one overwrites anything.")),
       h("button", { class: "button secondary", type: "button", disabled, onclick: confirmForget }, "Forget GitHub key"),
     ] : null);
 }

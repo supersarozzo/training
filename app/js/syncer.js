@@ -1,10 +1,10 @@
 // The page's one syncer. On localhost only, `?fake-github=1` swaps the network for the pretend GitHub
 // (js/sync/fake-github.js), so the sync screens can be tested by hand. On a real phone it is always the real network.
-import { store } from "./ui/app.js";
+import { syncStore } from "./ui/app.js";
 import { createSyncer } from "./sync/sync.js";
 import { createFoodSyncer } from "./sync/foodsync.js";
 import { combineSyncers } from "./sync/both.js";
-import { foodStore } from "./diet/foodapp.js";
+import { foodSyncStore } from "./diet/foodapp.js";
 
 export function fakeActive() {
   try {
@@ -40,6 +40,7 @@ function getFoodFetch() {
   return async (...args) => (await fakeGithub()).foodFake.fetch(...args);
 }
 
-// The page's one syncer runs two files: progress.json, then food.json (sync/both.js).
-export const syncer = combineSyncers(createSyncer({ store, getFetch }), createFoodSyncer({ store, foodStore, getFetch: getFoodFetch }));
+// The page's one syncer runs two files: progress.json, then food.json (sync/both.js). It saves through the plain
+// store handles, so its own merge saves never start the automatic sync again (0.7.2, autosync.js).
+export const syncer = combineSyncers(createSyncer({ store: syncStore, getFetch }), createFoodSyncer({ store: syncStore, foodStore: foodSyncStore, getFetch: getFoodFetch }));
 if (fakeActive()) fakeGithub();

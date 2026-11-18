@@ -123,14 +123,30 @@ export function createSyncer({ store, getFetch, nowIso = () => new Date().toISOS
 // ---------- plain-words status for the screens (pure) ----------
 
 // A short line for Today and Settings. `unsynced` = something changed after the last good sync.
-export function statusText(device, unsynced = false, place = "elsewhere") {
+// 0.7.2 (automatic sync): a problem in words first; then "Not sent yet, will send automatically."; then
+// "Synced 12:25." (today) or "Synced 18 Nov, 12:25." (another day). `now` is for tests.
+export const NOT_SENT_YET = "Not sent yet, will send automatically.";
+
+// Back-off for automatic sync (0.7.2, Training Agent), from the saved workout result (the one the status line shows):
+// "none" = no problem; "wait" = a wrong key, no access or a damaged GitHub file: nothing automatic until "Sync now" or
+// a new key (saveConnection clears the result); "retry" = any other problem: open, front, signal back or "Sync now"
+// try again, never the 10 s quiet time or the way out. A food problem does not stop the workout sync.
+const WAIT_FOR_PERSON = new Set(["auth", "no_access", "broken_remote"]);
+export function syncProblem(device) {
+  const r = device?.last_sync_result;
+  if (!r || r === "ok" || r === "not_set_up") return "none";
+  return WAIT_FOR_PERSON.has(r) ? "wait" : "retry";
+}
+export function statusText(device, unsynced = false, place = "elsewhere", now = new Date()) {
   if (!connectionOf(device)) return place === "settings" ? MESSAGES.not_set_up_here : MESSAGES.not_set_up;
   const r = device.last_sync_result;
   if (r && r !== "ok") return MESSAGES[r] ?? MESSAGES.error;
+  if (unsynced) return NOT_SENT_YET;
   if (!device.last_sync_at) return "GitHub is set up. Not synced yet.";
   const when = new Date(device.last_sync_at);
-  const text = `Synced ${when.toLocaleDateString(undefined, { day: "numeric", month: "short" })}, ${when.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}.`;
-  return unsynced ? `${text} Newer changes not sent yet.` : text;
+  const time = when.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  const sameDay = when.toDateString() === now.toDateString();
+  return sameDay ? `Synced ${time}.` : `Synced ${when.toLocaleDateString(undefined, { day: "numeric", month: "short" })}, ${time}.`;
 }
 
 // The GitHub key ends soon (within 14 days) or has ended: { date, days } (days is negative when it has ended), else null.
