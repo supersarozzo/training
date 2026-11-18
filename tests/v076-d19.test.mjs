@@ -267,3 +267,39 @@ test("B-4 the plan data has a floor for every weighted exercise and none for bod
   }
   assert.ok(body, "fake page ready");
 });
+
+// ---------- trainer answers to 8.43 (commit 68d7f32) ----------
+
+// Answer 1: after a pain swap that starts at the floor, the card uses at least 3 reps left and one combined note.
+function painCard(swapKg) {
+  const doc = docWith(DB, [done("2026-11-16", "face_pull", 10, [12, 12, 12])]);
+  doc.block.start_monday = "2026-11-09";
+  const s = {
+    id: "s-20261118-tue-pain", updated_at: "2026-11-18T08:00:00.000Z", date: "2026-11-18", plan_day: "tue", week: 2, kind: "full", swapped_from: null,
+    status: "in_progress", started_at: "2026-11-18T08:00:00.000Z", finished_at: null, walk: null, note: "",
+    exercises: [{ slot: "B2", plan_exercise: "face_pull", done_exercise: "rear_delt_raise", swap_reason: "hurts", swap_weight_kg: swapKg, note: "Shoulder", planned_sets: 3, planned_rest: 90, sets: [] }],
+  };
+  doc.sessions.push(s);
+  store.save(doc);
+  store.saveDevice({});
+  setActive({ session_id: s.id, phase: "weights", rest: null, hold: null });
+  globalThis.location.hash = "#/workout";
+  const out = renderWorkout();
+  clearActive();
+  return (Array.isArray(out) ? out : [out]).map((x) => x.textContent).join(" ");
+}
+
+test("A-1 a pain swap that starts at the floor: one combined note and stop with 3 reps left (trainer answer 1)", () => {
+  const text = painCard(2); // the lightest dumbbell in [2, 4, 6]
+  assert.ok(text.includes("You swapped because it hurt. Lightest weight already: stop with 3 reps left today."));
+  assert.ok(!text.includes("Start light."), "one note, not two");
+  assert.match(text, /stop with 3 left/);
+  assert.ok(!/stop with 2 left/.test(text));
+});
+
+test("A-2 a pain swap above the floor keeps the old warning and the week's reps left", () => {
+  const text = painCard(4);
+  assert.ok(text.includes("You swapped because it hurt. Start light."));
+  assert.ok(!text.includes("Lightest weight already"));
+  assert.match(text, /stop with 2 left/);
+});
