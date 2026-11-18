@@ -99,8 +99,8 @@ export function renderProgress() {
           h("table", { class: "hist" },
             h("thead", {}, h("tr", {}, h("th", {}, "Date"), h("th", {}, "Sets"))),
             h("tbody", {}, recent.map((x) => {
-              const rec = x.exercises.find((r) => r.done_exercise === id && workSets(r).length);
-              return h("tr", {}, h("td", {}, shortDate(dayNumber(x.date))), h("td", {}, workSets(rec).map((w) => setText(id, w)).join(" · ")));
+              const sets = x.exercises.filter((r) => r.done_exercise === id).flatMap((r) => workSets(r)); // every record (review R8)
+              return h("tr", {}, h("td", {}, shortDate(dayNumber(x.date))), h("td", {}, sets.map((w) => setText(id, w)).join(" · ")));
             })))) : null,
       ];
     }))

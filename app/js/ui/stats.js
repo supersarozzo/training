@@ -10,10 +10,11 @@ const kindOf = (exId) => {
 };
 
 // The working sets of the newest finished workout that has this exercise: [{ weight_kg, reps, seconds }].
+// Every record of the exercise in that workout counts (a swap A -> B -> back to A gives two records; review R8).
 export function previousSets(sessions, exId) {
   for (const s of finishedSessions(sessions)) {
-    const rec = s.exercises.find((r) => r.done_exercise === exId && workSets(r).length);
-    if (rec) return workSets(rec).map((x) => ({ weight_kg: x.weight_kg ?? 0, reps: x.reps ?? null, seconds: x.seconds ?? null }));
+    const all = s.exercises.filter((r) => r.done_exercise === exId).flatMap((r) => workSets(r));
+    if (all.length) return all.map((x) => ({ weight_kg: x.weight_kg ?? 0, reps: x.reps ?? null, seconds: x.seconds ?? null }));
   }
   return [];
 }
