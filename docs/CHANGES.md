@@ -6,7 +6,7 @@ What is new in each app version, in plain words. Newest first. Older versions: s
 
 The Diet part of the Plan, Gym and Diet redesign (build steps 6, 7 and 8 of `redesign/plan-diet/judge/JUDGING.md`
 section 7), built by chat 8.38 on top of 0.6.0. Rosario's answers 62, 63 a, 64 a, 76 b, 77 b, 78 a, 79 a.
-0.6.0 is already on GitHub; 0.7.0 is not pushed until Rosario types "push": that one push sends 0.7.0.
+Pushed on Rosario's "push" (0.6.0 was already live).
 
 **A Diet tab** (5 tabs now: Today · Plan · Gym · Diet · Progress)
 - Today's food against your targets: two rings, protein first, then calories ("76 g to go", "1,550 kcal left"),
