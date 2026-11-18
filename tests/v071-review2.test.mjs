@@ -84,3 +84,25 @@ test("D12-W2 week 2 and later: the first-try note says to change the weight one 
     assert.equal(weightLine(doc, "chest_press", week).note, FIRST_TRY_NOTE_LATER, "the Plan card says the same");
   }
 });
+
+// R7  Checker round 1, finding 1 (closed late, in round 3): two rules had no test, so a later "fix" could change them
+//     unseen. They already work; these tests lock them in.
+import { planForSession } from "../app/js/engine/schedule.js";
+import { performances } from "../app/js/engine/workout.js";
+import { nextSuggestion } from "../app/js/engine/progression.js";
+import { days } from "../app/js/plan/plan-v2.js";
+
+test("R7-1 a workout saved without planned_sets keeps its old sets: Monday week 8, D = 2 and Abs1 = 3", () => {
+  const ex = (slot) => days.mon.slots.find((x) => x.slot === slot).ex;
+  const old = { plan_day: "mon", week: 8, exercises: ["D", "Abs1"].map((slot) => ({ slot, done_exercise: ex(slot), exercise: ex(slot), sets: [] })) };
+  assert.deepEqual(planForSession(old).slots.map((x) => [x.slot, x.sets]), [["D", 2], ["Abs1", 3]]);
+});
+
+test("R7-2 a stop with 0 work sets is skipped: two stops below the range around it still give one step lighter", () => {
+  const fin = (date, reps, stoppedAfter) => ({ id: `s-${date}`, date, status: "finished", plan_day: "mon", week: 3,
+    started_at: `${date}T08:00:00.000Z`, finished_at: `${date}T10:00:00.000Z`,
+    exercises: [{ slot: "A1", done_exercise: "chest_press", sets: reps.map((r) => ({ type: "work", weight_kg: 60, reps: r, rir: 2 })), stopped_after: stoppedAfter }] });
+  const perfs = performances([fin("2026-01-05", [8, 7], 1), fin("2026-01-07", [], 0), fin("2026-01-09", [9, 6], 1)], "chest_press");
+  assert.deepEqual(perfs.map((p) => p.date), ["2026-01-09", "2026-01-05"], "the empty stop is not a performance");
+  assert.equal(nextSuggestion(perfs[0], perfs[1], { settings: { stack_step_kg: { default: 5 } }, week: 3, exerciseId: "chest_press" }).action, "lower");
+});
