@@ -320,19 +320,27 @@ export function openCheck({ mode = "own", product = null, food: rec = null, pref
   const amountRow = [seg, amountBox];
 
   const heading = mode === "off" ? "From Open Food Facts · check before saving" : mode === "saved" ? "Your food" : "Make a new food";
-  const close = openSheet(
-    h("h2", {}, heading),
+  const details = [
     mode === "off" ? h("p", { class: "muted small" }, "Anyone can add products to Open Food Facts, so numbers can be wrong. Compare with the pack. You can change anything.") : null,
     textIn("name", "Name", "120"),
     pack ? h("p", { class: "pack-line muted small" }, pack) : null,
     h("h3", {}, "Per 100 g"),
     h("div", { class: "grid2" }, numIn("kcal", "Calories (kcal)"), numIn("protein", "Protein (g)"), numIn("carbs", "Carbs (g)"), numIn("fat", "Fat (g)")),
     result,
+  ];
+  const amountAndSave = [
     h("h3", {}, "How much did you have?"),
     amountRow,
     h("div", { class: "label" }, "Meal"),
     mealRow(st.meal, (m) => { st.meal = m; }),
     error, btn, second,
+  ];
+  // "Your food" and a scanned food (0.7.5, Rosario: "name and details underneath and all the inputs and save button
+  // visible by default"): amount, meal and Save first, details under. A new food keeps its order (name and numbers first).
+  const firstAmount = mode === "saved" || mode === "off";
+  const close = openSheet(
+    h("h2", {}, heading),
+    ...(firstAmount ? [...amountAndSave, h("h3", {}, "Food details"), ...details] : [...details, ...amountAndSave]),
     mode === "off" || (mode === "saved" && rec && rec.source === "off") ? creditLine() : null);
   refresh();
   return close;

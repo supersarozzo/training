@@ -24,7 +24,7 @@ const mainText = () => sheet().querySelector(".btn-main").textContent;
 const tap = (text) => byText(sheet(), "button", text).click();
 const closeAll = () => { while (sheet()) { const c = byText(sheet(), "button", "Close"); if (!c) break; c.click(); sheet()?.remove(); } };
 const per100g = { kcal: 170, protein_g: 14, carbs_g: 8, fat_g: 9 };
-const bites = () => ({ name: "Test chicken-style bites (1 bite = 31 g)", per100g, serving_g: 125, serving_label: "4 bites", source: "off", barcode: "5000000000000" });
+const bites = () => ({ name: "Test chicken-style bites (1 bite = 31 g)", per100g, serving_g: 125, serving_label: "4 bites", source: "off", barcode: "5000000000005" });
 
 store.saveDevice({ token: "made-up", repo: "x" });
 
@@ -112,11 +112,11 @@ test("F2-1 'Your food' (saved): How much, Meal, Save and add, Save without addin
 });
 
 test("F2-2 the scanned-food sheet (Open Food Facts) has the same order and keeps its warning and credit", () => {
-  const product = { name: "Test scanned bites", brand: "Test brand", quantity: "250 g", barcode: "5000000000017", per100g, serving_g: 125, serving_label: "4 bites", source: "off", off_fetched_at: "2026-11-18T10:00:00.000Z" };
+  const product = { name: "Test scanned bites", brand: "Test brand", quantity: "250 g", barcode: "5000000000012", per100g, serving_g: 125, serving_label: "4 bites", source: "off", off_fetched_at: "2026-11-18T10:00:00.000Z" };
   S.openCheck({ mode: "off", product });
   const text = sheet().textContent;
   assert.match(text, /numbers can be wrong/);
-  assert.match(text, /Test brand · 250 g · 5000000000017/);
+  assert.match(text, /Test brand · 250 g · 5000000000012/);
   assert.match(text, /Open Food Facts/);
   closeAll();
   const p = order("off", { product });

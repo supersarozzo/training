@@ -166,9 +166,34 @@ export const PIECE_MIN_G = 1;
 export const PIECE_MAX_G = 2000;
 const PIECE_WORDS = `The weight of 1 piece must be ${PIECE_MIN_G} to ${PIECE_MAX_G} g.`;
 const okPiece = (g) => typeof g === "number" && Number.isFinite(g) && g >= PIECE_MIN_G && g <= PIECE_MAX_G;
+// A serving named with a count of more than one ("4 bites", "2 eggs", "about 2 hash browns", a pack's "2 biscuits
+// (25 g)") holds that many pieces (0.7.5, Rosario: "Pieces say 31g in the description but then 1 piece shows up as
+// 125g"). Returns { n, unit } with the single unit ("bite"), or null: no count, a count of 1, or a weight or volume
+// ("100 g", "250 ml"). The words come from the pack or Open Food Facts: data only, shown as text.
+const MEASURE = /^(g|grams?|kg|mg|ml|cl|dl|l|lit(?:re|er)s?|millilit(?:re|er)s?|oz|ounces?|lbs?|pounds?|kcal|cals?|calories?)$/i;
+function singular(words) {
+  const parts = words.split(/\s+/);
+  let w = parts.pop();
+  if (/[kn]ies$/i.test(w)) w = w.slice(0, -1); // cookies, brownies
+  else if (/ies$/i.test(w) && w.length > 4) w = `${w.slice(0, -3)}y`; // patties
+  else if (/(ch|sh|ss|x|zz|o)es$/i.test(w)) w = w.slice(0, -2); // sandwiches, potatoes
+  else if (/[^s]s$/i.test(w)) w = w.slice(0, -1); // bites, eggs, slices
+  return [...parts, w].join(" ");
+}
+export function countedServing(label) {
+  const words = typeof label === "string" ? label.trim() : "";
+  const m = /^(?:(?:about|approx\.?|approximately|around|~)\s*)?(\d{1,3})\s+(.+)$/i.exec(words);
+  if (!m) return null;
+  const n = Number(m[1]);
+  const unit = m[2].replace(/\s*\([^)]*\)\s*$/, "").trim(); // "biscuits (25 g)" -> "biscuits"
+  if (n < 2 || n > 100 || !unit || /\d/.test(unit) || MEASURE.test(unit)) return null;
+  return { n, unit: singular(unit) };
+}
 export function pieceOf(food) {
   if (!food || !okPiece(food.serving_g)) return null;
   const words = typeof food.serving_label === "string" ? food.serving_label.trim() : "";
+  const counted = countedServing(words);
+  if (counted && okPiece(food.serving_g / counted.n)) return { g: food.serving_g / counted.n, label: counted.unit };
   return { g: food.serving_g, label: words || "piece" };
 }
 // The typed weight of one piece ("62,5" works too), rounded to 0.1 g.
@@ -202,6 +227,9 @@ export function piecesLine(count, piece_g) {
 export function withPieceWeight(food, g) {
   if (!okPiece(g)) throw new Error(PIECE_WORDS);
   const words = food && typeof food.serving_label === "string" ? food.serving_label.trim() : "";
+  // A typed weight is the weight of ONE piece, so "4 bites" becomes "bite" (0.7.5: the typed weight always wins).
+  const counted = countedServing(words);
+  if (counted) return { ...food, serving_g: g, serving_label: counted.unit };
   const keep = words !== "" && (food.serving_g === g || !/\d/.test(words));
   return { ...food, serving_g: g, serving_label: keep ? food.serving_label : "piece" };
 }

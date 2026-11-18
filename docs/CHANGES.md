@@ -25,6 +25,13 @@ Machines instead of awkward moves (trainer decision D18) and "1 set", built by c
 - Past workouts and a workout that is running keep their own moves.
 - **"1 set", not "1 sets".** Every screen now writes "1 set" and "1 rep" for one.
 - New photos and form videos for the 4 new moves.
+- **Food: 1 piece of "4 bites" is one bite.** A food whose serving says "4 bites" (125 g) counted the whole 125 g as
+  1 piece, so 4 pieces were 500 g. Now 1 piece = 31.3 g and the sheet says "1 bite = 31.3 g". The same for "2 eggs",
+  "about 2 hash browns" and a pack's "2 biscuits (25 g)". Foods you already saved show the right weight at once. A weight
+  you typed with Change still wins.
+- **Food: amount, meal and Save first.** On "Your food" and a scanned food, "How much did you have?", the meal and the
+  two Save buttons are at the top, so you see them without scrolling. The name, the pack line, the Per 100 g numbers and
+  "The numbers add up" are under "Food details". "Make a new food" keeps its order (you type the name first).
 
 ## 0.7.4 · 2026-11-18
 
