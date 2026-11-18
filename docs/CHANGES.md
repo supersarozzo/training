@@ -23,6 +23,9 @@ The editable walk and the food counter, built by chat 8.41. Not pushed yet.
   walk sheet no longer saves a break week's easier numbers for good.
 - **No double-tap zoom, second guard.** A quick second tap no longer zooms the screen, and it still counts as a tap
   (for example a fast second + on a number). Typing fields work as before, and pinch zoom still works.
+- **A plank says seconds, not reps.** The exercise screen of the plank and the side plank had a "Reps" box with
+  "20–40" in it. It now says **Hold: 20–40 s, seconds each set** (side plank: seconds each side). The Change sheet, the
+  Swap sheet, the Change button for VoiceOver and the week 1 set screen also say seconds for a hold.
 - For later builders: a test now fails when an app file changes but the version number does not.
 
 ## 0.7.3 · 2026-11-18

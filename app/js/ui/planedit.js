@@ -136,7 +136,7 @@ export function openSwapSheet(day, week, slotName) {
   openSheet(
     h("h2", {}, `Swap ${oldName}`),
     lastsBox(day),
-    h("p", { class: "small muted" }, `Keeps the slot's ${sh.sets} sets and its rest. The reps come from the new exercise.`),
+    h("p", { class: "small muted" }, `Keeps the slot's ${sh.sets} sets and its rest. The ${exercises[sh.current]?.kind === "hold" ? "seconds" : "reps"} come from the new exercise.`),
     first.length ? [h("span", { class: "eyebrow" }, `Same muscle (${sh.muscle}), other equipment`),
       h("div", { class: "card" }, first.map((x) => row(x.id, x.pick)))] : null,
     !first.length && !kin.length ? h("p", { class: "muted" }, "No other exercise for this muscle fits here.") : null,
@@ -310,9 +310,11 @@ export function changedCard(day, record, { canReset = true } = {}) {
 const lockedText = (st) => (st.locked ? "Workout running. This day can be changed after the workout ends." : "This day was changed on a newer app version. Update the app to change it.");
 
 const RUNNING_TEXT = "Workout running. Sets, reps and weight can be changed after the workout ends.";
+// A hold has seconds and no weight (0.7.4).
+export const doseRunningText = (ex) => (ex?.kind === "hold" ? "Workout running. Sets and seconds can be changed after the workout ends." : RUNNING_TEXT);
 export function openDoseSheet(day, week, slotName) {
   const doc = model.doc();
-  if (workoutRunning(doc)) { toast(RUNNING_TEXT); return; }
+  if (workoutRunning(doc)) { toast(doseRunningText(exercises[model.effectivePlanDay(day).slots.find((s) => s.slot === slotName)?.ex])); return; }
   const st0 = dayState(doc, day, week);
   if (!st0.canEdit) { toast(lockedText(st0)); return; }
   const slot = model.effectivePlanDay(day).slots.find((s) => s.slot === slotName);
@@ -394,7 +396,7 @@ export function openDoseSheet(day, week, slotName) {
 
   openSheet(
     h("h2", {}, `Change ${ex.name}`),
-    h("div", { class: "lasts" }, icon("info", 18), h("p", {}, h("b", {}, `Sets: every ${dayName(day)}. `), "Reps and weight: this exercise on every day. Past workouts stay as they were.")),
+    h("div", { class: "lasts" }, icon("info", 18), h("p", {}, h("b", {}, `Sets: every ${dayName(day)}. `), hold ? "Seconds: this exercise on every day. Past workouts stay as they were." : "Reps and weight: this exercise on every day. Past workouts stay as they were.")),
     stepper({ label: `Sets on ${dayName(day)}`, value: draft.sets, step: 1, min: MIN_SETS, max: MAX_SETS, decimals: 0, onChange: (v) => { draft.sets = v; showWeek(); } }),
     weekLine,
     h("div", { class: "dose-pair" },

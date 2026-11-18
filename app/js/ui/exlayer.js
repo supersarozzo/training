@@ -45,6 +45,9 @@ export function inPlanText(exId) {
   return list.length ? `In the plan: ${list.map((d) => days[d].name.slice(0, 3)).join(", ")}` : "Swap only";
 }
 
+// The Change button's VoiceOver words: a hold has seconds and no weight (0.7.4).
+export const changeLabel = (ex) => (ex.kind === "hold" ? `Change sets or seconds of ${ex.name}` : `Change sets, reps or weight of ${ex.name}`);
+
 const tile = (label, value, note) => h("div", { class: "ex-tile" }, h("span", { class: "eyebrow" }, label), h("b", {}, value), note ? h("small", {}, note) : null);
 
 // The Weight tile: "40 kg" (with "yours" when set in the Plan, "first try" before any weight: trainer D12, 0.7.1),
@@ -81,7 +84,9 @@ export function openExerciseLayer(exId, ctx = null) {
     extra = [
       h("div", { class: "ex-tiles" },
         tile("Sets", String(slot.sets)),
-        tile("Reps", repRange(ex, rangeFor(model.doc(), exId)), ex.kind === "hold" ? "seconds" : ex.perSide ? "each side" : null),
+        ex.kind === "hold" // a hold is seconds, never reps (0.7.4, Rosario: "rep is 20-40, what does that mean?")
+          ? tile("Hold", `${repRange(ex, rangeFor(model.doc(), exId))} s`, ex.perSide ? "seconds each side" : "seconds each set")
+          : tile("Reps", repRange(ex, rangeFor(model.doc(), exId)), ex.perSide ? "each side" : null),
         weightTile(weightLine(model.doc(), exId, ctx.week)),
         tile("Rest", rest.value, rest.note),
         tile("Stop with", Array.isArray(rir) ? `${rir[0]}–${rir[1]}` : String(rir), ex.kind === "hold" ? "seconds left" : "reps left")),
@@ -105,7 +110,7 @@ export function openExerciseLayer(exId, ctx = null) {
     h("p", { class: "small muted layer-equip" }, ex.equipment),
     video || editable ? h("div", { class: "chips layer-chips" },
       video ? videoButton(exId, { chip: true }) : null,
-      editable ? h("button", { class: "chip", type: "button", "aria-label": `Change sets, reps or weight of ${ex.name}`, onclick: () => openDoseSheet(ctx.day, ctx.week, ctx.slot) }, icon("edit", 18), "Change") : null,
+      editable ? h("button", { class: "chip", type: "button", "aria-label": changeLabel(ex), onclick: () => openDoseSheet(ctx.day, ctx.week, ctx.slot) }, icon("edit", 18), "Change") : null,
       editable ? h("button", { class: "chip", type: "button", "aria-label": `Swap ${ex.name}`, onclick: () => openSwapSheet(ctx.day, ctx.week, ctx.slot) }, icon("swap", 18), "Swap") : null,
       editable ? h("button", { class: "chip", type: "button", "aria-label": `Remove ${ex.name} from ${days[ctx.day].name}`, onclick: () => removeSlot(ctx.day, ctx.slot) }, icon("close", 18), "Remove") : null) : null,
     flip(exId, { cls: "big-flip", tag: true }),

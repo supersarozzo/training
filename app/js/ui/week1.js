@@ -138,7 +138,7 @@ export function renderWeek1(ctx) {
     const first = work[0];
     return [
       workoutScreen(...header(h("div", {},
-        h("div", { class: "target" }, `Set ${n} of ${sets} · stop with about 3 reps left`),
+        h("div", { class: "target" }, `Set ${n} of ${sets} · stop with about 3 ${hold ? "seconds" : "reps"} left`),
         n === 1 && weighted ? h("p", { class: "small muted" }, tryKg ? `Try ${tryKg} kg. ${sg?.action === "first_try" ? "First try. Set 1 tells us if it is right." : sg?.note ?? ""}`.trim() : "Pick a weight that feels easy. You find the right one in these two sets.") : null,
         n === 2 && first ? h("p", { class: "small muted" }, `Set 1: ${hold ? `${first.seconds} s` : weighted ? `${first.weight_kg} kg × ${first.reps}, ${first.left} left` : `${first.reps} reps`}.`) : null,
         suggestion ? h("p", { class: "small" }, `${suggestion.note} Suggested: ${suggestion.weight_kg} kg.`) : null)),

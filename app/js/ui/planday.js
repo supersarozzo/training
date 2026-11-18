@@ -17,7 +17,7 @@ import { thumb } from "./media.js";
 import { icon } from "./icons.js";
 import { onMount, stagger } from "./motion.js";
 import { miniMap } from "./bodymap.js";
-import { openExerciseLayer, doseParts } from "./exlayer.js";
+import { openExerciseLayer, doseParts, changeLabel } from "./exlayer.js";
 import { pageFor, muscleWords } from "../engine/planpage.js";
 import { ADDED_SLOTS, MAX_ADDED } from "../engine/planedits.js";
 import { viewDay, unitsIn, editedMinutes, rangeFor, weightLine, soreNote, walkWords } from "../planview.js";
@@ -112,7 +112,7 @@ function exCard(doc, day, week, slot, edit = false) {
   if (!edit) return card;
   return h("div", { class: "ecard" }, card,
     h("div", { class: "ebtns" },
-      h("button", { type: "button", "aria-label": `Change sets, reps or weight of ${ex.name}`, onclick: () => openDoseSheet(day, week, slot.slot) }, icon("edit", 18), "Change"),
+      h("button", { type: "button", "aria-label": changeLabel(ex), onclick: () => openDoseSheet(day, week, slot.slot) }, icon("edit", 18), "Change"),
       h("button", { type: "button", "aria-label": `Swap ${ex.name}`, onclick: () => openSwapSheet(day, week, slot.slot) }, icon("swap", 18), "Swap"),
       h("button", { type: "button", "aria-label": `Remove ${ex.name} from ${days[day].name}`, onclick: () => removeSlot(day, slot.slot) }, icon("close", 18), "Remove")));
 }

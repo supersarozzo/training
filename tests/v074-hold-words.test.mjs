@@ -14,7 +14,7 @@ const { store } = await import("../app/js/ui/app.js");
 const { validDoc } = await import("./fixtures/profiles.mjs");
 const { exercises, days } = await import("../app/js/plan/plan-v2.js");
 const { openExerciseLayer } = await import("../app/js/ui/exlayer.js");
-const { renderPlan } = await import("../app/js/ui/planday.js");
+const { renderPlan, resetPlanPage } = await import("../app/js/ui/planday.js");
 const pe = await import("../app/js/ui/planedit.js");
 const { week1Stage } = await import("../app/js/engine/week1.js");
 
@@ -70,6 +70,7 @@ test("H3 a non-hold exercise keeps its Reps tile (the fix is for holds only)", (
 
 // The Plan tab on one day, in Edit mode, so the card's Change, Swap and Remove buttons are there too.
 function planDay(day) {
+  resetPlanPage(); // Edit mode hides the day strip
   let r = renderPlan();
   r = Array.isArray(r) ? r[0] : r;
   r.querySelectorAll("button").find((b) => (b.getAttribute("aria-label") ?? "").startsWith(days[day].name)).click();
