@@ -66,7 +66,13 @@ export function createUpdater({ sw, doc, win, onChange = () => {}, fetch = null,
   let lastCheck = -Infinity;
 
   const set = (next) => { if (status !== next) { status = next; onChange(); } };
-  const reload = () => { if (reloaded) return; reloaded = true; win.location.reload(); };
+  // Never during a workout, also when one started after the tap (review round 3): the next open runs the new version.
+  const reload = () => {
+    if (reloaded) return;
+    if (inWorkout()) { set("workout"); return; }
+    reloaded = true;
+    win.location.reload();
+  };
 
   // A worker that finished installing waits. With no controller this is the very first install: nothing to update.
   function see(worker) {
@@ -123,6 +129,7 @@ export function createUpdater({ sw, doc, win, onChange = () => {}, fetch = null,
 
   // The tap on Update in the bar. A bar still drawn after its worker took over by itself: the tap reloads into it.
   function apply() {
+    if (inWorkout()) { set("workout"); return; }
     if (waiting && waiting.state === "installed") takeOver(waiting);
     else { updating = true; reload(); }
   }
@@ -146,11 +153,17 @@ export function createUpdater({ sw, doc, win, onChange = () => {}, fetch = null,
   }
 
   // Wait for a worker that is ready. 20 s when nothing is downloading, up to 90 s while a worker downloads.
+  // A new install that started and then failed (a file keeps failing on the site) sets installFailed (round 3).
+  let installFailed = false;
   async function waitForWorker() {
     const begin = now();
+    let seen = null;
+    installFailed = false;
     for (;;) {
       look();
       if (waiting) return waiting;
+      if (reg && reg.installing && reg.installing !== seen) seen = reg.installing;
+      if (seen && seen.state === "redundant") { installFailed = true; return null; }
       const downloading = reg && reg.installing && reg.installing.state !== "redundant";
       const spent = now() - begin;
       if (spent >= LONG_WAIT || (!downloading && spent >= SHORT_WAIT)) return null;
@@ -168,6 +181,8 @@ export function createUpdater({ sw, doc, win, onChange = () => {}, fetch = null,
       const live = await liveVersion();
       if (live === null) { set("offline"); return; }
       if (!isNewer(live, version)) { set("none"); return; }
+      // The new version already took over (a reload was held back by a workout): only the reload is missing.
+      if (updating) { reload(); return; }
       set("downloading");
       if (reg) {
         try { await reg.update(); } catch { /* the wait below decides */ }
@@ -179,10 +194,15 @@ export function createUpdater({ sw, doc, win, onChange = () => {}, fetch = null,
       if (inWorkout()) { set("workout"); return; }
       // Before deleting anything: the website's sw.js must already be the live version. Right after a release a CDN
       // copy can still serve the old sw.js; a fresh start would then fail and leave the app online-only (round 2).
+      // A failed install would fail again after a fresh start, without the working cache: change nothing (round 3).
+      if (installFailed) { set("siteupdating"); return; }
       const swText = await liveText("sw.js");
       if (swText === null) { set("offline"); return; }
-      if (!swText.includes(`"${live}"`)) { set("siteupdating"); return; }
+      // The version the live sw.js declares (not any text in it: its comments name other versions; round 3).
+      const swVersion = /APP_VERSION\s*=\s*"([^"]+)"/.exec(swText);
+      if (!swVersion || swVersion[1] !== live) { set("siteupdating"); return; }
       // No new worker came: start clean from the website. Only the app's file caches go; saved data stays.
+      if (inWorkout()) { set("workout"); return; } // a workout may have started while sw.js was read (round 3)
       set("reinstalling");
       try {
         const names = await caches.keys();

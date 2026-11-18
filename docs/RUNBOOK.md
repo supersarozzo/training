@@ -129,7 +129,8 @@ saved apart from the app files, so none of these steps can delete them.
    - "Downloading the new version…" Wait; the app restarts by itself in the new version (up to about a minute and a half).
    - "No signal. Try again later." Nothing was changed. Try again with internet.
    - "The website is still updating. Try again in 10 minutes." Nothing was changed. A new version was just put
-     on the website and it is not ready everywhere yet. Tap Update again after 10 minutes.
+     on the website and it is not ready everywhere yet. Tap Update again after 10 minutes. If it still says this
+     after an hour, tell the Training chat (a file on the website may be missing).
    - "Starting the new version…" or "Getting the new version from the website…" Wait a few seconds; the app restarts.
    - "Finish the workout first, then tap Update." A workout runs. Finish it, then tap Update.
    The button is off during a workout. Update outside a workout.
