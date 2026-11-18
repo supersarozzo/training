@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { dayLayout } from "../app/js/dayplan.js";
 import { walkSuggestion } from "../app/js/engine/workout.js";
 import { sessionLayout, missedRule } from "../app/js/engine/schedule.js";
-import { days } from "../app/js/plan/plan-v2.js";
+import { days, walkRules } from "../app/js/plan/plan-v2.js";
 import { validDoc, intake } from "./fixtures/profiles.mjs";
 
 const docWith = (over = {}, sessions = []) => ({ ...validDoc(), profile: { ...validDoc().profile, intake: intake(over) }, sessions });
@@ -42,4 +42,14 @@ test("the other blocks keep the plan's minutes; a short day keeps its own layout
     assert.deepEqual(r.layout.map((b) => b.id), plan.map((b) => b.id));
     r.layout.forEach((b, i) => { if (b.id !== "walk") assert.equal(b.minutes, plan[i].minutes, `${kind} ${b.id}`); });
   }
+});
+
+test("trainer decision D5: the walk suggestion never goes above the plan's top, even after a faster saved walk", () => {
+  const s = { ...walkSession("2026-01-19", 5), walk: { speed_kmh: 5.8, slope_pct: 14, minutes: 30, effort: 5, breathless: false, leg_day: false } };
+  const doc = docWith({ q36_walk_fit: "yes" }, [s]);
+  const normal = walkSuggestion(doc, { week: 2, legDay: false, missed: missedRule("2026-01-19", "2026-01-20"), kind: "full" });
+  assert.equal(normal.speed_kmh, walkRules.maxSpeed_kmh);
+  assert.equal(normal.slope_pct, walkRules.maxSlope_pct);
+  const leg = walkSuggestion(doc, { week: 2, legDay: true, missed: missedRule("2026-01-19", "2026-01-20"), kind: "full" });
+  assert.equal(leg.slope_pct, walkRules.maxSlope_pct - walkRules.legDaySlopeLess_pct);
 });
