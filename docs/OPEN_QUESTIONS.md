@@ -4,7 +4,7 @@ Numbered so Rosario can answer "1 yes, 2 a". Move answered ones to the bottom wi
 
 ## Open
 
-17. On the first visit, check if the gym has: lat pulldown machine, seated row machine, leg curl machine, pec deck, calf raise machine. The plan works without them (cable versions are used). If they exist, the plan can use them. Also note the dumbbell steps (for example 2, 4, 6 kg or 2, 3, 4 kg). (A first-visit check, not a question to answer now.)
+17. On the first visit, check if the gym has: lat pulldown machine, seated row machine, leg curl machine, pec deck, calf raise machine. The plan works without them (cable versions are used). If they exist, the plan can use them. Also note the dumbbell steps (for example 2, 4, 6 kg or 2, 3, 4 kg). Since 2026-11-18 (answer 82 a) also check: an ankle strap for the cables (for the cable leg curl) and a step or block for calf raises. (A first-visit check, not a question to answer now.)
 
 ## Answered
 
@@ -91,3 +91,13 @@ Asked on the mock-up page https://claude.ai/artifact/3PXi5fxUPPUCou1D4Hfw52. Rul
 77. Today's totals at the top of Diet: b) two rings, protein first, plus carbs and fat. (2026-11-17)
 78. Where the food log syncs: a) its own file in the private repo (`food.json`). (2026-11-17)
 79. Open Food Facts name search: a) UK products only. (2026-11-17)
+
+### Plan review (questions 80 to 84, answered on 2026-11-18, "All recommended")
+
+Asked in docs/plan/2026-11-17-plan-review-proposal.md (80 to 83) and by the master in chat (84).
+
+80. Move about 10 abs sets to calves and the back of the thighs: a) yes, all of it (calf raises on the leg press Monday and Wednesday, a leg curl Thursday, fewer abs sets on those days). (2026-11-18)
+81. Monday and Wednesday about 1 to 2 minutes longer: a) accept it; plank and side plank keep 2 sets. (2026-11-18)
+82. No leg curl machine: a) cable leg curl with an ankle strap, else dumbbell lying leg curl, else a second Romanian deadlift. (2026-11-18)
+83. When the change starts: a) as soon as the app is updated; new moves start like week 1. (2026-11-18)
+84. How to build: a) in waves, an Opus lead with helpers in parallel (Sonnet for well-specified parts, Opus for delicate parts and checks). (2026-11-18)
