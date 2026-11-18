@@ -137,3 +137,23 @@ test("D7 a short drag (15 to 45 px) is a scroll: never cancelled, never a first 
   doc.on.touchend.fn({ target: b, touches: [], changedTouches: [touch(100, 200)], timeStamp: 90190, cancelable: false, preventDefault: () => {} });
   assert.equal(b.dispatched.length, 0, "no replayed click when the tap could not be cancelled");
 });
+
+// ---------- Review gaps (checker, 2026-11-18) ----------
+test("D8 the guard starts exactly once; a button that left the screen between finger down and up gets no replayed click", () => {
+  const calls = src("js/main.js").split("\n").filter((l) => !l.trim().startsWith("//") && /guardDoubleTap\(\)/.test(l));
+  assert.equal(calls.length, 1, "one call: every extra call would add listeners and replay extra clicks");
+  const doc = fakeDoc();
+  tz.guardDoubleTap(doc);
+  const old = el("BUTTON");
+  old.isConnected = false; // the rest timer ended and the screen changed under the finger
+  tap(doc, old, 1000);
+  assert.equal(tap(doc, old, 1150), 1, "still no zoom");
+  assert.equal(old.dispatched.length, 0, "no click on a button that is gone");
+  const field = el("INPUT");
+  const plus = el("BUTTON");
+  tap(doc, field, 3000);
+  assert.equal(tap(doc, plus, 3150), 0, "a field tap then a button tap: the button tap is a first tap");
+  assert.equal(tap(doc, plus, 3300), 1);
+  assert.equal(tap(doc, plus, 3450), 1, "the fourth quick tap too");
+  assert.equal(plus.dispatched.length, 2);
+});
