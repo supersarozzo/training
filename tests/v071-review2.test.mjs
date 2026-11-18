@@ -58,7 +58,9 @@ test("R6 the pain swap never starts above the new exercise's own first try when 
   }
   // A weight really lifted or known (a set done, the logs, the Plan) keeps the old rule: 30 % under it.
   assert.equal(painSwapStart("smith_squat", { lastWorkKg: 40, origSugg: sg("leg_press"), newSugg: sg("smith_squat") }, doc.shared_settings), lighterFor("smith_squat", 40, doc.shared_settings));
-  assert.equal(painSwapStart("smith_squat", { lastWorkKg: undefined, origSugg: { action: "mine", weight_kg: 40 }, newSugg: sg("smith_squat") }, doc.shared_settings), lighterFor("smith_squat", 40, doc.shared_settings));
+  // Test change (auditor round 3, F2): a Plan weight on the original with nothing logged no longer counts in the new
+  // exercise's units; with nothing logged the swap starts from the new exercise's own weight (below).
+  assert.equal(painSwapStart("smith_squat", { lastWorkKg: undefined, origSugg: { action: "mine", weight_kg: 40, last: { weight_kg: 40 } }, newSugg: sg("smith_squat") }, doc.shared_settings), lighterFor("smith_squat", 40, doc.shared_settings));
   // The new exercise's own history decides by itself (no swap weight saved).
   assert.equal(painSwapStart("smith_squat", { lastWorkKg: 40, origSugg: sg("leg_press"), newSugg: { ...sg("smith_squat"), last: { weight_kg: 20 } } }, doc.shared_settings), null);
   const ui = src("js/ui/swap.js");
@@ -118,4 +120,39 @@ test("D12-W3 once an exercise has a log, no first-try note shows (trainer 8.37, 
     assert.ok(!String(sg.note ?? "").startsWith("First try"), `week ${week}: ${sg.note}`);
     assert.ok(!weightLine(doc, "chest_press", week).text.startsWith("Try "), `week ${week}`);
   }
+});
+
+// R8  Auditor round 3: with nothing logged, (F1) lowering the new exercise's own first try could round to 0 kg (D12:
+//     never 0), and (F2) a Plan weight on the original still counted in the new exercise's units (pulldown 100 ->
+//     70 kg on a machine whose first try is 30). Rule now: with nothing logged (no set today, no log of the original),
+//     start 30 % under the new exercise's own weight, and never below its first try (its lightest step).
+import { exercises } from "../app/js/plan/plan-v2.js";
+import { intake } from "./fixtures/profiles.mjs";
+
+test("R8 every pain swap with nothing logged: never 0, never above the new exercise's own first try", () => {
+  const base = { ...validDoc(), sessions: [], exercise_state: [] };
+  const profiles = [base.profile, { ...base.profile, intake: intake({ q22_sex: "female" }) }];
+  let checked = 0;
+  for (const profile of profiles) {
+    const doc = { ...base, profile };
+    const sg = (id, st) => suggestFor(doc, id, { week: 3, missed: null, exerciseState: st });
+    for (const [from, ex] of Object.entries(exercises)) {
+      for (const { id: to } of ex.swaps ?? []) {
+        if (!exercises[to] || exercises[to].step === "bodyweight") continue;
+        const own = firstTryWeight(to, doc.shared_settings, doc.profile);
+        for (const origSugg of [sg(from), { ...sg(from), action: "mine", weight_kg: 100 }]) {
+          const kg = painSwapStart(to, { lastWorkKg: undefined, origSugg, newSugg: sg(to) }, doc.shared_settings);
+          assert.ok(Number.isFinite(kg) && kg > 0 && kg <= own, `${profile.intake?.q22_sex} ${from} -> ${to} (${origSugg.action}): ${kg} kg, own first try ${own}`);
+          checked++;
+        }
+      }
+    }
+  }
+  assert.ok(checked > 40, `checked ${checked} swaps`);
+  // the auditor's cases
+  const woman = { ...base, profile: { ...base.profile, intake: intake({ q22_sex: "female" }) } };
+  const wsg = (id) => suggestFor(woman, id, { week: 3, missed: null, exerciseState: undefined });
+  assert.equal(painSwapStart("smith_squat", { origSugg: wsg("leg_press"), newSugg: wsg("smith_squat") }, woman.shared_settings), firstTryWeight("smith_squat", woman.shared_settings, woman.profile));
+  // a set done today keeps the old rule (known limit)
+  assert.equal(painSwapStart("smith_squat", { lastWorkKg: 40, origSugg: wsg("leg_press"), newSugg: wsg("smith_squat") }, woman.shared_settings), lighterFor("smith_squat", 40, woman.shared_settings));
 });
