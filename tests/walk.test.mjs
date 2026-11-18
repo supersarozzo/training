@@ -112,7 +112,8 @@ const { clearTickers } = await import("../app/js/timer.js");
 test.after(() => clearTickers()); // even when a test fails, stop the ring's ticks so the file ends
 
 const all = (n, out = []) => { out.push(n); for (const c of n.childNodes ?? []) all(c, out); return out; };
-const text = (n) => all(n).filter((x) => x.tagName === "#TEXT").map((x) => x.textContent).join("");
+// Text as a person sees it: text nodes, and elements whose text was set directly (textContent, as a real page does).
+const text = (n) => all(n).filter((x) => x.tagName === "#TEXT" || (!x.childNodes?.length && x.textContent)).map((x) => x.textContent).join("");
 const flat = (nodes) => nodes.flatMap((n) => all(n));
 const byLabel = (nodes, label) => flat(nodes).find((n) => n.attributes?.["aria-label"] === label);
 const buttonsIn = (nodes, words) => flat(nodes).filter((n) => n.tagName === "BUTTON" && text(n).includes(words));
@@ -163,8 +164,8 @@ test("W4 the result starts from the changed settings and records walking speeds 
   const result = ui.renderWalkResult({ act, session, walk: plan(), legDay: false });
   const speed = byLabel(result, "Speed");
   const slope = byLabel(result, "Slope");
-  assert.equal(speed.attributes.value, "4.4");
-  assert.equal(slope.attributes.value, "7");
+  assert.equal(String(speed.value), "4.4");
+  assert.equal(String(slope.value), "7");
   const moreSpeed = byLabel(result, "More Speed");
   for (let i = 0; i < 40; i++) moreSpeed.click();
   assert.equal(speed.value, "7");
