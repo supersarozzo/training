@@ -193,3 +193,14 @@ test("W10 savePlanDay (Undo) and every edit refuse to overwrite a record from a 
   assert.equal(r.colour, "newer");
   assert.deepEqual(r.slots, newer.slots);
 });
+
+test("W11 a planned move swapped during a finished workout counts as done: the next week gets the week's sets", () => {
+  const known = days.mon.slots.map((s) => s.ex);
+  const past = finishedMonday(known);
+  const d = past.exercises.find((e) => e.plan_exercise === "calf_raise_leg_press");
+  d.done_exercise = "calf_raise_machine"; // swapped at the gym, finished with the machine
+  d.swap_reason = "busy";
+  const p = setup({ ...validDoc(), sessions: [past] });
+  const s = p.model.startSession({ planDay: "mon", week: 4, kind: "full" });
+  assert.equal(s.exercises.find((e) => e.slot === "D").planned_sets, 3);
+});
