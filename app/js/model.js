@@ -7,7 +7,7 @@ import { validateDocument, clipText } from "./validate.js";
 import { mergeDocs } from "./sync/merge.js";
 import { PLAN_ID } from "./plan/plan-v2.js";
 import { planForDay } from "./engine/schedule.js";
-import { performances } from "./engine/workout.js";
+import { finishedSessions, workSets } from "./engine/workout.js";
 import { planDayId, isPlanDayId, checkSlots, checkPlanDay, findPlanDay, effectiveDay, planDaySlots, sameAsPlan, withSwap, withRemoved, withAdded } from "./engine/planedits.js";
 
 const NEWER_DAY = "This day was changed on a newer app version. Update the app first.";
@@ -121,11 +121,16 @@ export function createModel(store, clock = () => new Date()) {
       const clockNow = clock();
       const t = stamp();
       const before = store.load();
+      // Done before: finished work sets in a record that planned it or did it (a move swapped at the gym still counts).
+      const doneBefore = new Set();
+      for (const old of finishedSessions(Array.isArray(before.sessions) ? before.sessions : [])) {
+        for (const r of old.exercises ?? []) if (r && workSets(r).length) { doneBefore.add(r.plan_exercise); doneBefore.add(r.done_exercise); }
+      }
       const chosen = slots ?? planForDay(planDay, week, kind, findPlanDay(before, planDay)).slots;
       // A move with no finished sets in any earlier workout (new in the plan, added or swapped in by a Plan edit)
       // starts like week 1: at most 2 work sets this time (answer 83 a). The week's sets apply from the next time.
       const daySlots = chosen.map((s) => (Number.isInteger(s.sets) && s.sets > NEW_MOVE_SETS
-        && performances(Array.isArray(before.sessions) ? before.sessions : [], s.ex).length === 0 ? { ...s, sets: NEW_MOVE_SETS } : s));
+        && !doneBefore.has(s.ex) ? { ...s, sets: NEW_MOVE_SETS } : s));
       const session = {
         id: newId("s", clockNow), updated_at: t, date: localDate(clockNow), plan_day: planDay, week, kind,
         swapped_from: swappedFrom, status: "in_progress", started_at: t, finished_at: null,
