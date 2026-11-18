@@ -13,3 +13,11 @@ export function dayLayout(doc, { planDay, week, today, kind = "full" }) {
   const layout = sessionLayout(kind, week).map((b) => (b.id === "walk" ? { ...b, minutes: walk.minutes } : b));
   return { layout, minutes: layout.reduce((n, b) => n + b.minutes, 0), walk };
 }
+
+// The walk of a workout already started: the same call as the workout screen (ui/flow.js buildCtx: the last workout
+// finished before its date, its week, its day and its kind), so Today's walk tile shows what the running workout shows
+// (0.7.1, checker round 3). null for a day the plan does not know.
+export function sessionWalk(doc, session) {
+  if (!days[session.plan_day]) return null;
+  return dayLayout(doc, { planDay: session.plan_day, week: session.week, today: session.date, kind: session.kind ?? "full" }).walk;
+}

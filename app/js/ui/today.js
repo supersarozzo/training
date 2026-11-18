@@ -11,7 +11,7 @@ import { getActive, setActive } from "../active.js";
 import { dayLabel, canStartWorkout, missedRule, PRACTICE_LABEL, practiceLine, sessionWeek } from "../engine/schedule.js";
 import { finishedSessions, suggestFor, buildUnits } from "../engine/workout.js";
 import { days, exercises } from "../plan/plan-v2.js";
-import { dayLayout } from "../dayplan.js";
+import { dayLayout, sessionWalk } from "../dayplan.js";
 import { exerciseStateId } from "../ids.js";
 import { walkWords } from "../planview.js";
 import { thumb } from "./media.js";
@@ -154,6 +154,7 @@ export function renderToday() {
   const swapFrom = shown !== label.planDay ? label.planDay : null; // saved on the workout: done in place of that day
   // The shown day's plan (walk and blocks), the same call as the Plan day page (0.7.1, iPhone P5).
   const shownLayout = shown && active && !open ? dayLayout(doc, { planDay: shown, week, today: t, kind: "full" }) : null;
+  const openWalk = open ? sessionWalk(doc, open) : null; // a running workout: its own walk, as the workout screen shows it
   const heading = open ? dayName : shown ? days[shown].focus : active ? "Rest day" : dayName;
   const sub = !active || (open && running) ? label.text
     : open ? null
@@ -237,7 +238,8 @@ export function renderToday() {
       targets.protein_g !== null ? h("div", { class: "tile" }, h("div", { class: "label" }, "Protein a day"), h("div", { class: "value" }, String(targets.protein_g), h("span", { class: "unit" }, " g"))) : null,
       // The walk tile (0.7.1, iPhone P5): the shown day's real walk, the same numbers as its Plan day page; the starting
       // walk only when no workout day is shown. A restored file may have no starting walk (review F4).
-      shownLayout ? h("div", { class: "tile wide small muted" }, `${days[shown].name}'s walk: ${walkWords(shownLayout.walk)}, ${shownLayout.walk.minutes} min`)
+      openWalk ? h("div", { class: "tile wide small muted" }, `${days[open.plan_day].name}'s walk: ${walkWords(openWalk)}, ${openWalk.minutes} min`)
+        : shownLayout ? h("div", { class: "tile wide small muted" }, `${days[shown].name}'s walk: ${walkWords(shownLayout.walk)}, ${shownLayout.walk.minutes} min`)
         : targets.walk_start ? h("div", { class: "tile wide small muted" }, `Starting walk: ${walkWords(targets.walk_start)}`) : null));
   }
   if (!open && installHintShown()) {

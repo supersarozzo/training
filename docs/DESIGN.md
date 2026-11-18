@@ -250,7 +250,7 @@ Don't
 - One day per page, read like Today, opened on today, with the real sets of this week.
 - **Top:** the week chip ("Week 3 · Build 1 ›", opens the 12 weeks sheet), Edit, the gear. Then the big day name with a "Today" mark, the focus words and a meta line: "about 90 min · 21 sets · stop with 2 left".
 - **Day strip:** the 5 days with their focus words and done ticks; one tap jumps to any day.
-- **Order on the page:** the walk card first ("Walk first · 30 min uphill", with the leg-day easier line), then the pairs, then the abs, then the "Whole plan check" card at the end of the day.
+- **Order on the page:** the walk card first ("Walk first · 20 min uphill" with the real minutes, then the speed and slope the app gives that day and week, "4 km/h · 2 % slope", then the leg-day easier line; 0.7.1), then the pairs, then the abs, then the "Whole plan check" card at the end of the day.
 - **Pair headers in words**, not slot letters: "Pair A · back and forth · 3 rounds · rest 90 s after each round"; "On its own · rest 60 s between sets".
 - **Day arrows at the bottom** (question 69 a): "‹ Monday · Wednesday ›" on a **solid frosted bar** above the tab bar, the same frost as the tab bar, so cards never show through.
 - **No big day map at the top** (question 70 a). The first exercise shows without scrolling at 375 × 812.
