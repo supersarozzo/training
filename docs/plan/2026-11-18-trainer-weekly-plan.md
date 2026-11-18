@@ -536,6 +536,8 @@ Sources (read 2026-11-18): Bosquet et al. 2013, Scand J Med Sci Sports 23(3):e14
 7. Bodyweight and timed exercises still give 0.
 8. A Plan weight set by Rosario below the floor is shown exactly as set.
 
+**Answers to 8.43 (added 2026-11-18):** (1) After a pain swap that starts at the floor, the workout also uses at least 3 reps left, with one combined note: "You swapped because it hurt. Lightest weight already: stop with 3 reps left today." After pain is exactly when the session must get easier, and at the floor effort is the only way left. (2) A weight Rosario set below the floor stays exactly as set: it is never lowered, never raised. (3) In every at-floor case the note is "Lightest weight already. Stop with 3 reps left today." and it replaces the "about 10 % lower" text, which would be untrue. The 2-set rule after a break of more than 4 weeks still applies, with its own text.
+
 ## 5. Changes to your earlier choices
 
 **None.** I kept 74 b and 80-83 exactly:
