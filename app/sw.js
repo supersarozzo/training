@@ -1,6 +1,6 @@
 // Service worker: keeps every app file on the phone so the app opens without a network.
 // APP_VERSION must match js/version.js (a unit test checks this and the file list).
-const APP_VERSION = "0.7.0";
+const APP_VERSION = "0.7.1";
 const CACHE = `training-${APP_VERSION}`;
 const FILES = [
   "./",
