@@ -183,7 +183,7 @@ test("S11 the first fetch removes OLDER app caches once the own cache is complet
   assert.deepEqual([...w.stores.keys()].sort(), ["other-cache", CACHE, "training-0.10.0"].sort());
 });
 
-test("S12 the first fetch keeps old caches when the own cache is missing (evicted): the old files are better than nothing offline", async () => {
+test("S12 the first fetch keeps old caches when the own cache is missing (evicted); online the network answers (offline: R3)", async () => { // name changed in round 1 (checker 2)
   const w = world();
   oldCache(w);
   const res = await w.run("fetch", { request: req("js/main.js") });
@@ -232,7 +232,9 @@ function page({ controller = true, waiting = null, installing = null, update } =
   const doc = { hidden: false, listeners: {}, addEventListener(t, f) { (doc.listeners[t] ??= []).push(f); }, fire(t) { (doc.listeners[t] ?? []).forEach((f) => f()); } };
   const win = { reloads: 0, listeners: {}, addEventListener(t, f) { (win.listeners[t] ??= []).push(f); }, fire(t, e = {}) { (win.listeners[t] ?? []).forEach((f) => f(e)); }, location: { reload() { win.reloads++; } } };
   let changes = 0;
-  const u = need("createUpdater")({ sw, doc, win, onChange: () => { changes++; } });
+  // `now` (round 1, R5): automatic checks wait 15 minutes; each fake call moves the clock 20 minutes so U5 still sees each check.
+  let clock = 0;
+  const u = need("createUpdater")({ sw, doc, win, onChange: () => { changes++; }, now: () => (clock += 20 * 60000) });
   return { u, reg, sw, doc, win, get changes() { return changes; } };
 }
 const tick = () => new Promise((r) => setImmediate(r));
