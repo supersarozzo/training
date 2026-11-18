@@ -443,3 +443,14 @@ test("F29 the model never saves an entry the food check would refuse (a huge por
   assert.equal(validateFoodDoc(p.model.doc()).ok, true, "what the phone holds always passes the check");
   assert.equal(live(p.model.doc().food_log).length, 1, "a refused entry saves nothing");
 });
+
+test("F30 checkFood also warns when the pack size text says 1 or 2 grams (the mock-up's 'Check these numbers')", () => {
+  const per100g = { kcal: 280, protein_g: 3, carbs_g: 35, fat_g: 14.5 };
+  const one = checkFood({ per100g, serving_g: 43.1, quantity: "1 gram" });
+  assert.equal(one.ok, false);
+  assert.ok(one.warnings.includes("The pack size says 1 gram. That is likely wrong."));
+  assert.equal(checkFood({ per100g, serving_g: 43.1, quantity: "2g" }).warnings.at(-1), "The pack size says 2 grams. That is likely wrong.");
+  assert.equal(checkFood({ per100g, serving_g: 43.1, quantity: "450 g" }).ok, true);
+  assert.equal(checkFood({ per100g, serving_g: 43.1, quantity: "1 kg" }).ok, true, "kilograms are not grams");
+  assert.equal(checkFood({ per100g, serving_g: 1, quantity: "1 g" }).warnings.filter((x) => x.startsWith("The pack size")).length, 1, "said once");
+});
