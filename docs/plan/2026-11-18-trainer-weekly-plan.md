@@ -394,6 +394,34 @@ Sources (read 2026-11-18): Bull et al. 2020, WHO guidelines on physical activity
 6. Reset: the day follows the rule again, starting from its last saved walk.
 7. The line "Your own walk. The walk rule does not change this day." shows on an edited day. The hint line shows when the minutes are under 30, and only then.
 
+### D17. Abs on days in a row — **keep; no plan change**
+
+Asked by the Training Agent on 2026-11-18, for you: "On Monday I have planks and Tuesday I have cable crunch, and both work the abs on back-to-back days. That should be wrong, no?"
+
+**What the week does (weeks 2-5):**
+
+| Day | Abs work | Kind |
+|---|---|---|
+| Mon | plank 2 × 30 s | light hold |
+| Tue | cable crunch 3, dead bug 3 | **hard** (moving, with weight) |
+| Wed | side plank 2 | light hold |
+| Thu | plank 2 × 30 s | light hold |
+| Fri | reverse crunch 3, side plank 2 | **hard** (moving) + hold |
+
+It is the same pattern as D13: two hard abs days, 72 hours apart (Tuesday and Friday). The other days are short holds.
+
+**My decision: keep it.** No plan data changes. The D13 soreness rule also covers the abs: if they are still very sore (a plank hurts, not only feels tired), do the hold shorter that day.
+
+**Why:**
+- *A plank is a different job from a crunch.* A plank holds the trunk still against gravity for 30 seconds, with body weight only. It trains the abs to keep the spine steady (endurance and stability). A cable crunch bends the spine against a weight, which is the muscle-building work. Core experts build the stability holds (plank, side plank) for frequent practice, focused on endurance (McGill 2010).
+- *Holds cause very little muscle damage.* Most soreness and damage come from the lowering (eccentric) part of a movement under load (Hyldahl, Chen and Nosaka 2017, as in D11). A plank has no lowering part, so the abs are ready again the next day.
+- *Sets stop short of failure,* so even the hard days recover in about 1 to 2 days (Morán-Navarro 2017, D13). Hitting a muscle on days in a row works when each session is moderate (Saric 2019, D13).
+- *Moving the holds would not help.* Putting them on Tuesday and Friday makes those days longer, and the trunk then gets only 2 days of work a week. A 2-set hold at the end of the other days costs about 2 minutes.
+
+Sources (read 2026-11-18): McGill 2010, Strength Cond J 32(3):33-46, core training ([author's PDF](https://www.backfitpro.com/medical-scientific-articles/2010/[70]McGill,S.M.(2010)Core-training[J.Strength-and-Condit.].pdf)); Hyldahl, Chen and Nosaka 2017 (D11); Morán-Navarro et al. 2017 and Saric et al. 2019 (D13).
+
+**Tests:** none. No plan data or app change. Test `trainer 3` already locks the days.
+
 ## 5. Changes to your earlier choices
 
 **None.** I kept 74 b and 80-83 exactly:
