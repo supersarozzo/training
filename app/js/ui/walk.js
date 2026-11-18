@@ -2,7 +2,7 @@
 import { h } from "../h.js";
 import { workoutScreen, topBar, actionBar, mainButton, secondaryButton, timerView, stepper, choiceRow } from "./parts.js";
 import { model } from "./app.js";
-import { patchActive } from "../active.js";
+import { patchActive, getActive } from "../active.js";
 import { rerender } from "./app.js";
 import { setPhase, askEnd } from "./flow.js";
 import { startTimer, remainingMs } from "../timer.js";
@@ -11,12 +11,36 @@ import { cues } from "../plan/cues.js";
 import { flip } from "./media.js";
 import { machineRow, videoButton } from "./exinfo.js";
 import { icon } from "./icons.js";
+import { walkRules } from "../plan/plan-v2.js";
 
 const fmt = (n) => (Number.isInteger(n) ? n.toFixed(1) : String(n));
+const round1 = (n) => Math.round(n * 10) / 10;
+
+// A small change before the walk (trainer decision D7, docs/plan/2026-11-18-trainer-decisions.md): speed up to
+// 0.5 km/h either way, slope up to 2 % either way, never above the plan's top (leg days: 2 % lower). A pick that is
+// already above the top (an older saved walk) can be kept, not raised.
+export function adjustRange(w, legDay) {
+  const topSlope = walkRules.maxSlope_pct - (legDay ? walkRules.legDaySlopeLess_pct : 0);
+  return {
+    speed: [round1(Math.max(2, w.speed_kmh - 0.5)), round1(Math.max(w.speed_kmh, Math.min(w.speed_kmh + 0.5, walkRules.maxSpeed_kmh)))],
+    slope: [Math.max(0, w.slope_pct - 2), Math.max(w.slope_pct, Math.min(w.slope_pct + 2, topSlope))],
+  };
+}
+
+// Today's walk settings: the change made before the start (kept on the phone in the running workout), or the plan's pick.
+export function walkTarget(w, act, legDay) {
+  const a = act?.walk_adjust;
+  const r = adjustRange(w, legDay);
+  const pick = (v, [lo, hi], d) => (typeof v === "number" && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d);
+  const speed_kmh = a ? pick(a.speed_kmh, r.speed, w.speed_kmh) : w.speed_kmh;
+  const slope_pct = a ? pick(a.slope_pct, r.slope, w.slope_pct) : w.slope_pct;
+  return { speed_kmh, slope_pct, changed: speed_kmh !== w.speed_kmh || slope_pct !== w.slope_pct };
+}
 
 export function renderWalk(ctx) {
   const { act, session, walk: w } = ctx;
   const legText = ctx.legDay ? "Leg day: 2 % less steep, effort 4 to 5 out of 10." : "Effort 5 to 6 out of 10: you can talk in short sentences.";
+  const t = walkTarget(w, act, ctx.legDay);
 
   // Before the start: what to set on the treadmill.
   if (!act.timer_end) {
@@ -25,6 +49,32 @@ export function renderWalk(ctx) {
       patchActive({ timer_end: startTimer(w.minutes * 60, Date.now()), timer_total: w.minutes * 60000 });
       rerender();
     };
+    // The tiles and the "plan's pick" line follow a change without redrawing the screen.
+    const speedValue = h("span", {});
+    const slopeValue = h("span", {});
+    const pickLine = h("p", { class: "small muted" });
+    const show = (cur) => {
+      speedValue.textContent = fmt(cur.speed_kmh);
+      slopeValue.textContent = String(cur.slope_pct);
+      pickLine.textContent = cur.changed ? `Plan's pick: ${fmt(w.speed_kmh)} km/h · ${w.slope_pct} %` : "";
+    };
+    show(t);
+    const range = adjustRange(w, ctx.legDay);
+    const adjustBox = h("div", { class: "text-link-row" });
+    const change = (patch) => {
+      const cur = walkTarget(w, getActive(), ctx.legDay);
+      const next = walkTarget(w, { walk_adjust: { speed_kmh: cur.speed_kmh, slope_pct: cur.slope_pct, ...patch } }, ctx.legDay);
+      patchActive({ walk_adjust: { speed_kmh: next.speed_kmh, slope_pct: next.slope_pct } });
+      show(next);
+    };
+    const openAdjust = () => {
+      adjustBox.className = "";
+      adjustBox.replaceChildren(
+        stepper({ label: "Speed", unit: "km/h", value: t.speed_kmh, step: 0.1, min: range.speed[0], max: range.speed[1], onChange: (v) => change({ speed_kmh: v }) }),
+        stepper({ label: "Slope", unit: "%", value: t.slope_pct, step: 1, min: range.slope[0], max: range.slope[1], decimals: 0, onChange: (v) => change({ slope_pct: v }) }),
+        h("p", { class: "small muted" }, "Up to 0.5 km/h and 2 % either way, never above the plan's top. The next walk follows what you save."));
+    };
+    adjustBox.append(h("button", { class: "text-button", type: "button", onclick: openAdjust }, "Change speed or slope"));
     return [
       workoutScreen(
         topBar("Walk", () => askEnd(ctx)),
@@ -33,8 +83,10 @@ export function renderWalk(ctx) {
           h("div", { class: "ex-hero-fade" }),
           h("div", { class: "ex-hero-text" }, h("span", { class: "eyebrow accent" }, "Block 1 · Treadmill"), h("h1", {}, "Fast uphill walk"))),
         h("div", { class: "metric-pair" },
-          h("div", { class: "tile" }, h("div", { class: "label" }, "Speed"), h("div", { class: "value" }, fmt(w.speed_kmh), h("span", { class: "unit" }, " km/h"))),
-          h("div", { class: "tile" }, h("div", { class: "label" }, "Slope"), h("div", { class: "value" }, String(w.slope_pct), h("span", { class: "unit" }, " %")))),
+          h("div", { class: "tile" }, h("div", { class: "label" }, "Speed"), h("div", { class: "value" }, speedValue, h("span", { class: "unit" }, " km/h"))),
+          h("div", { class: "tile" }, h("div", { class: "label" }, "Slope"), h("div", { class: "value" }, slopeValue, h("span", { class: "unit" }, " %")))),
+        pickLine,
+        adjustBox,
         h("div", { class: "info-lines" },
           h("div", {}, icon("clock", 16), `${w.minutes} minutes. First ${w.buildUpMinutes} minutes are an easy build-up: ${fmt(w.buildUp.speed_kmh)} km/h, ${w.buildUp.slope_pct} %.`),
           h("div", {}, icon("bolt", 16), `${legText} ${w.note}`)),
@@ -54,7 +106,7 @@ export function renderWalk(ctx) {
     const building = elapsed < w.buildUpMinutes * 60000;
     label.textContent = building
       ? `Build-up: ${fmt(w.buildUp.speed_kmh)} km/h · ${w.buildUp.slope_pct} %`
-      : `Fast walk: ${fmt(w.speed_kmh)} km/h · ${w.slope_pct} %`;
+      : `Fast walk: ${fmt(t.speed_kmh)} km/h · ${t.slope_pct} %`;
   };
   return [
     workoutScreen(
@@ -72,7 +124,8 @@ let draft = null;
 
 export function renderWalkResult(ctx) {
   const { act, session, walk: w } = ctx;
-  if (!draft || draft.id !== session.id) draft = { id: session.id, speed: w.speed_kmh, slope: w.slope_pct, effort: null, breathless: false, distance: "", hr: "" };
+  const t = walkTarget(w, act, ctx.legDay);
+  if (!draft || draft.id !== session.id) draft = { id: session.id, speed: t.speed_kmh, slope: t.slope_pct, effort: null, breathless: false, distance: "", hr: "" };
 
   const save = () => {
     const planned = w.minutes;
@@ -96,7 +149,8 @@ export function renderWalkResult(ctx) {
       topBar("Walk result", () => askEnd(ctx)),
       h("h1", {}, "How was the walk?"),
       h("div", {},
-        stepper({ label: "Speed", unit: "km/h", value: draft.speed, step: 0.1, min: 2, max: 8, onChange: (v) => { draft.speed = v; } }),
+        // Walking speeds only, up to 7 km/h (trainer decision D6); slope up to 15 %, the top of most treadmills.
+        stepper({ label: "Speed", unit: "km/h", value: draft.speed, step: 0.1, min: 2, max: 7, onChange: (v) => { draft.speed = v; } }),
         stepper({ label: "Slope", unit: "%", value: draft.slope, step: 1, min: 0, max: 15, decimals: 0, onChange: (v) => { draft.slope = v; } })),
       h("h3", {}, "How hard did it feel? (1 to 10)"),
       h("p", { class: "small muted" }, "1 = very easy, 5 = you can talk in short sentences, 10 = all out."),

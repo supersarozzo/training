@@ -191,8 +191,10 @@ export const walkRules = {
   legDaySlopeLess_pct: 2,
   legDayEffort: [4, 5],
   normalEffort: [5, 6],
+  // Top of the walk. Trainer decision D3 (docs/plan/2026-11-18-trainer-decisions.md): 12 % and 5 km/h, about 8.5 METs,
+  // close to the 12-3-30 walk. The old top speed was 6 km/h (12 % at 6 km/h is about 10 METs, vigorous).
   maxSlope_pct: 12,
-  maxSpeed_kmh: 6,
+  maxSpeed_kmh: 5,
   speedStep_kmh: 0.2,
   slopeStep_pct: 1,
   // starting settings by intake question 36 (WORKFLOW B5). The plan starts at the low end of each range.
