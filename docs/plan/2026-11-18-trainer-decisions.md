@@ -19,11 +19,11 @@ Words used here:
 | D2 | Walk length | 30 min (3 build-up + 27); short day 15; first walk 20 for the "no" row | no change |
 | D3 | Top of the walk | 12 % slope and 6 km/h | 12 % slope and **5 km/h** |
 | D4 | Effort rule | 5 to 6 of 10 (leg days 4 to 5) | no change |
-| D5 | Suggestion never above the top | the next walk copies a saved walk, even above the top | the suggestion stays at or under the top (engine change sent to worker 8.35) |
+| D5 | Suggestion never above the top | the next walk copies a saved walk, even above the top | the suggestion stays at or under the top (applied by worker 8.35, commit 809e673) |
 | D6 | Result screen limits | speed 2 to 8 km/h, slope 0 to 15 % | speed 2 to **7** km/h, slope 0 to 15 % |
 | D7 | Change before the walk | not possible | **"Change speed or slope"**: up to 0.5 km/h and 2 % either way, never above the top; no minutes change |
 | M1 to M9 | Muscle data | see section 2 | 13 exercises fixed, 2 rows waiting for a code change |
-| P1 | Sets, reps, rest in `plan-v2.js` | – | checked against the plan doc and sources: no clear mistake, no change |
+| P1 | Sets, reps, rest in `plan-v2.js` | – | handed to worker 8.37 (owner of the weekly plan); first look found no mistake |
 
 ## 1. The walk
 
@@ -71,7 +71,7 @@ The research helper's longer check is in [the walk check](../research/2026-11-18
   base = { speed_kmh: Math.min(base.speed_kmh, walkRules.maxSpeed_kmh), slope_pct: Math.min(base.slope_pct, walkRules.maxSlope_pct) };
   ```
 
-  With a test: a saved walk at 5.8 km/h and 14 % gives a suggestion of 5 km/h and 12 % (leg day 10 %). Sent to worker 8.35 on 2026-11-18, who owns that file tonight (details in the shared notes, `8.36-trainer-walk-clamp-for-8.35.md`).
+  With a test: a saved walk at 5.8 km/h and 14 % gives a suggestion of 5 km/h and 12 % (leg day 10 %). Sent to worker 8.35 on 2026-11-18, who owns that file tonight; applied in commit 809e673 (test first in 941bd5d).
 - **Old → new:** no limit → at or under the top.
 
 ### D6. Result screen: walking speeds only (7 km/h, was 8)
@@ -120,21 +120,18 @@ Source of the findings: [the muscle-map check](../research/2026-11-18-muscle-map
 
 **The weekly numbers on the plan page move a little:** calves and hamstrings lose some helper half-sets (leg press, squats, hip thrust); inner thighs gain some; forearms, glutes (side plank), mid back (rear-delt raise) and side shoulders (presses) gain helper half-sets. Direct (main-muscle) sets do not change.
 
-**Body drawing (not data, not changed):** the front-shoulder strip is small on the front map, so presses look weaker than lateral raises (check section 3). This is drawing code (`bodymap.js`), not the trainer's file. Sent as a follow-up.
+**Body drawing (not data):** the front-shoulder strip was small on the front map, so presses looked weaker than lateral raises (check section 3). Worker 8.35 fixed it in the drawing code (commit 6ef3987: the front shoulder cap shows presses).
 
-## 3. Sets, reps and rest in `plan-v2.js` (P1)
+## 3. Sets, reps and rest in `plan-v2.js` (P1): handed to worker 8.37
 
-- **Checked:** every day's slots (exercise, sets, rest) and every exercise's rep range and kind against plan v2 sections 5, 6 and 17. All match. Weights are not numbers in the plan: they come from week 1 (find the weight with about 3 reps left) and the double-progression rule.
-- **Against the evidence:** 2 to 3 sets per exercise, 8 to 15 reps, stopping 2 to 3 reps before failure, each muscle twice a week, about 8 to 12 hard sets per muscle a week. The 2026 ACSM position stand favours progressive training of all major muscles at least 2 days a week, with flexible sets and reps, and found that training to failure did not consistently help ([ACSM 2026 resistance training update](https://acsm.org/resistance-training-guidelines-update-2026/); [Newswise summary](https://www.newswise.com/articles/acsm-unveils-landmark-2026-resistance-training-guidelines-first-update-in-17-years)). A dose-response meta-regression found more weekly sets give more growth with smaller gains as sets rise ([Pelland et al. preprint, SportRxiv](https://sportrxiv.org/index.php/server/preprint/view/460)). The plan sits in a sensible beginner range.
-- **Decision:** no clear mistake, no change.
-- **Small note, no change:** `plan-v2.js` calls the cable pull-through `muscle: "hamstrings"`, while the muscle data says glutes main. Words only; both muscles work.
+The Training master moved the weekly plan (days, sets, reps, rest, weights guidance) to worker 8.37, a separate trainer who owns `app/js/plan/plan-v2.js` from 2026-11-18. Its check and decisions are in [the trainer weekly plan](2026-11-18-trainer-weekly-plan.md). Before the hand-over this file's trainer compared every day's slots and rep ranges in `plan-v2.js` with plan v2 sections 5, 6 and 17: all matched, no clear mistake. 8.37 reached the same result and agreed with D3. This file's only `plan-v2.js` change is D3 (`maxSpeed_kmh`, commit 9c851b1).
 
 ## 4. Not verified
 
 - Study full texts were not read; numbers come from abstracts (Europe PMC), official pages and search summaries. A 2024 review on self-chosen effort (University of Murcia journal) could not be opened as text, so it is not used.
 - MET numbers are formula estimates; people and treadmills differ by 10 to 20 %.
 - The walk screen change was tested on a pretend page (tests W1 to W4), not on a phone.
-- D5 needs worker 8.35's engine change; until then a walk saved above the top is copied into later suggestions.
+- D5 was applied by worker 8.35; the trainer read the commit list but did not re-run its test separately (the full test run covers it).
 
 ## 5. Notes for later (the trainer stays Rosario's trainer)
 
