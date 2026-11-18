@@ -173,10 +173,13 @@ test("W3 the Plan cards never say '1 sets' (week 12: the planks have 1 set)", ()
 });
 
 test("W4 no screen builds '<count> sets' or '<count> reps' without the helper", () => {
-  const files = ["engine/workout.js", "ui/exlayer.js", "ui/planday.js", "ui/planedit.js", "ui/today.js", "ui/pair.js", "ui/progress.js", "ui/finish.js", "ui/flow.js", "ui/week1.js"];
+  // Review round 1 (checker): + the pair header ("1 rounds"), the muscle check ("1 direct sets") and a reps word kept in a
+  // ternary (`: " reps"`, which gave "1 reps" for a range of exactly 1).
+  const files = ["engine/workout.js", "ui/exlayer.js", "ui/planday.js", "ui/planedit.js", "ui/today.js", "ui/pair.js", "ui/progress.js", "ui/finish.js", "ui/flow.js", "ui/week1.js",
+    "engine/planpage.js", "planview.js", "ui/musclecheck.js"];
   for (const f of files) {
     const src = readFileSync(new URL(`../app/js/${f}`, import.meta.url), "utf8");
-    const bad = src.split("\n").filter((l) => /\$\{[^}]+\} (sets|reps)\b/.test(l) || /String\([^)]*\)\), " sets/.test(l));
+    const bad = src.split("\n").filter((l) => /\$\{[^}]+\} (sets|reps|rounds|direct sets)\b/.test(l) || /String\([^)]*\)\), " sets/.test(l) || /: " reps"/.test(l));
     assert.deepEqual(bad, [], `${f} builds a count with "sets" or "reps" directly`);
   }
 });
