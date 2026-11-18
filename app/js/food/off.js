@@ -2,7 +2,10 @@
 // Safety rules:
 //  - only the barcode or the search word is sent, plus app_name / app_version (their rule for apps); no key, no
 //    cookies, no referrer, no extra headers. The GitHub key is never near this file;
-//  - name search finds UK products only (answer 79 a);
+//  - name search finds UK products only (answer 79 a). Since 0.7.6 (food S1) it asks search.openfoodfacts.org first (the
+//    old /cgi/search.pl answered 503 on 2026-11-18): q = the typed words + countries_tags:"en:united-kingdom", with the
+//    Lucene signs and AND / OR / NOT taken out of the words, so typing can never change the filter; no app_name there.
+//    If it fails, the old address once; if both fail, one plain message. One search counts once against the limit;
 //  - their text is typed by strangers: it is cleaned and cut to 120 letters here, and the page shows it as text only;
 //    every number is range-checked (a bad one becomes null, and the check step asks Rosario to type it);
 //  - a call gives up after 20 s; at most 10 lookups and 8 searches a minute (their limits are 15 and 10);
@@ -11,6 +14,7 @@ import { cleanText, TEXT_MAX, PER100_MAX } from "./foodmath.js";
 import { normalizeBarcode, BARCODE_WORDS } from "./barcode.js";
 
 export const OFF_ORIGIN = "https://world.openfoodfacts.org";
+export const OFF_SEARCH_ORIGIN = "https://search.openfoodfacts.org";
 export const OFF_LIMITS = Object.freeze({ reads: 10, searches: 8, windowMs: 60000 });
 export const OFF_CREDIT_LINKS = Object.freeze({ off: "https://world.openfoodfacts.org", odbl: "https://opendatacommons.org/licenses/odbl/1-0/" });
 export const OFF_WORDS = {
@@ -21,11 +25,18 @@ export const OFF_WORDS = {
   not_found: "Open Food Facts does not know this barcode. Make a new food with the numbers from the pack.",
   wait: "Many lookups in one minute. Wait {s} s, then try again.",
   short: "Type at least 2 letters.",
+  search_down: "Online search is not working right now. Try again later, or make a new food.",
 };
 const TIMEOUT_MS = 20000;
 const FIELDS = "code,product_name,product_name_en,brands,quantity,serving_size,serving_quantity,nutriments";
 const PAGE = 20;
 const WORD_MAX = 60;
+const UK_FILTER = 'countries_tags:"en:united-kingdom"';
+// The typed words as plain words only: every Lucene sign becomes a space and the operator words go (they are upper case
+// in Lucene; "and" in lower case is a plain word), so the words can never change the UK filter or the search.
+export function plainWords(text) {
+  return String(text ?? "").replace(/[+\-&|!(){}[\]^"~*?:\\/]/g, " ").split(/\s+/).filter((w) => w && !/^(AND|OR|NOT|TO)$/.test(w)).join(" ");
+}
 
 const fin = (v) => typeof v === "number" && Number.isFinite(v);
 function number(v) {
@@ -49,7 +60,7 @@ export function parseProduct(raw, code = null, fetchedAt = new Date().toISOStrin
   return {
     barcode: bc.ok ? bc.code : null,
     name: cleanText(typeof p.product_name === "string" && p.product_name.trim() ? p.product_name : p.product_name_en ?? "", TEXT_MAX),
-    brand: cleanText(typeof p.brands === "string" ? p.brands : "", TEXT_MAX),
+    brand: cleanText(typeof p.brands === "string" ? p.brands : Array.isArray(p.brands) ? p.brands.filter((b) => typeof b === "string").join(", ") : "", TEXT_MAX),
     quantity: cleanText(typeof p.quantity === "string" ? p.quantity : "", 60),
     serving_g: serving !== null && serving > 0 && serving <= 2000 ? Math.round(serving * 10) / 10 : null,
     serving_label: cleanText(typeof p.serving_size === "string" ? p.serving_size : "", 60),
@@ -132,19 +143,25 @@ export function createOff({ fetch: doFetch, version = "0", now = Date.now, setTi
 
     // Search a food name, UK products only. { ok: true, products } | { ok: false, code, message }.
     async search(text) {
-      const word = cleanText(text, WORD_MAX);
+      const word = cleanText(plainWords(cleanText(text, 500)), WORD_MAX);
       if (word.length < 2) return fail("short");
       const wait = allow("searches");
       if (wait) return wait;
-      const q = params({
-        search_terms: word, search_simple: "1", action: "process", json: "1", page_size: String(PAGE),
-        tagtype_0: "countries", tag_contains_0: "contains", tag_0: "en:united-kingdom", fields: FIELDS,
-      });
-      const r = await get(`${OFF_ORIGIN}/cgi/search.pl?${q}`);
-      if (!r.ok) return r;
-      if (r.status !== 200 || !isObj(r.json) || !Array.isArray(r.json.products)) return fail("bad");
+      const list = (r, key) => (r.ok && r.status === 200 && isObj(r.json) && Array.isArray(r.json[key]) ? r.json[key] : null);
+      // search.openfoodfacts.org first: only q (the words and the UK filter), the page size and our fields.
+      const fresh = await get(`${OFF_SEARCH_ORIGIN}/search?${new URLSearchParams({ q: `${word} ${UK_FILTER}`, page_size: String(PAGE), fields: FIELDS })}`);
+      let raw = list(fresh, "hits");
+      if (raw === null) { // the old address once
+        const q = params({
+          search_terms: word, search_simple: "1", action: "process", json: "1", page_size: String(PAGE),
+          tagtype_0: "countries", tag_contains_0: "contains", tag_0: "en:united-kingdom", fields: FIELDS,
+        });
+        const old = await get(`${OFF_ORIGIN}/cgi/search.pl?${q}`);
+        raw = list(old, "products");
+        if (raw === null) return fail(fresh.code === "offline" && old.code === "offline" ? "offline" : "search_down");
+      }
       const at = new Date(now()).toISOString();
-      const products = r.json.products.slice(0, PAGE).map((p) => parseProduct(p, isObj(p) ? p.code : null, at)).filter(hasAnything);
+      const products = raw.filter(isObj).slice(0, PAGE).map((p) => parseProduct(p, p.code, at)).filter(hasAnything);
       return { ok: true, products };
     },
   };
