@@ -41,11 +41,11 @@ const textOf = (out) => (Array.isArray(out) ? out : [out]).filter(Boolean).map((
 test("R1 week 1: 'too heavy' at the lightest step holds the weight and says the D19 note; above it, as before", () => {
   const at = week1NextSet({ weight_kg: 5, reps: 1, left: "0-1" }, "chest_press", DB);
   assert.equal(at.weight_kg, 5);
-  assert.equal(at.note, P.FLOOR_NOTE);
+  assert.equal(at.note, P.WEEK1_FLOOR_NOTE, "trainer answer 5 to 8.43 (71d3aa5): the week-1 floor words");
   assert.equal(at.atFloor, true);
   const heavy = week1NextSet({ weight_kg: 2, reps: 9, left: "0-1" }, "lateral_raise", DB);
   assert.equal(heavy.weight_kg, 2);
-  assert.equal(heavy.note, P.FLOOR_NOTE, "'A bit heavy. Remove 1 step.' at 2 kg too");
+  assert.equal(heavy.note, P.WEEK1_FLOOR_NOTE, "'A bit heavy. Remove 1 step.' at 2 kg too");
   const above = week1NextSet({ weight_kg: 20, reps: 1, left: "0-1" }, "chest_press", DB);
   assert.equal(above.note, "Too heavy. Remove 2 steps.");
   assert.equal(above.weight_kg, 10);
@@ -161,4 +161,12 @@ test("M2 protein: a single food row under 10 g keeps 1 decimal; 10 g and more, a
   assert.match(diet, /const fmt = \(n\) => Math\.round\(n\)/, "the ring and its words: whole grams");
   assert.match(src("js/diet/sheets.js"), /\$\{entry\.kcal\} kcal · \$\{proteinText\(entry\.protein_g\)\} g protein/, "one entry's sheet: the row rule");
   assert.ok(body, "fake page ready");
+});
+
+// Review round 2 (checker, its plant passed every behaviour test): only the duplicate floor note is hidden; any OTHER
+// suggestion note on a pain swap at the floor still shows.
+test("R2d a pain swap at the floor keeps the other suggestion note ('Same weight. Aim for 1 more rep per set.')", () => {
+  const text = painCardFromLog([done("2026-11-13", "rear_delt_raise", 2, [12, 12, 12])]);
+  assert.ok(text.includes(P.PAIN_FLOOR_NOTE));
+  assert.ok(text.includes("Same weight. Aim for 1 more rep per set."), "the suggestion's own note stays");
 });
