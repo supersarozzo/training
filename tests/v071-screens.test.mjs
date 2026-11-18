@@ -111,7 +111,7 @@ test("S10 entry rows: protein in bold, then the time and the amount, kcal small"
   assert.deepEqual(dietPage.entryParts({ ...e, amount_g: null }), { sub: "08:10 · Quick add", big: "4.4 g", small: "150 kcal" });
   assert.equal(dietPage.entryParts({ ...e, updated_at: undefined }).sub, "40 g"); // no time: none shown
   assert.equal(dietPage.entryParts({ ...e, updated_at: "not a time" }).sub, "40 g");
-  assert.equal(dietPage.entryParts({ ...e, protein_g: 46.5 }).big, "46.5 g");
+  assert.equal(dietPage.entryParts({ ...e, protein_g: 46.5 }).big, "47 g"); // 0.7.6: whole grams from 10 g (master pick 2 a)
   assert.equal(dietPage.entryParts({ ...e, protein_g: 7 }).big, "7 g");
 });
 

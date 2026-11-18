@@ -88,7 +88,7 @@ test("F-1 foodHint: a line only when GitHub is set up and the last food sync had
 });
 
 test("F-2 Today shows the food hint with a link to Diet under the sync line; none when food is fine", () => {
-  fresh({ ...CONNECTED, food_last_sync_result: "error" });
+  fresh({ ...CONNECTED, food_last_sync_result: "conflict" }); // review round 1: "error" syncs by itself (R4)
   globalThis.location.hash = "#/today";
   const out = renderToday();
   const root = Array.isArray(out) ? out[0] : out;

@@ -106,7 +106,7 @@ test("D11-3 the label says 'Practice week · Learn, find weights'; 'Week 0' is n
   assert.equal(schedule.practiceLine(START), "Your plan starts on Monday 12 January. Practice now: find your weights and learn the moves.");
   for (const d of [WED_BEFORE, SAT_BEFORE, "2026-01-05"]) assert.doesNotMatch(schedule.dayLabel(START, d).text, /Week 0|Week -/);
   const t = src("ui/today.js");
-  assert.match(t, /practice \? PRACTICE_LABEL/);
+  assert.match(t, /practice \? PRACTICE_SHORT/); // 0.7.6: Today's eyebrow says only "Practice week" (master pick under Rosario's 94 a)
   assert.match(t, /practiceLine\(doc\.block\.start_monday\)/);
   assert.doesNotMatch(t, /Week 0/);
 });
