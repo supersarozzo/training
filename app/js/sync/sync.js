@@ -15,7 +15,8 @@ import { hasData } from "../store.js";
 
 export const MESSAGES = {
   ok: "Synced.",
-  not_set_up: "Only on this phone. Set up GitHub in Settings.",
+  not_set_up: "Only on this phone. Set up GitHub in Progress › Settings.",
+  not_set_up_here: "Only on this phone. Set up GitHub below.", // inside Settings itself
   offline: "Saved on phone. Will sync when online.",
   auth: "GitHub key expired or wrong. Make a new one.",
   no_access: "Can't reach training-data. Check the repo name and key.",
@@ -122,8 +123,8 @@ export function createSyncer({ store, getFetch, nowIso = () => new Date().toISOS
 // ---------- plain-words status for the screens (pure) ----------
 
 // A short line for Today and Settings. `unsynced` = something changed after the last good sync.
-export function statusText(device, unsynced = false) {
-  if (!connectionOf(device)) return MESSAGES.not_set_up;
+export function statusText(device, unsynced = false, place = "elsewhere") {
+  if (!connectionOf(device)) return place === "settings" ? MESSAGES.not_set_up_here : MESSAGES.not_set_up;
   const r = device.last_sync_result;
   if (r && r !== "ok") return MESSAGES[r] ?? MESSAGES.error;
   if (!device.last_sync_at) return "GitHub is set up. Not synced yet.";

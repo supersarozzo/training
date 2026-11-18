@@ -13,7 +13,7 @@ import { machineRow, videoButton } from "./exinfo.js";
 import { icon } from "./icons.js";
 import { walkRules } from "../plan/plan-v2.js";
 
-const fmt = (n) => (Number.isInteger(n) ? n.toFixed(1) : String(n));
+export const fmt = (n) => String(Math.round(n * 10) / 10); // the same number as the stepper shows (5, not 5.0)
 const round1 = (n) => Math.round(n * 10) / 10;
 
 // A small change before the walk (trainer decision D7, docs/plan/2026-11-18-trainer-decisions.md): speed up to

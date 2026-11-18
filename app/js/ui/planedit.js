@@ -140,7 +140,13 @@ export function openSwapSheet(day, week, slotName) {
 
 // ---------- Add sheet ----------
 
-export function openAddSheet(day, week) {
+// "3 sets this week (2 in a normal week)"; for another picked week: "3 sets in week 7 (...)".
+export function setsWords(a, week, thisWeek) {
+  const when = thisWeek === undefined || week === thisWeek ? "this week" : `in week ${week}`;
+  return `${a.setsThisWeek} sets ${when} (${a.setsNormal} in a normal week)`;
+}
+
+export function openAddSheet(day, week, thisWeek) {
   const doc = model.doc();
   const a = addSheet(doc, day, week, doc.shared_settings);
   if (a.left <= 0) { toast(`${a.max} added: the most for one day.`); return; }
@@ -174,7 +180,7 @@ export function openAddSheet(day, week) {
     h("h2", {}, `Add to ${dayName(day)}`),
     lastsBox(day),
     h("div", { class: "card tight" },
-      h("p", {}, h("b", {}, "Where it goes:"), ` at the end, after the abs, done on its own. ${a.setsThisWeek} sets this week (${a.setsNormal} in a normal week), ${a.rest} s rest. At most ${a.max} added exercises a day.`),
+      h("p", {}, h("b", {}, "Where it goes:"), ` at the end, after the abs, done on its own. ${setsWords(a, week, thisWeek)}, ${a.rest} s rest. At most ${a.max} added exercises a day.`),
       h("p", { class: "small muted" }, `Adds about ${a.minutes} minutes. "low" = the Muscles screen finds this muscle short in the whole plan.`)),
     chips,
     list);
@@ -285,6 +291,16 @@ export function openDoseSheet(day, week, slotName) {
     });
   };
 
+  const weightBox = weighted ? stepper({
+    label: "Weight", unit: "kg", value: draft.kg, min: 0, max: 1000, decimals: 2,
+    next: (v, dir) => Math.max(0, v + dir * weightStepFor(slot.ex, v, doc.shared_settings)),
+    onChange: (v) => { draft.kg = v; draft.kgTouched = true; },
+  }) : null;
+  if (weightBox && w.kg === null) { // the app has no weight yet: an empty box, not "0 kg" (0.6.0 minor)
+    const box = weightBox.querySelector(".step-input");
+    box.value = "";
+    box.setAttribute("placeholder", "kg");
+  }
   const hasOwnWeight = typeof stOld?.my_weight_kg === "number";
   const resetWeight = () => {
     try {
@@ -306,11 +322,7 @@ export function openDoseSheet(day, week, slotName) {
       stepper({ label: hold ? "Seconds, high" : "Reps, high", unit, value: draft.hi, step: hold ? 5 : 1, min: 1, max: 100, decimals: 0, onChange: (v) => { draft.hi = v; showRange(); } })),
     rangeNote,
     weighted ? [
-      stepper({
-        label: "Weight", unit: "kg", value: draft.kg, min: 0, max: 1000, decimals: 2,
-        next: (v, dir) => Math.max(0, v + dir * weightStepFor(slot.ex, v, doc.shared_settings)),
-        onChange: (v) => { draft.kg = v; draft.kgTouched = true; },
-      }),
+      weightBox,
       h("p", { class: "small muted" }, w.kg
         ? `The app says ${w.text}${w.note ? ` (${w.note})` : ""}. A weight you set here is used next time; after that the app counts up from what you log.`
         : "Set the weight you will start with. After your next workout the app counts up from what you log."),

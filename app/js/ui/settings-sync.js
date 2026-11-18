@@ -6,6 +6,7 @@ import { openSheet } from "./parts.js";
 import { store, model, rerender } from "./app.js";
 import { syncer, fakeInfo } from "../syncer.js";
 import { saveConnection, forgetKey, statusText, keyEndsSoon, connectionOf } from "../sync/sync.js";
+import { FOOD_MESSAGES } from "../sync/foodsync.js";
 import { today } from "../clock.js";
 
 let draft = null; // { owner, repo, token, expires } while the form is open
@@ -57,6 +58,15 @@ async function run(label, work) {
 
 const asMessage = (res, okText) => ({ kind: res.result === "ok" ? "ok" : "error", text: res.result === "ok" ? okText : res.message });
 
+// The combined syncer (both.js) puts the food result in `res.food`. "Synced" is said only when the food part is fine too (0.7.1).
+// Pure: used by Get and Send.
+export function syncOutcome(res, okText) {
+  const food = res.food;
+  if (res.result !== "ok" || !food || food.result === "ok") return asMessage(res, okText);
+  const why = food.message ?? FOOD_MESSAGES[food.result] ?? FOOD_MESSAGES.error;
+  return { kind: "error", text: `Workouts synced. Food did not sync: ${why}` };
+}
+
 const saveAndTest = () => run("test", async () => {
   const saved = saveDraft();
   if (!saved.ok) return { kind: "error", text: saved.error };
@@ -65,10 +75,10 @@ const saveAndTest = () => run("test", async () => {
 });
 const getNow = () => run("get", async () => {
   const res = await syncer.request("get");
-  return asMessage(res, res.found === false ? "Nothing on GitHub yet. Your phone data is unchanged." : "Got the latest from GitHub and merged it into this phone.");
+  return syncOutcome(res, res.found === false ? "Nothing on GitHub yet. Your phone data is unchanged." : "Got the latest from GitHub and merged it into this phone.");
 });
 export { getNow as getFromGithub };
-const sendNow = () => run("send", async () => asMessage(await syncer.request("full"), "Synced: the phone and GitHub now have the same data."));
+const sendNow = () => run("send", async () => syncOutcome(await syncer.request("full"), "Synced: the phone and GitHub now have the same data."));
 
 function confirmForget() {
   const close = openSheet(
@@ -86,7 +96,7 @@ export function syncCard() {
   const disabled = busy !== null;
   return h("div", { class: "card" },
     h("h2", {}, "GitHub sync"),
-    h("p", { class: busy || (device.last_sync_result && device.last_sync_result !== "ok") ? "status-warning" : "muted", role: "status" }, busy ? "Working…" : statusText(device, unsynced)),
+    h("p", { class: busy || (device.last_sync_result && device.last_sync_result !== "ok") ? "status-warning" : "muted", role: "status" }, busy ? "Working…" : statusText(device, unsynced, "settings")),
     ends ? h("p", { class: "status-warning" }, ends.days < 0 ? `The GitHub key ended on ${ends.date}. Make a new one.` : `The GitHub key ends on ${ends.date}.`) : null,
     h("p", { class: "small muted" }, "Your data syncs to your private GitHub repo when you save a workout and when you open the app. It can not sync while the app is closed."),
     connectionFields(),

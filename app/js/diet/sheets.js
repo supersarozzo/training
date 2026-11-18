@@ -30,6 +30,10 @@ const num = (text) => {
 const show = (n) => (n === null || n === undefined ? "?" : String(Math.round(n * 10) / 10));
 let uid = 0;
 
+// The Diet page gives its list redraw here: Undo with a sheet open redraws the list behind it and leaves the sheet open.
+let redrawList = () => {};
+export function setListRedraw(fn) { redrawList = fn; }
+
 // A message with an Undo button that goes away after 8 seconds. One at a time.
 export function undoToast(text, onUndo, ms = 8000) {
   document.querySelectorAll(".undo-toast").forEach((el) => el.remove());
@@ -40,7 +44,7 @@ export function undoToast(text, onUndo, ms = 8000) {
       onclick: () => {
         el.remove();
         try { onUndo(); } catch (e) { messageToast(errText(e)); }
-        if (!document.querySelector("[data-sheet], [data-scan]")) rerender(); // never close a sheet with typed text
+        document.querySelector("[data-sheet], [data-scan]") ? redrawList() : rerender(); // a sheet stays open (typed text): only the list behind it is redrawn
       },
     }, icon("undo", 18), "Undo"));
   document.body.append(el);

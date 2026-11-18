@@ -329,7 +329,7 @@ export function dayChoices(doc, date) {
 
 // The weight to use, in words, for the Plan's cards and the opened exercise (0.6.0: "the plan never shows weights").
 // Same numbers as the workout (suggestFor), without the break rules of a running workout.
-// Returns { text, note, kg }: text "40 kg" | "Your body weight" | "Find it in week 1" | "Pick a light weight";
+// Returns { text, note, kg }: text "40 kg" | "Your body weight" | "Pick a light weight";
 // note: why ("Your weight, set in the Plan.", "Last time: 40 kg x 10, 10, 9" ...).
 export function weightLine(doc, exId, week) {
   const ex = exercises[exId];
@@ -337,7 +337,7 @@ export function weightLine(doc, exId, week) {
   const st = (doc?.exercise_state ?? []).find((x) => x && x.id === `x-${exId}` && !x.deleted);
   const sg = suggestFor(doc, exId, { week, missed: null, exerciseState: st });
   if (typeof sg.weight_kg === "number" && sg.weight_kg > 0) return { text: `${sg.weight_kg} kg`, note: sg.action === "mine" ? sg.note : sg.lastText ?? sg.note ?? "", kg: sg.weight_kg };
-  return { text: week === 1 ? "Find it in week 1" : "Pick a light weight", note: "Start light with good form; the app counts up from what you log.", kg: null };
+  return { text: "Pick a light weight", note: "Start light with good form; the app counts up from what you log.", kg: null };
 }
 
 // Is any workout running (any day)? Reps and weight set in the Plan count on every day, so the Change sheet stays

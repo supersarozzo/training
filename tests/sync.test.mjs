@@ -120,7 +120,7 @@ test("sync not set up: a plain message and no network call at all", async () => 
   const p = withProfile(phone(fake, { configure: false }));
   const res = await p.syncer.request();
   assert.equal(res.result, "not_set_up");
-  assert.equal(res.message, "Only on this phone. Set up GitHub in Settings.");
+  assert.equal(res.message, "Only on this phone. Set up GitHub in Progress › Settings.");
   assert.equal(fake.calls.length, 0);
 });
 

@@ -13,7 +13,8 @@ export const FOOD_PATH = "food.json";
 export const FOOD_MESSAGES = {
   ...MESSAGES,
   ok: "Food synced.",
-  not_set_up: "Food is only on this phone. Set up GitHub in Settings.",
+  not_set_up: "Food is only on this phone. Set up GitHub in Progress › Settings.",
+  not_set_up_here: "Food is only on this phone. Set up GitHub below.",
   broken_remote: "The GitHub food file looks damaged. Not changed. Ask the Training chat.",
   too_new: "The GitHub food file is from a newer app. Update the app first.",
   local_problem: "The food data on this phone could not be read. Nothing was sent. Ask the Training chat.",
@@ -52,8 +53,8 @@ export function createFoodSyncer({ store, foodStore, getFetch, nowIso = () => ne
 }
 
 // A short line for the Diet tab. `unsynced` = food changed after the last good food sync.
-export function foodStatusText(device, unsynced = false) {
-  if (!connectionOf(device)) return FOOD_MESSAGES.not_set_up;
+export function foodStatusText(device, unsynced = false, place = "elsewhere") {
+  if (!connectionOf(device)) return place === "settings" ? FOOD_MESSAGES.not_set_up_here : FOOD_MESSAGES.not_set_up;
   const r = device[RESULT];
   if (r && r !== "ok") return FOOD_MESSAGES[r] ?? FOOD_MESSAGES.error;
   if (!device[AT]) return "Food: GitHub is set up. Not synced yet.";

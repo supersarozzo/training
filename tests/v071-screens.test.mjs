@@ -115,7 +115,7 @@ test("S10 entry rows: protein in bold, then the time and the amount, kcal small"
 
 // ---------- S11-S15: C6 ----------
 test("S11 'no weight yet' has one wording in the Plan; the Change sheet starts empty, not at 0 kg", () => {
-  const doc = { exercise_state: [] };
+  const doc = { exercise_state: [], sessions: [], weighins: [] };
   for (const week of [1, 2, 6]) assert.equal(weightLine(doc, "leg_press", week).text, "Pick a light weight");
   assert.doesNotMatch(src("js/planview.js"), /Find it in week 1/);
   const pe = src("js/ui/planedit.js");

@@ -132,7 +132,7 @@ export function renderPlan() {
     u.slots.map((x) => exCard(doc, day, week, x, edit)),
   ]);
   const addButton = edit ? (addedLeft > 0
-    ? h("button", { class: "button secondary add-ex", type: "button", onclick: () => openAddSheet(day, week) }, icon("plus", 20), `Add an exercise (${addedLeft} of ${MAX_ADDED} left)`)
+    ? h("button", { class: "button secondary add-ex", type: "button", onclick: () => openAddSheet(day, week, page.week) }, icon("plus", 20), `Add an exercise (${addedLeft} of ${MAX_ADDED} left)`)
     : h("button", { class: "button secondary add-ex", type: "button", disabled: true }, `${MAX_ADDED} added: the most for one day`)) : null;
   const editCard = edit ? h("div", { class: "card changed-card" },
     h("p", {}, h("b", {}, `Editing ${dayWord}.`), ` Each change saves at once and lasts: every ${dayWord} from now on, in every week. Past workouts stay as they were.`),

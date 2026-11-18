@@ -62,7 +62,7 @@ test("key ends soon: 14 days before, and after it ended", () => {
 });
 
 test("status text uses the plain messages", () => {
-  assert.equal(statusText({}), "Only on this phone. Set up GitHub in Settings.");
+  assert.equal(statusText({}), "Only on this phone. Set up GitHub in Progress › Settings.");
   const base = { token: "x-test-key-1", owner: "o" };
   assert.match(statusText(base), /Not synced yet/);
   assert.equal(statusText({ ...base, last_sync_result: "auth" }), "GitHub key expired or wrong. Make a new one.");

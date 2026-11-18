@@ -420,7 +420,7 @@ test("S24 Forget GitHub key also removes the food sync state; a new connection s
 });
 
 test("S25 food status line in words", () => {
-  assert.equal(foodStatusText({}), "Food is only on this phone. Set up GitHub in Settings.");
+  assert.equal(foodStatusText({}), "Food is only on this phone. Set up GitHub in Progress › Settings.");
   const dev = { token: "t-made-up", owner: "o" };
   assert.equal(foodStatusText(dev), "Food: GitHub is set up. Not synced yet.");
   assert.equal(foodStatusText({ ...dev, food_last_sync_result: "broken_remote" }), FOOD_MESSAGES.broken_remote);

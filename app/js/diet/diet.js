@@ -12,7 +12,7 @@ import { downloadText } from "../backup.js";
 import { entriesOn, totals, byMeal, MEAL_WORDS, mealAt, recentFoods, averageLast7, againAmount, numbersFor, dayBefore } from "../food/foodmath.js";
 import { foodStatusText } from "../sync/foodsync.js";
 import { syncer } from "../syncer.js";
-import { openSearch, openDigits, openQuickAdd, openEntry, creditLine, undoToast, messageToast } from "./sheets.js";
+import { openSearch, openDigits, openQuickAdd, openEntry, creditLine, undoToast, messageToast, setListRedraw } from "./sheets.js";
 import { openScanner } from "./scan.js";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -61,6 +61,37 @@ async function restoreFile(input) {
 
 function failToast(e) { messageToast(e && e.message ? e.message : "That did not work. Nothing was changed."); }
 
+// The words of one entry row (the mock-up): the name, then "08:10 · 40 g", then protein in bold and the kcal small.
+// The time is when the entry was last saved (the entry has no other time); no valid time: none is shown.
+export function entryParts(e) {
+  const d = new Date(e.updated_at);
+  const time = typeof e.updated_at === "string" && !Number.isNaN(d.getTime()) ? `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}` : "";
+  const amount = typeof e.amount_g === "number" ? `${Math.round(e.amount_g * 10) / 10} g` : "Quick add";
+  return { sub: time ? `${time} · ${amount}` : amount, big: `${Math.round(e.protein_g * 10) / 10} g`, small: `${e.kcal} kcal` };
+}
+
+// Today's foods by meal. Read fresh each time, so Undo can redraw just this part behind an open sheet.
+function foodList(date) {
+  const entries = entriesOn(fm.doc(), date);
+  return [
+    h("h2", {}, "Today's food"),
+    entries.length === 0 ? h("p", { class: "muted" }, "No food yet today. Pick a way above.") : null,
+    ...byMeal(entries).map((m) => h("section", { class: "card meal" },
+      h("div", { class: "mealh" }, h("span", {}, MEAL_WORDS[m.meal]), h("small", { class: "muted" }, m.entries.length ? `${m.kcal} kcal · ${Math.round(m.protein_g)} g protein` : "Nothing yet")),
+      m.entries.map((e) => {
+        const p = entryParts(e);
+        return h("button", { class: "fl", type: "button", onclick: () => openEntry(e) },
+          h("span", { class: "nm" }, h("b", {}, e.name), h("small", { class: "muted" }, p.sub)),
+          h("span", { class: "kc" }, h("b", {}, p.big), h("small", { class: "muted" }, p.small)),
+          icon("chevron", 18));
+      }))),
+  ].filter(Boolean);
+}
+setListRedraw(() => {
+  const el = document.querySelector(".diet-list");
+  if (el) el.replaceChildren(...foodList(today()));
+});
+
 export function renderDiet() {
   const date = today();
   const doc = fm.doc();
@@ -90,7 +121,6 @@ export function renderDiet() {
     h("button", { class: "way", type: "button", disabled, onclick }, icon(name, 22), h("span", {}, label), sub ? h("small", { class: "muted" }, sub) : null);
 
   const recent = recentFoods(doc, date, 6);
-  const meals = byMeal(entries);
 
   const pick = h("input", { class: "scan-file", type: "file", accept: "application/json,.json", "aria-label": "Food backup file", onchange: () => restoreFile(pick) });
   const foot = h("div", { class: "diet-foot" },
@@ -126,14 +156,7 @@ export function renderDiet() {
             h("span", { class: "kc" }, h("b", {}, kcal), h("small", { class: "muted" }, "kcal")), icon("plus", 20));
           return btn;
         })) : null,
-      h("h2", {}, "Today's food"),
-      entries.length === 0 ? h("p", { class: "muted" }, "No food yet today. Pick a way above.") : null,
-      meals.map((m) => h("section", { class: "card meal" },
-        h("div", { class: "mealh" }, h("span", {}, MEAL_WORDS[m.meal]), h("small", { class: "muted" }, m.entries.length ? `${m.kcal} kcal · ${Math.round(m.protein_g)} g protein` : "Nothing yet")),
-        m.entries.map((e) => h("button", { class: "fl", type: "button", onclick: () => openEntry(e) },
-          h("span", { class: "nm" }, h("b", {}, e.name), h("small", { class: "muted" }, typeof e.amount_g === "number" ? `${Math.round(e.amount_g * 10) / 10} g` : "Quick add")),
-          h("span", { class: "kc" }, h("b", {}, e.kcal), h("small", { class: "muted" }, `${Math.round(e.protein_g)} g protein`)),
-          icon("chevron", 18))))),
+      h("div", { class: "diet-list" }, foodList(date)),
       foot),
     tabActionBar(
       h("div", { class: "diet-bar" },
