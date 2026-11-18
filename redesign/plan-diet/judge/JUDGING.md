@@ -151,7 +151,8 @@ Delicate steps (marked ⚠) are Opus with tests first in their own commit (ARCHI
    route, camera stopped before any route change, check digit before lookup.
 9. **Device check** on Rosario's iPhone (camera permission per launch, `capture="environment"`, decode speed, Home
    Screen gaps), then version bump and push only on Rosario's typed yes.
-10. Delete `redesign/plan-diet/a/` and `b/` after the build (A holds a copy of the sync and token code).
+10. Delete `redesign/plan-diet/a/` and `b/` after the build (A holds a copy of the sync and token code). Done by worker
+   8.43 on 2026-11-18 (Rosario's answer 96 a); the files stay in the git history before that commit.
 
 ## 8. Not verified
 
