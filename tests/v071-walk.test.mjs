@@ -52,3 +52,25 @@ test("W3 one wording for the walk numbers, used by Today and the Plan", () => {
   assert.match(td, /`\$\{days\[shown\]\.name\}'s walk: \$\{walkWords\(shownLayout\.walk\)\}, \$\{shownLayout\.walk\.minutes\} min`/);
   assert.match(td, /Starting walk: /);
 });
+
+// Checker round 3, finding 1: with a workout running, Today's walk tile said "Starting walk" (the week-1 numbers). It
+// now shows the running workout's walk, the same call as the workout screen (flow.js buildCtx).
+import { sessionWalk } from "../app/js/dayplan.js";
+import { walkSuggestion, finishedSessions } from "../app/js/engine/workout.js";
+import { missedRule } from "../app/js/engine/schedule.js";
+import { days } from "../app/js/plan/plan-v2.js";
+
+test("W4 a running workout: Today's walk tile shows that workout's walk, as the workout screen does", () => {
+  const doc = validDoc();
+  doc.sessions = [walkSession("2026-01-19", 4, 6), walkSession("2026-01-21", 4, 6)];
+  for (const [plan_day, week, kind] of [["mon", 8, "full"], ["tue", 3, "full"], ["fri", 5, "short"]]) {
+    const running = { date: "2026-01-26", plan_day, week, kind, status: "in_progress" };
+    const lastFinished = finishedSessions(doc.sessions).find((s) => s.date < running.date);
+    const missed = missedRule(lastFinished ? lastFinished.date : null, running.date);
+    assert.deepEqual(sessionWalk(doc, running), walkSuggestion(doc, { week, legDay: days[plan_day].leg, missed, kind }), `${plan_day} week ${week}`);
+  }
+  assert.equal(sessionWalk(doc, { date: "2026-01-26", plan_day: "sat", week: 3, kind: "full" }), null, "a day the plan does not know");
+  const td = src("js/ui/today.js");
+  assert.match(td, /const openWalk = open \? sessionWalk\(doc, open\) : null;/);
+  assert.match(td, /openWalk \? h\("div", \{ class: "tile wide small muted" \}, `\$\{days\[open\.plan_day\]\.name\}'s walk: \$\{walkWords\(openWalk\)\}, \$\{openWalk\.minutes\} min`\)/);
+});
