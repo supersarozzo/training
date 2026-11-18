@@ -149,3 +149,23 @@ test("V9 a scanned food whose numbers look wrong: one warning line above the Sav
   assert.equal(sheet().querySelectorAll("p").filter((p) => p.textContent === "The numbers look wrong. Check them under Food details.").length, 0);
   closeAll();
 });
+
+// ---------- round 3 (both reviewers, minor): a place Rosario just put back is never offered back ----------
+
+test("V10 an old Tuesday whose card shows A2 and C2: Rosario swaps C1 back to the hip thrust; the card keeps A2 and C2 only", () => {
+  freshOldTuesday(OLD_TUE.map((r) => (r[0] === "C1" ? ["C1", "db_glute_bridge", 3, null] : r)));
+  assert.equal(d18Cards(openDay("tue")).length, 1);
+  planedit.openSwapSheet("tue", 3, "C1");
+  const sh = body.querySelector("[data-sheet]");
+  sh.querySelectorAll("button").find((b) => /^Swap Dumbbell glute bridge for Hip thrust(\.| \()/.test(b.getAttribute("aria-label") ?? "")).click();
+  assert.equal(model.effectivePlanDay("tue").slots.find((s) => s.slot === "C1").ex, "hip_thrust");
+  const card = d18Cards(openDay("tue"))[0];
+  assert.ok(card, "the card still offers the other places");
+  assert.doesNotMatch(card.textContent, /Hip thrust → Hip thrust machine/);
+  assert.match(card.textContent, /Cable crunch → Crunch with a dumbbell/);
+  assert.ok(unanswered(), "the card itself is not answered");
+});
+
+test("V11 'Gramm' and kJ labels are weights or energy, not pieces", () => {
+  for (const [label, g] of [["30 Gramm", 30], ["500 kJ", 30]]) assert.deepEqual(fmath.pieceOf({ serving_g: g, serving_label: label }), { g, label }, label);
+});
