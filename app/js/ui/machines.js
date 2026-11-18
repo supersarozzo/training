@@ -7,7 +7,7 @@
 //   itself (JUDGING.md 3.6 item 5). All text goes in through h(), never innerHTML.
 import { h } from "../h.js";
 import { MAX_TEXT } from "../validate.js";
-import { screen, openSheet, gearLink } from "./parts.js";
+import { screen, openSheet } from "./parts.js";
 import { model, rerender } from "./app.js";
 import { machines, machineOf, AREAS, AREA_ORDER, SIGN_CAVEAT, exercisesOn } from "../plan/media.js";
 import { gymSpotId } from "../ids.js";
@@ -148,7 +148,6 @@ export function renderGym() {
   const doc = model.doc();
   const pick = (v) => { part = v; rerender(); };
   const main = screen(
-    gearLink(),
     h("div", { class: "gym-head" }, h("span", { class: "eyebrow accent" }, "My gym"), h("h1", {}, "Gym")),
     h("div", { class: "segmented two", role: "tablist", "aria-label": "Part of the gym" },
       [["machines", "Machines"], ["exercises", "Exercises"]].map(([value, label]) =>

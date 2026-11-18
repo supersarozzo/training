@@ -2,7 +2,7 @@
 // last three workouts), the last measurements and the recent workouts.
 // Base: redesign A (photo thumbnails, glowing line). From builder C: totals, gold best dots, history, recent workouts.
 import { h } from "../h.js";
-import { screen, emptyState, gearLink } from "./parts.js";
+import { screen, emptyState, settingsButton } from "./parts.js";
 import { model, rerender } from "./app.js";
 import { lineChart, dayNumber, shortDate } from "./charts.js";
 import { trendSeries, activeWeighins } from "../engine/trend.js";
@@ -119,7 +119,7 @@ export function renderProgress() {
 
   onMount(() => stagger(document.querySelectorAll(".screen > .card, .screen > .tiles")));
   return screen(
-    gearLink(),
+    settingsButton(),
     h("span", { class: "eyebrow accent" }, "Your 12 weeks"),
     h("h1", {}, "Progress"),
     totals,

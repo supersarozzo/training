@@ -6,7 +6,8 @@ import { icon } from "./icons.js";
 import { bump, reduced } from "./motion.js";
 
 // Tab order of answers 67 a and 68 a: Today · Plan · Gym · Diet · Progress. Diet comes with build step 7; until then the
-// bar has 4 tabs. Settings is not a tab: it is the gear at the top right of every tab (gearLink).
+// bar has 4 tabs. Settings is not a tab: since 0.6.0 it is a "Settings" button in words at the top right of Progress
+// (settingsButton). Rosario read the gear icon as a brightness button that does nothing, so it left Today, Plan and Gym.
 const TABS = [["today", "Today"], ["plan", "Plan"], ["gym", "Gym"], ["progress", "Progress"]];
 
 export function tabBar(active) {
@@ -17,6 +18,10 @@ export function tabBar(active) {
 }
 
 // The Settings gear (44 x 44 px), always at the top right of a tab screen (DESIGN.md 15.2).
+export function settingsButton() {
+  return h("a", { class: "settings-btn", href: "#/settings" }, icon("settings", 18), "Settings");
+}
+// The old round gear (kept for any screen that still wants an icon-only link; no tab uses it since 0.6.0).
 export function gearLink() {
   return h("a", { class: "gear", href: "#/settings", "aria-label": "Settings" }, icon("settings", 22));
 }

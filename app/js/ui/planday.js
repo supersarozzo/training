@@ -6,7 +6,7 @@
 // Read-only in this step: Edit comes with build steps 3 and 4. No Print (removed by Rosario, PRD F3).
 // All text through h(); no innerHTML; no style attributes.
 import { h } from "../h.js";
-import { screen, openSheet, closeSheets, gearLink } from "./parts.js";
+import { screen, openSheet, closeSheets } from "./parts.js";
 import { model, rerender, go } from "./app.js";
 import { today } from "../clock.js";
 import { dayLayout } from "../dayplan.js";
@@ -145,7 +145,6 @@ export function renderPlan() {
   }, edit ? "Done" : "Edit") : null;
 
   const main = screen(
-    gearLink(),
     h("div", { class: "plan-flow" },
       h("div", { class: "plan-top" },
         h("button", { class: "week-chip", type: "button", onclick: () => openWeeks(page.week, week), "aria-label": `Week ${week} of ${weeks.length}, ${wi.phase}. Open the 12 weeks.` },

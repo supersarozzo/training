@@ -2,7 +2,7 @@
 // Shows numbers only: it never changes the plan. All numbers come from planview.js (which uses engine/planpage.js
 // setsByMuscle, the same function as "Day so far"). Bar widths are set from code (CSSOM), never in markup.
 import { h } from "../h.js";
-import { screen, gearLink } from "./parts.js";
+import { screen } from "./parts.js";
 import { model, rerender } from "./app.js";
 import { today } from "../clock.js";
 import { icon } from "./icons.js";
@@ -83,7 +83,6 @@ export function renderMuscleCheck() {
   const pick = (id) => { state.chip = id; rerender(); };
 
   const main = screen(
-    gearLink(),
     h("a", { class: "text-button back-link", href: "#/plan", onclick: () => { state.chip = null; } }, icon("back", 18), "Plan"),
     h("span", { class: "eyebrow accent" }, "Whole plan · Monday to Friday"),
     h("h1", {}, "Muscles"),

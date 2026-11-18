@@ -1,3 +1,13 @@
 /* 0.6.0 screens (worker 8.35, 2026-11-18): Today's day picker, sets/reps/weight in the Plan, weights on the cards,
    "Stop this exercise here", the Settings button in words. Colours only through the tokens in app.css, so light and
    dark follow the theme. Kept apart from app.css so the dark-mode fix can change app.css at the same time. */
+
+/* Settings in words, top right of Progress (the gear icon looked like a brightness button). */
+.settings-btn {
+  position: absolute; z-index: 2; top: calc(var(--s4) + env(safe-area-inset-top)); right: var(--s4);
+  min-height: var(--tap-min); padding: 0 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px;
+  background: var(--bg-raised); border: 1px solid var(--border-default); box-shadow: var(--shadow-card); color: var(--text-primary);
+  font-weight: 700; font-size: 15px; text-decoration: none;
+}
+.settings-btn:active { transform: scale(.96); }
+.screen > .settings-btn + .eyebrow { padding-right: 120px; min-height: 22px; display: block; }
