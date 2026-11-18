@@ -81,9 +81,13 @@ const req = (path) => ({ method: "GET", url: `${BASE}${path}` });
 const oldCache = (w, name = "training-0.7.0") => w.stores.set(name, new Map(FILES.map((f) => [plain(f), response(`old:${f}`)])));
 
 // ---------- version ----------
-test("V1 version: 0.7.3 in js/version.js and at the top of sw.js", () => {
-  assert.equal(APP_VERSION, "0.7.3");
-  assert.equal(sw.match(/const APP_VERSION = "([^"]+)"/)[1], "0.7.3");
+// 0.7.4 (worker 8.41): was an exact "0.7.3" pin; now the lasting rule (HANDOVER: never roll sw.js back below 0.7.3).
+// The exact number of each release is pinned in its own test file (tests/v074-walk-edit.test.mjs V0).
+test("V1 version: the same in js/version.js and at the top of sw.js, never below 0.7.3", () => {
+  const n = (v) => v.split(".").map(Number);
+  const [a, b, c] = n(APP_VERSION);
+  assert.ok(a > 0 || b > 7 || (b === 7 && c >= 3), APP_VERSION);
+  assert.equal(sw.match(/const APP_VERSION = "([^"]+)"/)[1], APP_VERSION);
 });
 
 // ---------- install (cause B) ----------
