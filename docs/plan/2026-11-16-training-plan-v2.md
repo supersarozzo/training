@@ -2,7 +2,7 @@
 
 Date: 2026-11-16. For: Rosario. Goal: build muscle. Level: beginner. Gym: The Gym Group, York Foss Island ([equipment](../research/2026-11-16-gym-equipment.md)). No injuries.
 Built from: Rosario's 25 intake answers (2026-11-16) and the rules in [WORKFLOW.md](../WORKFLOW.md), sections B, C, E and F.
-Replaces: [plan v1](2026-11-16-training-plan.md).
+Replaces: [plan v1](2026-11-16-training-plan.md). Checked against the evidence on 2026-11-18: [trainer weekly plan](2026-11-18-trainer-weekly-plan.md) (one change: walk top speed 5 km/h).
 
 > **Privacy.** This file has no body data. Every personal number (weight goal, calories, protein, check-in limits, starting walk settings) is in the **private plan**, `private/plan-v2-personal.md`, which is on Rosario's computer only and never committed. Here you see only the formula.
 >
@@ -234,7 +234,7 @@ First add reps inside the range, then add weight. One bad set never lowers the w
 
 **Smallest steps:** dumbbells: the next size (check the gym's steps, question 17); machines and cables: one plate on the stack; Smith squat and hip thrust: 2.5 kg each side.
 **Bodyweight and timed abs:** when all sets reach the top, add 2 reps or 5 seconds.
-**Walk:** two walks in a row at 5 out of 10 or easier → add 1 % slope (up to 12 %), then 0.2 km/h speed (up to about 6 km/h, still walking). Leg days always stay 2 % below the other days. The "12-3-30" walk (12 % slope, about 4.8 km/h, 30 minutes) is a later target, not a start.
+**Walk:** two walks in a row at 5 out of 10 or easier → add 1 % slope (up to 12 %), then 0.2 km/h speed (up to 5 km/h; changed 2026-11-18 from about 6 km/h, see the [trainer weekly plan](2026-11-18-trainer-weekly-plan.md), decision D8). Leg days always stay 2 % below the other days. The "12-3-30" walk (12 % slope, about 4.8 km/h, 30 minutes) is a later target, not a start.
 
 ## 10. The 12 weeks (WORKFLOW E2)
 
