@@ -81,7 +81,7 @@ test("D12-W2 week 2 and later: the first-try note says to change the weight one 
     assert.equal(sg.action, "first_try");
     assert.equal(sg.note, FIRST_TRY_NOTE_LATER, `week ${week}`);
     assert.equal(sg.weight_kg, firstTryWeight("chest_press", doc.shared_settings, doc.profile));
-    assert.equal(weightLine(doc, "chest_press", week).note, FIRST_TRY_NOTE_LATER, "the Plan card says the same");
+    assert.equal(weightLine(doc, "chest_press", week).note, FIRST_TRY_NOTE_LATER, "weightLine says the same (the Plan's Change sheet shows this note; the Plan card shows 'Try N kg')");
   }
 });
 
