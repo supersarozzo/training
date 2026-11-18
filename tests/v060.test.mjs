@@ -283,3 +283,12 @@ test("V19 a running workout keeps the reps and weight it started with: the Chang
   const reset = open.slice(open.indexOf("const resetWeight"));
   assert.ok(reset.indexOf("workoutRunning(") > -1 && reset.indexOf("workoutRunning(") < reset.indexOf("setExercisePrefs("), "checked before the weight is reset");
 });
+
+test("V20 screen check fixes: Plan keeps room above the tab bar (M1); the Settings button is the word only, no sun-like icon (m2); Settings goes back where it came from (m1); a hold says seconds left (m6)", () => {
+  assert.match(src("ui/planday.js"), /edit \? "screen has-bar plan-screen" : "screen has-tabs plan-screen"/);
+  const btn = src("ui/parts.js").match(/export function settingsButton\(\) \{[\s\S]*?\n\}/)[0];
+  assert.doesNotMatch(btn, /icon\(/);
+  assert.match(btn, /"Settings"/);
+  assert.match(src("ui/settings.js"), /history\.back\(\)/);
+  assert.match(src("ui/exlayer.js"), /ex\.kind === "hold" \? "seconds left" : "reps left"/);
+});
