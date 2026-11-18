@@ -22,8 +22,10 @@ const src = (p) => readFileSync(new URL(`../app/${p}`, import.meta.url), "utf8")
 const css = src("css/app.css");
 
 // ---------- S1: A1 ----------
-test("S1 .screen.has-bar leaves room for the tab bar, the floating button and some air above it", () => {
-  const rule = css.match(/\.screen\.has-bar\s*\{\s*padding-bottom:\s*calc\(([^;]+)\);\s*\}/);
+// 0.7.1 auditor finding 5: the room is on `.has-bar.over-tabs` (Today, the Plan's edit mode); workout and setup screens
+// have no tab bar and keep the old `.has-bar` room (tests/v071-review.test.mjs R3).
+test("S1 .screen.has-bar.over-tabs leaves room for the tab bar, the floating button and some air above it", () => {
+  const rule = css.match(/\.screen\.has-bar\.over-tabs\s*\{\s*padding-bottom:\s*calc\(([^;]+)\);\s*\}/);
   assert.ok(rule, "the has-bar rule");
   const tokens = { "--tap-main": 58, "--s3": 12, "--s2": 8, "--s4": 16, "--s6": 24, "--s8": 32, "--s12": 48 };
   const expr = rule[1].replace(/env\(safe-area-inset-bottom\)/g, "0").replace(/var\((--[a-z0-9-]+)\)/g, (_, n) => String(tokens[n]));
