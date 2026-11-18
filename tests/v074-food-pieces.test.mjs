@@ -138,3 +138,36 @@ test("P9 the piece words read well; the weight box takes a comma (text box with 
   assert.match(t, /pieceWords\(piece\)/);
   assert.match(t, /type: "text", inputmode: "decimal"[^\n]*"aria-label": "Weight of 1 piece"/, "a number box drops a typed comma");
 });
+
+// ---------- Review findings (auditor, 2026-11-18) ----------
+test("P10 the phone box is read before the mode is written (the token, sync state and a running workout stay)", () => {
+  const t = src("js/diet/sheets.js");
+  const at = t.indexOf("function remember(");
+  const body = t.slice(at, t.indexOf("\n  }", at));
+  assert.match(body, /store\.saveDevice\(withMode\(device\(\), foodId, amountMode\)\)/, "built from the saved box, never from {}");
+  assert.doesNotMatch(body, /withMode\(\{\}/);
+  // The same with the real store: a food save's mode write keeps every other key.
+  const map = new Map();
+  const storage = { getItem: (k) => (map.has(k) ? map.get(k) : null), setItem: (k, v) => map.set(k, String(v)), removeItem: (k) => map.delete(k) };
+  return import("../app/js/store.js").then(({ createStore }) => {
+    const store = createStore(storage);
+    store.saveDevice({ token: "made-up", repo: "x", active: { session_id: "s-1" }, sound_on: false });
+    store.saveDevice(modes.withMode(store.loadDevice(), "fo-20260126-abc123", "pieces"));
+    const d = store.loadDevice();
+    assert.deepEqual([d.token, d.repo, d.active.session_id, d.sound_on], ["made-up", "x", "s-1", false]);
+    assert.equal(modes.readMode(d, "fo-20260126-abc123"), "pieces");
+  });
+});
+
+test("P11 a count that would round to 0 starts at 1 piece; a serving named only in grams reads as '1 piece = 30 g'", () => {
+  assert.deepEqual(fmath.piecesStart(125, 62.5), { count: 2, grams: 125 });
+  assert.deepEqual(fmath.piecesStart(1, 2000), { count: 1, grams: 2000 }, "0.0005 pieces: start at 1 piece");
+  assert.deepEqual(fmath.piecesStart(null, 62.5), { count: 1, grams: 62.5 });
+  assert.equal(fmath.pieceWords({ g: 30, label: "30 g" }), "1 piece = 30 g");
+  assert.equal(fmath.pieceWords({ g: 30, label: "30g" }), "1 piece = 30 g");
+  assert.match(src("js/diet/sheets.js"), /piecesStart\(/);
+});
+
+test("P12 piecesStart keeps the count and the grams in step (100 g of a 30 g piece: 3.3 pieces = 99 g)", () => {
+  assert.deepEqual(fmath.piecesStart(100, 30), { count: 3.3, grams: 99 });
+});
