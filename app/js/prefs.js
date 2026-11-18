@@ -13,6 +13,29 @@ export function readPrefs(store) {
   }
 }
 
+// Answers to the one-tap machine offers (trainer D18, 0.7.5): { "<day>:<slot>:<exercise>": "used" | "kept" }, key
+// `machine_offers` in the device box. On this phone only (never synced, never in a backup): at worst another phone
+// asks once more. Anything else in the box under that key is ignored.
+const OFFER_KEY = /^(mon|tue|wed|thu|fri):[A-Za-z0-9]{1,4}:[a-z_]{1,40}$/;
+export function readOfferAnswers(store) {
+  try {
+    const raw = store.loadDevice()?.machine_offers;
+    const out = {};
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+      for (const [k, v] of Object.entries(raw)) if (OFFER_KEY.test(k) && (v === "used" || v === "kept")) out[k] = v;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+export function saveOfferAnswer(store, key, answer) {
+  if (!OFFER_KEY.test(key) || (answer !== "used" && answer !== "kept")) return;
+  const next = { ...store.loadDevice() };
+  next.machine_offers = { ...readOfferAnswers(store), [key]: answer };
+  store.saveDevice(next);
+}
+
 // patch: { theme?, motionOff? }. An unknown theme is saved as "auto".
 export function savePrefs(store, patch) {
   const next = { ...store.loadDevice() };

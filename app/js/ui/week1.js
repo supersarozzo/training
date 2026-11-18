@@ -7,6 +7,7 @@ import { h } from "../h.js";
 import { workoutScreen, topBar, actionBar, mainButton, stepper, choiceRow } from "./parts.js";
 import { model, rerender } from "./app.js";
 import { patchActive } from "../active.js";
+import { nReps } from "../words.js";
 import { exercises } from "../plan/plan-v2.js";
 import { warmupSets } from "../engine/progression.js";
 import { cues } from "../plan/cues.js";
@@ -140,7 +141,7 @@ export function renderWeek1(ctx) {
       workoutScreen(...header(h("div", {},
         h("div", { class: "target" }, `Set ${n} of ${sets} · stop with about 3 ${hold ? "seconds" : "reps"} left`),
         n === 1 && weighted ? h("p", { class: "small muted" }, tryKg ? `Try ${tryKg} kg. ${sg?.action === "first_try" ? "First try. Set 1 tells us if it is right." : sg?.note ?? ""}`.trim() : "Pick a weight that feels easy. You find the right one in these two sets.") : null,
-        n === 2 && first ? h("p", { class: "small muted" }, `Set 1: ${hold ? `${first.seconds} s` : weighted ? `${first.weight_kg} kg × ${first.reps}, ${first.left} left` : `${first.reps} reps`}.`) : null,
+        n === 2 && first ? h("p", { class: "small muted" }, `Set 1: ${hold ? `${first.seconds} s` : weighted ? `${first.weight_kg} kg × ${first.reps}, ${first.left} left` : nReps(first.reps)}.`) : null,
         suggestion ? h("p", { class: "small" }, `${suggestion.note} Suggested: ${suggestion.weight_kg} kg.`) : null)),
       weighted ? weightStepper(d) : null,
       repsStepper(d)),

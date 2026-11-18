@@ -15,6 +15,7 @@ import { dayLayout, sessionWalk } from "../dayplan.js";
 import { exerciseStateId } from "../ids.js";
 import { walkWords } from "../planview.js";
 import { thumb } from "./media.js";
+import { nSets } from "../words.js";
 import { openExerciseInfo } from "./exinfo.js";
 import { fmtKg } from "./stats.js";
 import { startWorkout } from "./flow.js";
@@ -107,7 +108,7 @@ function exerciseList(doc, planDay, week, missed) {
       const reps = `${rangeText(rangeFor(doc, exId))}${ex.kind === "hold" ? " s" : ""}`;
       const end = ex.kind === "hold" ? `${sg.range[0]} s` : ex.step === "bodyweight" ? `${sg.reps}` : sg.weight_kg ? `${fmtKg(sg.weight_kg)} kg` : "–";
       const what = ex.kind === "hold" ? "hold" : ex.step === "bodyweight" ? "reps" : sg.weight_kg ? (sg.action === "mine" ? "your weight" : sg.action === "first_try" ? "first try" : "suggested") : "start light";
-      return h("button", { class: "ex-row", type: "button", "aria-label": `${slot.slot} ${ex.name}: ${slot.sets} sets of ${reps}${ex.perSide ? " each side" : ""}, ${end} ${what}. Open tips.`, onclick: () => openExerciseInfo(exId, { settingsNote: false }) },
+      return h("button", { class: "ex-row", type: "button", "aria-label": `${slot.slot} ${ex.name}: ${nSets(slot.sets)} of ${reps}${ex.perSide ? " each side" : ""}, ${end} ${what}. Open tips.`, onclick: () => openExerciseInfo(exId, { settingsNote: false }) },
         thumb(exId, { small: true }),
         h("span", { class: "grow" },
           h("span", { class: "title" }, h("span", { class: "badge slot" }, slot.slot), h("span", {}, ex.name)),

@@ -6,14 +6,17 @@
 // All text through h(); no innerHTML; no style attributes.
 import { h } from "../h.js";
 import { openSheet, closeSheets, toast, stepper } from "./parts.js";
-import { model, rerender } from "./app.js";
+import { model, store, rerender } from "./app.js";
 import { getActive } from "../active.js";
 import { days, exercises } from "../plan/plan-v2.js";
 import { thumb } from "./media.js";
 import { icon } from "./icons.js";
 import { miniMap } from "./bodymap.js";
 import { viewDay, swapSheet, addSheet, exName, dayChanges, changedOn, rangeFor, rangeText, weightLine, workoutRunning, walkWords } from "../planview.js";
-import { withSets, setsForSlot, MIN_SETS, MAX_SETS, walkLimits, walkHint } from "../engine/planedits.js";
+import { withSets, setsForSlot, MIN_SETS, MAX_SETS, walkLimits, walkHint, withD18 } from "../engine/planedits.js";
+import { machines } from "../plan/media.js";
+import { saveOfferAnswer } from "../prefs.js";
+import { nSets, repWord } from "../words.js";
 import { planWalkForEdit } from "../dayplan.js";
 import { weightStepFor, validRange } from "../engine/workout.js";
 import { pageFor } from "../engine/planpage.js";
@@ -21,7 +24,7 @@ import { today } from "../clock.js";
 
 // The Change sheet's week line (0.7.1): "This week" only when the picked week is this week.
 export function doseWeekWords(n, week, thisWeek) {
-  return week === thisWeek ? `This week: ${n} sets (the week ${week} rule).` : `In week ${week}: ${n} sets.`;
+  return week === thisWeek ? `This week: ${nSets(n)} (the week ${week} rule).` : `In week ${week}: ${nSets(n)}.`;
 }
 
 const dayName = (day) => days[day].name;
@@ -32,7 +35,7 @@ const savedSlots = (day) => { const info = model.effectivePlanDay(day); return c
 const repsText = (ex) => {
   const [lo, hi] = ex.range;
   const r = lo === hi ? `${lo}` : `${lo}–${hi}`;
-  return ex.kind === "hold" ? `${r} s hold` : `${r} reps`;
+  return ex.kind === "hold" ? `${r} s hold` : `${r} ${lo === hi ? repWord(lo) : "reps"}`;
 };
 
 // What can be done to a day now. A workout running on this day locks it (the sets of a running workout are fixed);
@@ -136,7 +139,7 @@ export function openSwapSheet(day, week, slotName) {
   openSheet(
     h("h2", {}, `Swap ${oldName}`),
     lastsBox(day),
-    h("p", { class: "small muted" }, `Keeps the slot's ${sh.sets} sets and its rest. The ${exercises[sh.current]?.kind === "hold" ? "seconds" : "reps"} come from the new exercise.`),
+    h("p", { class: "small muted" }, `Keeps the slot's ${nSets(sh.sets)} and its rest. The ${exercises[sh.current]?.kind === "hold" ? "seconds" : "reps"} come from the new exercise.`),
     first.length ? [h("span", { class: "eyebrow" }, `Same muscle (${sh.muscle}), other equipment`),
       h("div", { class: "card" }, first.map((x) => row(x.id, x.pick)))] : null,
     !first.length && !kin.length ? h("p", { class: "muted" }, "No other exercise for this muscle fits here.") : null,
@@ -152,7 +155,7 @@ export function openSwapSheet(day, week, slotName) {
 // "3 sets this week (2 in a normal week)"; for another picked week: "3 sets in week 7 (...)".
 export function setsWords(a, week, thisWeek) {
   const when = thisWeek === undefined || week === thisWeek ? "this week" : `in week ${week}`;
-  return `${a.setsThisWeek} sets ${when} (${a.setsNormal} in a normal week)`;
+  return `${nSets(a.setsThisWeek)} ${when} (${a.setsNormal} in a normal week)`;
 }
 
 export function openAddSheet(day, week, thisWeek) {
@@ -292,6 +295,43 @@ export function openWalkSheet(day, week) {
     h("button", { class: "button", type: "button", onclick: saveWalk }, "Save"),
     h("button", { class: "button secondary", type: "button", onclick: () => closeSheets() }, "Cancel"),
     own ? h("button", { class: "text-button back-plan", type: "button", onclick: backToPlan }, icon("undo", 18), "Back to the plan's walk") : null);
+}
+
+// ---------- one-tap machine offer (trainer D18, 0.7.5) ----------
+// "The gym has a leg curl machine. Use it instead of dumbbell lying leg curl?" Use it: one Plan edit (that day, that
+// place, with the 8 s Undo toast). Keep: nothing changes. Either answer is final on this phone (prefs.js).
+// The changed-card look (accent border): no new colours, sizes or classes.
+export function offerCard(day, offer) {
+  const machine = machines[offer.machine]?.name ?? exName(offer.to);
+  const fromName = exName(offer.from);
+  const article = /^[aeiou]/i.test(machine) ? "an" : "a";
+  const use = () => {
+    if (save(day, `Swapped ${fromName} for ${exName(offer.to)}.`, () => model.swapPlanSlot(day, offer.slot, offer.to))) saveOfferAnswer(store, offer.key, "used");
+  };
+  const keep = () => { saveOfferAnswer(store, offer.key, "kept"); rerender(); };
+  return h("div", { class: "card changed-card" },
+    h("p", {}, h("b", {}, `The gym has ${article} ${machine.toLowerCase()}. Use it instead of ${fromName.toLowerCase()}?`)),
+    h("p", { class: "small muted" }, `${exName(offer.to)}, every ${dayName(day)} from now on. Sets and rest stay the same. Past workouts are not changed.`),
+    h("button", { class: "button secondary", type: "button", "aria-label": `Use the ${exName(offer.to).toLowerCase()} instead of ${fromName.toLowerCase()} every ${dayName(day)}`, onclick: use }, icon("swap", 18), "Use it"),
+    h("button", { class: "text-button", type: "button", "aria-label": `Keep ${fromName.toLowerCase()} on ${dayName(day)}`, onclick: keep }, "Keep"));
+}
+
+// ---------- the D18 offer for a saved Tuesday or Friday edit (trainer's answer 3 to 8.42) ----------
+// "The plan now uses simpler machines on Tuesday. Use them in your edited Tuesday?" Use them: one save that changes only
+// those places (sets and rest stay), with the 8 s Undo toast. Keep mine: nothing changes. Asked once on this phone.
+export function d18OfferCard(day, offer) {
+  const name = dayName(day);
+  const use = () => {
+    const ok = save(day, `${name} now uses the plan's new exercises.`, () => model.savePlanDay(day, withD18(savedSlots(day), offer.swaps)));
+    if (ok) saveOfferAnswer(store, offer.key, "used");
+  };
+  const keep = () => { saveOfferAnswer(store, offer.key, "kept"); rerender(); };
+  return h("div", { class: "card changed-card" },
+    h("p", {}, h("b", {}, `The plan now uses simpler machines on ${name}. Use them in your edited ${name}?`)),
+    h("p", {}, offer.swaps.map((sw, i) => [i ? h("br") : null, `${exName(sw.from)} → ${exName(sw.to)}`])),
+    h("p", { class: "small muted" }, "Only these change. Your sets and rest stay. Past workouts are not changed."),
+    h("button", { class: "button secondary", type: "button", "aria-label": `Use the plan's new exercises in your edited ${name}`, onclick: use }, icon("swap", 18), "Use them"),
+    h("button", { class: "text-button", type: "button", "aria-label": `Keep your ${name} as it is`, onclick: keep }, "Keep mine"));
 }
 
 // The "Changed by you · 17 Nov" card (accent border).

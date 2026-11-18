@@ -2,6 +2,7 @@
 import { model, go, rerender } from "./app.js";
 import { getActive, setActive, patchActive, clearActive } from "../active.js";
 import { exercises, days } from "../plan/plan-v2.js";
+import { nReps } from "../words.js";
 import { planForSession, missedRule, canStartWorkout, blockPosition, sessionLayout, canTrain, sessionWeek } from "../engine/schedule.js";
 import { plannedWalk } from "../engine/planedits.js";
 import { buildSequence, nextPosition, walkSuggestion, finishedSessions, suggestFor, slotRecord, workSets } from "../engine/workout.js";
@@ -82,7 +83,7 @@ export function nextText(ctx, entry) {
   const w = rec.swap_reason === "hurts" && rec.swap_weight_kg != null ? rec.swap_weight_kg : sg.weight_kg;
   let detail = "";
   if (ex.kind === "hold") detail = ` · ${sg.range[0]} s`;
-  else if (ex.step === "bodyweight") detail = ` · ${sg.reps} reps`;
+  else if (ex.step === "bodyweight") detail = ` · ${nReps(sg.reps)}`;
   else if (w) detail = ` · ${w} kg × ${sg.reps}`;
   return `${entry.slot} ${ex.name}${detail}`;
 }

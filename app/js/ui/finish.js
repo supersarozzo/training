@@ -5,6 +5,7 @@ import { h } from "../h.js";
 import { workoutScreen, topBar, actionBar, mainButton, choiceRow } from "./parts.js";
 import { model, go, rerender } from "./app.js";
 import { exercises } from "../plan/plan-v2.js";
+import { nReps } from "../words.js";
 import { leaveWorkout } from "./flow.js";
 import { performances, suggestFor, workSets, isNewBest } from "../engine/workout.js";
 import { setSavedMessage } from "./today.js";
@@ -45,7 +46,7 @@ export function summarize(doc, session) {
     const earlier = performances(others, rec.done_exercise);
     if (now && isNewBest(now, earlier, ex.kind)) {
       const last = work[work.length - 1];
-      bests.push(ex.kind === "hold" ? `${ex.name}: ${last.seconds} s, a new best` : ex.step === "bodyweight" ? `${ex.name}: ${last.reps} reps, a new best` : `${ex.name}: ${last.reps} reps at ${last.weight_kg} kg, a new best`);
+      bests.push(ex.kind === "hold" ? `${ex.name}: ${last.seconds} s, a new best` : ex.step === "bodyweight" ? `${ex.name}: ${nReps(last.reps)}, a new best` : `${ex.name}: ${nReps(last.reps)} at ${last.weight_kg} kg, a new best`);
     }
     const state = doc.exercise_state.find((x) => x.id === `x-${rec.done_exercise}`);
     const s = suggestFor(asIfFinished, rec.done_exercise, { week: Math.min(session.week + 1, 12), missed: null, exerciseState: state });

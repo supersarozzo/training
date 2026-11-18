@@ -55,6 +55,11 @@ export const media = {
   db_lying_leg_curl: { lib: "Lying_Leg_Curls", match: "close", matchNote: "Photo shows the leg curl machine. Lie the same way on a flat bench, a dumbbell between your feet." },
   one_leg_db_calf_raise: { lib: "Standing_Dumbbell_Calf_Raise", match: "close", matchNote: "Photo shows two legs. Do one leg at a time, a dumbbell in one hand, and hold a rail." },
   cable_leg_curl: { lib: "Standing_Leg_Curl", match: "close", matchNote: "Photo shows the standing leg curl machine. With the cable, strap on one ankle and curl that leg." },
+  // added 2026-11-18 (trainer D18, 0.7.5): free-exercise-db commit f00c92c, photos unchanged (docs/MEDIA.md)
+  booty_builder_hip_thrust: { lib: "Barbell_Hip_Thrust", match: "close", matchNote: "Photo shows a barbell on a bench. On the hip thrust machine a belt holds your hips; the move is the same." },
+  weighted_crunch: { lib: "Weighted_Crunches", match: "close", matchNote: "Photo shows a weight plate and raised legs. Keep your feet flat on the floor and hold one dumbbell on your chest." },
+  ab_crunch_machine: { lib: "Ab_Crunch_Machine", match: "same" },
+  reverse_pec_deck: { lib: "Reverse_Machine_Flyes", match: "same" },
   // warm-up moves and the walk
   arm_circles: { lib: "Arm_Circles", match: "same" },
   arm_swings: { lib: "Dynamic_Chest_Stretch", match: "close", matchNote: "Swing your arms open and across, like this stretch." },
@@ -113,6 +118,11 @@ export const VIDEOS = {
   db_lying_leg_curl: { url: "https://www.youtube.com/watch?v=aPUtiouhcQQ", title: "Dumbbell Lying Leg Curl | How To | Proper Form & Technique", channel: "FITTR" },
   one_leg_db_calf_raise: { url: "https://www.youtube.com/watch?v=PTn6icEeH3Y", title: "Standing single leg dumbbell calf raises", channel: "FITTR" },
   cable_leg_curl: { url: "https://www.youtube.com/watch?v=QerRbPE55D8", title: "Standing Cable Leg Curls", channel: "WABBA" },
+  // added 2026-11-18 (trainer D18, 0.7.5): YouTube oEmbed answered 200 with this title and channel on 2026-11-18 (docs/MEDIA.md)
+  booty_builder_hip_thrust: { url: "https://www.youtube.com/watch?v=UlljOYPM57U", title: "How to Use the Hip Thrust Machine", channel: "Gainesville Health & Fitness" },
+  weighted_crunch: { url: "https://www.youtube.com/watch?v=GnOtkztXWQs", title: "How To Do: Dumbbell Crunch - Floor | Ab Workout Exercise", channel: "Fitway - Workout Trainer" },
+  ab_crunch_machine: { url: "https://www.youtube.com/watch?v=NpjB_rp756Y", title: "Life Fitness Circuit Series Ab Crunch Instructions", channel: "Life Fitness / Hammer Strength" },
+  reverse_pec_deck: { url: "https://www.youtube.com/watch?v=hmtnyIGgR9A", title: "How To: Reverse Pec Deck Rear Delt Fly", channel: "Ignore Limits" },
   arm_circles: { url: "https://www.youtube.com/watch?v=3STTSi_jdHk", title: "How To Arm Circles | Nuffield Health", channel: "Nuffield Health" },
   arm_swings: { url: "https://www.youtube.com/watch?v=p7EnbCprr5w", title: "Arm swings side to side", channel: "NHS inform" },
   cat_cow: { url: "https://www.youtube.com/watch?v=1Y0YjXS9sKI", title: "How to Do a Cat Cow Stretch: A Guide from Physical Therapists", channel: "Hinge Health" },
@@ -140,10 +150,11 @@ export function photosFor(id) {
 // area: the kind of area it stands in, in many UK gyms. The areas, signs and looks are typical, NOT checked at
 // The Gym Group York Foss Island: SIGN_CAVEAT says so on every card, and Rosario's own note fixes it.
 export const SIGN_CAVEAT = "Usual sign name and area in UK gyms. Signs and areas may differ at your gym.";
-export const AREA_ORDER = ["cardio", "machines", "cables", "free_weights", "functional"];
+export const AREA_ORDER = ["cardio", "machines", "glutes", "cables", "free_weights", "functional"];
 export const AREAS = {
   cardio: { name: "Cardio", hint: "Rows of treadmills, bikes and cross-trainers." },
   machines: { name: "Resistance machines", hint: "Machines with a seat, most with a weight stack and a pin." },
+  glutes: { name: "Glutes area", hint: "Hip thrust machines and benches. The gym's website lists a Booty Builder V8, a hip thrust bench and a Glute Drive." },
   cables: { name: "Cables", hint: "Tall frames with pulleys you can move up and down (functional trainer)." },
   free_weights: { name: "Free weights", hint: "Dumbbell racks, benches and the Smith machine." },
   functional: { name: "Functional and stretch", hint: "Matted floor space for planks, warm-ups and stretching." },
@@ -160,13 +171,16 @@ export const machines = {
   leg_extension: { name: "Leg extension machine", sign: "Leg Extension", area: "machines", photo: "leg_extension", tip: "Knee in line with the machine's pivot.", look: "A seat with a padded bar in front of your lower shins that you lift by straightening your legs." },
   cable_station: { name: "Cable station (functional trainer)", sign: "Functional Trainer / Dual Adjustable Pulley", area: "cables", photo: "triceps_pushdown", tip: "Set the pulley height first, then clip on the rope or handle.", look: "A tall frame with two weight stacks and pulleys that slide up and down; ropes and handles hang on hooks." },
   smith_machine: { name: "Smith machine", sign: "Smith Machine", area: "free_weights", photo: "smith_squat", tip: "Set the safety stops just below your lowest point.", look: "A barbell fixed on two vertical rails, with hooks and safety stops." },
-  hip_thrust: { name: "Glute Drive or hip thrust bench", sign: "Glute Drive / Hip Thrust", area: "free_weights", photo: "hip_thrust", tip: "Chin tucked, ribs down, squeeze at the top.", look: "A low padded bench for your upper back, with a belt or pad over the hips." },
+  hip_thrust: { name: "Glute Drive or hip thrust bench", sign: "Glute Drive / Hip Thrust", area: "glutes", photo: "hip_thrust", tip: "Chin tucked, ribs down, squeeze at the top.", look: "A low padded bench for your upper back, with a belt or pad over the hips." },
   dumbbells_bench: { name: "Dumbbells and adjustable bench", sign: "Dumbbells", area: "free_weights", photo: "db_bench_press", tip: "Put the dumbbells back on the rack in order.", look: "Racks of dumbbells in pairs, and benches whose back can be set flat, sloped or upright." },
   mat_area: { name: "Mats and stretch area", sign: "Stretching / Functional", area: "functional", photo: "plank", tip: "Wipe the mat before and after.", look: "Open floor with mats. Take a mat for planks, dead bugs and the warm-up." },
   lat_pulldown: { name: "Lat pulldown machine", sign: "Lat Pulldown", area: "machines", photo: "lat_pulldown_machine", check: "lat_pulldown", tip: "Thigh pads snug, so you do not lift off.", look: "A seat with a thigh pad and a long bar hanging from above." },
   seated_row: { name: "Seated row machine", sign: "Seated Row", area: "machines", photo: "seated_row_machine", check: "seated_row", tip: "Chest on the pad, pull with your elbows.", look: "A seat with a chest pad and handles in front that you pull back." },
   leg_curl: { name: "Leg curl machine", sign: "Leg Curl", area: "machines", photo: "leg_curl_machine", check: "leg_curl", tip: "Knee in line with the pivot.", look: "A seat (or bench) with a pad behind your lower legs that you curl down." },
   pec_deck: { name: "Pec deck", sign: "Pec Fly / Rear Delt", area: "machines", photo: "pec_deck", check: "pec_deck", tip: "Handles at shoulder height.", look: "A seat with two arms at the sides that you bring together in front of your chest." },
+  // Added 2026-11-18 (trainer D18, 0.7.5). booty_builder: on the gym's website (no check). ab_crunch: the new first-visit check.
+  booty_builder: { name: "Hip thrust machine (Booty Builder)", sign: "Booty Builder", area: "glutes", photo: "booty_builder_hip_thrust", tip: "Set the seat and foot plate for your height first; belt snug over your hips.", look: "A seat with a back pad and a foot plate, a padded belt over the hips and a weight stack with a pin." },
+  ab_crunch: { name: "Ab crunch machine", sign: "Abdominal Crunch", area: "machines", photo: "ab_crunch_machine", check: "ab_crunch", tip: "Start light; curl with your abs, not your arms.", look: "A seat with pads or handles at chest height that you curl forward and down." },
   calf_raise: { name: "Calf raise machine", sign: "Calf Raise", area: "machines", photo: "calf_raise_machine", check: "calf_raise", tip: "Full stretch at the bottom, pause at the top.", look: "Shoulder pads over a small step; you rise up on your toes." },
 };
 
@@ -182,6 +196,7 @@ export const machineOf = {
   rear_delt_raise: "dumbbells_bench", db_glute_bridge: "mat_area", calf_raise_leg_press: "leg_press", lat_pulldown_machine: "lat_pulldown",
   seated_row_machine: "seated_row", leg_curl_machine: "leg_curl", calf_raise_machine: "calf_raise",
   db_lying_leg_curl: "dumbbells_bench", one_leg_db_calf_raise: "dumbbells_bench", cable_leg_curl: "cable_station",
+  booty_builder_hip_thrust: "booty_builder", weighted_crunch: "mat_area", ab_crunch_machine: "ab_crunch", reverse_pec_deck: "pec_deck",
   uphill_walk: "treadmill", arm_circles: "mat_area", arm_swings: "mat_area", cat_cow: "mat_area", bodyweight_squats: "mat_area",
   glute_bridges: "mat_area", hip_hinge: "mat_area", pushups_bench: "mat_area",
 };

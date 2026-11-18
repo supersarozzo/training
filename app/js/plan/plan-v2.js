@@ -18,10 +18,10 @@ export const exercises = {
   plank: { name: "Plank", equipment: "Floor", kind: "hold", range: [20, 40], step: "bodyweight", muscle: "abs", swaps: [{ id: "dead_bug" }] },
   dead_bug: { name: "Dead bug", equipment: "Floor", kind: "reps", range: [8, 8], perSide: true, step: "bodyweight", muscle: "abs", swaps: [{ id: "plank" }] },
   leg_press: { name: "Leg press", equipment: "Leg press machine", kind: "reps", range: [10, 12], step: "stack", muscle: "quads", swaps: [{ id: "smith_squat" }] },
-  cable_crunch: { name: "Cable crunch", equipment: "Cable, high pulley", kind: "reps", range: [10, 15], step: "stack", muscle: "abs", swaps: [{ id: "reverse_crunch" }] },
+  cable_crunch: { name: "Cable crunch", equipment: "Cable, high pulley", kind: "reps", range: [10, 15], step: "stack", muscle: "abs", swaps: [{ id: "weighted_crunch" }, { id: "reverse_crunch" }] },
   romanian_deadlift: { name: "Romanian deadlift", equipment: "Dumbbells", kind: "reps", range: [8, 12], step: "dumbbell", muscle: "hamstrings", swaps: [{ id: "cable_pull_through" }] },
-  face_pull: { name: "Face pull", equipment: "Cable, high pulley", kind: "reps", range: [12, 15], step: "stack", muscle: "back", swaps: [{ id: "rear_delt_raise" }] },
-  hip_thrust: { name: "Hip thrust", equipment: "Glute Drive or hip thrust bench", kind: "reps", range: [8, 12], step: "smith_2x2.5", muscle: "glutes", swaps: [{ id: "db_glute_bridge" }] },
+  face_pull: { name: "Face pull", equipment: "Cable, high pulley", kind: "reps", range: [12, 15], step: "stack", muscle: "back", swaps: [{ id: "rear_delt_raise" }, { id: "reverse_pec_deck", needsMachine: "pec_deck" }] },
+  hip_thrust: { name: "Hip thrust", equipment: "Glute Drive or hip thrust bench", kind: "reps", range: [8, 12], step: "smith_2x2.5", muscle: "glutes", swaps: [{ id: "booty_builder_hip_thrust" }, { id: "db_glute_bridge" }] },
   leg_extension: { name: "Leg extension", equipment: "Leg extension machine", kind: "reps", range: [12, 15], step: "stack", muscle: "quads", swaps: [{ id: "goblet_squat", note: "light" }] },
   goblet_squat: { name: "Goblet squat", equipment: "1 dumbbell or kettlebell", kind: "reps", range: [8, 12], step: "dumbbell", muscle: "quads", swaps: [{ id: "leg_press" }] },
   db_bench_press: { name: "Dumbbell bench press", equipment: "Dumbbells + flat bench", kind: "reps", range: [8, 12], step: "dumbbell", muscle: "chest", swaps: [{ id: "chest_press" }] },
@@ -38,6 +38,11 @@ export const exercises = {
   calf_raise_standing: { name: "Standing calf raise", equipment: "Smith machine, step or plate under the toes", kind: "reps", range: [12, 15], step: "smith_2x2.5", muscle: "calves", swaps: [{ id: "calf_raise_leg_press" }, { id: "calf_raise_machine", needsMachine: "calf_raise" }] },
   // Added 2026-11-18 (plan change, answers 80-83): planned on Mon and Wed (calf raise) and Thu (leg curl) in the D slot.
   calf_raise_leg_press: { name: "Calf raise on the leg press", equipment: "Leg press machine", kind: "reps", range: [12, 15], step: "stack", muscle: "calves", swaps: [{ id: "calf_raise_machine", needsMachine: "calf_raise" }, { id: "calf_raise_standing" }, { id: "one_leg_db_calf_raise" }] },
+  // Added 2026-11-18 (trainer D18, 0.7.5): machines instead of awkward moves. Planned on Tue C1 and Fri B1 (hip thrust
+  // machine) and Tue A2 (crunch with a dumbbell). hip_thrust, cable_crunch, dead_bug and calf_raise_standing left the
+  // days but stay here (saved logs, exercise_state and Plan edits name them) and stay offered as swaps.
+  booty_builder_hip_thrust: { name: "Hip thrust machine", equipment: "Booty Builder (glutes area)", kind: "reps", range: [8, 12], step: "stack", muscle: "glutes", swaps: [{ id: "hip_thrust" }, { id: "db_glute_bridge" }] },
+  weighted_crunch: { name: "Crunch with a dumbbell", equipment: "Mat or flat bench, 1 dumbbell on the chest", kind: "reps", range: [10, 15], step: "dumbbell", muscle: "abs", swaps: [{ id: "ab_crunch_machine", needsMachine: "ab_crunch" }, { id: "cable_crunch" }, { id: "reverse_crunch" }] },
   db_lying_leg_curl: { name: "Dumbbell lying leg curl", equipment: "Dumbbell + flat bench, lying face down", kind: "reps", range: [10, 15], step: "dumbbell", muscle: "hamstrings", swaps: [{ id: "leg_curl_machine", needsMachine: "leg_curl" }, { id: "cable_leg_curl" }, { id: "romanian_deadlift" }] },
 
   // Swap-only exercises (they appear only as a swap)
@@ -52,10 +57,40 @@ export const exercises = {
   // Added 2026-11-18 (plan change): swaps for the new D moves.
   one_leg_db_calf_raise: { name: "One-leg dumbbell calf raise", equipment: "On a step, one dumbbell in one hand", kind: "reps", range: [12, 15], perSide: true, step: "dumbbell", muscle: "calves", swaps: [] },
   cable_leg_curl: { name: "Standing cable leg curl", equipment: "Cable, low pulley, ankle strap (first visit check)", kind: "reps", range: [10, 15], perSide: true, step: "stack", muscle: "hamstrings", swaps: [] },
+  // Added 2026-11-18 (trainer D18, 0.7.5): machines the gym's website does not confirm; offered after the first visit.
+  ab_crunch_machine: { name: "Ab crunch machine", equipment: "Ab crunch machine (first visit check)", kind: "reps", range: [10, 15], step: "stack", muscle: "abs", swaps: [] },
+  reverse_pec_deck: { name: "Reverse pec deck", equipment: "Pec deck, facing the pad (first visit check)", kind: "reps", range: [12, 15], step: "stack", muscle: "back", swaps: [] },
 };
 
 // The extra machines the first visit checks (question 17).
-export const extraMachines = ["lat_pulldown", "seated_row", "leg_curl", "pec_deck", "calf_raise"];
+// "ab_crunch" added by trainer D18 (0.7.5), at the end (the order is the order of the Settings fields).
+export const extraMachines = ["lat_pulldown", "seated_row", "leg_curl", "pec_deck", "calf_raise", "ab_crunch"];
+
+// One-tap machine offers (trainer D18, 0.7.5). When the first visit says the gym has `machine`, a Plan day whose place
+// holds `from` (the confirmed fallback) offers `to` once: "The gym has a <machine>. Use it instead of <exercise>?"
+// Use it makes one Plan edit (that day, that place); Keep changes nothing. engine/planedits.js machineOffers.
+export const machineOffers = Object.freeze([
+  Object.freeze({ machine: "leg_curl", from: "db_lying_leg_curl", to: "leg_curl_machine" }),
+  Object.freeze({ machine: "lat_pulldown", from: "pulldown", to: "lat_pulldown_machine" }),
+  Object.freeze({ machine: "seated_row", from: "seated_cable_row", to: "seated_row_machine" }),
+  Object.freeze({ machine: "ab_crunch", from: "weighted_crunch", to: "ab_crunch_machine" }),
+  Object.freeze({ machine: "pec_deck", from: "face_pull", to: "reverse_pec_deck" }),
+]);
+
+// The places trainer D18 (0.7.5) changed: day -> slot -> { from (the old exercise), to (the new one) }. A saved Plan edit
+// that still holds `from` there is never rewritten silently: the Plan day offers the change once (trainer's answer 3
+// to 8.42), engine/planedits.js d18Offer.
+export const d18Changes = Object.freeze({
+  tue: Object.freeze({
+    A2: Object.freeze({ from: "cable_crunch", to: "weighted_crunch" }),
+    C1: Object.freeze({ from: "hip_thrust", to: "booty_builder_hip_thrust" }),
+    C2: Object.freeze({ from: "dead_bug", to: "plank" }),
+  }),
+  fri: Object.freeze({
+    B1: Object.freeze({ from: "hip_thrust", to: "booty_builder_hip_thrust" }),
+    D: Object.freeze({ from: "calf_raise_standing", to: "calf_raise_leg_press" }),
+  }),
+});
 
 // Days. slot: pair letter + 1 or 2 (A1, A2 ...), "Abs1", or "D" (on its own, after the pairs or after Abs1). "Abs2" is no longer used by any day (still understood by the engine).
 // Plan change 2026-11-18: Monday, Wednesday and Thursday have Abs1 (2 sets) then D (no Abs2), so D is not only on leg days.
@@ -79,11 +114,11 @@ export const days = {
     name: "Tuesday", focus: "Lower body A", walk: "easy", upper: false, leg: true,
     slots: [
       { slot: "A1", ex: "leg_press", sets: 3, rest: null },
-      { slot: "A2", ex: "cable_crunch", sets: 3, rest: 90 },
+      { slot: "A2", ex: "weighted_crunch", sets: 3, rest: 90 }, // D18 (0.7.5): was cable_crunch
       { slot: "B1", ex: "romanian_deadlift", sets: 3, rest: null },
       { slot: "B2", ex: "face_pull", sets: 3, rest: 90 },
-      { slot: "C1", ex: "hip_thrust", sets: 3, rest: null },
-      { slot: "C2", ex: "dead_bug", sets: 3, rest: 75 },
+      { slot: "C1", ex: "booty_builder_hip_thrust", sets: 3, rest: null }, // D18 (0.7.5): was hip_thrust
+      { slot: "C2", ex: "plank", sets: 3, rest: 75 }, // D18 (0.7.5): was dead_bug
       { slot: "D", ex: "leg_extension", sets: 3, rest: 60 },
     ],
   },
@@ -118,11 +153,11 @@ export const days = {
     slots: [
       { slot: "A1", ex: "smith_squat", sets: 3, rest: null },
       { slot: "A2", ex: "reverse_crunch", sets: 3, rest: 90 },
-      { slot: "B1", ex: "hip_thrust", sets: 3, rest: null },
+      { slot: "B1", ex: "booty_builder_hip_thrust", sets: 3, rest: null }, // D18 (0.7.5): was hip_thrust
       { slot: "B2", ex: "lateral_raise", sets: 3, rest: 75 },
       { slot: "C1", ex: "cable_pull_through", sets: 3, rest: null },
       { slot: "C2", ex: "side_plank", sets: 2, rest: 60 },
-      { slot: "D", ex: "calf_raise_standing", sets: 3, rest: 60 },
+      { slot: "D", ex: "calf_raise_leg_press", sets: 3, rest: 60 }, // D18 (0.7.5): was calf_raise_standing
     ],
   },
 };
@@ -143,6 +178,8 @@ export const firstTryKg = Object.freeze({
   romanian_deadlift: 12, cable_pull_through: 15, calf_raise_leg_press: 40, calf_raise_standing: 10,
   calf_raise_machine: 30, one_leg_db_calf_raise: 6, db_lying_leg_curl: 6, leg_curl_machine: 15, cable_leg_curl: 5,
   cable_crunch: 20,
+  // Trainer D18 (0.7.5). The Booty Builder V8 stack numbers are not known: 20 is a guess, aimed low.
+  booty_builder_hip_thrust: 20, weighted_crunch: 2, ab_crunch_machine: 15, reverse_pec_deck: 10,
 });
 
 // Soreness notes (trainer D13, 0.7.1): a note on two cards, only in the practice week (week 0) and weeks 1-3. Tied to
@@ -160,6 +197,7 @@ export const BIG_LIFTS = Object.freeze([
   "chest_press", "db_bench_press", "incline_db_press", "shoulder_press_machine", "seated_db_shoulder_press",
   "pulldown", "lat_pulldown_machine", "one_arm_db_row", "seated_cable_row", "seated_row_machine",
   "leg_press", "smith_squat", "goblet_squat", "hip_thrust", "db_glute_bridge", "romanian_deadlift",
+  "booty_builder_hip_thrust", // D18 (0.7.5): Tuesday C1 keeps both warm-up sets, as the hip thrust did under T2
 ]);
 
 // Seconds to move from the first to the second exercise of a pair (plan v2 section 5).

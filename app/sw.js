@@ -1,6 +1,6 @@
 // Service worker: keeps every app file on the phone so the app opens without a network.
 // APP_VERSION must match js/version.js (a unit test checks this and the file list).
-const APP_VERSION = "0.7.4";
+const APP_VERSION = "0.7.5";
 const CACHE = `training-${APP_VERSION}`;
 const FILES = [
   "./",
@@ -111,12 +111,17 @@ const FILES = [
   "js/validate.js",
   "js/version.js",
   "js/wakelock.js",
+  "js/words.js",
+  "media/exercises/ab_crunch_machine/0.jpg",
+  "media/exercises/ab_crunch_machine/1.jpg",
   "media/exercises/arm_circles/0.jpg",
   "media/exercises/arm_circles/1.jpg",
   "media/exercises/arm_swings/0.jpg",
   "media/exercises/arm_swings/1.jpg",
   "media/exercises/bodyweight_squats/0.jpg",
   "media/exercises/bodyweight_squats/1.jpg",
+  "media/exercises/booty_builder_hip_thrust/0.jpg",
+  "media/exercises/booty_builder_hip_thrust/1.jpg",
   "media/exercises/cable_crunch/0.jpg",
   "media/exercises/cable_crunch/1.jpg",
   "media/exercises/cable_curl/0.jpg",
@@ -187,6 +192,8 @@ const FILES = [
   "media/exercises/rear_delt_raise/1.jpg",
   "media/exercises/reverse_crunch/0.jpg",
   "media/exercises/reverse_crunch/1.jpg",
+  "media/exercises/reverse_pec_deck/0.jpg",
+  "media/exercises/reverse_pec_deck/1.jpg",
   "media/exercises/romanian_deadlift/0.jpg",
   "media/exercises/romanian_deadlift/1.jpg",
   "media/exercises/seated_cable_row/0.jpg",
@@ -205,6 +212,8 @@ const FILES = [
   "media/exercises/triceps_pushdown/1.jpg",
   "media/exercises/uphill_walk/0.jpg",
   "media/exercises/uphill_walk/1.jpg",
+  "media/exercises/weighted_crunch/0.jpg",
+  "media/exercises/weighted_crunch/1.jpg",
   "vendor/body-muscles/CHANGES.md",
   "vendor/body-muscles/LICENSE",
   "vendor/body-muscles/NOTICE",

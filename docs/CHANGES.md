@@ -2,6 +2,30 @@
 
 What is new in each app version, in plain words. Newest first. Older versions: see `docs/HANDOVER.md` and the git log.
 
+## 0.7.5 · 2026-11-18
+
+Machines instead of awkward moves (trainer decision D18) and "1 set", built by chat 8.42. Not live yet (waits for "push").
+
+- **Tuesday and Friday use simpler moves.** Your trainer swapped four moves for ones with the gym's own machines
+  (the gym's website lists them):
+  - Tuesday: the hip thrust becomes the **hip thrust machine** (Booty Builder, glutes area); the cable crunch becomes a
+    **crunch with a dumbbell** on your chest; the dead bug becomes a **plank**.
+  - Friday: the hip thrust becomes the **hip thrust machine**; the standing calf raise on the Smith machine becomes the
+    **calf raise on the leg press**.
+  - Sets and rest stay the same. Every muscle still gets the same sets each week (checked for weeks 1 to 12).
+- **The first weight of a new move comes from the old one.** If you logged the hip thrust, the cable crunch or the
+  standing calf raise, the new move starts from that weight, converted by your trainer's table and rounded down. A
+  weight you set yourself in the Plan wins.
+- **One-tap offers after the first visit.** When the first-visit check in Settings says the gym has a leg curl, lat
+  pulldown, seated row, ab crunch or pec deck machine, the Plan day offers it once: **Use it** or **Keep**. The ab crunch
+  machine is a new line in the first-visit check.
+- **A Tuesday or Friday you changed yourself is never rewritten.** If your saved Tuesday or Friday still has an old
+  move in a place D18 changed, the Plan day asks once: **Use them** (only those places change, your sets and rest stay)
+  or **Keep mine** (nothing changes, never asked again).
+- Past workouts and a workout that is running keep their own moves.
+- **"1 set", not "1 sets".** Every screen now writes "1 set" and "1 rep" for one.
+- New photos and form videos for the 4 new moves.
+
 ## 0.7.4 · 2026-11-18
 
 The editable walk, food Grams | Pieces, the double-tap guard and hold words, built by chat 8.41. Live since 2026-11-18 18:20 (pushed 273bb24..aa42645 on Rosario's typed push).

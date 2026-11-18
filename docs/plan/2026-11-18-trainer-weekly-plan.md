@@ -424,6 +424,8 @@ Sources (read 2026-11-18): McGill 2010, Strength Cond J 32(3):33-46, core traini
 
 ### D18. Machines instead of awkward moves — **4 swaps in the plan, 5 machine offers after the first visit**
 
+*Status: built by worker 8.42 in app 0.7.5 (2026-11-18), with the answers to 8.42 below; not live until pushed.*
+
 Asked by the Training Agent on 2026-11-18, for you: "Can we use exercises with the gym's machines, without weird movements like the hip thrust, the dead bug or the cable crunch? I'm pretty sure the gym has machines for those muscles too."
 
 **The main fact:** for building muscle, machines work as well as free weights (Haugen 2023: 13 studies, 1,016 people, no difference in muscle growth). So a simpler machine costs nothing. It is easier to learn, easier to set up and safer when you are tired. The rule I used: if a machine **the gym's website confirms** does the same job, the plan uses it. If the machine is not confirmed, the plan keeps a move with confirmed equipment, and the app offers the machine once the first visit finds it.

@@ -14,7 +14,7 @@
 // 0.7.4 (worker 8.41, iPhone P5 part 2): a record may carry the day's own walk, `walk: { speed_kmh, slope_pct, minutes }`,
 // fixed for that day in every week until "Back to the plan's walk". Limits from the walk engine and the trainer
 // (WALK_LIMITS). A walk this app cannot use makes the whole record unusable here (newerVersion), like an unknown slot.
-import { PLAN_ID, days, exercises, weekInfo, walkRules } from "../plan/plan-v2.js";
+import { PLAN_ID, days, exercises, weekInfo, walkRules, machineOffers as OFFERS, d18Changes } from "../plan/plan-v2.js";
 
 export const SLOT_NAMES = Object.freeze(["A1", "A2", "B1", "B2", "C1", "C2", "Abs1", "Abs2", "D", "E1", "E2"]);
 export const ADDED_SLOTS = Object.freeze(["E1", "E2"]);
@@ -256,4 +256,58 @@ export function planSwapChoices(dayId, slotName, record, settings) {
   const inDay = new Set(eff.slots.filter((s) => s.slot !== slotName).map((s) => s.ex));
   const hasMachine = (id) => !MACHINE_OF.has(id) || settings?.extra_machines?.[MACHINE_OF.get(id)] === true;
   return out.filter((id) => id !== cur.ex && !inDay.has(id) && (hasMachine(id) || (planSlot && id === planSlot.ex)));
+}
+
+// ---------- one-tap machine offers (trainer D18, 0.7.5) ----------
+
+// The offers a day shows now: [{ key, machine, slot, from, to }] in the day's order. One per place whose exercise is an
+// offer's confirmed fallback (`from`), when the first visit says the gym has the machine (extra_machines[...] === true),
+// the machine exercise is not already in the day, and this offer was never answered (`answered`: { key: "used" |
+// "kept" }, kept on this phone, prefs.js). A day saved by a newer app shows none (it cannot be edited here).
+export const offerKey = (dayId, slot, to) => `${dayId}:${slot}:${to}`;
+export function machineOffers(dayId, record, settings, answered = {}) {
+  if (!isPlanDayId(dayId)) return [];
+  const eff = effectiveDay(dayId, record);
+  if (eff.newerVersion) return [];
+  const inDay = new Set(eff.slots.map((s) => s.ex));
+  const out = [];
+  for (const s of eff.slots) {
+    for (const o of OFFERS) {
+      if (s.ex !== o.from || settings?.extra_machines?.[o.machine] !== true || inDay.has(o.to) || !isKnownExercise(o.to)) continue;
+      const key = offerKey(dayId, s.slot, o.to);
+      if (answered && own(answered, key)) continue;
+      out.push({ key, machine: o.machine, slot: s.slot, from: o.from, to: o.to });
+    }
+  }
+  return out;
+}
+
+// ---------- the D18 offer for a saved Tuesday or Friday edit (trainer's answer 3 to 8.42) ----------
+
+// A saved edit holds the whole day, so a Tuesday edited before 0.7.5 still holds the old exercises in the places D18
+// changed. It is never rewritten silently: the Plan day offers it once. Returns null or { key, swaps: [{ slot, from, to }] }
+// for the places that still hold D18's old exercise and can take the new one (not already elsewhere in the day).
+// None for the plan's own day, a tombstone, a day saved by a newer app, or an answered offer (`answered`, prefs.js).
+export const D18_OFFER_KEY = (dayId) => `${dayId}:D18:plan`;
+export function d18Offer(dayId, record, answered = {}) {
+  const changes = isPlanDayId(dayId) ? d18Changes[dayId] : null;
+  if (!changes || !isObj(record) || record.deleted === true) return null;
+  const key = D18_OFFER_KEY(dayId);
+  if (answered && own(answered, key)) return null;
+  const eff = effectiveDay(dayId, record);
+  if (!eff.edited || eff.newerVersion) return null;
+  const inDay = new Set(eff.slots.map((s) => s.ex));
+  const swaps = [];
+  for (const s of eff.slots) {
+    const c = own(changes, s.slot) ? changes[s.slot] : null;
+    if (c && s.ex === c.from && !inDay.has(c.to)) swaps.push({ slot: s.slot, from: c.from, to: c.to });
+  }
+  return swaps.length ? { key, swaps } : null;
+}
+
+// The day's slots with D18's exercises in those places; sets and rest stay as Rosario saved them. Pure (a new list).
+export function withD18(slots, swaps) {
+  let out = copySlots(slots);
+  for (const sw of swaps) out = withSwap(out, sw.slot, sw.to);
+  return out;
 }

@@ -15,6 +15,7 @@ import { model, rerender } from "./app.js";
 import { patchActive, getActive } from "../active.js";
 import { exercises } from "../plan/plan-v2.js";
 import { cues } from "../plan/cues.js";
+import { setWord, nReps } from "../words.js";
 import { stepUp, stepDown, warmupSets } from "../engine/progression.js";
 import { slotRecord, workSets, warmupDone, warmupCount, unitLabel, targetText } from "../engine/workout.js";
 import { askEnd, nextText, nextDue, restBetween, progressOf } from "./flow.js";
@@ -48,14 +49,14 @@ export function askRir(sessionId, slot, ex) {
 // "Stop this exercise here": asks first, then moves on with the sets done; Undo (8 s) asks the rest again.
 function askStop(session, entry, ex, doneCount) {
   const close = openSheet(
-    h("h2", {}, `Move on with ${doneCount} of ${entry.sets} sets?`),
+    h("h2", {}, `Move on with ${doneCount} of ${entry.sets} ${setWord(entry.sets)}?`),
     h("p", { class: "muted" }, `The sets you did are saved. ${ex.name} ends here and the workout goes on.`),
     h("p", { class: "small muted" }, "Does it hurt? Use Swap › It hurts instead."), // trainer D10: pain goes through Swap
     h("button", { class: "button", type: "button", onclick: () => {
       close();
       model.stopExercise(session.id, entry.slot, true);
       rerender();
-      undoToast(`${ex.name}: stopped after ${doneCount} of ${entry.sets} sets.`, () => undoStop(session.id, entry.slot));
+      undoToast(`${ex.name}: stopped after ${doneCount} of ${entry.sets} ${setWord(entry.sets)}.`, () => undoStop(session.id, entry.slot));
     } }, "Yes, move on"),
     h("button", { class: "button secondary", type: "button", onclick: () => close() }, "No, keep going"));
 }
@@ -171,7 +172,7 @@ export function renderPair(ctx, pos) {
   for (let n = 1; n <= entry.sets; n++) {
     const s = done[n - 1];
     if (s) {
-      const what = hold ? `${s.seconds} s` : bodyweight ? `${s.reps} reps` : `${s.weight_kg} kg × ${s.reps}`;
+      const what = hold ? `${s.seconds} s` : bodyweight ? nReps(s.reps) : `${s.weight_kg} kg × ${s.reps}`;
       const left = s.rir == null || hold ? "" : ` · ${s.rir >= 4 ? "4+" : s.rir} left`;
       const just = justDone === `${session.id}:${entry.slot}:${n}`;
       if (just) justDone = null;
@@ -185,7 +186,7 @@ export function renderPair(ctx, pos) {
   // What Done will save, shown on the button and kept up to date while the steppers move (builder C).
   const doneSub = () => (warmupPending
     ? `${fmtKg(wsets[wDone].weight_kg)} kg × ${wsets[wDone].reps}`
-    : hold ? `${draft.reps} s` : bodyweight ? `${draft.reps} reps` : `${fmtKg(draft.weight)} kg × ${draft.reps}`);
+    : hold ? `${draft.reps} s` : bodyweight ? nReps(draft.reps) : `${fmtKg(draft.weight)} kg × ${draft.reps}`);
   let doneBtn = null;
   const live = () => { const el = doneBtn?.querySelector(".sub"); if (el) el.textContent = doneSub(); };
 

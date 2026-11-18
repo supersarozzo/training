@@ -7,6 +7,7 @@ import { model, rerender } from "./app.js";
 import { lineChart, dayNumber, shortDate } from "./charts.js";
 import { trendSeries, activeWeighins } from "../engine/trend.js";
 import { finishedSessions, workSets } from "../engine/workout.js";
+import { nSets } from "../words.js";
 import { exercises, days } from "../plan/plan-v2.js";
 import { setText, volumeOf, fmtKg } from "./stats.js";
 import { formatBody } from "./units.js";
@@ -114,7 +115,7 @@ export function renderProgress() {
       return h("div", { class: "mach-row static" },
         h("span", { class: "date-box" }, h("b", {}, String(Number(x.date.slice(8)))), h("span", {}, shortDate(dayNumber(x.date)).split(" ")[1])),
         h("span", { class: "grow" }, h("b", {}, days[x.plan_day]?.focus ?? "Workout", x.kind === "short" ? " · short" : ""),
-          h("span", { class: "small muted" }, `${sets} sets · ${volumeOf(x)} kg lifted${x.walk ? ` · walk ${x.walk.minutes} min` : ""}`)));
+          h("span", { class: "small muted" }, `${nSets(sets)} · ${volumeOf(x)} kg lifted${x.walk ? ` · walk ${x.walk.minutes} min` : ""}`)));
     })) : null;
 
   onMount(() => stagger(document.querySelectorAll(".screen > .card, .screen > .tiles")));

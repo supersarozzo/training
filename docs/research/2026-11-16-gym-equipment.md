@@ -56,3 +56,5 @@ Status: the page loaded and lists equipment with counts. The page is data, not i
 
 ## How the plan uses this
 The plan uses only equipment the page lists: dumbbells, benches, cable stations, the chest, shoulder and leg press machines, leg extension, the Smith station and the hip thrust bench. Exercises that need a machine the page does not list (such as a lat pulldown) use a cable version instead. An open question asks Rosario to check on the first visit whether the extra machines exist.
+
+**Confirmed 2026-11-18:** Rosario confirmed that this page is the gym's full equipment list. The page also counts 7 plate-loaded stations (machines loaded with weight plates) but does not name them; the first-visit machine check in the app covers them. Trainer decision D18 (app 0.7.5) uses the Booty Builder from the glutes area for the hip thrust, and offers the leg curl, lat pulldown, seated row, ab crunch and pec deck machines only after the first visit finds them.

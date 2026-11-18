@@ -79,6 +79,9 @@ export const exerciseMuscles = {
   // calf_raise_leg_press moved here from the swap-only part (data unchanged).
   db_lying_leg_curl: { main: ["hamstrings"], helpers: [], equip: "dumbbell" }, // Lying_Leg_Curls (machine version of the same move)
   calf_raise_leg_press: { main: ["calves"], helpers: [], equip: "machine" },
+  // Added 2026-11-18 (trainer D18, 0.7.5): the same muscles as the exercise each one replaces (hip_thrust, cable_crunch).
+  booty_builder_hip_thrust: { main: ["glutes"], helpers: ["hamstrings"], equip: "machine", own: { reason: "Trainer D18 and M1: the hip thrust machine is the hip thrust with a belt; the ankle does not move, so no calves (StrengthLog; Contreras 2015 EMG)" } }, // photo: Barbell_Hip_Thrust
+  weighted_crunch: { main: ["abs"], helpers: [], equip: "dumbbell" }, // Weighted_Crunches
 
   // Swap-only exercises
   cable_curl: { main: ["biceps"], helpers: ["forearms"], equip: "cable", own: { reason: "Trainer M5: forearms help, as in the dumbbell curl (StrengthLog; Wikipedia Biceps curl)" } },
@@ -92,6 +95,9 @@ export const exerciseMuscles = {
   // Added 2026-11-18 (plan change); muscles copied from the free-exercise-db entry used for the photo (no own reading needed).
   one_leg_db_calf_raise: { main: ["calves"], helpers: [], equip: "dumbbell" }, // Standing_Dumbbell_Calf_Raise
   cable_leg_curl: { main: ["hamstrings"], helpers: [], equip: "cable" }, // Standing_Leg_Curl (one leg at a time)
+  // Added 2026-11-18 (trainer D18, 0.7.5): offered only after the first visit finds the machine.
+  ab_crunch_machine: { main: ["abs"], helpers: [], equip: "machine" }, // Ab_Crunch_Machine
+  reverse_pec_deck: { main: ["rear_delts"], helpers: ["mid_back"], equip: "machine", own: { reason: "Trainer D18 and M8: the muscles between the shoulder blades help, as in the rear-delt raise and the face pull (StrengthLog trapezius; Ekstrom 2003 EMG: middle trapezius)" } }, // Reverse_Machine_Flyes
 };
 
 // Body drawing part (app/vendor/body-muscles/shapes.js) -> our muscle group, by the start of the part id.

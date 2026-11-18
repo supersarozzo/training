@@ -60,6 +60,10 @@ Date: 2026-11-17. Written by task chat 8.24 (redesign merge). Data source: `app/
 | pushups_bench | [Incline_Push-Up](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Incline_Push-Up) | same |
 | uphill_walk | [Walking_Treadmill](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Walking_Treadmill) | close |
 | pec_deck | [Butterfly](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Butterfly) | same |
+| booty_builder_hip_thrust | [Barbell_Hip_Thrust](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Barbell_Hip_Thrust) | close (the hip thrust's photo; 0.7.5, D18) |
+| weighted_crunch | [Weighted_Crunches](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Weighted_Crunches) | close (photo shows a plate and raised legs; 0.7.5, D18) |
+| ab_crunch_machine | [Ab_Crunch_Machine](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Ab_Crunch_Machine) | same (0.7.5, D18) |
+| reverse_pec_deck | [Reverse_Machine_Flyes](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Reverse_Machine_Flyes) | same (0.7.5, D18) |
 
 ## Icons
 
@@ -118,3 +122,7 @@ All interface icons and the gym-area icons are original inline SVG written for t
 | hip_hinge | [How to Do a Hip Hinge: A Guide from Physical Therapists](https://www.youtube.com/watch?v=2W_gXhut5S8) | Hinge Health | 200, same title and channel |
 | pushups_bench | [Incline Push Ups // Learn to Push Up for Beginners!](https://www.youtube.com/watch?v=49jfZ_z7-us) | Tom Morrison | 200, same title and channel |
 | uphill_walk | [How To Use The Treadmill](https://www.youtube.com/watch?v=HxsFneJFM2c) | PureGym | 200, same title and channel |
+| booty_builder_hip_thrust | [How to Use the Hip Thrust Machine](https://www.youtube.com/watch?v=UlljOYPM57U) | Gainesville Health & Fitness | 200, same title and channel (0.7.5; not watched yet) |
+| weighted_crunch | [How To Do: Dumbbell Crunch - Floor \| Ab Workout Exercise](https://www.youtube.com/watch?v=GnOtkztXWQs) | Fitway - Workout Trainer | 200, same title and channel (0.7.5; not watched yet) |
+| ab_crunch_machine | [Life Fitness Circuit Series Ab Crunch Instructions](https://www.youtube.com/watch?v=NpjB_rp756Y) | Life Fitness / Hammer Strength | 200, same title and channel (0.7.5; not watched yet) |
+| reverse_pec_deck | [How To: Reverse Pec Deck Rear Delt Fly](https://www.youtube.com/watch?v=hmtnyIGgR9A) | Ignore Limits | 200, same title and channel (0.7.5; not watched yet) |

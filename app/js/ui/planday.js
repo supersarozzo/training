@@ -8,7 +8,7 @@
 // All text through h(); no innerHTML; no style attributes.
 import { h } from "../h.js";
 import { screen, openSheet, closeSheets } from "./parts.js";
-import { model, rerender, go } from "./app.js";
+import { model, store, rerender, go } from "./app.js";
 import { today } from "../clock.js";
 import { dayLayout } from "../dayplan.js";
 import { OWN_WALK_LINE } from "../engine/workout.js";
@@ -19,10 +19,12 @@ import { onMount, stagger } from "./motion.js";
 import { miniMap } from "./bodymap.js";
 import { openExerciseLayer, doseParts, changeLabel } from "./exlayer.js";
 import { pageFor, muscleWords } from "../engine/planpage.js";
-import { ADDED_SLOTS, MAX_ADDED } from "../engine/planedits.js";
+import { ADDED_SLOTS, MAX_ADDED, machineOffers, d18Offer } from "../engine/planedits.js";
+import { readOfferAnswers } from "../prefs.js";
+import { setWord } from "../words.js";
 import { viewDay, unitsIn, editedMinutes, rangeFor, weightLine, soreNote, walkWords } from "../planview.js";
 import { renderMuscleCheck } from "./musclecheck.js";
-import { dayState, openSwapSheet, openAddSheet, removeSlot, changedCard, openDoseSheet, openWalkSheet } from "./planedit.js";
+import { dayState, openSwapSheet, openAddSheet, removeSlot, changedCard, openDoseSheet, openWalkSheet, offerCard, d18OfferCard } from "./planedit.js";
 
 // The page remembers the picked day and week while you stay on the tab; coming back to the tab opens today again.
 // `edit`: Edit mode (build step 4). It is page state: it ends when the day changes or the tab is left.
@@ -97,7 +99,7 @@ function exCard(doc, day, week, slot, edit = false) {
   const badge = added ? "Added" : planned && planned.ex !== slot.ex ? "Swapped" : null;
   const card = h("button", {
     class: "pcard ex", type: "button",
-    "aria-label": `${ex.name}${badge ? ` (${badge.toLowerCase()})` : ""}: ${slot.sets} sets of ${range[0] === range[1] ? range[0] : `${range[0]} to ${range[1]}`}${ex.kind === "hold" ? " seconds" : " reps"}${ex.perSide ? " each side" : ""}. Weight: ${wl.text}. ${words.card}. Open muscles, photos and tips.`,
+    "aria-label": `${ex.name}${badge ? ` (${badge.toLowerCase()})` : ""}: ${slot.sets} ${setWord(slot.sets)} of ${range[0] === range[1] ? range[0] : `${range[0]} to ${range[1]}`}${ex.kind === "hold" ? " seconds" : " reps"}${ex.perSide ? " each side" : ""}. Weight: ${wl.text}. ${words.card}. Open muscles, photos and tips.`,
     onclick: () => openExerciseLayer(slot.ex, { day, week, slot: slot.slot }),
   },
   thumb(slot.ex),
@@ -149,6 +151,11 @@ export function renderPlan() {
   const editCard = edit ? h("div", { class: "card changed-card" },
     h("p", {}, h("b", {}, `Editing ${dayWord}.`), ` Each change saves at once and lasts: every ${dayWord} from now on, in every week. Past workouts stay as they were.`),
     h("p", { class: "small muted" }, `About ${minutes} minutes now; the plan's day is about ${planLay.minutes}.`)) : null;
+  // Trainer D18 (0.7.5): a machine the first visit found is offered once, only when the day can be edited (not while a
+  // workout runs on it, not a day saved by a newer app), and not in Edit mode (Swap is there).
+  const answered = readOfferAnswers(store);
+  const offers = view.canEdit && !edit ? machineOffers(day, view.record, doc.shared_settings, answered) : [];
+  const planOffer = view.canEdit && !edit ? d18Offer(day, view.record, answered) : null; // trainer's answer 3 to 8.42
   const lockCard = view.locked ? h("div", { class: "card lock-card" }, icon("info", 20), h("p", {}, "Workout running. This day can be changed after the workout ends.")) : null;
   const newerLine = view.newerVersion ? h("div", { class: "note-line" }, icon("info", 16), h("span", {}, "This day was changed on a newer app version. Update the app to change it.")) : null;
   const editChip = view.canEdit ? h("button", {
@@ -169,7 +176,7 @@ export function renderPlan() {
         h("div", { class: "plan-focus" }, days[day].focus),
         h("div", { class: "plan-meta" },
           h("span", {}, "about ", h("b", {}, String(minutes)), " min"),
-          h("span", {}, h("b", {}, String(totalSets)), " sets"),
+          h("span", {}, h("b", {}, String(totalSets)), ` ${setWord(totalSets)}`),
           h("span", {}, "stop with ", h("b", {}, rirText(rirFor(week, day))), " left"))),
       week !== page.week ? h("div", { class: "note-line" }, icon("info", 16), h("span", {}, `Showing week ${week}. This week is week ${page.week}.`),
         h("button", { class: "text-button", type: "button", onclick: () => { state.week = null; rerender(); } }, "Back to this week")) : null,
@@ -178,6 +185,8 @@ export function renderPlan() {
       editCard,
       lockCard,
       newerLine,
+      planOffer ? d18OfferCard(day, planOffer) : null,
+      offers.map((o) => offerCard(day, o)),
       !edit && view.edited ? changedCard(day, view.record, { canReset: view.canEdit }) : null,
       edit ? walkEditCard(walkCard(lay.walk, day), day, week) : walkCard(lay.walk, day),
       units,

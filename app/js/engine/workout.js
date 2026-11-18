@@ -5,6 +5,7 @@
 // - walk suggestion
 // Source: plan v2 sections 3 to 6, 8, 9, 11; WORKFLOW D.
 import { exercises, MOVE_SECONDS, weekInfo, walkRules, BIG_LIFTS, firstTryKg } from "../plan/plan-v2.js";
+import { nSets } from "../words.js";
 import { exerciseMuscles } from "../plan/muscles.js";
 import { localDate } from "../ids.js";
 import { planForDay, missedRule } from "./schedule.js";
@@ -175,6 +176,25 @@ export function planWeightNewer(state, last) {
 }
 
 export const FIRST_TRY_NOTE = "First try. Set 1 tells us if it is right.";
+
+// Trainer D18 (0.7.5): the exercise a new planned exercise replaced in its place. Its first weight comes from the old
+// exercise's last logged weight x (new first try / old first try), rounded down to the gym (the D15 conversion WITHOUT
+// the 30 % cut: nothing hurts). Only while the new exercise has no log of its own. The plank (from the dead bug) has no
+// weight. The calf raise on the leg press (from the Smith standing calf raise) keeps its own history when it has one.
+export const REPLACED_BY_D18 = Object.freeze({
+  booty_builder_hip_thrust: "hip_thrust",
+  weighted_crunch: "cable_crunch",
+  calf_raise_leg_press: "calf_raise_standing",
+});
+export function fromReplaced(doc, exerciseId) {
+  const oldId = REPLACED_BY_D18[exerciseId];
+  const tableNew = firstTryKg[exerciseId];
+  const tableOld = firstTryKg[oldId];
+  if (!oldId || !(tableNew > 0) || !(tableOld > 0)) return null;
+  const old = performances(doc.sessions, oldId)[0];
+  if (!old || !(old.weight_kg > 0)) return null;
+  return { weight_kg: gymFloor(old.weight_kg * (tableNew / tableOld), exerciseId, doc.shared_settings), from: oldId };
+}
 // From week 2 the find-your-weight steps do not run, so the note says what to do instead (trainer D12 addition, dc59f13).
 export const FIRST_TRY_NOTE_LATER = "First try. Set 1 too easy (4 or more reps left) or too hard? Change the weight one step for the next set.";
 
@@ -200,6 +220,12 @@ export function suggestFor(doc, exerciseId, ctx) {
       return { ...base, weight_kg: state.start_weight_kg, action: "start", note: "Your starting weight from week 1." };
     }
     if (ex.step === "bodyweight") return { ...base, weight_kg: 0, action: "unknown", note: "" };
+    // Trainer D18 (0.7.5): a new exercise in the place of an old one starts from the old one's logged weight.
+    const conv = fromReplaced(doc, exerciseId);
+    if (conv) {
+      const from = `From your ${exercises[conv.from].name.toLowerCase()} weight.`;
+      return { ...base, weight_kg: conv.weight_kg, action: "first_try", note: ctx.week > 1 ? `${from} ${FIRST_TRY_NOTE_LATER.replace(/^First try. /, "")}` : `${from} Set 1 tells us if it is right.` };
+    }
     // Nothing known yet: the first-try weight (trainer D12, 0.7.1); the week-1 steps correct it from set 1.
     const first = firstTryWeight(exerciseId, settings, doc.profile);
     if (first > 0) return { ...base, weight_kg: first, action: "first_try", note: ctx.week > 1 ? FIRST_TRY_NOTE_LATER : FIRST_TRY_NOTE };
@@ -281,7 +307,7 @@ export function targetText(exerciseId, sets, rir, myRange = null) {
   const range = lo === hi ? `${lo}` : `${lo} to ${hi}`;
   const unit = ex.kind === "hold" ? "seconds" : "reps";
   const side = ex.perSide ? " each side" : "";
-  return `${sets} sets · ${range} ${unit}${side} · stop with ${left} left`;
+  return `${nSets(sets)} · ${range} ${unit}${side} · stop with ${left} left`;
 }
 
 // New best: more weight than ever before, or the same weight with more reps (holds: more seconds).

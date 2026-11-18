@@ -6,7 +6,9 @@ import { screen, choiceRow } from "./parts.js";
 import { model, store, rerender } from "./app.js";
 import { soundOn, setSound, getActive } from "../active.js";
 import { setSoundOn, beep } from "../sound.js";
-import { extraMachines } from "../plan/plan-v2.js";
+import { extraMachines, DAY_IDS } from "../plan/plan-v2.js";
+import { machineOffers, findPlanDay } from "../engine/planedits.js";
+import { readOfferAnswers } from "../prefs.js";
 import { syncCard, getFromGithub } from "./settings-sync.js";
 import { syncer } from "../syncer.js";
 import { makeBackup, downloadText, BACKUP_WARN_BYTES } from "../backup.js";
@@ -18,7 +20,8 @@ import { APP_VERSION } from "../version.js";
 import { updateNow, updateStatusWords } from "./update.js";
 import { updateWords } from "../updater.js";
 
-const MACHINE_NAMES = { lat_pulldown: "Lat pulldown machine", seated_row: "Seated row machine", leg_curl: "Leg curl machine", pec_deck: "Pec deck", calf_raise: "Calf raise machine" };
+// ab_crunch: the first-visit check added by trainer D18 (0.7.5). A "yes" makes the Plan offer the machine once (planday.js).
+const MACHINE_NAMES = { lat_pulldown: "Lat pulldown machine", seated_row: "Seated row machine", leg_curl: "Leg curl machine", pec_deck: "Pec deck", calf_raise: "Calf raise machine", ab_crunch: "Ab crunch machine" };
 let gymMessage = null;
 let draft = null; // { dumbbells, stack, machines }
 
@@ -41,7 +44,11 @@ function gymCard(settings) {
       extra_machines: { ...settings.extra_machines, ...draft.machines },
     });
     draft = null;
-    gymMessage = { kind: "ok", text: "Saved on this phone." };
+    // Trainer D18 (0.7.5): a machine the gym has is offered once on its Plan days; say where to find the offer.
+    const doc = model.doc();
+    const answered = readOfferAnswers(store);
+    const offers = DAY_IDS.some((d) => machineOffers(d, findPlanDay(doc, d), doc.shared_settings, answered).length);
+    gymMessage = { kind: "ok", text: offers ? "Saved on this phone. The Plan tab offers the machine on its days." : "Saved on this phone." };
     rerender();
   };
   return h("div", { class: "card" },
