@@ -262,6 +262,8 @@ export function walkSuggestion(doc, { week, legDay, missed, kind = "full" }) {
   if (missed?.kind === "minus_10") { base = walkAfterBreak(base, startBase, "weeks_2_4"); note = "Back from a break: 2 % less steep this week."; }
   if (missed?.kind === "minus_20") { base = walkAfterBreak(base, startBase, "over_4_weeks"); note = "Back from a long break: starting settings again."; }
 
+  // Trainer decision D5: never suggest more than the plan's top, even after a faster or steeper walk was saved.
+  base = { speed_kmh: Math.min(base.speed_kmh, walkRules.maxSpeed_kmh), slope_pct: Math.min(base.slope_pct, walkRules.maxSlope_pct) };
   const day = walkForDay(base, legDay);
   const minutes = kind === "short" ? 15 : (walks.length ? walkRules.minutes : startRow.minutes);
   const buildUpMinutes = kind === "short" ? 2 : 3;
