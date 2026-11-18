@@ -9,7 +9,8 @@
 // - The whole-plan muscle check rows.
 // All muscle numbers come from engine/planpage.js setsByMuscle, the same function as "Day so far", so the opened
 // exercise and the muscle check never disagree.
-import { daySlots } from "./engine/schedule.js";
+import { daySlots, blockPosition } from "./engine/schedule.js";
+import { validRange } from "./engine/workout.js";
 import { findPlanDay, effectiveDay, planDaySlots, planSwapChoices, setsForSlot, ADDED_SLOTS, ADDED_SETS, ADDED_REST, MAX_ADDED } from "./engine/planedits.js";
 import { setsByMuscle, levelFor, soFarText, unitsOf, unitHeader, slotRole, GYM_GROUPS, gymGroupOf, fmtSets } from "./engine/planpage.js";
 import { days, exercises, weeks, weekInfo, DAY_IDS, MOVE_SECONDS } from "./plan/plan-v2.js";
@@ -95,7 +96,11 @@ export function dayChanges(dayId, record) {
   for (const p of plan) {
     const n = now.get(p.slot);
     if (!n) out.push({ what: "remove", slot: p.slot, from: p.ex, to: null, text: `Removed: ${exName(p.ex)}` });
-    else if (n.ex !== p.ex) out.push({ what: "swap", slot: p.slot, from: p.ex, to: n.ex, text: `${exName(p.ex)} → ${exName(n.ex)}` });
+    else {
+      if (n.ex !== p.ex) out.push({ what: "swap", slot: p.slot, from: p.ex, to: n.ex, text: `${exName(p.ex)} → ${exName(n.ex)}` });
+      // 0.6.0: the sets of an exercise changed in the Plan (base sets, before the week rule).
+      if (n.sets !== p.sets) out.push({ what: "sets", slot: p.slot, from: p.sets, to: n.sets, text: `Sets: ${exName(n.ex)} ${p.sets} → ${n.sets}` });
+    }
   }
   for (const s of eff.slots) if (ADDED_SLOTS.includes(s.slot)) out.push({ what: "add", slot: s.slot, from: null, to: s.ex, text: `Added: ${exName(s.ex)}` });
   return out;
@@ -296,3 +301,28 @@ export function checkLevels(doc, week) {
 export const checkSub = (week) => `${weekInfo(clampWeek(week)).phase}. Sets a week, Monday to Friday.`;
 
 export { lower as muscleLower };
+
+// ---------- 0.6.0: reps per exercise, the day to train ----------
+
+// The reps range of an exercise: the one set in the Plan (exercise_state my_range) when it is usable, else the plan's.
+export function rangeFor(doc, exId) {
+  const st = (doc?.exercise_state ?? []).find((x) => x && x.id === `x-${exId}` && !x.deleted);
+  return validRange(st?.my_range) ?? [...exercises[exId].range];
+}
+
+// "10–12" for a range.
+export const rangeText = (r) => (r[0] === r[1] ? String(r[0]) : `${r[0]}–${r[1]}`);
+
+// The plan days of this week for Today's day picker: [{ day, done, today }]. Any day can be trained on any date
+// (Rosario, 2026-11-18: "so I can start any day of the week"). done: a finished or running workout of that plan day
+// this week. today: the plan day of this date (none on Saturday and Sunday). Empty when the plan is not running.
+export function dayChoices(doc, date) {
+  const pos = blockPosition(doc.block.start_monday, date);
+  if (pos.state !== "running") return [];
+  const sessions = Array.isArray(doc.sessions) ? doc.sessions : [];
+  return DAY_IDS.map((day) => ({
+    day,
+    done: sessions.some((s) => !s.deleted && s.week === pos.week && s.plan_day === day && (s.status === "finished" || s.status === "in_progress")),
+    today: pos.planDay === day,
+  }));
+}

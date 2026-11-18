@@ -233,6 +233,13 @@ const CHECKS = {
   }),
   exercise_state: (r, n) => checkRecord(r, `exercise state ${n}`, (x) => {
     numOrNull(x.start_weight_kg, `exercise state ${n} start weight`, 0, 1000);
+    // 0.6.0: reps and weight set in the Plan.
+    numOrNull(x.my_weight_kg, `exercise state ${n} weight set in the Plan`, 0, 1000);
+    if (x.my_range !== undefined && x.my_range !== null) {
+      const r = x.my_range;
+      if (!Array.isArray(r) || r.length !== 2 || !r.every((v) => Number.isInteger(v) && v >= 1 && v <= 100) || r[0] > r[1]) fail(`exercise state ${n} reps must be two whole numbers, low first`);
+    }
+    if (x.my_weight_at !== undefined && x.my_weight_at !== null && !isDate(x.my_weight_at)) fail(`exercise state ${n} weight date must be a date`);
     text(x.machine_note ?? "", `exercise state ${n} note`);
     numOrNull(x.fail_streak ?? 0, `exercise state ${n} fail streak`, 0, 100);
   }),

@@ -5,9 +5,9 @@ import { MACHINE_IDS } from "./plan/machine-ids.js";
 import { hasData } from "./store.js";
 import { validateDocument, clipText } from "./validate.js";
 import { mergeDocs } from "./sync/merge.js";
-import { PLAN_ID } from "./plan/plan-v2.js";
+import { PLAN_ID, exercises } from "./plan/plan-v2.js";
 import { planForDay } from "./engine/schedule.js";
-import { finishedSessions, workSets } from "./engine/workout.js";
+import { finishedSessions, workSets, validRange } from "./engine/workout.js";
 import { planDayId, isPlanDayId, checkSlots, checkPlanDay, findPlanDay, effectiveDay, planDaySlots, sameAsPlan, withSwap, withRemoved, withAdded } from "./engine/planedits.js";
 
 const NEWER_DAY = "This day was changed on a newer app version. Update the app first.";
@@ -156,6 +156,15 @@ export function createModel(store, clock = () => new Date()) {
         rec.sets.push({ n, type: set.type, weight_kg: set.weight_kg ?? 0, reps: set.reps ?? null, seconds: set.seconds ?? null, rir: null, done_at: t });
       });
     },
+    // "Stop this exercise here" (0.6.0): move on after the work sets already saved. stop false: ask the sets again.
+    stopExercise(sessionId, slot, stop = true) {
+      return editSession(sessionId, (s) => {
+        const rec = s.exercises.find((e) => e.slot === slot);
+        if (!rec) throw new Error(`No exercise ${slot} in this workout`);
+        if (stop) rec.stopped_after = rec.sets.filter((x) => x.type === "work").length;
+        else delete rec.stopped_after;
+      });
+    },
     // "How many more could you do?" for the set just saved.
     setLastRir(sessionId, slot, rir, left = undefined) {
       return editSession(sessionId, (s) => {
@@ -244,6 +253,19 @@ ${note}` : note);
         if (typeof next.machine_note === "string") next.machine_note = clipText(next.machine_note);
         if (i >= 0) doc.exercise_state[i] = next; else doc.exercise_state.push(next);
       });
+    },
+
+    // Reps and weight of one exercise, set in the Plan (0.6.0). They count on every day the exercise is in.
+    // range: [low, high] or null (back to the plan's reps). weightKg: a number or null (back to the app's steps).
+    // The weight carries the day it was set: the workout uses it until a newer workout exists (engine/workout.js).
+    setExercisePrefs(exerciseId, { range, weightKg }) {
+      if (!Object.prototype.hasOwnProperty.call(exercises, exerciseId)) throw new Error("Unknown exercise.");
+      if (range !== undefined && range !== null && !validRange(range)) throw new Error("Reps must be two whole numbers from 1 to 100, low first.");
+      if (weightKg !== undefined && weightKg !== null && !(typeof weightKg === "number" && weightKg >= 0 && weightKg <= 1000)) throw new Error("The weight must be 0 to 1000 kg.");
+      const patch = {};
+      if (range !== undefined) patch.my_range = range ? [range[0], range[1]] : null;
+      if (weightKg !== undefined) { patch.my_weight_kg = weightKg; patch.my_weight_at = weightKg === null ? null : localDate(clock()); }
+      return this.setExerciseState(exerciseId, patch);
     },
 
     // "Where it is in my gym" for one machine (gym_spots, JUDGING.md 3.3). One record per machine: g-<machine>.

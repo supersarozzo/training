@@ -67,7 +67,7 @@ test("V2 sets saved through savePlanDay show on the day and follow the week rule
   const v3 = view.viewDay(doc, "tue", 3);
   assert.equal(v3.slots.find((s) => s.slot === "A1").sets, 5);
   assert.equal(view.viewDay(doc, "tue", 1).slots.find((s) => s.slot === "A1").sets, 2);
-  assert.deepEqual(view.dayChanges("tue", view.editOf(doc, "tue")), [`Sets: ${"Leg press"} 3 → 5`]);
+  assert.deepEqual(view.dayChanges("tue", view.editOf(doc, "tue")).map((c) => c.text), ["Sets: Leg press 3 → 5"]);
 });
 
 test("V3 suggestFor: reps set in the Plan (my_range) replace the plan's reps; with no history the weight set there is used", () => {
@@ -84,23 +84,24 @@ test("V3 suggestFor: reps set in the Plan (my_range) replace the plan's reps; wi
 
 test("V4 the weight set in the Plan wins until a newer workout; after that the normal steps take over", () => {
   const doc = validDoc();
-  doc.sessions = [finished("2026-02-23", 3, "leg_press", [work(1, 40, 12), work(2, 40, 12), work(3, 40, 12)])];
+  // 100 kg: one stack step is small (40 to 45 kg would be a "big jump", which first asks for 2 more reps).
+  doc.sessions = [finished("2026-02-23", 3, "leg_press", [work(1, 100, 12), work(2, 100, 12), work(3, 100, 12)])];
   doc.exercise_state = [{ id: "x-leg_press", updated_at: T, start_weight_kg: null, machine_note: "", fail_streak: 0, my_weight_kg: 60, my_weight_at: "2026-02-24" }];
   let s = workout.suggestFor(doc, "leg_press", { week: 3, missed: null, exerciseState: doc.exercise_state[0] });
   assert.equal(s.weight_kg, 60, "set after the last workout: used");
   doc.exercise_state[0].my_weight_at = "2026-02-20";
   s = workout.suggestFor(doc, "leg_press", { week: 3, missed: null, exerciseState: doc.exercise_state[0] });
   assert.notEqual(s.action, "mine", "set before the last workout: the steps decide");
-  assert.ok(s.weight_kg > 40, "all sets at the top with reps left: heavier");
+  assert.ok(s.weight_kg > 100, "all sets at the top with reps left: heavier");
 });
 
 test("V5 with my_range the top of the new range decides when to add weight", () => {
-  const last = { weight_kg: 40, sets: [{ reps: 8, rir: 2 }, { reps: 8, rir: 2 }, { reps: 8, rir: 2 }], date: "2026-02-23", week: 3 };
+  const last = { weight_kg: 100, sets: [{ reps: 8, rir: 2 }, { reps: 8, rir: 2 }, { reps: 8, rir: 2 }], date: "2026-02-23", week: 3 };
   const s = nextSuggestion(last, null, { exerciseId: "leg_press", week: 3, settings: validDoc().shared_settings, range: [6, 8], planRange: [6, 8] });
-  assert.ok(s.weight_kg > 40, "8 reps is the top of 6 to 8");
+  assert.ok(s.weight_kg > 100, "8 reps is the top of 6 to 8");
   assert.deepEqual(s.range, [6, 8]);
   const plain = nextSuggestion(last, null, { exerciseId: "leg_press", week: 3, settings: validDoc().shared_settings });
-  assert.equal(plain.weight_kg, 40, "without my_range 8 reps is below 10 to 12");
+  assert.equal(plain.weight_kg, 100, "without my_range 8 reps is below 10 to 12");
 });
 
 test("V6 targetText and rangeFor use my_range", () => {
@@ -117,13 +118,13 @@ test("V6 targetText and rangeFor use my_range", () => {
 test("V7 the file check accepts my_range and my_weight_kg and refuses bad ones", () => {
   const doc = validDoc();
   doc.exercise_state = [{ id: "x-leg_press", updated_at: T, start_weight_kg: null, machine_note: "", fail_streak: 0, my_range: [6, 8], my_weight_kg: 52.5, my_weight_at: "2026-03-01" }];
-  assert.doesNotThrow(() => validateDocument(copy(doc)));
+  assert.equal(validateDocument(copy(doc)).ok, true);
   const bad1 = copy(doc); bad1.exercise_state[0].my_weight_kg = 5000;
-  assert.throws(() => validateDocument(bad1));
+  assert.equal(validateDocument(bad1).ok, false);
   const bad2 = copy(doc); bad2.exercise_state[0].my_range = ["a", 8];
-  assert.throws(() => validateDocument(bad2));
+  assert.equal(validateDocument(bad2).ok, false);
   const bad3 = copy(doc); bad3.exercise_state[0].my_range = [12, 6];
-  assert.throws(() => validateDocument(bad3));
+  assert.equal(validateDocument(bad3).ok, false);
 });
 
 test("V8 model.setExercisePrefs saves reps and weight with the date, and clears them", () => {
@@ -163,7 +164,7 @@ test("V9 Stop this exercise here: after 1 of 3 sets the workout moves on; Undo b
   model.stopExercise(session.id, "A1", false);
   s = model.doc().sessions.find((x) => x.id === session.id);
   assert.equal(workout.nextPosition(s, seq).entry.slot, "A1");
-  assert.doesNotThrow(() => validateDocument(copy(model.doc())));
+  assert.equal(validateDocument(copy(model.doc())).ok, true);
 });
 
 // ---------- 4. start any day ----------

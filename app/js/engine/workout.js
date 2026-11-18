@@ -65,6 +65,11 @@ export function buildSequence(slots, { setsOverride = null } = {}) {
   return { units, seq };
 }
 
+// A reps range [low, high] set in the Plan, or null when it is missing or broken (whole numbers, 1 to 100, low <= high).
+export function validRange(r) {
+  return Array.isArray(r) && r.length === 2 && r.every((n) => Number.isInteger(n) && n >= 1 && n <= 100) && r[0] <= r[1] ? [r[0], r[1]] : null;
+}
+
 // The record of one slot inside a session (or undefined).
 export function slotRecord(session, slot) {
   return session.exercises.find((e) => e.slot === slot);
@@ -84,7 +89,10 @@ export const warmupDone = (rec) => (rec ? rec.sets.filter((s) => s.type === "war
 export function nextPosition(session, seq) {
   for (let i = 0; i < seq.length; i++) {
     const e = seq[i];
-    if (workSets(slotRecord(session, e.slot)).length < e.setNumber) return { index: i, entry: e };
+    const rec = slotRecord(session, e.slot);
+    // "Stop this exercise here" (0.6.0): the sets after `stopped_after` are not asked any more.
+    if (rec && Number.isInteger(rec.stopped_after) && e.setNumber > rec.stopped_after) continue;
+    if (workSets(rec).length < e.setNumber) return { index: i, entry: e };
   }
   return null;
 }
@@ -141,9 +149,15 @@ export function suggestFor(doc, exerciseId, ctx) {
   const settings = doc.shared_settings;
   const perfs = performances(doc.sessions, exerciseId);
   const last = perfs[0];
-  const [low] = ex.range;
-  const base = { range: ex.range, reps: low, last, lastText: describeLast(last, exerciseId) };
   const state = ctx.exerciseState;
+  // Reps and weight set in the Plan (0.6.0): my_range replaces the plan's reps; my_weight_kg is used until a workout
+  // newer than the day it was set (my_weight_at) exists. They count on every day the exercise is in.
+  const own = validRange(state?.my_range) ?? ex.range;
+  const [low] = own;
+  const base = { range: own, reps: low, last, lastText: describeLast(last, exerciseId) };
+  const mine = state && typeof state.my_weight_kg === "number" && ex.step !== "bodyweight"
+    && (!last || (typeof state.my_weight_at === "string" && state.my_weight_at >= last.date));
+  if (mine) return { ...base, weight_kg: state.my_weight_kg, action: "mine", note: "Your weight, set in the Plan." };
 
   if (!last) {
     if (state && state.start_weight_kg) {
@@ -159,7 +173,7 @@ export function suggestFor(doc, exerciseId, ctx) {
     return { ...base, weight_kg: w, action: "start", note: "Your starting weight from week 1." };
   }
 
-  const s = nextSuggestion(last, perfs[1], { exerciseId, week: ctx.week, settings });
+  const s = nextSuggestion(last, perfs[1], { exerciseId, week: ctx.week, settings, planRange: own });
   let weight = s.weight_kg;
   let note = s.note;
   let action = s.action;
@@ -173,7 +187,7 @@ export function suggestFor(doc, exerciseId, ctx) {
     note = "First workout back: same weight as last time, no increase.";
     action = "same_break";
   }
-  const range = s.range ?? ex.range;
+  const range = s.range ?? own;
   return { ...base, weight_kg: weight, range, reps: range[0], action, note };
 }
 
@@ -192,9 +206,9 @@ export function weightStepFor(exerciseId, weight, settings) {
 }
 
 // Plan-based text: "3 sets · 8 to 12 reps · stop with 2 left"
-export function targetText(exerciseId, sets, rir) {
+export function targetText(exerciseId, sets, rir, myRange = null) {
   const ex = exercises[exerciseId];
-  const [lo, hi] = ex.range;
+  const [lo, hi] = validRange(myRange) ?? ex.range;
   const left = Array.isArray(rir) ? `${rir[0]} or ${rir[1]}` : String(rir);
   const range = lo === hi ? `${lo}` : `${lo} to ${hi}`;
   const unit = ex.kind === "hold" ? "seconds" : "reps";

@@ -142,6 +142,16 @@ export function withRemoved(slots, slotName) {
   return out;
 }
 
+// Change the sets of one exercise on this day (the base sets, before the week rule). 0.6.0, Rosario's batch.
+export function withSets(slots, slotName, sets) {
+  const i = slots.findIndex((s) => s.slot === slotName);
+  if (i < 0) fail(`No exercise in place ${String(slotName).slice(0, 10)} on this day.`);
+  if (!Number.isInteger(sets) || sets < MIN_SETS || sets > MAX_SETS) fail(`Sets must be ${MIN_SETS} to ${MAX_SETS}.`);
+  const out = copySlots(slots);
+  out[i].sets = sets;
+  return out;
+}
+
 // Add an exercise at the end of the day, on its own: 3 sets, 60 s rest (answer 72 a).
 export function withAdded(slots, exId) {
   if (!isKnownExercise(exId)) fail("Unknown exercise.");

@@ -103,13 +103,15 @@ export function warmupSets(workWeight, exerciseId, settings) {
 // last / previous: a finished session of this exercise:
 //   { weight_kg, sets: [{ reps (or seconds for holds), rir }], pain?: boolean, formBroke?: boolean }
 //   "rir" is the "how many more could you do?" tap: 0, 1, 2, 3, 4 (4 means 4 or more).
-// opts: { exerciseId, week, settings, range? } `range` overrides the plan range (raised for bodyweight work).
+// opts: { exerciseId, week, settings, range?, planRange? } `range` overrides the plan range (raised for bodyweight work);
+// `planRange` is the reps range set in the Plan (exercise_state my_range, 0.6.0), used in place of the plan's own.
 // Returns { action, weight_kg, range, note, noIncrease? } where action is one of
 //   "increase", "increase2", "same_add_rep", "same_check", "extra_reps", "lower", "lower10", "hold".
 export function nextSuggestion(last, previous, opts) {
   const { exerciseId, week, settings } = opts;
   const ex = exercises[exerciseId];
-  const [low, top] = opts.range ?? ex.range;
+  const own = opts.planRange ?? ex.range;
+  const [low, top] = opts.range ?? own;
   const w = last.weight_kg;
   const unit = ex.kind === "hold" ? "seconds" : "reps";
   const done = last.sets.map((s) => (ex.kind === "hold" ? s.seconds ?? s.reps : s.reps));
@@ -147,7 +149,7 @@ export function nextSuggestion(last, previous, opts) {
   }
 
   if (allTop && minLeft >= 1) {
-    const planTop = ex.range[1];
+    const planTop = own[1];
     const steps = allFour && week >= 2 && week <= 4 ? 2 : 1;
     const next = stepUp(w, exerciseId, settings, steps);
     // Big jump (one step is more than about 10 % heavier): first reach 2 reps above the plan's range

@@ -1,7 +1,8 @@
 // Body shapes for the muscle maps, from body-muscles by Ivan Vulović (https://github.com/vulovix/body-muscles),
 // version 1.0.0, commit 15c8085ee97cb94c51f92c75224416b15f955b5c. Apache License 2.0: see LICENSE and NOTICE in this folder.
 // What we changed (Apache-2.0 section 4 b): see CHANGES.md in this folder. In short: only each part's id and its SVG path,
-// copied unchanged from src/data/muscles.front.ts and src/data/muscles.back.ts, as plain JavaScript lists.
+// copied unchanged from src/data/muscles.front.ts and src/data/muscles.back.ts, as plain JavaScript lists, except the
+// back of the head (head-back), which we redrew on 2026-11-18.
 // Which part belongs to which of our muscles: app/js/plan/muscles.js (partMuscle).
 
 // The source draws both views on one canvas 72 wide and 93 tall: front at x 0 to 35, back at x 37 to 72.
@@ -52,7 +53,8 @@ export const FRONT = [
 ];
 
 export const BACK = [
-  ["head-back", "m 48.157455,6.3585449 0.44208,-0.14964 0.16111,0.16427 1.48163,4.0475101 2.32401,1.45118 2.39971,-1.52387 0.97577,-3.6896901 0.52752,-0.55908 0.23367,0.0981 0.24198,-3.34467 -2.03129,-2.31103004 -2.84509,-0.51629 -2.20422,0.52915 -1.93631,2.63077004 z"],
+  // Changed by us on 2026-11-18 (see CHANGES.md): the back of the head is a plain rounded shape, so the back view shows no face or cheekbones.
+  ["head-back", "M 52.43,0.55 C 54.85,0.55 56.55,2.6 56.55,5.6 C 56.55,8.2 55.4,10.35 54.3,11.25 C 53.7,11.7 51.2,11.7 50.55,11.25 C 49.45,10.35 48.3,8.2 48.3,5.6 C 48.3,2.6 50.0,0.55 52.43,0.55 Z"],
   ["nape", "m 52.369695,12.105075 -2.35767,-1.55045 -1.47119,-3.9514301 -0.60741,0.0403 0.27409,1.82447 0.97635,0.33932 0.7613,2.2157201 0.33017,1.06849 0.0895,2.14894 1.16448,0.008 0.10563,-0.70833 0.54716,-0.0606 z m 1.01793,1.47595 0.23768,0.64982 1.38107,-0.004 0.01,-2.38784 0.25971,-0.79061 0.57215,-2.1698001 0.76359,-0.41018 0.25158,-1.78416 -0.62859,0.0193 -1.08488,3.8998101 -2.39725,1.46684 0.2768,1.48507 z"],
   ["traps-upper-left", "M 49.625,14.629 L 49.688,12.005 L 48.974,13.157 L 44.594,14.654 L 45.945,16.925 L 51.222,16.925 L 51.183,14.550 Z"],
   ["traps-mid-left", "M 46.034,17.075 L 48.920,21.925 L 51.303,21.925 L 51.224,17.075 Z"],
