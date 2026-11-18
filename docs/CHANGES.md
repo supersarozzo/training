@@ -16,6 +16,9 @@ Leftovers wave, built by chat 8.39 on top of 0.7.0. The trainer (8.37) decided e
   find-your-weight steps then correct it. The numbers come from the trainer's table and never from your body weight.
 - A double tap no longer zooms the page. Pinch to zoom still works.
 - Plan: the Edit button sits at the top right again, in line with the cards.
+- The walk shows its real numbers for each day and week, for example "4 km/h · 2 % slope", on the Plan day page and on
+  Today. Tuesday and Friday (leg days) are 2 % less steep. Today's walk tile shows the walk of the day on screen, the same
+  numbers as the Plan. Changing the walk in Plan Edit comes in a later version.
 
 **From the trainer**
 - In the practice week and weeks 1 to 3, the first exercise on Wednesday and Thursday has a short note: if those

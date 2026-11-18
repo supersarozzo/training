@@ -19,7 +19,7 @@ import { miniMap } from "./bodymap.js";
 import { openExerciseLayer, doseParts } from "./exlayer.js";
 import { pageFor, muscleWords } from "../engine/planpage.js";
 import { ADDED_SLOTS, MAX_ADDED } from "../engine/planedits.js";
-import { viewDay, unitsIn, editedMinutes, rangeFor, weightLine, soreNote } from "../planview.js";
+import { viewDay, unitsIn, editedMinutes, rangeFor, weightLine, soreNote, walkWords } from "../planview.js";
 import { renderMuscleCheck } from "./musclecheck.js";
 import { dayState, openSwapSheet, openAddSheet, removeSlot, changedCard, openDoseSheet } from "./planedit.js";
 
@@ -64,13 +64,16 @@ function dayStrip(doc, shown, todayDay, week) {
     changed.has(d) ? h("span", { class: "badge chg-mark", "aria-hidden": "true" }, "changed") : null)));
 }
 
-function walkCard(minutes, day) {
+// The walk this day and week really gets (0.7.1, iPhone P5): walkSuggestion's speed, slope and minutes, the same numbers
+// as Today's walk tile.
+function walkCard(walk, day) {
   const easy = days[day].walk === "easy";
   return h("div", { class: "pcard walk" },
     h("span", { class: "tile-ic" }, icon("walk", 26)),
     h("span", { class: "grow" },
       h("b", {}, "Walk first"),
-      h("span", { class: "walk-min" }, h("b", {}, String(minutes)), " min uphill"),
+      h("span", { class: "walk-min" }, h("b", {}, String(walk.minutes)), " min uphill"),
+      h("span", { class: "walk-set" }, walkWords(walk)),
       h("span", { class: "small muted" }, easy
         ? `Easier: ${walkRules.legDaySlopeLess_pct} % less slope, effort ${walkRules.legDayEffort.join(" to ")} of 10`
         : `Normal: effort ${walkRules.normalEffort.join(" to ")} of 10`)));
@@ -168,7 +171,7 @@ export function renderPlan() {
       lockCard,
       newerLine,
       !edit && view.edited ? changedCard(day, view.record, { canReset: view.canEdit }) : null,
-      edit ? null : walkCard(lay.walk.minutes, day),
+      edit ? null : walkCard(lay.walk, day),
       units,
       addButton,
       h("button", { class: "pcard check", type: "button", onclick: () => go("#/plan/muscles") },

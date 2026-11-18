@@ -22,6 +22,10 @@ const isPairSlot = (name) => /^[A-C][12]$/.test(name);
 const lower = (g) => MUSCLES[g].name.toLowerCase();
 export const exName = (id) => exercises[id]?.name ?? "Unknown exercise";
 
+// The walk numbers in one wording, for Today and the Plan day page (0.7.1, iPhone P5): "5 km/h · 6 % slope".
+const oneDecimal = (x) => String(Math.round(x * 10) / 10);
+export const walkWords = (walk) => `${oneDecimal(walk.speed_kmh)} km/h · ${oneDecimal(walk.slope_pct)} % slope`;
+
 // ---------- the day as it will be trained ----------
 
 // The saved record of a day in a document (a tombstone too), or null.

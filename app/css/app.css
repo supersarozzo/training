@@ -738,6 +738,7 @@ button.pcard:active { transform: scale(.98); }
 .tile-ic { width: 56px; height: 56px; border-radius: 14px; flex: none; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-text); }
 .walk-min { font-size: 18px; }
 .walk-min b { font-size: 22px; font-weight: 800; }
+.walk-set { font-size: 16px; font-weight: 600; color: var(--text-primary); }
 .bar.action-bar.day-bar {
   border-top: 1px solid var(--border-default); background: var(--bar-glass);
   -webkit-backdrop-filter: saturate(160%) blur(20px); backdrop-filter: saturate(160%) blur(20px);

@@ -13,6 +13,7 @@ import { finishedSessions, suggestFor, buildUnits } from "../engine/workout.js";
 import { days, exercises } from "../plan/plan-v2.js";
 import { dayLayout } from "../dayplan.js";
 import { exerciseStateId } from "../ids.js";
+import { walkWords } from "../planview.js";
 import { thumb } from "./media.js";
 import { openExerciseInfo } from "./exinfo.js";
 import { fmtKg } from "./stats.js";
@@ -151,6 +152,8 @@ export function renderToday() {
   const choices = active ? dayChoices(doc, t) : [];
   const shown = picked.date === t && choices.some((c) => c.day === picked.day) ? picked.day : defaultShown(doc, t);
   const swapFrom = shown !== label.planDay ? label.planDay : null; // saved on the workout: done in place of that day
+  // The shown day's plan (walk and blocks), the same call as the Plan day page (0.7.1, iPhone P5).
+  const shownLayout = shown && active && !open ? dayLayout(doc, { planDay: shown, week, today: t, kind: "full" }) : null;
   const heading = open ? dayName : shown ? days[shown].focus : active ? "Rest day" : dayName;
   const sub = !active || (open && running) ? label.text
     : open ? null
@@ -193,7 +196,7 @@ export function renderToday() {
     const check = canStartWorkout(doc.sessions, t);
     const lastFinished = finishedSessions(doc.sessions)[0];
     const missed = missedRule(lastFinished ? lastFinished.date : null, t);
-    const day = dayLayout(doc, { planDay: shown, week, today: t, kind });
+    const day = shownLayout ?? dayLayout(doc, { planDay: shown, week, today: t, kind });
     // A saved Plan edit with more or fewer sets changes the time (about 8 minutes for an added exercise).
     const total = editedMinutes(day.minutes, shown, week, editOf(doc, shown));
     const blocks = total === day.minutes ? day.layout : [...day.layout.slice(0, -1), { id: "edits", minutes: total - day.minutes }, day.layout[day.layout.length - 1]];
@@ -232,7 +235,10 @@ export function renderToday() {
     children.push(h("span", { class: "eyebrow" }, "Your numbers"), h("div", { class: "tiles" },
       targets.kcal !== null ? h("div", { class: "tile" }, h("div", { class: "label" }, "Food a day"), h("div", { class: "value" }, String(targets.kcal), h("span", { class: "unit" }, " kcal"))) : null,
       targets.protein_g !== null ? h("div", { class: "tile" }, h("div", { class: "label" }, "Protein a day"), h("div", { class: "value" }, String(targets.protein_g), h("span", { class: "unit" }, " g"))) : null,
-      targets.walk_start ? h("div", { class: "tile wide small muted" }, `Starting walk: ${targets.walk_start.speed_kmh} km/h, ${targets.walk_start.slope_pct} % slope`) : null)); // a restored file may have none (review F4)
+      // The walk tile (0.7.1, iPhone P5): the shown day's real walk, the same numbers as its Plan day page; the starting
+      // walk only when no workout day is shown. A restored file may have no starting walk (review F4).
+      shownLayout ? h("div", { class: "tile wide small muted" }, `${days[shown].name}'s walk: ${walkWords(shownLayout.walk)}, ${shownLayout.walk.minutes} min`)
+        : targets.walk_start ? h("div", { class: "tile wide small muted" }, `Starting walk: ${walkWords(targets.walk_start)}`) : null));
   }
   if (!open && installHintShown()) {
     children.push(h("div", { class: "card warn" }, h("h2", {}, "Add this app to your Home Screen"),

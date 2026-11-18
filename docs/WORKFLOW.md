@@ -269,6 +269,8 @@ Week 1 teaches each exercise and finds a good weight. Nobody tests a maximum lif
 
 **Soreness note (0.7.1, trainer D13):** in the practice week and weeks 1-3, the A1 card of Wednesday and Thursday (on the Plan and in the workout) says to use one step lighter when those muscles are still very sore, and to skip it on joint pain. By the workout day and slot, so it follows a Plan swap and a day picked on another date. A note only.
 
+**The walk on screen (0.7.1, iPhone P5):** the Plan day page's walk card and Today's walk tile show the walk the app will suggest for that day and week: speed, slope and minutes from `walkSuggestion` (the starting walk, then a step up after two easy walks in a row, leg days 2 % less slope, never above 5 km/h and 12 %). Both use `dayLayout(...).walk` and one wording (`planview.js walkWords`), so the numbers always match. Today shows "Starting walk" only when no workout day is shown. Editing the walk in Plan Edit is a later step (it adds saved data).
+
 **Rules for week 1:**
 - 2 working sets per exercise, not 3.
 - Stop every set with about 3 reps left. It will feel easy. That is on purpose.
