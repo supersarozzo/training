@@ -65,6 +65,15 @@ Body text is 17 px (the iPhone's own default). Inputs are never under 16 px, or 
 
 Components use only the role properties (`--bg-canvas`, `--text-primary`, `--accent`, …). Dark mode is a second map of the same roles. The app follows the phone setting (`prefers-color-scheme`), with an override in **Settings > Look** (Auto / Light / Dark).
 
+How the look reaches every part (dark-mode check, 2026-11-18, `docs/checks/2026-11-18-dark-mode.md`):
+
+- Each of the three maps in `app.css` also sets the CSS `color-scheme` property (light / dark), so the phone's own parts (keyboard, scroll bars, date and list wheels) follow the Look choice, not only the phone.
+- The bar colour (`theme-color`) is the page canvas of each look: two tags in `index.html`, one per phone setting. `boot.js` (before the first paint) and `js/theme.js` write a fixed Light or Dark into both. iOS home-screen apps take the top strip's colour from the page; `apple-mobile-web-app-status-bar-style` stays `default` (never the translucent black style).
+- The manifest has no `theme_color` (one colour cannot be right in both looks).
+- With Auto, the app listens for the phone turning light or dark (`ui/theme.js`). A switch is instant: `html.theme-switching` turns transitions off for two frames.
+- Picking Auto / Light / Dark marks the button in place: no redraw, no jump to the top of Settings.
+- No colour is written in JavaScript (a test checks it); new style files use the tokens only (a test checks it).
+
 | Role | Use |
 |---|---|
 | `--bg-canvas` | page background (with a faint accent glow at the top) |
@@ -214,7 +223,7 @@ Don't
 
 ## 14. Iteration guide
 
-1. Change a token here first, then in `app/css/app.css` (all three maps: light, dark by phone setting, dark by choice).
+1. Change a token here first, then in `app/css/app.css` (all three maps: light, dark by phone setting, dark by choice; the two dark maps must stay the same, a test checks it). If `--bg-canvas` changes, change the bar colours too (`js/theme.js`, `js/boot.js`, `index.html`; a test checks they match).
 2. Never add a one-off value in a component; add a token or reuse one.
 3. Re-check contrast after any colour change and update the list in section 3.
 4. Date this file when edited.

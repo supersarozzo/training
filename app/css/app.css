@@ -13,7 +13,9 @@
   --t-fast: 160ms; --t-normal: 280ms; --t-slow: 460ms; --t-flash: 2000ms;
   --ease: cubic-bezier(.2, .8, .2, 1); --spring: cubic-bezier(.34, 1.4, .64, 1);
 
-  /* light roles */
+  /* light roles. color-scheme tells the phone's own parts (keyboard, scroll bars, date and list wheels, form
+     controls) which look the app is in, so they follow the Look choice, not only the phone (dark-mode check). */
+  color-scheme: light;
   --bg-canvas: #f2f3f5;
   --bg-surface: #ffffff;
   --bg-raised: #ffffff;
@@ -45,6 +47,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --bg-canvas: #08090c; --bg-surface: #121419; --bg-raised: #1a1d24; --bg-subtle: #23272f;
     --border-default: rgba(255, 255, 255, .08); --border-strong: #6b7280;
     --text-primary: #f5f6f8; --text-muted: #a0a6b2;
@@ -63,6 +66,7 @@
   }
 }
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --bg-canvas: #08090c; --bg-surface: #121419; --bg-raised: #1a1d24; --bg-subtle: #23272f;
   --border-default: rgba(255, 255, 255, .08); --border-strong: #6b7280;
   --text-primary: #f5f6f8; --text-muted: #a0a6b2;
@@ -81,6 +85,9 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+/* A Light / Dark switch is instant: no part fades on its own, so the page and the phone's top strip change together
+   (SimpleHost's lesson). theme.js adds the class for two frames. */
+html.theme-switching *, html.theme-switching *::before, html.theme-switching *::after { transition: none !important; }
 html { -webkit-text-size-adjust: 100%; background: var(--bg-canvas); }
 body {
   margin: 0; background: var(--bg-canvas) var(--canvas-glow) no-repeat; color: var(--text-primary);

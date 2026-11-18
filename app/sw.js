@@ -48,6 +48,7 @@ const FILES = [
   "js/sync/merge.js",
   "js/sync/sync.js",
   "js/syncer.js",
+  "js/theme.js",
   "js/timer.js",
   "js/ui/app.js",
   "js/ui/bodymap.js",

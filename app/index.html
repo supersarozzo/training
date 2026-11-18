@@ -7,7 +7,14 @@
   <meta name="color-scheme" content="light dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Training">
-  <meta name="theme-color" content="#08090c">
+  <!-- The phone's top strip (clock, battery) in the home-screen app: iOS's own strip ("default"). iOS takes its colour
+       from the page. Never the translucent black style: on iOS 26 it made the app one strip too short (SimpleHost). iOS reads
+       this tag only when the app is added to the home screen. -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <!-- Bar colour per phone setting, the page canvas of each look. boot.js and js/theme.js write the Look choice
+       into both when it is Light or Dark. docs/checks/2026-11-18-dark-mode.md -->
+  <meta name="theme-color" content="#f2f3f5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#08090c" media="(prefers-color-scheme: dark)">
   <title>Training</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">

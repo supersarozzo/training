@@ -128,12 +128,17 @@ function shortcutCard(settings) {
 }
 
 // Look and Animations, in one card. The switch is a real switch for screen readers (role="switch").
+// Auto / Light / Dark: applied at once and marked in place, with no redraw, so the screen does not jump to the top.
+function markPicked(row, value) {
+  [...row.children].forEach((b, i) => b.setAttribute("aria-pressed", THEMES[i][0] === value ? "true" : "false"));
+}
 function lookCard() {
   const off = motionOff();
+  const themeRow = choiceRow(THEMES, currentTheme(), (value) => { setTheme(value); markPicked(themeRow, value); });
   return h("div", { class: "card" },
     h("h2", {}, "Look"),
     h("p", { class: "muted" }, "Auto follows the phone. Dark is easiest on the eyes in the gym."),
-    choiceRow(THEMES, currentTheme(), (value) => { setTheme(value); rerender(); }),
+    themeRow,
     h("div", { class: "switch-row" },
       h("span", { class: "grow" }, h("b", { id: "anim-label" }, "Animations"),
         h("span", { class: "small muted" }, off ? "Off: screens and photos stay still. Tap a photo to see the end position." : "On: short movements and moving photos. The phone's Reduce Motion also turns them off.")),
