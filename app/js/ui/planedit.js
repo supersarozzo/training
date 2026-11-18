@@ -1,6 +1,7 @@
 // Plan edits (build step 4, docs/DESIGN.md 15.5; mock-up frames "Edit mode", "Swap sheet", "Add an exercise",
 // "Changed day"): the Swap sheet, the Add sheet, Remove, the "Back to the plan's day" sheet and the Undo toast.
-// All saves go through the step 3 model calls (swapPlanSlot, removePlanSlot, addPlanSlot, savePlanDay, resetPlanDay);
+// All saves go through the step 3 model calls (swapPlanSlot, removePlanSlot, addPlanSlot, savePlanDay, resetPlanDay,
+// and since 0.7.4 setPlanWalk and resetPlanWalk for the day's own walk);
 // each throws a plain-words Error when it is not allowed, and the message is shown in a toast, never a crash.
 // All text through h(); no innerHTML; no style attributes.
 import { h } from "../h.js";
@@ -11,8 +12,9 @@ import { days, exercises } from "../plan/plan-v2.js";
 import { thumb } from "./media.js";
 import { icon } from "./icons.js";
 import { miniMap } from "./bodymap.js";
-import { viewDay, swapSheet, addSheet, exName, dayChanges, changedOn, rangeFor, rangeText, weightLine, workoutRunning } from "../planview.js";
-import { withSets, setsForSlot, MIN_SETS, MAX_SETS } from "../engine/planedits.js";
+import { viewDay, swapSheet, addSheet, exName, dayChanges, changedOn, rangeFor, rangeText, weightLine, workoutRunning, walkWords } from "../planview.js";
+import { withSets, setsForSlot, MIN_SETS, MAX_SETS, walkLimits, walkHint } from "../engine/planedits.js";
+import { planWalkForEdit } from "../dayplan.js";
 import { weightStepFor, validRange } from "../engine/workout.js";
 import { pageFor } from "../engine/planpage.js";
 import { today } from "../clock.js";
@@ -200,18 +202,19 @@ export function openBackToPlan(day) {
   const changes = dayChanges(day, info.record);
   const name = dayName(day);
   const back = () => {
-    let before;
+    let before, beforeWalk;
     try {
       const now = dayState(model.doc(), day, 1);
       // Read again at the tap: a day saved by a newer app (after a sync) or a day whose workout is running is never reset here.
       if (now.newerVersion) throw new Error("This day was changed on a newer app version. Update the app to change it.");
       if (now.locked) throw new Error("Workout running. This day can be changed after the workout ends.");
       before = savedSlots(day);
+      beforeWalk = model.effectivePlanDay(day).walk; // the day's own walk comes back with Undo too (0.7.4)
       model.resetPlanDay(day);
     } catch (e) { toast(e.message); return; }
     closeSheets();
     rerender();
-    undoToast(`${name} is back to the plan's version.`, () => model.savePlanDay(day, before));
+    undoToast(`${name} is back to the plan's version.`, () => model.savePlanDay(day, before, null, beforeWalk));
   };
   openSheet(
     h("h2", {}, `Back to the plan's ${name}?`),
@@ -220,6 +223,75 @@ export function openBackToPlan(day) {
     h("p", { class: "small muted" }, "Workouts already done stay as they were. Your weights and history for each exercise are kept."),
     h("button", { class: "button", type: "button", onclick: back }, `Back to the plan's ${name}`),
     h("button", { class: "button secondary", type: "button", onclick: closeSheets }, `Keep my ${name}`));
+}
+
+// ---------- The day's own walk (0.7.4; Rosario: "the warmup walk cant be edited") ----------
+// Speed, slope and minutes for this day of the plan, fixed in every week until "Back to the plan's walk". The limits
+// come from the engine (walkLimits: the trainer's D2, D3, D6, D7). One Save; Undo puts the old walk back.
+const fmt1 = (n) => String(Math.round(n * 10) / 10);
+const clampTo = (v, [lo, hi]) => Math.min(hi, Math.max(lo, v));
+
+export function openWalkSheet(day, week) {
+  const doc = model.doc();
+  const st0 = dayState(doc, day, week);
+  if (!st0.canEdit) { toast(lockedText(st0)); return; }
+  const lim = walkLimits(day);
+  const own = model.effectivePlanDay(day).walk;
+  const plan = planWalkForEdit(doc, day, week); // the plan's walk in this week, without a break week's lowering (checker)
+  const shown = own ?? plan;
+  const draft = {
+    speed_kmh: clampTo(Math.round(shown.speed_kmh * 10) / 10, lim.speed_kmh),
+    slope_pct: clampTo(Math.round(shown.slope_pct), lim.slope_pct),
+    minutes: clampTo(Math.round(shown.minutes), lim.minutes),
+  };
+  const name = dayName(day);
+  const leg = days[day].leg;
+  let touched = false; // Save with nothing touched writes nothing (a day without its own walk keeps the walk rule)
+  const hintLine = h("p", { class: "small muted" }, walkHint(draft.minutes) ?? "");
+  hintLine.hidden = !walkHint(draft.minutes);
+
+  const saveWalk = () => {
+    const walk = { ...draft, speed_kmh: Math.round(draft.speed_kmh * 10) / 10 };
+    let before;
+    try {
+      const now = dayState(model.doc(), day, week);
+      if (!now.canEdit) throw new Error(lockedText(now));
+      const info = model.effectivePlanDay(day);
+      if (!touched) { closeSheets(); return; } // nothing changed: no write, no Undo
+      if (info.walk && info.walk.speed_kmh === walk.speed_kmh && info.walk.slope_pct === walk.slope_pct && info.walk.minutes === walk.minutes) { closeSheets(); return; } // nothing changed: no write, no Undo
+      before = { slots: savedSlots(day), walk: info.walk };
+      model.setPlanWalk(day, walk);
+    } catch (e) { toast(e.message); return; }
+    closeSheets();
+    rerender();
+    undoToast(`${name}'s walk changed.`, () => model.savePlanDay(day, before.slots, null, before.walk));
+  };
+  const backToPlan = () => {
+    let before;
+    try {
+      const now = dayState(model.doc(), day, week);
+      if (!now.canEdit) throw new Error(lockedText(now));
+      before = { slots: savedSlots(day), walk: model.effectivePlanDay(day).walk };
+      model.resetPlanWalk(day);
+    } catch (e) { toast(e.message); return; }
+    closeSheets();
+    rerender();
+    undoToast(`${name}'s walk is back to the plan's.`, () => model.savePlanDay(day, before.slots, null, before.walk));
+  };
+
+  openSheet(
+    h("h2", {}, `Change ${name}'s walk`),
+    h("div", { class: "lasts" }, icon("info", 18),
+      h("span", {}, h("b", {}, `Lasts: every ${name} from now on.`), " The numbers stay the same every week; the walk rule no longer moves them. Past and running workouts stay as they were.")),
+    stepper({ label: "Speed", unit: "km/h", value: draft.speed_kmh, step: lim.speedStep_kmh, min: lim.speed_kmh[0], max: lim.speed_kmh[1], decimals: 1, onChange: (v) => { draft.speed_kmh = v; touched = true; } }),
+    stepper({ label: "Slope", unit: "%", value: draft.slope_pct, step: lim.slopeStep_pct, min: lim.slope_pct[0], max: lim.slope_pct[1], decimals: 0, onChange: (v) => { draft.slope_pct = v; touched = true; } }),
+    stepper({ label: "Minutes", unit: "min", value: draft.minutes, step: lim.minutesStep, min: lim.minutes[0], max: lim.minutes[1], decimals: 0, onChange: (v) => { draft.minutes = v; touched = true; const hint = walkHint(v); hintLine.textContent = hint ?? ""; hintLine.hidden = !hint; } }),
+    hintLine,
+    h("p", { class: "small muted" }, `The plan's walk in week ${week}: ${walkWords(plan)}, ${plan.minutes} min.`),
+    h("p", { class: "small muted" }, `Your trainer's limits: ${fmt1(lim.speed_kmh[0])} to ${fmt1(lim.speed_kmh[1])} km/h, slope up to ${lim.slope_pct[1]} %${leg ? " (a leg day)" : ""}, ${lim.minutes[0]} to ${lim.minutes[1]} minutes. On the day you can still change speed and slope a little before you start.`),
+    h("button", { class: "button", type: "button", onclick: saveWalk }, "Save"),
+    h("button", { class: "button secondary", type: "button", onclick: () => closeSheets() }, "Cancel"),
+    own ? h("button", { class: "text-button back-plan", type: "button", onclick: backToPlan }, icon("undo", 18), "Back to the plan's walk") : null);
 }
 
 // The "Changed by you · 17 Nov" card (accent border).

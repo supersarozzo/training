@@ -8,7 +8,7 @@ import { mergeDocs } from "./sync/merge.js";
 import { PLAN_ID, exercises } from "./plan/plan-v2.js";
 import { planForDay } from "./engine/schedule.js";
 import { finishedSessions, workSets, validRange } from "./engine/workout.js";
-import { planDayId, isPlanDayId, checkSlots, checkPlanDay, findPlanDay, effectiveDay, planDaySlots, sameAsPlan, withSwap, withRemoved, withAdded } from "./engine/planedits.js";
+import { planDayId, isPlanDayId, checkSlots, checkPlanDay, findPlanDay, effectiveDay, planDaySlots, sameAsPlan, withSwap, withRemoved, withAdded, checkWalk, pickWalk } from "./engine/planedits.js";
 
 const NEWER_DAY = "This day was changed on a newer app version. Update the app first.";
 // Answer 83 a: a move never done before starts like week 1, with at most 2 work sets in its first workout.
@@ -58,10 +58,17 @@ export function createModel(store, clock = () => new Date()) {
     return planDaySlots(dayId);
   }
 
-  function writePlanDay(dayId, slots, change) {
+  // `walk` (0.7.4): undefined keeps the day's saved walk (only a live record's, never a tombstone's); null removes it;
+  // an object saves it (checked first). The day goes back to the plan (tombstone) only when its slots are the plan's
+  // AND no walk is set.
+  function writePlanDay(dayId, slots, change, walk) {
     if (!isPlanDayId(dayId)) throw new Error("Unknown day.");
     const check = checkSlots(slots);
     if (!check.ok) throw new Error(check.reason);
+    if (walk !== undefined && walk !== null) {
+      const w = checkWalk(walk, dayId);
+      if (!w.ok) throw new Error(w.reason);
+    }
     const clean = JSON.parse(JSON.stringify(slots));
     return update((doc, t) => {
       if (!Array.isArray(doc.plan_days)) doc.plan_days = [];
@@ -70,13 +77,15 @@ export function createModel(store, clock = () => new Date()) {
       const old = i >= 0 ? doc.plan_days[i] : null;
       const live = old && old.deleted !== true ? old : null;
       if (live && !checkPlanDay(live, dayId).ok) throw new Error(NEWER_DAY);
-      if (sameAsPlan(dayId, clean)) { // back to the plan's own day: no edit is left
-        if (live) doc.plan_days[i] = { ...live, deleted: true, deleted_at: t, updated_at: t };
+      const walkNext = walk === undefined ? (live && live.walk ? pickWalk(live.walk) : null) : walk === null ? null : pickWalk(walk);
+      if (sameAsPlan(dayId, clean) && !walkNext) { // back to the plan's own day: no edit is left
+        if (live) { doc.plan_days[i] = { ...live, deleted: true, deleted_at: t, updated_at: t }; delete doc.plan_days[i].walk; } // no walk in a tombstone: a 0.7.3 edit copies it back
         return;
       }
       const changes = live && Array.isArray(live.changes) ? live.changes : [];
       const next = { ...(old ?? {}), id, updated_at: t, plan_id: PLAN_ID, day: dayId, slots: clean };
-      delete next.deleted; delete next.deleted_at; delete next.changes;
+      delete next.deleted; delete next.deleted_at; delete next.changes; delete next.walk;
+      if (walkNext) next.walk = walkNext;
       const list = change ? [...changes, { at: t, ...change }].slice(-MAX_CHANGES) : changes;
       if (list.length) next.changes = list;
       if (i >= 0) doc.plan_days[i] = next; else doc.plan_days.push(next);
@@ -143,6 +152,9 @@ export function createModel(store, clock = () => new Date()) {
         effort: null, note: "",
       };
       if (setsOverride) session.sets_override = setsOverride;
+      // The day's own walk from Plan > Edit (0.7.4): kept on the workout, so a walk edit made later never changes it.
+      const walkEdit = effectiveDay(planDay, findPlanDay(before, planDay)).walk;
+      if (walkEdit) session.planned_walk = walkEdit;
       update((doc) => { doc.sessions.push(session); });
       return session;
     },
@@ -306,8 +318,22 @@ ${note}` : note);
     // Save a whole edited day. `slots` are base slots ({ slot, ex, sets, rest }, the sets before the week rule, as
     // effectivePlanDay gives them), never the week's sets from planForDay. Used for Undo. `change` (optional):
     // { what, slot, from, to } for the "what did I change" list. Slots equal to the plan's own day leave no edit.
-    savePlanDay(dayId, slots, change = null) {
-      return writePlanDay(dayId, slots, change);
+    // `walk` (0.7.4, Undo): leave it out to keep the saved walk; pass the walk from before (or null for none).
+    savePlanDay(dayId, slots, change = null, walk = undefined) {
+      return writePlanDay(dayId, slots, change, walk);
+    },
+    // The day's own walk (0.7.4, Plan > Edit): { speed_kmh, slope_pct, minutes } inside the trainer's limits
+    // (engine/planedits.js walkLimits). Fixed for that day in every week until resetPlanWalk. Keeps the slot edits.
+    setPlanWalk(dayId, walk) {
+      if (!isPlanDayId(dayId)) throw new Error("Unknown day.");
+      const w = checkWalk(walk, dayId);
+      if (!w.ok) throw new Error(w.reason);
+      const from = effectiveDay(dayId, findPlanDay(store.load(), dayId)).walk;
+      return writePlanDay(dayId, baseSlots(dayId), { what: "walk", from, to: pickWalk(walk) }, walk);
+    },
+    // "Back to the plan's walk": removes only the walk; the day goes back to the plan when nothing else was changed.
+    resetPlanWalk(dayId) {
+      return writePlanDay(dayId, baseSlots(dayId), { what: "walk", to: null }, null);
     },
     swapPlanSlot(dayId, slot, exId) {
       const base = baseSlots(dayId);
@@ -329,7 +355,13 @@ ${note}` : note);
       if (!isPlanDayId(dayId)) throw new Error("Unknown day.");
       return update((doc, t) => {
         const i = Array.isArray(doc.plan_days) ? doc.plan_days.findIndex((r) => r && r.id === planDayId(dayId)) : -1;
-        if (i >= 0 && doc.plan_days[i].deleted !== true) doc.plan_days[i] = { ...doc.plan_days[i], deleted: true, deleted_at: t, updated_at: t };
+        if (i >= 0 && doc.plan_days[i].deleted !== true) {
+          const usable = checkPlanDay(doc.plan_days[i], dayId).ok;
+          doc.plan_days[i] = { ...doc.plan_days[i], deleted: true, deleted_at: t, updated_at: t };
+          // 0.7.4: the day's own walk does not stay in the tombstone (a 0.7.3 edit copies the old record and would bring
+          // the walk back). A walk this app cannot use (a newer app's) is kept, like every field it does not know.
+          if (usable) delete doc.plan_days[i].walk;
+        }
       });
     },
 

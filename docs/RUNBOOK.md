@@ -30,10 +30,10 @@ To start again from an empty first screen: in the browser open the developer too
 What this does: runs every automatic check (plan data, formulas, rules, storage, file checks). It takes a few seconds. No install is needed (Node 24).
 
 ```bash
-node --test
+node --test "tests/*.test.mjs"
 ```
 
-Use it with no folder name. On Windows, `node --test tests/` fails with "Cannot find module".
+Type it exactly like this, with the quotes (0.7.4, worker 8.40's follow-up). Without the pattern, Node also runs the helper files in `tests/` (the fake GitHub, fixtures, tools). On Windows, `node --test tests/` fails with "Cannot find module".
 
 Pass means every line starts with a tick and the summary says `fail 0`.
 
@@ -95,7 +95,7 @@ Before the rewrite to the noreply address, all commits were saved in `private/tr
 
 ## When something breaks
 
-1. Run `node --test`. If a test fails, the line names what broke.
+1. Run `node --test "tests/*.test.mjs"`. If a test fails, the line names what broke.
 2. The app shows "Something is wrong" with a plain message: your data was not changed. Tell the Training chat what the message says.
 3. "Not saved. Phone storage full" (a sheet after a tap): the tap was not saved. Download a backup (Settings) and tell the Training chat. If sync says "Some data on this phone does not pass the app's own check. Nothing was sent.", the GitHub copy is safe and unchanged: do the same.
 4. A blank page: open the browser console (F12 > Console) and copy the red text to the Training chat.
@@ -107,8 +107,9 @@ Git project: revert the commit (`git revert <commit>`). Nothing outside this fol
 **Never roll back `app/sw.js` to a version before 0.7.3, and never lower `APP_VERSION`.** The old worker searched every cache and an older one would win again (the 0.7.1 bug), and a lower version never deletes a higher version's cache. To undo an app change, release a new, higher version that keeps the 0.7.3 `sw.js` rules.
 
 ## Releasing a new version of the app (step 8)
-1. Change `APP_VERSION` in `app/js/version.js` **and** at the top of `app/sw.js` (same text). `node --test` fails if they differ.
-2. Add any new file in `app/` to the `FILES` list in `app/sw.js`. `node --test` fails if the list and the folder differ.
+1. Change `APP_VERSION` in `app/js/version.js` **and** at the top of `app/sw.js` (same text). The tests fail if they differ.
+2. Add any new file in `app/` to the `FILES` list in `app/sw.js`. The tests fail if the list and the folder differ.
+2b. When the version's files are final, record its stamp: `node tests/tools/app-stamp.mjs --write` (0.7.4). The test `tests/app-version-guard.test.mjs` fails when a file in `app/` changed since the last stamp but `APP_VERSION` did not, and reminds you to record the stamp after raising it. No git is needed: the stamp (`tests/fixtures/app-stamp.json`) holds the version and one fingerprint of every `app/` file (Windows line ends counted as plain ones).
 3. On the phone the banner "New version ready" appears; tap Update. If the app was closed before the download ended, there is no banner: the next open, or the one after, runs the new version or shows the bar. The first card in Settings says which version the phone runs, and its Update button gets a newer one now.
 4. To try the worker on your computer: open `http://localhost:8000/?sw=1`. Remove it afterwards in the browser's site data. The built-in preview pane of the Claude app cannot run service workers: test offline in real Chrome or Safari.
 5. Never change a file in `app/` without raising the version: the worker only downloads files again when `sw.js` changes. Never rename the cache prefix `training-`: old caches are found by it.

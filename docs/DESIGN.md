@@ -277,6 +277,7 @@ Don't
 - **Add** (question 72 a): the new exercise goes **at the end of the day, on its own, 3 sets, 60 s rest, at most 2 added exercises a day** (**mock-up**). The Add sheet lists muscles (with "low" on the ones the muscle check finds short) and never offers an exercise already in the day. Never the same exercise twice in a day.
 - **Undo:** every edit shows a toast with Undo for **8 s** (**mock-up**).
 - A changed day shows the card "Changed by you · 17 Nov" with what changed and "Back to the plan's Tuesday".
+- **The walk in Edit mode** (0.7.4): the walk card stays, in the exercise cards' edit look (`ecard`, one `ebtns` button "Change"). The walk sheet follows the Change sheet: title "Change Monday's walk", the `lasts` box, three standard steppers (Speed km/h, Slope %, Minutes min), two small muted lines (the plan's walk this week; the trainer's limits), Save, Cancel, and the text button "Back to the plan's walk" (the `back-plan` look) when the day has its own walk. A day's own walk carries the existing "Yours"-style `badge inline acc` next to "Walk first", and in Edit mode a small muted line under the card: "Your own walk. The walk rule does not change this day." (trainer D16 A; the walk screen shows it in its note line). Under the Minutes stepper, while the minutes are under 30, a small muted hint: "Under 30 minutes a day means under 150 minutes of walking a week." (D16 B: no warning colour). No new colours, sizes or classes.
 - **"Back to the plan's Tuesday" asks first** (question 73 a): a sheet lists every change that goes away, says that done workouts, weights and history stay, and offers "Back to the plan's Tuesday" / "Keep my Tuesday"; then the 8 s Undo toast.
 
 ### 15.6 Whole-plan muscle check
@@ -306,7 +307,7 @@ Don't
 
 - Every food from Open Food Facts is checked by Rosario before it is saved: "Check before saving. Anyone can add products to Open Food Facts, so numbers can be wrong. Compare with the pack. You can change anything."
 - Fields: name, brand · pack · barcode line, per 100 g: calories, protein, carbs, fat (4 fields in a grid). "✓ The numbers add up." or soft warnings in words ("The pack size says 1 gram. That is likely wrong."); warnings never block saving.
-- **Portion starts at the pack's serving** when known, else the last amount, else 100 g. The meal row (Breakfast, Lunch, Dinner, Snacks). Main button "Save and add 43.1 g".
+- **Portion starts at the pack's serving** when known, else the last amount, else 100 g. **"How many"** (0.7.4): when the food has a serving (grams and words), a standard stepper "How many" sits above the grams stepper (both in the existing `dose-pair`), with a small muted line "1 = 1 bar (30 g)". The count's + and − move by whole servings; each stepper sets the other; grams are saved. The meal row (Breakfast, Lunch, Dinner, Snacks). Main button "Save and add 43.1 g".
 - Open Food Facts text goes in only through `h()`, clipped to **120 letters**; numbers are range-checked; lookups give up after **20 s** with "Open Food Facts did not answer" (**mock-up** and JUDGING.md section 7).
 
 ### 15.10 Open Food Facts credit

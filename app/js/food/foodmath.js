@@ -137,6 +137,28 @@ export function startAmount(food = {}) {
   if (goodAmount(food.last_amount_g)) return food.last_amount_g;
   return 100;
 }
+// ---------- "How many" (0.7.4; Rosario: "how many or how much grams") ----------
+// A food with a serving (grams and words, from Open Food Facts or typed) can be counted: grams = count x serving.
+// Grams stay the truth in the log (food_log.servings stays null); the count is only a faster way to set the grams.
+const MAX_PORTION_G = 5000; // the portion stepper's top (and the file check's amount_g limit)
+const round1 = (n) => Math.round(n * 10) / 10;
+export function servingOf(food) {
+  if (!food || !fin(food.serving_g) || food.serving_g <= 0 || food.serving_g > 2000) return null;
+  if (typeof food.serving_label !== "string" || !food.serving_label.trim()) return null;
+  return { g: food.serving_g, label: food.serving_label };
+}
+const okNum = (n) => typeof n === "number" && Number.isFinite(n) && n > 0;
+export const gramsForCount = (count, serving_g) => (okNum(count) && okNum(serving_g) ? round1(count * serving_g) : null);
+export const countForGrams = (grams, serving_g) => (okNum(grams) && okNum(serving_g) ? round1(grams / serving_g) : null);
+// The + and - buttons move by whole servings: 1.5 -> 2 or 1; never below 1 (under 1, minus changes nothing).
+export function stepCount(count, dir) {
+  const eps = 1e-6;
+  if (dir > 0) return Math.floor(count + eps) + 1;
+  const down = Math.ceil(count - eps) - 1;
+  return down >= 1 ? down : count;
+}
+export const maxCount = (serving_g) => Math.max(1, Math.floor(MAX_PORTION_G / serving_g + 1e-9));
+
 // Log again: the last amount first (fast apps remember the last portion), else the serving, else 100 g.
 export function againAmount(food = {}) {
   if (goodAmount(food.last_amount_g)) return food.last_amount_g;

@@ -8,7 +8,7 @@ import { rerender } from "../ui/app.js";
 import { food as fm, off } from "./foodapp.js";
 import { OFF_CREDIT_LINKS } from "../food/off.js";
 import { MEALS } from "../food/foodvalidate.js";
-import { MEAL_WORDS, mealAt, savedFoods, checkFood, startAmount, cleanText } from "../food/foodmath.js";
+import { MEAL_WORDS, mealAt, savedFoods, checkFood, startAmount, cleanText, servingOf, gramsForCount, countForGrams, stepCount, maxCount } from "../food/foodmath.js";
 import { normalizeBarcode, BARCODE_WORDS, foodIdFor } from "../food/barcode.js";
 import { now, today } from "../clock.js";
 
@@ -248,6 +248,24 @@ export function openCheck({ mode = "own", product = null, food: rec = null, pref
   const numIn = (key, label) => field(label, numInput(`${id}${key}`, st[key], bind(key), label), `${id}${key}`);
   const pack = [st.brand, st.quantity, st.barcode].filter(Boolean).join(" · ");
 
+  // "How many" (0.7.4): with a serving, a count stepper next to the grams; each one sets the other. Grams are saved.
+  const serving = servingOf(src);
+  let countBox = null;
+  const gramsBox = stepper({
+    label: "Portion", unit: "g", value: num(st.amount) ?? 100, step: 10, min: 1, max: 5000, decimals: 1,
+    onChange: (n) => { st.amount = String(n); const c = serving ? countForGrams(n, serving.g) : null; if (countBox && c !== null) countBox.setValue(c); refresh(); },
+  });
+  if (serving) {
+    countBox = stepper({
+      label: "How many", value: countForGrams(num(st.amount) ?? serving.g, serving.g) ?? 1, min: 0.1, max: maxCount(serving.g), decimals: 1,
+      next: (v, dir) => stepCount(v, dir),
+      onChange: (n) => { const g = gramsForCount(n, serving.g); if (g === null) return; st.amount = String(g); gramsBox.setValue(g); refresh(); },
+    });
+  }
+  const amountRow = serving
+    ? [h("div", { class: "dose-pair" }, countBox, gramsBox), h("p", { class: "small muted" }, `1 = ${serving.label}`)]
+    : gramsBox;
+
   const heading = mode === "off" ? "From Open Food Facts · check before saving" : mode === "saved" ? "Your food" : "Make a new food";
   const close = openSheet(
     h("h2", {}, heading),
@@ -258,7 +276,7 @@ export function openCheck({ mode = "own", product = null, food: rec = null, pref
     h("div", { class: "grid2" }, numIn("kcal", "Calories (kcal)"), numIn("protein", "Protein (g)"), numIn("carbs", "Carbs (g)"), numIn("fat", "Fat (g)")),
     result,
     h("h3", {}, "How much did you have?"),
-    stepper({ label: "Portion", unit: "g", value: num(st.amount) ?? 100, step: 10, min: 1, max: 5000, decimals: 1, onChange: (n) => { st.amount = String(n); refresh(); } }),
+    amountRow,
     h("div", { class: "label" }, "Meal"),
     mealRow(st.meal, (m) => { st.meal = m; }),
     error, btn, second,

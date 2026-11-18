@@ -198,6 +198,14 @@ function checkSession(s, where) {
     numOrNull(s.walk.minutes, `${where} walk minutes`, 0, 300);
     numOrNull(s.walk.effort, `${where} walk effort`, 0, 10);
   }
+  // 0.7.4: the walk the workout started with (the day's walk from Plan > Edit). Loose limits like the walk above; an
+  // older app keeps the field and ignores it.
+  if (s.planned_walk !== undefined && s.planned_walk !== null) {
+    if (!isObj(s.planned_walk)) fail(`${where} planned walk must be an object`);
+    num(s.planned_walk.speed_kmh, `${where} planned walk speed`, 0, 20);
+    num(s.planned_walk.slope_pct, `${where} planned walk slope`, 0, 30);
+    num(s.planned_walk.minutes, `${where} planned walk minutes`, 0, 300);
+  }
   if (!Array.isArray(s.exercises) || s.exercises.length > 40) fail(`${where} exercises must be a list`);
   s.exercises.forEach((e, n) => {
     const w = `${where} exercise ${n + 1}`;
@@ -252,8 +260,9 @@ const CHECKS = {
     text(x.machine, `gym spot ${n} machine`, { max: 60, allowEmpty: false });
     text(x.where ?? "", `gym spot ${n} note`);
   }),
-  // Saved Plan edits (engine/planedits.js). Only the record itself is checked here: the slots are checked by the engine
-  // before use, and a record it cannot use (for example from a newer app) is kept and synced, never refused or dropped.
+  // Saved Plan edits (engine/planedits.js). Only the record itself is checked here: the slots and the day's walk (0.7.4)
+  // are checked by the engine before use, and a record it cannot use (for example from a newer app) is kept and synced,
+  // never refused or dropped.
   plan_days: (r, n) => checkRecord(r, `plan day ${n}`),
 };
 

@@ -2,6 +2,26 @@
 
 What is new in each app version, in plain words. Newest first. Older versions: see `docs/HANDOVER.md` and the git log.
 
+## 0.7.4 · 2026-11-18
+
+The editable walk and the food counter, built by chat 8.41. Not pushed yet.
+
+- **You can change a day's warm-up walk.** In Plan, tap Edit, then Change on the walk card. Set the speed, the slope
+  and the minutes. Your trainer's limits apply: 2 to 5 km/h, slope up to 12 % (10 % on Tuesday and Friday, the leg
+  days), 10 to 30 minutes. The change lasts for that day every week, like your other Plan changes, and you can undo
+  it for 8 seconds. "Back to the plan's walk" gives the app's walk back.
+- A changed day says so: "Your own walk. The walk rule does not change this day." Under 30 minutes, one line reminds
+  you that the week then has less than 150 minutes of walking. After a break of 2 weeks or more, the app still makes
+  that day's walk easier for one week.
+- Today and the Plan show the same changed walk. A workout that is already running keeps the walk it started with.
+- A changed walk stays the same every week: the app no longer makes that day's walk harder by itself. Other days still
+  follow the walk rule. Before you start, the walk screen still lets you change speed and slope a little.
+- **"How many" for food.** When a food has a serving size (for example "1 bar (30 g)"), the food sheet has a "How
+  many" counter above the grams. 2 bars = 60 g. Change either one and the other follows. The app still saves grams.
+- Two safety fixes found by the reviewers: a walk you reset can no longer come back from a phone still on 0.7.3, and the
+  walk sheet no longer saves a break week's easier numbers for good.
+- For later builders: a test now fails when an app file changes but the version number does not.
+
 ## 0.7.3 · 2026-11-18
 
 The update fix, built by chat 8.40. Live since 2026-11-18 16:23. The editable walk moves to 0.7.4.

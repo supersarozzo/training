@@ -3,6 +3,7 @@ import { model, go, rerender } from "./app.js";
 import { getActive, setActive, patchActive, clearActive } from "../active.js";
 import { exercises, days } from "../plan/plan-v2.js";
 import { planForSession, missedRule, canStartWorkout, blockPosition, sessionLayout, canTrain, sessionWeek } from "../engine/schedule.js";
+import { plannedWalk } from "../engine/planedits.js";
 import { buildSequence, nextPosition, walkSuggestion, finishedSessions, suggestFor, slotRecord, workSets } from "../engine/workout.js";
 import { startTimer } from "../timer.js";
 import { today } from "../clock.js";
@@ -28,7 +29,8 @@ export function buildCtx(doc, session, act) {
       if (!memo.has(exId)) memo.set(exId, suggestFor({ ...doc, sessions: doc.sessions }, exId, { week: session.week, missed, exerciseState: ctx.state(exId) }));
       return memo.get(exId);
     },
-    walk: walkSuggestion(doc, { week: session.week, legDay, missed, kind: session.kind }),
+    // The walk the workout started with (0.7.4: planned_walk, the day's Plan walk at the start), never a later edit.
+    walk: walkSuggestion(doc, { week: session.week, legDay, missed, kind: session.kind, edit: plannedWalk(session) }),
     position: () => nextPosition(session, seq),
   };
   return ctx;

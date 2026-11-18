@@ -200,12 +200,16 @@ export function stepper({ label, unit, value, step = 1, next, min = 0, max = 999
     onChange(v);
   };
   const move = (dir) => set(next ? next(v, dir) : v + dir * step);
-  return h("div", { class: "stepper-block" },
+  const block = h("div", { class: "stepper-block" },
     h("div", { class: "label" }, label),
     h("div", { class: "stepper" },
       h("button", { class: "step-btn", type: "button", "aria-label": `Less ${label}`, onclick: () => move(-1) }, "−"),
       h("div", { class: "step-value" }, input, unit ? h("span", { class: "unit" }, unit) : null),
       h("button", { class: "step-btn", type: "button", "aria-label": `More ${label}`, onclick: () => move(1) }, "+")));
+  // Set the number from outside (0.7.4: the food count and the grams follow each other). No onChange, so two linked
+  // steppers never call each other in a loop; the next +/- starts from this number.
+  block.setValue = (n) => { v = n; input.value = fmt(v); };
+  return block;
 }
 
 // A row of choice buttons, one chosen. items: [[value, label]]. Used for effort 1 to 10 and "how many more".

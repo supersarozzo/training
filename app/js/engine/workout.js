@@ -300,7 +300,11 @@ export function isNewBest(perfNow, earlier, kind) {
 // Settings for today's walk.
 // doc: data document, week: block week, legDay: bool, missed: missedRule result.
 // Returns { speed_kmh, slope_pct, minutes, buildUp, note }
-export function walkSuggestion(doc, { week, legDay, missed, kind = "full" }) {
+// `edit` (0.7.4): the day's own walk from Plan > Edit ({ speed_kmh, slope_pct, minutes }, engine/planedits.js), or
+// null. An edited day keeps its numbers in every week (the walk rule does not move them); only the break rules still
+// lower them, and the short day still walks 15 minutes at most. Returns `edited: true` then.
+export function walkSuggestion(doc, { week, legDay, missed, kind = "full", edit = null }) {
+  if (edit) return editedWalk(doc, edit, { legDay, missed, kind });
   const targets = doc.profile?.targets;
   const fit = doc.profile?.intake?.q36_walk_fit;
   const startBase = targets?.walk_start ?? { speed_kmh: walkRules.start.no.speed_kmh, slope_pct: walkRules.start.no.slope_pct };
@@ -336,6 +340,32 @@ export function walkSuggestion(doc, { week, legDay, missed, kind = "full" }) {
   const minutes = kind === "short" ? 15 : (walks.length ? walkRules.minutes : startRow.minutes);
   const buildUpMinutes = kind === "short" ? 2 : 3;
   return { speed_kmh: day.speed_kmh, slope_pct: day.slope_pct, minutes, buildUpMinutes, buildUp: { ...walkRules.buildUp }, effortRange: day.effortRange, note };
+}
+
+// The day's own walk (Plan > Edit, 0.7.4, trainer decision D16). The numbers are the day's (a leg day's slope already
+// lower). The break rule, number by number, for the break week only (D16 C): back from 2 to 4 weeks, the slope is 2 %
+// lower (never below 0), speed and minutes as edited; back from more than 4 weeks, each of speed, slope and minutes is
+// the lower of the edit and the starting settings (never raised). Short day: at most 15 minutes (D16 line 5).
+export const OWN_WALK_LINE = "Your own walk. The walk rule does not change this day."; // D16 A: on screen on an edited day
+function editedWalk(doc, edit, { legDay, missed, kind }) {
+  const startBase = doc.profile?.targets?.walk_start ?? { speed_kmh: walkRules.start.no.speed_kmh, slope_pct: walkRules.start.no.slope_pct };
+  const fit = doc.profile?.intake?.q36_walk_fit;
+  const startMinutes = fit && walkRules.start[fit] ? startWalk(fit, false).minutes : walkRules.minutes;
+  let speed_kmh = edit.speed_kmh;
+  let slope_pct = edit.slope_pct;
+  let editMinutes = edit.minutes;
+  let note = OWN_WALK_LINE;
+  if (missed?.kind === "minus_10") { slope_pct = Math.max(slope_pct - 2, 0); note = `Back from a break: 2 % less steep this week. ${OWN_WALK_LINE}`; }
+  if (missed?.kind === "minus_20") {
+    const start = walkForDay(startBase, legDay);
+    speed_kmh = Math.min(speed_kmh, start.speed_kmh);
+    slope_pct = Math.min(slope_pct, start.slope_pct);
+    editMinutes = Math.min(editMinutes, startMinutes);
+    note = `Back from a long break: starting settings where lower this week. ${OWN_WALK_LINE}`;
+  }
+  const minutes = kind === "short" ? Math.min(15, editMinutes) : editMinutes;
+  const buildUpMinutes = kind === "short" ? 2 : 3;
+  return { speed_kmh, slope_pct, minutes, buildUpMinutes, buildUp: { ...walkRules.buildUp }, effortRange: legDay ? walkRules.legDayEffort : walkRules.normalEffort, note, edited: true };
 }
 
 export { planForDay, missedRule, stepDown };

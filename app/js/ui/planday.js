@@ -11,6 +11,7 @@ import { screen, openSheet, closeSheets } from "./parts.js";
 import { model, rerender, go } from "./app.js";
 import { today } from "../clock.js";
 import { dayLayout } from "../dayplan.js";
+import { OWN_WALK_LINE } from "../engine/workout.js";
 import { days, exercises, weeks, weekInfo, rirFor, DAY_IDS, walkRules } from "../plan/plan-v2.js";
 import { thumb } from "./media.js";
 import { icon } from "./icons.js";
@@ -21,7 +22,7 @@ import { pageFor, muscleWords } from "../engine/planpage.js";
 import { ADDED_SLOTS, MAX_ADDED } from "../engine/planedits.js";
 import { viewDay, unitsIn, editedMinutes, rangeFor, weightLine, soreNote, walkWords } from "../planview.js";
 import { renderMuscleCheck } from "./musclecheck.js";
-import { dayState, openSwapSheet, openAddSheet, removeSlot, changedCard, openDoseSheet } from "./planedit.js";
+import { dayState, openSwapSheet, openAddSheet, removeSlot, changedCard, openDoseSheet, openWalkSheet } from "./planedit.js";
 
 // The page remembers the picked day and week while you stay on the tab; coming back to the tab opens today again.
 // `edit`: Edit mode (build step 4). It is page state: it ends when the day changes or the tab is left.
@@ -65,19 +66,25 @@ function dayStrip(doc, shown, todayDay, week) {
 }
 
 // The walk this day and week really gets (0.7.1, iPhone P5): walkSuggestion's speed, slope and minutes, the same numbers
-// as Today's walk tile.
+// as Today's walk tile. 0.7.4: a walk set in Plan > Edit carries the "Yours" badge; in Edit mode a Change button opens
+// the walk sheet (the exercise cards' look: ecard and ebtns).
 function walkCard(walk, day) {
   const easy = days[day].walk === "easy";
   return h("div", { class: "pcard walk" },
     h("span", { class: "tile-ic" }, icon("walk", 26)),
     h("span", { class: "grow" },
-      h("b", {}, "Walk first"),
+      h("b", {}, "Walk first", walk.edited ? h("span", { class: "badge inline acc" }, "Yours") : null),
       h("span", { class: "walk-min" }, h("b", {}, String(walk.minutes)), " min uphill"),
       h("span", { class: "walk-set" }, walkWords(walk)),
       h("span", { class: "small muted" }, easy
         ? `Easier: ${walkRules.legDaySlopeLess_pct} % less slope, effort ${walkRules.legDayEffort.join(" to ")} of 10`
         : `Normal: effort ${walkRules.normalEffort.join(" to ")} of 10`)));
 }
+const walkEditCard = (card, day, week) =>
+  h("div", { class: "ecard" }, card,
+    model.effectivePlanDay(day).walk ? h("p", { class: "small muted" }, OWN_WALK_LINE) : null, // trainer D16 A
+    h("div", { class: "ebtns" },
+      h("button", { type: "button", "aria-label": `Change the speed, slope or minutes of ${days[day].name}'s walk`, onclick: () => openWalkSheet(day, week) }, icon("edit", 18), "Change")));
 
 // `edit`: Edit mode, with Swap and Remove under the card. A swapped or added place carries a badge (build step 4).
 function exCard(doc, day, week, slot, edit = false) {
@@ -126,6 +133,7 @@ export function renderPlan() {
   const edit = state.edit && view.canEdit;
   const totalSets = slots.reduce((n, x) => n + x.sets, 0);
   const lay = dayLayout(doc, { planDay: day, week, today: t });
+  const planLay = lay.walk.edited ? dayLayout(doc, { planDay: day, week, today: t, walkEdit: null }) : lay; // the plan's own day (0.7.4)
   const minutes = editedMinutes(lay.minutes, day, week, view.record);
   const addedLeft = MAX_ADDED - slots.filter((x) => ADDED_SLOTS.includes(x.slot)).length;
   const dayWord = days[day].name;
@@ -140,7 +148,7 @@ export function renderPlan() {
     : h("button", { class: "button secondary add-ex", type: "button", disabled: true }, `${MAX_ADDED} added: the most for one day`)) : null;
   const editCard = edit ? h("div", { class: "card changed-card" },
     h("p", {}, h("b", {}, `Editing ${dayWord}.`), ` Each change saves at once and lasts: every ${dayWord} from now on, in every week. Past workouts stay as they were.`),
-    h("p", { class: "small muted" }, `About ${minutes} minutes now; the plan's day is about ${lay.minutes}.`)) : null;
+    h("p", { class: "small muted" }, `About ${minutes} minutes now; the plan's day is about ${planLay.minutes}.`)) : null;
   const lockCard = view.locked ? h("div", { class: "card lock-card" }, icon("info", 20), h("p", {}, "Workout running. This day can be changed after the workout ends.")) : null;
   const newerLine = view.newerVersion ? h("div", { class: "note-line" }, icon("info", 16), h("span", {}, "This day was changed on a newer app version. Update the app to change it.")) : null;
   const editChip = view.canEdit ? h("button", {
@@ -171,7 +179,7 @@ export function renderPlan() {
       lockCard,
       newerLine,
       !edit && view.edited ? changedCard(day, view.record, { canReset: view.canEdit }) : null,
-      edit ? null : walkCard(lay.walk, day),
+      edit ? walkEditCard(walkCard(lay.walk, day), day, week) : walkCard(lay.walk, day),
       units,
       addButton,
       h("button", { class: "pcard check", type: "button", onclick: () => go("#/plan/muscles") },

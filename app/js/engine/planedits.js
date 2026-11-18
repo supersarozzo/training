@@ -10,7 +10,11 @@
 //   the plan and `newerVersion` is true, so a screen can say "This day was changed on a newer app version".
 // - Slot names (the grammar): pairs A1 to C2, Abs1, Abs2, D (on its own), and E1, E2 for added exercises: at the end
 //   of the day, on their own, 3 sets, 60 s rest, at most 2 a day (answer 72 a). E follows the D week rule.
-import { PLAN_ID, days, exercises, weekInfo } from "../plan/plan-v2.js";
+//
+// 0.7.4 (worker 8.41, iPhone P5 part 2): a record may carry the day's own walk, `walk: { speed_kmh, slope_pct, minutes }`,
+// fixed for that day in every week until "Back to the plan's walk". Limits from the walk engine and the trainer
+// (WALK_LIMITS). A walk this app cannot use makes the whole record unusable here (newerVersion), like an unknown slot.
+import { PLAN_ID, days, exercises, weekInfo, walkRules } from "../plan/plan-v2.js";
 
 export const SLOT_NAMES = Object.freeze(["A1", "A2", "B1", "B2", "C1", "C2", "Abs1", "Abs2", "D", "E1", "E2"]);
 export const ADDED_SLOTS = Object.freeze(["E1", "E2"]);
@@ -82,11 +86,66 @@ export function checkSlots(slots) {
   return { ok: true };
 }
 
+// ---------- the day's own walk (0.7.4) ----------
+
+// Trainer limits for a saved walk: speed from the result screen's floor (D6, 2 km/h) to the plan's top (D3, 5 km/h);
+// slope 0 to the top (D3, 12 %; leg days 2 % lower, 10 %); minutes up to the plan's 30 (D2, never longer). Steps as the
+// walk screen's small change (D7): 0.1 km/h and 1 %; minutes by 1.
+export const WALK_LIMITS = Object.freeze({
+  speed_kmh: Object.freeze([2, walkRules.maxSpeed_kmh]),
+  speedStep_kmh: 0.1,
+  slope_pct: Object.freeze([0, walkRules.maxSlope_pct]),
+  slopeStep_pct: walkRules.slopeStep_pct,
+  minutes: Object.freeze([10, walkRules.minutes]),
+  minutesStep: 1,
+});
+
+// The limits for one day: leg days have a lower slope top.
+export function walkLimits(dayId) {
+  const leg = isPlanDayId(dayId) && days[dayId].leg;
+  const top = WALK_LIMITS.slope_pct[1] - (leg ? walkRules.legDaySlopeLess_pct : 0);
+  return { ...WALK_LIMITS, slope_pct: [WALK_LIMITS.slope_pct[0], top] };
+}
+
+const onStep = (v, step) => Math.abs(v / step - Math.round(v / step)) < 1e-6;
+const inRange = (v, [lo, hi]) => typeof v === "number" && Number.isFinite(v) && v >= lo - 1e-9 && v <= hi + 1e-9;
+
+// Can this app use (and save) this walk for this day? { ok: true } or { ok: false, reason } in plain words.
+export function checkWalk(walk, dayId) {
+  const no = (reason) => ({ ok: false, reason });
+  if (!isObj(walk)) return no("The walk could not be read.");
+  const lim = walkLimits(dayId);
+  if (!inRange(walk.speed_kmh, lim.speed_kmh) || !onStep(walk.speed_kmh, lim.speedStep_kmh)) return no(`Speed must be ${lim.speed_kmh[0]} to ${lim.speed_kmh[1]} km/h.`);
+  if (!inRange(walk.slope_pct, lim.slope_pct) || !Number.isInteger(walk.slope_pct)) return no(`Slope must be a whole number from ${lim.slope_pct[0]} to ${lim.slope_pct[1]} %.`);
+  if (!inRange(walk.minutes, lim.minutes) || !Number.isInteger(walk.minutes)) return no(`Minutes must be a whole number from ${lim.minutes[0]} to ${lim.minutes[1]}.`);
+  return { ok: true };
+}
+
+// The three walk numbers, nothing else (a clean copy; speed kept to one decimal).
+// D16 B: one hint line under the minutes stepper when the day's walk is under 30 minutes (no warning colour, no block).
+export const walkHint = (minutes) => (typeof minutes === "number" && minutes < 30 ? "Under 30 minutes a day means under 150 minutes of walking a week." : null);
+export const pickWalk = (w) => ({ speed_kmh: Math.round(w.speed_kmh * 10) / 10, slope_pct: w.slope_pct, minutes: w.minutes });
+
+// The walk a workout started with (model.startSession saves it when the day had an edited walk), or null. Loose limits,
+// the same as the file check: a workout keeps what it planned, even from a newer app.
+export function plannedWalk(session) {
+  const w = session && session.planned_walk;
+  if (!isObj(w)) return null;
+  const ok = (v, lo, hi) => typeof v === "number" && Number.isFinite(v) && v >= lo && v <= hi;
+  if (!ok(w.speed_kmh, 0, 20) || !ok(w.slope_pct, 0, 30) || !ok(w.minutes, 1, 300)) return null;
+  return { speed_kmh: w.speed_kmh, slope_pct: w.slope_pct, minutes: w.minutes };
+}
+
 // Can this app use a plan_days record for this day? (A tombstone is "not an edit", see effectiveDay.)
+// A missing or null `walk` means no walk edit (every record before 0.7.4).
 export function checkPlanDay(record, dayId) {
   if (!isObj(record)) return { ok: false, reason: "Not a saved day." };
   if (record.id !== planDayId(dayId) || record.plan_id !== PLAN_ID || record.day !== dayId) {
     return { ok: false, reason: "This day was saved for another plan or day." };
+  }
+  if (record.walk !== undefined && record.walk !== null) {
+    const w = checkWalk(record.walk, dayId);
+    if (!w.ok) return w;
   }
   return checkSlots(record.slots);
 }
@@ -98,10 +157,11 @@ export function findPlanDay(doc, dayId) {
 }
 
 // The day to train: the edited day when the record is usable, else the plan's day.
-// Returns { dayId, slots: [{ slot, ex, sets (base, before the week rule), rest }], edited, newerVersion }.
+// Returns { dayId, slots: [{ slot, ex, sets (base, before the week rule), rest }], walk, edited, newerVersion }.
+// `walk`: the day's own walk (a copy) or null (0.7.4).
 // A pair exercise left on its own with no rest of its own gets the rest the plan gives that pair (its last member's).
 export function effectiveDay(dayId, record) {
-  const plain = { dayId, slots: planDaySlots(dayId), edited: false, newerVersion: false };
+  const plain = { dayId, slots: planDaySlots(dayId), walk: null, edited: false, newerVersion: false };
   if (!isObj(record) || record.deleted === true) return plain;
   if (!checkPlanDay(record, dayId).ok) return { ...plain, newerVersion: true };
   const slots = record.slots.map(pick);
@@ -112,7 +172,8 @@ export function effectiveDay(dayId, record) {
     const pair = days[dayId].slots.filter((p) => p.slot[0] === s.slot[0] && isPairSlot(p.slot));
     s.rest = pair.length ? pair[pair.length - 1].rest ?? LONE_REST : LONE_REST;
   }
-  return { dayId, slots, edited: true, newerVersion: false };
+  const walk = isObj(record.walk) ? pickWalk(record.walk) : null;
+  return { dayId, slots, walk, edited: true, newerVersion: false };
 }
 
 // True when these slots are exactly the plan's own day (same places, exercises, sets and rest, same order).

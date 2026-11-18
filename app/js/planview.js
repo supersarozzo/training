@@ -90,7 +90,7 @@ export function editedMinutes(planMinutes, dayId, week, record) {
 
 // ---------- what changed against the plan's day ----------
 
-// [{ what: "swap" | "remove" | "add", slot, from, to, text }] in the day's order. Base slots (no week rule).
+// [{ what: "swap" | "remove" | "add" | "sets" | "walk", slot, from, to, text }] in the day's order. Base slots (no week rule).
 export function dayChanges(dayId, record) {
   const eff = effectiveDay(dayId, record);
   if (!eff.edited) return [];
@@ -107,6 +107,8 @@ export function dayChanges(dayId, record) {
     }
   }
   for (const s of eff.slots) if (ADDED_SLOTS.includes(s.slot)) out.push({ what: "add", slot: s.slot, from: null, to: s.ex, text: `Added: ${exName(s.ex)}` });
+  // 0.7.4: the day's own walk (fixed in every week).
+  if (eff.walk) out.push({ what: "walk", slot: null, from: null, to: eff.walk, text: `Walk: ${walkWords(eff.walk)}, ${eff.walk.minutes} min` });
   return out;
 }
 
