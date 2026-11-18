@@ -200,12 +200,18 @@ export function countedServing(label) {
   if (n < 2 || n > 100 || !unit || /\d/.test(unit) || MEASURE.test(unit.split(/[\s.(]/)[0])) return null;
   return { n, unit: singular(unit) };
 }
+// A serving named only by its weight in grams ("30 g", "100g", "25 gr", "50 g.") or with no words says nothing about
+// pieces (0.7.6, Rosario: "minihashbrowns was 8 pieces for 30 grams"): no piece weight, so Pieces asks for one. A weight
+// typed with Change saves the words "piece" (withPieceWeight), so it is asked only once.
+const GRAMS_ONLY = /^\d+(?:[.,]\d+)?\s*(?:g|gr|grs|gm|gms|grams?|grammes?|gramm)\.?$/i;
+export const gramsOnlyLabel = (words) => words === "" || GRAMS_ONLY.test(words);
 export function pieceOf(food) {
   if (!food || !okPiece(food.serving_g)) return null;
   const words = typeof food.serving_label === "string" ? food.serving_label.trim() : "";
+  if (gramsOnlyLabel(words)) return null;
   const counted = countedServing(words);
   if (counted && okPiece(food.serving_g / counted.n)) return { g: food.serving_g / counted.n, label: counted.unit };
-  return { g: food.serving_g, label: words || "piece" };
+  return { g: food.serving_g, label: words };
 }
 // The typed weight of one piece ("62,5" works too), rounded to 0.1 g.
 export function checkPieceWeight(text) {
@@ -241,7 +247,7 @@ export function withPieceWeight(food, g) {
   // A typed weight is the weight of ONE piece, so "4 bites" becomes "bite" (0.7.5: the typed weight always wins).
   const counted = countedServing(words);
   if (counted) return { ...food, serving_g: g, serving_label: counted.unit };
-  const keep = words !== "" && (food.serving_g === g || !/\d/.test(words));
+  const keep = !gramsOnlyLabel(words) && (food.serving_g === g || !/\d/.test(words)); // grams only: "piece" (0.7.6)
   return { ...food, serving_g: g, serving_label: keep ? food.serving_label : "piece" };
 }
 
