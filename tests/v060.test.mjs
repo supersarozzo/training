@@ -216,3 +216,53 @@ test("V13 the back view draws the back of the head (a plain rounded shape), not 
   assert.match(head, /^M 52\.43,0\.55 C/);
   assert.doesNotMatch(head, /1\.48163,4\.0475101/, "the old jaw line is gone");
 });
+
+// ---------- audit fixes (independent auditor, 2026-11-18, auditor-v060 M1, m6, m7) ----------
+
+test("V15 an exercise stopped early never raises the weight next time (M1): same weight, even at the top reps", () => {
+  const doc = validDoc();
+  const s = finished("2026-02-23", 3, "leg_press", [work(1, 100, 12)]);
+  s.exercises[0].stopped_after = 1;
+  doc.sessions = [s];
+  const perf = workout.performances(doc.sessions, "leg_press");
+  assert.equal(perf[0].stopped, true);
+  const sg = workout.suggestFor(doc, "leg_press", { week: 3, missed: null });
+  assert.equal(sg.weight_kg, 100, "1 of 3 sets, then stopped: hold the weight");
+  assert.match(sg.note, /stopped/i);
+  // Three full sets at the top still move up (no change for a normal workout).
+  doc.sessions = [finished("2026-02-23", 3, "leg_press", [work(1, 100, 12), work(2, 100, 12), work(3, 100, 12)])];
+  assert.ok(workout.suggestFor(doc, "leg_press", { week: 3, missed: null }).weight_kg > 100);
+});
+
+test("V16 the file check refuses a bad stopped_after (m6); the workout never skips a whole exercise on a negative one", () => {
+  const { model } = setup();
+  const session = model.startSession({ planDay: "tue", week: 3, kind: "full" });
+  const bad = copy(model.doc());
+  bad.sessions.find((x) => x.id === session.id).exercises[0].stopped_after = -1;
+  assert.equal(validateDocument(bad).ok, false);
+  bad.sessions.find((x) => x.id === session.id).exercises[0].stopped_after = 1.5;
+  assert.equal(validateDocument(bad).ok, false);
+  bad.sessions.find((x) => x.id === session.id).exercises[0].stopped_after = 2;
+  assert.equal(validateDocument(bad).ok, true);
+  const s = copy(model.doc().sessions.find((x) => x.id === session.id));
+  s.exercises[0].stopped_after = -1;
+  const { seq } = workout.buildSequence(s.exercises.map((e) => ({ slot: e.slot, ex: e.plan_exercise, sets: e.planned_sets, rest: e.planned_rest })));
+  assert.equal(workout.nextPosition(s, seq).entry.slot, s.exercises[0].slot, "a negative value is ignored");
+});
+
+test("V17 a weight of 0 kg for a weighted exercise is never saved as 'your weight' (m7): it means let the app choose", () => {
+  const { model } = setup();
+  model.setExercisePrefs("leg_press", { weightKg: 0 });
+  const st = model.doc().exercise_state.find((x) => x.id === "x-leg_press");
+  assert.equal(st.my_weight_kg, null);
+  assert.equal(st.my_weight_at, null);
+});
+
+test("V18 the Change sheet checks every value before it writes, writes only what changed, and reads the old values at Save (m1, m2, m3)", () => {
+  const s = src("ui/planedit.js");
+  const save = s.slice(s.indexOf("const saveIt"), s.indexOf("const hasOwnWeight"));
+  assert.ok(save.indexOf("validRange(") > -1 && save.indexOf("validRange(") < save.indexOf("savePlanDay("), "reps checked before any write");
+  assert.ok(save.indexOf("weightOk") > -1 && save.indexOf("weightOk") < save.indexOf("savePlanDay("), "weight checked before any write");
+  assert.match(save, /if \(!didSets && !didPrefs\)/, "nothing changed: no write, no Undo");
+  assert.match(save, /const stNow = /, "old exercise values read at Save");
+});
