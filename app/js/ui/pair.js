@@ -16,7 +16,7 @@ import { patchActive, getActive } from "../active.js";
 import { exercises } from "../plan/plan-v2.js";
 import { cues } from "../plan/cues.js";
 import { setWord, nReps } from "../words.js";
-import { stepUp, stepDown, warmupSets, floorRir } from "../engine/progression.js";
+import { stepUp, stepDown, warmupSets, floorRir, minWeight, PAIN_FLOOR_NOTE } from "../engine/progression.js";
 import { slotRecord, workSets, warmupDone, warmupCount, unitLabel, targetText } from "../engine/workout.js";
 import { askEnd, nextText, nextDue, restBetween, progressOf } from "./flow.js";
 import { openSwap } from "./swap.js";
@@ -120,6 +120,9 @@ export function renderPair(ctx, pos) {
   const bodyweight = ex.step === "bodyweight";
   const done = workSets(rec);
   const startKg = rec.swap_reason === "hurts" && rec.swap_weight_kg != null ? rec.swap_weight_kg : sg.weight_kg;
+  // Trainer D19, answer 1 to 8.43: a pain swap that starts at the floor (the lightest step) stops with 3 reps left.
+  const painFloor = rec.swap_reason === "hurts" && typeof rec.swap_weight_kg === "number" && rec.swap_weight_kg > 0 && rec.swap_weight_kg <= minWeight(exId, ctx.settings);
+  const atFloor = sg.atFloor === true || painFloor;
 
   // Warm-up sets: first exercise of a pair, from the suggested working weight. How many (0, 1 or 2) follows the
   // trainer's L1 rule (engine warmupCount), on the day as it really is: the exercise really done in each slot.
@@ -239,14 +242,14 @@ export function renderPair(ctx, pos) {
     workoutScreen(
       topBar(title, () => askEnd(ctx), progressOf(session, seq)),
       exerciseHeader(ctx, rec),
-      h("div", { class: "target" }, targetText(exId, entry.sets, sg.atFloor ? floorRir(ctx.plan.rir) : ctx.plan.rir, rangeFor(ctx.doc, exId))), // trainer D19: at the floor, 3 or more left
+      h("div", { class: "target" }, targetText(exId, entry.sets, atFloor ? floorRir(ctx.plan.rir) : ctx.plan.rir, rangeFor(ctx.doc, exId))), // trainer D19: at the floor, 3 or more left
       h("div", { class: "info-lines" },
         sg.lastText && !prevBtn ? h("div", {}, sg.lastText) : null,
         sg.note && !(sg.action === "unknown") ? h("div", {}, sg.note) : null,
         ctx.state(exId)?.machine_note ? h("div", {}, `Machine: ${ctx.state(exId).machine_note}`) : null,
         whereLine(ctx, exId),
         soreNote(ctx.session.plan_day, ctx.session.week, entry.slot) ? h("div", { class: "sore-note" }, soreNote(ctx.session.plan_day, ctx.session.week, entry.slot)) : null, // trainer D13
-        rec.swap_reason === "hurts" ? h("div", { class: "warn" }, "You swapped because it hurt. Start light.") : null,
+        rec.swap_reason === "hurts" ? h("div", { class: "warn" }, painFloor ? PAIN_FLOOR_NOTE : "You swapped because it hurt. Start light.") : null,
         unknown ? h("div", { class: "warn" }, "Pick a light weight you can lift with good form.") : null),
       // Warm-up sets: tiles while they are due, one short line once done (DESIGN.md: "collapsed after done").
       wsets.length && warmupPending ? h("div", { class: "set-list" },

@@ -11,6 +11,8 @@ The lowest weight (trainer decision D19), safer old versions, and small fixes, b
   you listed none), one plate on a machine or cable, or 5 kg on the Smith machine and the hip thrust.
 - **Already at the lightest weight?** The weight stays, and the card says: "Lightest weight already. Stop with 3 reps
   left today." The target line then says "stop with 3 left". A weight you set yourself is never changed.
+- **After an "It hurts" swap that starts at the lightest weight,** the card says "You swapped because it hurt. Lightest
+  weight already: stop with 3 reps left today." and the target line says "stop with 3 left".
 - **A newer app's workout no longer breaks this app.** If another phone with a newer app saves a workout with a new
   exercise, this app now leaves that exercise out of its screens instead of failing (the workout stays in your file as
   it is). This works from 0.7.6 on: phones still on 0.7.5 or older must update first, as before.
