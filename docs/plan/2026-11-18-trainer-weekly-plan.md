@@ -172,7 +172,7 @@ Asked by the Training Agent on 2026-11-18. In 0.6.0 you can end an exercise befo
 | Stopped early, any number of sets done | **Same weight.** Aim to finish every set at that weight. (8.35's default.) |
 | Stopped early **twice in a row** on this exercise, and both times at least one set was below the bottom of the rep range | **One smallest step lighter**, back to the bottom of the range. (Next version.) |
 | A set 3 or more reps below the range, two sessions in a row | 10 % lighter, as today. This rule comes first. |
-| Easier week or week 1 | Same weight, as today. |
+| Easier week or week 1 | Same weight, as today. The "one step lighter" rule does not fire in these weeks (see 8.39 answer T1). |
 
 Bodyweight and timed exercises (plank, dead bug, reverse crunch): same target; they never go "lighter".
 
@@ -184,7 +184,7 @@ Bodyweight and timed exercises (plank, dead bug, reverse crunch): same target; t
 
 Sources (read 2026-11-18): Hickmott et al. 2022, Sports Med Open, adjusting load and volume to daily performance gives strength and growth similar to fixed plans ([PubMed 35038063](https://pubmed.ncbi.nlm.nih.gov/35038063/)); Plotkin et al. 2022 (D5) and the 2-for-2 rule (D5): move up only when the whole planned work is done with reps to spare; Pelland et al. 2026 and Schoenfeld 2017 (D2): growth follows weekly sets with diminishing returns, so one short session costs little; plan v2 section 9: two bad sessions before lowering, pain lowers at once.
 
-**For 8.35 (next version, not 0.6.0):** in `engine/progression.js` `nextSuggestion`, right after the 10 % rule and before the easier-week check: if `last.stopped && previous?.stopped`, the exercise is not bodyweight, and both sessions have a set below `low`, then return `action: "lower"`, `weight_kg: stepDown(w, exerciseId, settings)`, `range: [low, top]`, note "You stopped early twice and missed the range. One step lighter." The existing `last.stopped` hold stays as it is. A test comes first: stopped twice + below range → lower; stopped twice in range → hold; stopped once → hold; bodyweight → hold. Optional words on the Stop confirm: "Does it hurt? Use Swap › It hurts instead."
+**For 8.35 (next version, not 0.6.0):** in `engine/progression.js` `nextSuggestion`, right after the easier-week / week-1 hold and before the `last.stopped` hold (corrected 2026-11-18, answer T1 to 8.39; first written as "before the easier-week check"): if `last.stopped && previous?.stopped`, the exercise is not bodyweight, and both sessions have a set below `low`, then return `action: "lower"`, `weight_kg: stepDown(w, exerciseId, settings)`, `range: [low, top]`, note "You stopped early twice and missed the range. One step lighter." The existing `last.stopped` hold stays as it is. A test comes first: stopped twice + below range → lower; stopped twice in range → hold; stopped once → hold; bodyweight → hold. Optional words on the Stop confirm: "Does it hurt? Use Swap › It hurts instead."
 
 ## 5. Changes to your earlier choices
 
@@ -285,10 +285,38 @@ The numbers in the day tables are **sets** for that week. Pair rest: "move on" m
 
 | # | What | Why | Who decides or builds |
 |---|---|---|---|
-| L1 | Warm-up sets only before the first exercise for each muscle (pairs A and B); pair C (curls, pushdowns, raises) gets one light set at most. Saves about 2 minutes a day. | Warm-up sets help heavy lifts; small exercises after the muscle is already warm need little. This is coaching practice; I found no trial on it. | The engine owner (`engine/workout.js`), with a test first. Not urgent. |
-| L2 | Next 12-week block: keep the D exercise (calves, leg curl) at 3 sets in weeks 7-11, using the 2 minutes from L1. | Calves and the back of the thighs drop to about 10 fractional sets in weeks 7-11; more sets give more growth (D2). | The trainer, at the week-12 review. Needs a change to the week rule in `plan-v2.js` and `engine/planedits.js` together. |
+| L1 | **Decided, exact rule in section 7.1 (T2); built by 8.39 in 0.7.1.** Warm-up sets only before the first exercise for each muscle (pairs A and B); pair C (curls, pushdowns, raises) gets one light set at most. Saves about 2 minutes a day. | Warm-up sets help heavy lifts; small exercises after the muscle is already warm need little. This is coaching practice; I found no trial on it. | The engine owner (`engine/workout.js`), with a test first. Not urgent. |
+| L2 | **Decided, exact rule in section 7.1 (T3); built now by 8.39 in 0.7.1, not at the week-12 review.** Keep the D exercise (calves, leg curl) at 3 sets in weeks 7-11, using the 2 minutes from L1. | Calves and the back of the thighs drop to about 10 fractional sets in weeks 7-11; more sets give more growth (D2). | The trainer, at the week-12 review. Needs a change to the week rule in `plan-v2.js` and `engine/planedits.js` together. |
 | L3 | Diet note: keep the food gap at about 500 kcal a day or less. If the weekly check says "losing too slowly", add steps first, then cut food. | Murphy and Koehler 2022 (D9). | The Training Agent and the Diet worker. Private numbers stay in `private/`. |
-| L4 | The cable pull-through is labelled "hamstrings" in `plan-v2.js`, but its muscle data says glutes are the main muscle. Words only; it changes the Gym grouping. | Muscle map check, "could add" list. | The trainer, with the Gym screen owner. |
+| L4 | **Decided (T4), built by 8.39.** The cable pull-through is labelled "hamstrings" in `plan-v2.js`, but its muscle data says glutes are the main muscle. Words only; it changes the Gym grouping. | Muscle map check, "could add" list. | The trainer, with the Gym screen owner. |
+
+### 7.1 Exact rules for worker 8.39 (version 0.7.1), decided 2026-11-18
+
+**T1 · D10 rule 2 (stopped twice → one step lighter).**
+(a) It sits **after** the easier-week / week-1 hold, not before it. It fires only in weeks that allow progress (2-5, 7-11). Why: in week 1 the weight is still being found, and in weeks 6 and 12 the weights already stay the same with fewer sets and 4 reps left; a lighter weight there teaches nothing. A stop in week 5 and week 6 can still lower the week-7 suggestion. The 10 % rule and the pain rule stay before everything, as today.
+(b) "Twice in a row" = the last two saved performances of that exercise. A stop with 0 work sets is not a performance and is skipped. Yes.
+Stop confirm words: "Does it hurt? Use Swap › It hurts instead." Yes.
+
+**T2 · L1 warm-up sets.** Only the first exercise of a pair (A1, B1, C1) can get warm-up sets, as today. For each of them, in the day as it really is (Plan edits and swaps included):
+1. If any of its **main** muscles was a main muscle of an earlier exercise that day (helpers do not count): **no warm-up set.**
+2. Else, if it is a **big lift**: the two warm-up sets as today (about 50 % × 10, then about 75 % × 5).
+3. Else (a small exercise): **one light set**, about 50 % × 10.
+
+Big lifts (plan v2 section 5): `chest_press`, `db_bench_press`, `incline_db_press`, `shoulder_press_machine`, `seated_db_shoulder_press`, `pulldown`, `lat_pulldown_machine`, `one_arm_db_row`, `seated_cable_row`, `seated_row_machine`, `leg_press`, `smith_squat`, `goblet_squat`, `hip_thrust`, `db_glute_bridge`, `romanian_deadlift`. Everything else is small.
+Second exercises of pairs (A2, B2, C2), Abs, D and added exercises (E1, E2): none, as today. Bodyweight and timed exercises: none.
+So the difference from your reading: the big-or-small test decides, not the letter. Tuesday's C1 hip thrust is a big lift with no earlier glute exercise, so it keeps both warm-up sets. Friday's C1 cable pull-through gets none (the hip thrust already worked the glutes). Monday's C1 curl gets one light set.
+Why: warm-up sets help a heavy lift that day; a small exercise, or a muscle already worked, needs little. This is coaching practice; I found no trial on it.
+
+**T3 · L2 (D sets in weeks 7-11).**
+(a) **Build it now**, in this form: in weeks 7-11, on days that are **not leg days** (Monday, Wednesday, Thursday), the D exercise keeps its plan sets (3), and **Abs1 has one set less** (plank or side plank 2 → 1). On leg days (Tuesday, Friday) nothing changes: D drops to 2 as today. Why: calves and the back of the thighs get more sets (calves 6 → 8, back of the thighs 5 → 6 direct), abs give some away (19 → 16, still far above the usual 10), and Monday, Wednesday and Thursday get only about half a minute longer (one more D set, about 1.75 minutes, minus one plank set, about 1.2 minutes). Leg days stay at about 91 minutes. A rule for every day would add nearly 2 minutes to each leg day, mostly for extra quad sets that are not needed.
+The rule needs the day: in `plan-v2.js` `setsFor` use `days[dayId].leg`; in `engine/planedits.js` `setsForSlot` pass the day (or its `leg` flag) so both stay the same (tests/plan-edits.test.mjs test 6).
+(b) Added exercises E1 and E2 stay at 2 sets in weeks 7-11, as today (extra work, and time).
+(c) Yes: easier weeks 6 and 12 stay "one set less", week 1 stays 2 sets, for D and Abs1 too.
+My test `tests/trainer-plan.test.mjs` still holds after this (base sets do not change; the set floors only rise). The weekly-set table in D2 changes for weeks 7-11: calves 8 direct, back of the thighs 6 direct, abs 16.
+
+**T4 · L4.** `cable_pull_through` `muscle: "hamstrings"` → `"glutes"` in `plan-v2.js`. Its swaps stay. No other words need to change.
+
+**T5 · Back check (rows count the lats as a main muscle).** `one_arm_db_row`, `seated_cable_row` and `seated_row_machine`: main `["lats", "mid_back"]` (lats first, as the muscle map check wrote it; both are on the back view), helpers `["biceps", "rear_delts"]`. Pulldowns (`pulldown`, `lat_pulldown_machine`) stay main `["lats"]`. Face pull and rear-delt raise do not change. After this, lats get 12 direct sets in weeks 2-5 and 14 in weeks 7-11, as D2 expects for the back.
 
 ## 8. What changes in the app
 
