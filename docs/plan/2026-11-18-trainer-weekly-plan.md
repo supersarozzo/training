@@ -10,7 +10,7 @@ Inputs: [plan review proposal](2026-11-17-plan-review-proposal.md) (answers 80-8
 
 ## 1. The short version
 
-I checked every main choice in plan v2 against at least three independent sources. **The plan is sound and stays almost the same.** Its weekly sets per muscle, its reps and effort, its pairs and rests, its progression rule and its two easier weeks all sit inside what the evidence supports for a beginner who wants to lose fat slowly and build muscle.
+I checked every main choice in plan v2 against at least three independent sources. D10 (added later the same night) sets the rule for "Stop this exercise here". **The plan is sound and stays almost the same.** Its weekly sets per muscle, its reps and effort, its pairs and rests, its progression rule and its two easier weeks all sit inside what the evidence supports for a beginner who wants to lose fat slowly and build muscle.
 
 **One change:** the walk's top speed goes from 6 km/h down to 5 km/h (the top slope stays 12 %). Worker 8.36 decided this first (its decision D3); I checked it independently and agree. The data change is in `plan-v2.js`.
 
@@ -159,6 +159,32 @@ Old and new: same plan on a slow cut.
 Why: a review of studies found that eating less than you burn slows muscle gain, and a gap of about 500 kcal a day or more stopped it on average; strength still rose. Keep the weights hard and the sets the same; keep protein high; and keep the food gap moderate. This is not a training change, so it goes to the Training Agent and the Diet worker as a note (section 7).
 
 Sources: Murphy and Koehler 2022, Scand J Med Sci Sports ([TUM record](https://portal.fis.tum.de/en/publications/energy-deficiency-impairs-resistance-training-gains-in-lean-mass-/), doi 10.1111/sms.14075); ACSM 2026 (above); the plan's own WORKFLOW B4 rule (loss no faster than 1 % of body weight a week).
+
+### D10. "Stop this exercise here" (new in 0.6.0) — **keep 8.35's default, plus one rule for the next version**
+
+Asked by the Training Agent on 2026-11-18. In 0.6.0 you can end an exercise before all its sets are done. 8.35's safe default (commit 03d4e2b): next time the weight stays the same and does not go up.
+
+**My rule:**
+
+| What happened last time | Next time |
+|---|---|
+| It hurt, or form broke | The pain rule, as today: lower the weight, no increase until form is good. Pain should be reported with Swap › "It hurts", not with Stop. |
+| Stopped early, any number of sets done | **Same weight.** Aim to finish every set at that weight. (8.35's default.) |
+| Stopped early **twice in a row** on this exercise, and both times at least one set was below the bottom of the rep range | **One smallest step lighter**, back to the bottom of the range. (Next version.) |
+| A set 3 or more reps below the range, two sessions in a row | 10 % lighter, as today. This rule comes first. |
+| Easier week or week 1 | Same weight, as today. |
+
+Bodyweight and timed exercises (plank, dead bug, reverse crunch): same target; they never go "lighter".
+
+**Why:**
+1. *Hold, do not raise.* Double progression raises the weight only when **every planned set** reached the top of the range. Stopping early leaves the last sets untested, and later sets are where reps drop. So the evidence for "ready for more" is missing. Holding costs at most one session of progress.
+2. *Do not lower after one stop.* One missed set is a small part of the week's 9 to 17 sets for that muscle. Growth follows the weekly total with smaller and smaller gains, so one short session barely matters. People stop for many reasons (time, a busy machine, a bad day). Lowering after one stop would punish a time problem as if it were a strength problem.
+3. *Lower after two stops with missed reps.* Two short sessions in a row, **with** reps below the range both times, show that the weight is too heavy for now. This often happens on a calorie cut. Changing the weight to match how you perform on the day works as well as fixed plans. A one-step drop is milder than the 10 % rule, which still catches bigger misses.
+4. *The reason for stopping.* It matters, but the app does not record it, and asking takes another tap at the gym. Time and tiredness look the same in the data, and the rule above treats them fairly: hold first, lower only when reps were missed twice. Pain is the one reason that must change the weight at once. It already has its own path (Swap › "It hurts"). The Stop question should point to that path, not take a pain answer of its own.
+
+Sources (read 2026-11-18): Hickmott et al. 2022, Sports Med Open, adjusting load and volume to daily performance gives strength and growth similar to fixed plans ([PubMed 35038063](https://pubmed.ncbi.nlm.nih.gov/35038063/)); Plotkin et al. 2022 (D5) and the 2-for-2 rule (D5): move up only when the whole planned work is done with reps to spare; Pelland et al. 2026 and Schoenfeld 2017 (D2): growth follows weekly sets with diminishing returns, so one short session costs little; plan v2 section 9: two bad sessions before lowering, pain lowers at once.
+
+**For 8.35 (next version, not 0.6.0):** in `engine/progression.js` `nextSuggestion`, right after the 10 % rule and before the easier-week check: if `last.stopped && previous?.stopped`, the exercise is not bodyweight, and both sessions have a set below `low`, then return `action: "lower"`, `weight_kg: stepDown(w, exerciseId, settings)`, `range: [low, top]`, note "You stopped early twice and missed the range. One step lighter." The existing `last.stopped` hold stays as it is. A test comes first: stopped twice + below range → lower; stopped twice in range → hold; stopped once → hold; bodyweight → hold. Optional words on the Stop confirm: "Does it hurt? Use Swap › It hurts instead."
 
 ## 5. Changes to your earlier choices
 
