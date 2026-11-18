@@ -40,10 +40,12 @@ export function week1NextSet(set1, exerciseId, settings) {
 
 // The starting weight saved for week 2. The weight that fits after set 2 is the start.
 // If set 2 is still off, the app saves its best guess (the table applied to set 2); week 2 fixes the rest
-// with the normal rule.
-export function week1StartingWeight(set2, exerciseId, settings) {
+// with the normal rule. On a practice day (week 0, trainer D11 rule 4) it is the start of week 1, which may adjust it
+// once more (0.7.1, auditor round 2).
+export function week1StartingWeight(set2, exerciseId, settings, { practice = false } = {}) {
   const second = week1NextSet(set2, exerciseId, settings);
-  return { start_weight_kg: second.weight_kg, fits: second.keep, note: second.keep ? "Your starting weight for week 2." : "Best guess. Week 2 will fix it with the normal rule." };
+  const next = practice ? 1 : 2;
+  return { start_weight_kg: second.weight_kg, fits: second.keep, note: second.keep ? `Your starting weight for week ${next}.` : `Best guess. Week ${next} will fix it${practice ? "" : " with the normal rule"}.` };
 }
 
 // Week 1 rules (section 8): 2 working sets, RIR 3, no progression. Those numbers live in plan-v2.js
@@ -76,8 +78,8 @@ export function week1Stage(rec, weighted) {
 }
 
 // The result of the exercise after both sets: the starting weight for week 2.
-export function week1Result(rec, exerciseId, settings) {
+export function week1Result(rec, exerciseId, settings, opts = {}) {
   const work = rec.sets.filter((s) => s.type === "work");
   const set2 = { weight_kg: work[1].weight_kg, reps: work[1].reps, left: work[1].left };
-  return week1StartingWeight(set2, exerciseId, settings);
+  return week1StartingWeight(set2, exerciseId, settings, opts);
 }

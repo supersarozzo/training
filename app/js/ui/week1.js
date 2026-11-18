@@ -165,12 +165,12 @@ export function renderWeek1(ctx) {
     ];
   }
 
-  // 7. Result: the weight that fits is the starting weight for week 2
-  const res = week1Result(rec, exId, settings);
+  // 7. Result: the weight that fits is the starting weight for week 2 (for week 1 on a practice day, trainer D11)
+  const res = week1Result(rec, exId, settings, { practice: session.week === 0 });
   const d = fresh(`${session.id}:${rec.slot}:result:${exId}`, { note: ctx.state(exId)?.machine_note ?? "" });
   return [
     workoutScreen(...header(h("div", { class: "card accent" },
-      h("div", { class: "label" }, "Your starting weight for week 2"),
+      h("div", { class: "label" }, `Your starting weight for week ${session.week === 0 ? 1 : 2}`),
       h("div", { class: "display" }, String(res.start_weight_kg), h("span", { class: "unit" }, " kg")),
       h("p", { class: "small muted" }, res.note))),
     h("div", { class: "field" },
