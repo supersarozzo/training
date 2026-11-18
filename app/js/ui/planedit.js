@@ -14,6 +14,13 @@ import { miniMap } from "./bodymap.js";
 import { viewDay, swapSheet, addSheet, exName, dayChanges, changedOn, rangeFor, rangeText, weightLine, workoutRunning } from "../planview.js";
 import { withSets, setsForSlot, MIN_SETS, MAX_SETS } from "../engine/planedits.js";
 import { weightStepFor, validRange } from "../engine/workout.js";
+import { pageFor } from "../engine/planpage.js";
+import { today } from "../clock.js";
+
+// The Change sheet's week line (0.7.1): "This week" only when the picked week is this week.
+export function doseWeekWords(n, week, thisWeek) {
+  return week === thisWeek ? `This week: ${n} sets (the week ${week} rule).` : `In week ${week}: ${n} sets.`;
+}
 
 const dayName = (day) => days[day].name;
 const clone = (x) => JSON.parse(JSON.stringify(x));
@@ -249,7 +256,8 @@ export function openDoseSheet(day, week, slotName) {
   const unit = hold ? "s" : "reps";
 
   const weekLine = h("p", { class: "small muted" });
-  const showWeek = () => { weekLine.textContent = `This week: ${setsForSlot(week, { ...slot, sets: draft.sets }, day)} sets (the week ${week} rule).`; };
+  const thisWeek = pageFor(doc.block.start_monday, today()).week;
+  const showWeek = () => { weekLine.textContent = doseWeekWords(setsForSlot(week, { ...slot, sets: draft.sets }, day), week, thisWeek); };
   showWeek();
   const rangeNote = h("p", { class: "small muted" });
   const showRange = () => {

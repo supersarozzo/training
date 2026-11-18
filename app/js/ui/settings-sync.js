@@ -10,6 +10,8 @@ import { FOOD_MESSAGES, foodStatusText } from "../sync/foodsync.js";
 
 // A damaged or too-new food box must never stop Settings from drawing (wave 3 F2): it then counts as "nothing new".
 const foodUnsynced = () => { try { return syncer.food.hasUnsynced(); } catch { return false; } };
+// Next to the workout line, the food line always says it is about food ("Saved on phone…" alone would be unclear).
+export const foodWords = (t) => (/^Food\b/.test(t) ? t : `Food: ${t}`);
 import { today } from "../clock.js";
 
 let draft = null; // { owner, repo, token, expires } while the form is open
@@ -101,7 +103,7 @@ export function syncCard() {
     h("h2", {}, "GitHub sync"),
     h("p", { class: busy || (device.last_sync_result && device.last_sync_result !== "ok") ? "status-warning" : "muted", role: "status" }, busy ? "Working…" : statusText(device, unsynced, "settings")),
     // Food has its own line (0.7.1), as on the Diet tab, so a failed food.json never hides behind "Synced".
-    !busy && connectionOf(device) ? h("p", { class: device.food_last_sync_result && device.food_last_sync_result !== "ok" ? "small status-warning" : "small muted" }, foodStatusText(device, foodUnsynced(), "settings")) : null,
+    !busy && connectionOf(device) ? h("p", { class: device.food_last_sync_result && device.food_last_sync_result !== "ok" ? "small status-warning" : "small muted" }, foodWords(foodStatusText(device, foodUnsynced(), "settings"))) : null,
     ends ? h("p", { class: "status-warning" }, ends.days < 0 ? `The GitHub key ended on ${ends.date}. Make a new one.` : `The GitHub key ends on ${ends.date}.`) : null,
     h("p", { class: "small muted" }, "Your data syncs to your private GitHub repo when you save a workout and when you open the app. It can not sync while the app is closed."),
     connectionFields(),
