@@ -155,17 +155,21 @@ test("the shoulder rule covers exactly the exercises whose entry lists shoulders
 
 test("the check catches a planted wrong muscle (the test can fail)", () => {
   const { exerciseMuscles } = mod();
-  const saved = exerciseMuscles.leg_press;
+  // Planted on exercises that match free-exercise-db exactly, so each planted change is the only difference.
+  // (Until 2026-11-18 this used leg_press; the trainer's muscle fixes made leg_press an own reading, see below.)
+  const saved = exerciseMuscles.leg_extension;
   const savedChest = exerciseMuscles.chest_press;
   try {
-    exerciseMuscles.leg_press = { ...saved, main: ["hamstrings"] };
-    assert.ok(differences("leg_press").length > 0);
-    exerciseMuscles.leg_press = { ...saved, helpers: saved.helpers.filter((m) => m !== "calves") };
-    assert.ok(differences("leg_press").length > 0);
-    exerciseMuscles.chest_press = { ...exerciseMuscles.chest_press, helpers: ["side_delts", "triceps"] };
+    assert.deepEqual(differences("leg_extension"), []);
+    assert.deepEqual(differences("chest_press"), []);
+    exerciseMuscles.leg_extension = { ...saved, main: ["hamstrings"] };
+    assert.ok(differences("leg_extension").length > 0);
+    exerciseMuscles.chest_press = { ...savedChest, helpers: savedChest.helpers.filter((m) => m !== "triceps") };
+    assert.ok(differences("chest_press").length > 0);
+    exerciseMuscles.chest_press = { ...savedChest, helpers: ["side_delts", "triceps"] };
     assert.ok(differences("chest_press").some((d) => d.includes("rule says front_delts")));
   } finally {
-    exerciseMuscles.leg_press = saved;
+    exerciseMuscles.leg_extension = saved;
     exerciseMuscles.chest_press = savedChest;
   }
 });
@@ -192,4 +196,36 @@ test("the body drawing: licence files kept, every muscle we use can be drawn", (
   const drawn = new Set(parts.map(([id]) => partMuscle(id)).filter(Boolean));
   for (const e of Object.values(exerciseMuscles)) for (const m of [...e.main, ...e.helpers]) assert.ok(drawn.has(m), `${m} has a shape`);
   for (const part of ["front_delts", "side_delts", "rear_delts", "lats", "mid_back"]) assert.ok(drawn.has(part), `${part} is drawn on its own`);
+});
+
+// Trainer decisions M1 to M9 (docs/plan/2026-11-18-trainer-decisions.md), from the muscle-map check
+// (docs/research/2026-11-18-muscle-map-check.md): each fix is backed by at least 2 sources that agree.
+const TRAINER_FIXES_2026_11_18 = {
+  leg_press: { main: ["quads"], helpers: ["glutes", "adductors"] },
+  goblet_squat: { main: ["quads"], helpers: ["glutes", "adductors", "calves"] },
+  smith_squat: { main: ["quads"], helpers: ["glutes", "adductors", "calves", "lower_back"] },
+  hip_thrust: { main: ["glutes"], helpers: ["hamstrings"] },
+  db_glute_bridge: { main: ["glutes"], helpers: ["hamstrings"] },
+  one_arm_db_row: { main: ["lats", "mid_back"], helpers: ["biceps", "rear_delts"] },
+  seated_cable_row: { main: ["lats", "mid_back"], helpers: ["biceps", "rear_delts"] },
+  seated_row_machine: { main: ["lats", "mid_back"], helpers: ["biceps", "rear_delts"] },
+  hammer_curl: { main: ["biceps"], helpers: ["forearms"] },
+  cable_curl: { main: ["biceps"], helpers: ["forearms"] },
+  side_plank: { main: ["abs"], helpers: ["glutes"] },
+  cable_lateral_raise: { main: ["side_delts"], helpers: [] },
+  rear_delt_raise: { main: ["rear_delts"], helpers: ["mid_back"] },
+  shoulder_press_machine: { main: ["front_delts"], helpers: ["triceps", "side_delts"] },
+  seated_db_shoulder_press: { main: ["front_delts"], helpers: ["triceps", "side_delts"] },
+};
+
+test("trainer muscle fixes 2026-11-18: the 15 exercises have the decided main muscles and helpers, each with a reason", () => {
+  const { exerciseMuscles } = mod();
+  for (const [id, want] of Object.entries(TRAINER_FIXES_2026_11_18)) {
+    assert.deepEqual(exerciseMuscles[id].main, want.main, `${id} main`);
+    assert.deepEqual(exerciseMuscles[id].helpers, want.helpers, `${id} helpers`);
+    assert.ok(exerciseMuscles[id].own?.reason, `${id} differs from free-exercise-db, so it carries its reason`);
+  }
+  // No calves where the ankle does not move; no hamstrings as helpers of squats or the leg press.
+  for (const id of ["leg_press", "hip_thrust", "db_glute_bridge"]) assert.ok(!exerciseMuscles[id].helpers.includes("calves"), id);
+  for (const id of ["leg_press", "goblet_squat", "smith_squat"]) assert.ok(!exerciseMuscles[id].helpers.includes("hamstrings"), id);
 });
