@@ -41,3 +41,13 @@ test("C1-1 the Settings sync card shows the food status line", () => {
   assert.match(t, /foodStatusText\(device, foodUnsynced\(\), "settings"\)/);
   assert.match(t, /const foodUnsynced = \(\) => \{ try \{ return syncer\.food\.hasUnsynced\(\); \} catch \{ return false; \} \};/);
 });
+
+// A3, second place (found in the 0.7.1 screen check): the Plan's Change sheet said "This week: 3 sets (the week 8
+// rule)." while week 8 was picked and this week was week 2.
+test("A3-2 the Change sheet names the picked week when it is not this week", async () => {
+  const planedit = await import("../app/js/ui/planedit.js");
+  assert.equal(planedit.doseWeekWords(3, 8, 2), "In week 8: 3 sets.");
+  assert.equal(planedit.doseWeekWords(3, 2, 2), "This week: 3 sets (the week 2 rule).");
+  const t = readFileSync(new URL("../app/js/ui/planedit.js", import.meta.url), "utf8");
+  assert.match(t, /doseWeekWords\(setsForSlot\(week, \{ \.\.\.slot, sets: draft\.sets \}, day\), week, thisWeek\)/);
+});
