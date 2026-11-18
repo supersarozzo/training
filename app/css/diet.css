@@ -1,0 +1,105 @@
+/* The Diet tab and its sheets (worker 8.38, build step 7). Colours only through the tokens in app.css, so light and
+   dark follow the theme. The one exception: the scanner overlay (.scan) is dark in both looks, as in the approved
+   mock-up, so it uses plain white and black for the camera view only. Motion follows the app rule (app.css). */
+
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* rings */
+.tot .rings { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); text-align: center; }
+.dring { display: grid; justify-items: center; gap: var(--s2); }
+.dring-wrap { position: relative; width: 132px; height: 132px; }
+.dring-wrap svg { width: 132px; height: 132px; display: block; }
+.dring .arc { filter: var(--glow); transition: stroke-dasharray 260ms linear; }
+.dring.kcal .arc { opacity: .75; }
+.dring-in { position: absolute; inset: 0; display: grid; place-content: center; gap: 0; }
+.dring-in .eyebrow { font-size: 11px; margin: 0; }
+.dring-in b { font: 800 30px/1.05 var(--font-display); letter-spacing: -.03em; }
+.dring-in small { font-size: 12px; }
+.dring-words { color: var(--accent-text); }
+.tot-line { margin: var(--s3) 0 var(--s1); }
+.tot .center { margin-bottom: var(--s1); }
+
+/* the four ways */
+.ways { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s2); margin: var(--s3) 0; }
+.way {
+  min-height: 72px; padding: var(--s2) 2px; display: grid; justify-items: center; align-content: center; gap: 3px; text-align: center;
+  background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: var(--r-button);
+  box-shadow: var(--shadow-card); font: 700 13px/1.15 var(--font); cursor: pointer;
+}
+.way svg { color: var(--accent-text); }
+.way small { font-size: 12px; font-weight: 600; }
+.way:active { transform: scale(.96); }
+.way[disabled] { color: var(--text-muted); cursor: default; transform: none; box-shadow: none; }
+.way[disabled] svg { color: var(--text-muted); }
+
+/* food rows */
+.fl {
+  display: flex; align-items: center; gap: var(--s3); width: 100%; min-height: var(--tap-main); padding: var(--s2) 0;
+  background: none; border: 0; border-bottom: 1px solid var(--border-default); color: var(--text-primary);
+  font: inherit; text-align: left; cursor: pointer;
+}
+.fl:last-child { border-bottom: 0; }
+.fl:active { background: var(--accent-soft); }
+.fl[disabled] { color: var(--text-muted); }
+.fl .nm { flex: 1; min-width: 0; }
+.fl .nm b { display: block; font-size: 16px; }
+.fl .nm small { display: block; font-size: 14px; }
+.fl .kc { text-align: right; font-variant-numeric: tabular-nums; }
+.fl .kc b { display: block; font-size: 17px; }
+.fl .kc small { font-size: 13px; }
+.chip.had { min-height: 0; padding: 2px 8px; font-size: 12px; margin: 0; }
+.card.meal { padding-top: var(--s3); padding-bottom: var(--s2); }
+.mealh { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s2); font-weight: 800; font-size: 17px; padding-bottom: var(--s1); }
+.mealh small { font-weight: 500; font-size: 14px; text-align: right; }
+.card > h2 { font-size: 19px; }
+
+/* bottom bar: Your foods and Scan side by side */
+.diet-bar { display: flex; gap: var(--s2); }
+.diet-bar .button { flex: 1; margin: 0; }
+.diet-bar .button + .button { margin-top: 0; }
+
+/* foot */
+.diet-foot { margin-top: var(--s5); }
+.credit { margin-top: var(--s3); }
+.credit a { color: var(--accent-text); }
+
+/* sheets */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--s3); }
+.meals { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s2); margin: var(--s2) 0 var(--s4); }
+.meals .pick { font-size: 14px; min-height: 48px; }
+.sheet h3 { margin-top: var(--s4); }
+.pack-line { margin-top: calc(var(--s2) * -1); }
+.okline { color: var(--status-success); font-weight: 700; font-size: 15px; }
+.warnbox { border: 1.5px solid var(--status-warning); border-radius: var(--r-input); padding: var(--s2) var(--s3); font-size: 15px; }
+.warnbox p { margin: var(--s1) 0; }
+.warnbox svg { vertical-align: -3px; color: var(--status-warning); }
+.check-result { margin: var(--s2) 0 var(--s3); min-height: 24px; }
+.searchbar { display: flex; gap: var(--s2); align-items: center; margin-bottom: var(--s2); }
+.searchbar input { flex: 1; min-width: 0; }
+.searchbar .button.search-btn { width: auto; min-height: 52px; padding: 0 var(--s4); font-size: 16px; }
+.lookup-wait:empty { display: none; }
+.undo-toast { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); padding-top: var(--s1); padding-bottom: var(--s1); border-color: var(--accent); }
+.undo-toast .text-button { display: inline-flex; align-items: center; gap: 4px; flex: none; }
+
+/* scanner: dark in both looks (camera view). Plain white and black only here. */
+.scan { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; background: #050608; color: #fff; }
+.scan-head { display: flex; align-items: center; justify-content: space-between; padding: calc(var(--s4) + env(safe-area-inset-top)) var(--s4) var(--s3); }
+.scan-head b { font-size: 17px; }
+.scan-gap { width: 92px; }
+.scan-x { display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap-min); padding: 0 var(--s4); border-radius: var(--r-chip); background: none; color: #fff; border: 1px solid rgba(255, 255, 255, .35); font: 700 16px var(--font); cursor: pointer; }
+.scan-cam { position: relative; flex: 0 0 auto; height: 38vh; min-height: 200px; max-height: 360px; margin: 0 var(--s4); border-radius: var(--r-card); overflow: hidden; background: #16110e; }
+.scan-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.scan-frame { position: absolute; left: 12%; right: 12%; top: 28%; bottom: 28%; border: 3px solid var(--volt); border-radius: 16px; pointer-events: none; }
+.scan-laser { position: absolute; left: 16%; right: 16%; top: 50%; height: 2px; background: var(--volt); box-shadow: 0 0 12px var(--volt); animation: scan-sweep 1.8s ease-in-out infinite alternate; }
+@keyframes scan-sweep { from { transform: translateY(-40px); } to { transform: translateY(40px); } }
+html[data-motion="off"] .scan-laser { animation: none; }
+@media (prefers-reduced-motion: reduce) { .scan-laser { animation: none; } }
+.scan-low { flex: 1; background: var(--bg-surface); color: var(--text-primary); margin-top: var(--s4); border-radius: var(--r-hero) var(--r-hero) 0 0; padding: var(--s4) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom)); display: grid; gap: var(--s3); align-content: start; }
+.scan-low .button { margin: 0; }
+.scan-msg { margin: 0; font-weight: 600; min-height: 48px; }
+.scan-file { display: none; }
+
+/* backup buttons at the foot (quiet) */
+.backup-row { display: grid; gap: var(--s2); margin-top: var(--s3); }
+.backup-row .button { min-height: var(--tap-min); font-size: 15px; margin: 0; }
+.diet-foot { padding-bottom: calc(var(--tap-main) + var(--s6)); }

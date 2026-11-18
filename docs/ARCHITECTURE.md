@@ -117,9 +117,22 @@ app/
     engine/trend.js      7-day trend, weekly summary
     sync/github.js       GET and PUT calls only
     sync/merge.js        pure merge of two documents
-    sync/sync.js         one sync at a time, retries
+    sync/docsync.js      the one sync flow for any synced file (one sync at a time, retries); used by sync.js and foodsync.js
+    sync/sync.js         progress.json: its messages, connection, key handling; createSyncer = docsync with the progress kind
+    sync/foodsync.js     food.json: same repo and key, its own sync state (food_last_*) and phone box (build step 6)
+    sync/both.js         the page's syncer: progress.json, then food.json; same shape as one syncer
     sync/fake-github.js  in-browser fake (localhost only; tests/fake-github.mjs re-exports it)
-    syncer.js            the page's one syncer (picks the fake with ?fake-github=1 on localhost)
+    syncer.js            the page's one syncer (both files; picks the fakes with ?fake-github=1 on localhost)
+    food/foodvalidate.js checks a food document (phone box or food.json) before use
+    food/foodmerge.js    pure merge of two food documents (same pick as merge.js)
+    food/foodstore.js    the food box trn.food.v1 (+ trn.foodprev.v1), apart from the workout box
+    food/foodmodel.js    create / change / delete food records; saves at once
+    food/foodmath.js     pure: numbers for a portion, totals, meals, recent foods, 7-day average, the check step's warnings
+    food/barcode.js      pure: check digit, clean barcode, fb-<barcode> ids
+    food/off.js          Open Food Facts lookup and UK search (only the barcode or the word is sent)
+    food/scanner.js      the camera scanner around zxing-wasm (loaded only when it opens)
+    diet/                the Diet tab screens (build step 7): diet.js, sheets.js, scan.js, foodapp.js (the page's food model)
+    vendor/zxing-wasm/   the zxing-wasm 3.1.7 reader build, byte for byte, with its licences (CHANGES.md says what and why)
     autosync.js          when sync runs by itself (open, front, signal back; never in a workout)
     backup.js            make the backup file (data only, never the key), download it
     (restore itself is model.restore: check, then merge)
@@ -145,7 +158,7 @@ tests/
 - Pure modules (`engine/*`, `sync/merge.js`, `ids.js`, `nutrition`) never touch the page, storage or network. They take data and return data. They get unit tests.
 - Screens never write storage directly. They call `model.js`, which stamps `updated_at` and saves at once.
 - **Never put data into `innerHTML`.** Build elements with `h()` and set text with `textContent`. The synced file is untrusted data: a note could contain HTML or script.
-- One Content Security Policy line in `index.html`: scripts and styles only from our own site, network only to our site and `https://api.github.com`, no inline scripts (`default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://api.github.com; object-src 'none'; base-uri 'none'; form-action 'none'`).
+- One Content Security Policy line in `index.html`: scripts and styles only from our own site, network only to our site, `https://api.github.com` and (since 0.7.0, the Diet tab) `https://world.openfoodfacts.org`, no inline scripts. WebAssembly is allowed for the barcode reader (`'wasm-unsafe-eval'` allows WebAssembly only, never JavaScript `eval`): `default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://api.github.com https://world.openfoodfacts.org; object-src 'none'; base-uri 'none'; form-action 'none'`. `tests/barcode.test.mjs` B14 checks the whole line.
 - Test values in tests and fixtures are made up. Never Rosario's numbers.
 
 **Publishing:** GitHub Pages can only publish the repo root or a `docs/` folder from a branch, and `docs/` is taken by the project docs. So a small official workflow (`actions/upload-pages-artifact` + `actions/deploy-pages`, free for public repos) publishes only `app/`. No build happens in it; it copies the folder. The site address will be `https://<account>.github.io/training/`. All paths in the app are relative, so this address works.
@@ -226,6 +239,37 @@ One JSON document holds everything that syncs. It has the same shape on the phon
 **`plan_days`** (added 2026-11-18, build step 3, same format 1): saved Plan edits, "forever" for that day of the plan (answer 65). One record per edited day holds the whole day: `{ id: "p-plan-v2-<day>", updated_at, plan_id: "plan-v2", day, slots: [{ slot, ex, sets, rest }], changes?: [{ at, what, slot, from, to }] }`; `sets` are the base sets, the week rule is applied when read. The fixed id means two phones make the same record, so it merges as one unit (later `updated_at` wins). "Back to the plan's day" is a tombstone that keeps the fields; the day then falls back to `plan/plan-v2.js`, which is never edited. Rules live in `engine/planedits.js`: slot names `A1`-`C2`, `Abs1`, `Abs2`, `D`, and `E1`, `E2` for added exercises (at the end, on their own, 3 sets, 60 s rest, at most 2 a day, answer 72 a; E follows the D week rule and is skipped on the short day); every exercise from the catalogue, never twice in a day; sets 1 to 5; rest null or 30/45/60/75/90/120. `validate.js` checks only the record itself (optional list like `gym_spots`): a record this app cannot use (for example from a newer app) is kept and synced, never dropped, but not used: the day shows the plan and the engine says `newerVersion: true`. The engine reads an edit through an optional last argument: `daySlots(day, week, edit)`, `shortDaySlots(day, week, edit)`, `planForDay(day, week, kind, edit)` (`edit` = the day's record, `planedits.findPlanDay(doc, day)`); without it they behave exactly as before. Model calls: `effectivePlanDay`, `swapPlanSlot`, `removePlanSlot`, `addPlanSlot`, `savePlanDay` (Undo), `resetPlanDay`; they refuse a duplicate, a third added exercise and edits over a newer app's record. Past and running workouts never change: `startSession` stores `planned_sets` and `planned_rest` on each exercise record, and `schedule.planForSession(session)` rebuilds a started workout from the workout itself (older workouts without them read their place in the plan; a place the plan no longer has, like `Abs2`, never throws).
 
 All `0` and `"…"` above are placeholders, not real values. Body weight is always stored in kg; stones and pounds are only for display.
+
+### 4.2b The `food.json` shape (build step 6, app 0.7.0, answer 78 a)
+
+Food lives in its **own document**: on the phone in its own box `trn.food.v1` (safety copy `trn.foodprev.v1`), in the private repo in its own file `food.json`. Never inside `progress.json` (research 9.4: food would fill the 800 KB warning in months), and a food problem never touches the workout log.
+
+```json
+{
+  "format": 1,
+  "app": "training-food",
+  "foods": [ {
+    "id": "fb-5000000000012", "updated_at": "…",
+    "name": "…", "brand": "…", "barcode": "5000000000012",
+    "per100g": { "kcal": 0, "protein_g": 0, "carbs_g": 0, "fat_g": 0 },
+    "serving_g": 0, "serving_label": "…", "last_amount_g": 0,
+    "fav": false, "source": "off | own", "off_fetched_at": "…", "edited": false } ],
+  "food_log": [ {
+    "id": "f-20261118-k3f9qz", "updated_at": "…",
+    "date": "2026-11-18", "meal": "breakfast | lunch | dinner | snack | null",
+    "food": "fb-… | fo-… | null", "name": "…",
+    "amount_g": 0, "servings": null,
+    "kcal": 0, "protein_g": 0, "carbs_g": 0, "fat_g": 0,
+    "per100g": { "kcal": 0, "protein_g": 0, "carbs_g": 0, "fat_g": 0 },
+    "source": "off | own | quick" } ]
+}
+```
+
+- **Ids:** a barcode food is `fb-<barcode>` (the barcode passes its check digit; UPC-A is kept in its 13-digit form), so a scan on two phones makes ONE record; an own food is `fo-<yyyymmdd>-<6>`; an entry is `f-<yyyymmdd>-<6>`.
+- **Numbers are worked out once** when a food is logged and stored in the entry (kcal whole, grams to 0.1), with a copy of the numbers per 100 g so the portion can be changed later. A later fix of a saved food never changes a day already logged. A quick add has no amount and no numbers per 100 g; its carbs and fat may be `null`.
+- **No counters** ("used 12 times"): two phones would lose one. "Log again" and "had today" come from `food_log`.
+- **Checks** (`food/foodvalidate.js`): text up to 200 letters (the model cuts names to 120), kcal per 100 g 0 to 900, each macro per 100 g 0 to 100, an entry's kcal 0 to 20000, barcode 8 to 14 digits, dates and meals from fixed lists. A tombstone needs only `id` and `updated_at`. Unknown fields are kept; `token` and `device` are dropped; a newer `format` says "Update the app first".
+- **Model** (`food/foodmodel.js`): `saveFood`, `saveAndLog` (the check step's one button: save the food and log the portion in one save), `logAgain` (last portion, else the serving, else 100 g), `quickAdd`, `updateEntry`, `removeEntry` / `undoRemove` (tombstone; undo is a newer edit), `copyDay` / `undoCopy`, `removeFood`, `setFav`. Each loads, changes and saves at once, like a set.
 
 ### 4.3 Device-only data (never synced, never in a backup)
 
@@ -310,6 +354,20 @@ Rules:
 - Never in the background: iPhone web apps cannot run code when closed (research, section 4). The PRD and the Today screen say so honestly.
 - During a workout, auto sync waits until Finish (no network work while timers run), except the buttons.
 
+### 5.4b Food sync: `food.json` (build step 6, delicate)
+
+- **Same flow, one code path.** `sync/docsync.js` holds the flow of 5.2 for any file. `sync/sync.js` gives it the progress "kind" (messages, `validate.js`, `merge.js`, the workout box); `sync/foodsync.js` gives it the food kind (`foodvalidate.js`, `foodmerge.js`, the food box). So `food.json` has exactly the same rules: one sync at a time, edits during a sync kept, never PUT over a file it cannot read, never PUT what it could not read back, 409/422 retry up to 3 times, `cache: "no-store"`, last sync time = the start time.
+- **Same repo, branch and key; file `food.json`.** Its sync state has its own names in the device box: `food_last_sha`, `food_last_sync_at`, `food_last_sync_result`, `food_last_sync_attempt_at`. "Forget GitHub key" and a new connection clear them too.
+- **Both files in turn** (`sync/both.js`): every sync (open, front, signal back, Finish, the Settings buttons) runs progress.json first, then food.json. The result is the workout result (the status lines on Today and in Settings stay about the workout log) with the food result in `food`. A damaged `food.json` never stops or changes the workout sync, and a damaged `progress.json` never stops the food sync. When the problem is the connection itself (no signal, wrong key, no access, rate limit, not set up), the food call is skipped. The Diet tab shows the food line ("Food synced …" or the food problem in words).
+- **Merge:** `food/foodmerge.js` uses the same `pick` as `merge.js` (later `updated_at`, then the tombstone, then the JSON text), lists by id, sorted.
+- **Not before there is food:** a phone with no food never creates `food.json`.
+- **Tests:** `tests/food-sync.test.mjs` (25 tests against the pretend GitHub, with one pretend repo holding both files) and `tests/food-data.test.mjs`. In the browser, `?fake-github=1` on localhost gives the food file its own pretend GitHub (`trn.fake.food.v1`).
+
+### 5.4c Open Food Facts and the barcode reader (build steps 7 and 8, delicate)
+
+- **Open Food Facts** (`food/off.js`): `GET https://world.openfoodfacts.org/api/v3/product/<barcode>?fields=…&app_name=TrainingApp&app_version=<version>` and the UK-only name search `GET /cgi/search.pl?search_terms=<word>&…&tagtype_0=countries&tag_contains_0=contains&tag_0=en:united-kingdom` (checked on 2026-11-18: 5 of 5 results for "skyr" were UK products). Only the barcode or the word is sent; `credentials: "omit"`, `referrerPolicy: "no-referrer"`, no headers (no pre-flight, no key). 20 s limit ("Open Food Facts did not answer"); at most 10 lookups and 8 searches a minute (their limits: 15 and 10). The check digit is tested before any lookup. Their text is cleaned (control and direction letters out) and cut to 120 letters, every number is range-checked (a bad one becomes empty and the check step asks for it; kJ becomes kcal when kcal is missing), and only our fields are kept. The page shows their text with `h()` / text nodes only. Every sheet with their data shows the ODbL credit line.
+- **Barcode reader:** zxing-wasm 3.1.7, reader build, copied byte for byte into `app/vendor/zxing-wasm/` (npm integrity and the `.wasm` SHA-256 checked by a test), with its MIT licence, the Apache licences of zxing-cpp and NOTICE. `food/scanner.js` loads it only when the scanner opens and calls `prepareZXingModule` with `locateFile` pointed at our own `.wasm` (the library's default is jsDelivr; the CSP would block it too). It reads EAN-13, EAN-8 and UPC-A, one code at a time, from the middle band of the video. The video plays inline and muted. A good code stops every camera track before it is passed on; a misread keeps the camera open. The scanner is an overlay on the Diet route (the hash never changes while the camera runs), and the camera is also stopped on Close, on a route change (`main.js` stops it first in `render()`), on `pagehide` and when the app goes to the back. A test reads a drawn EAN-13 with the real copied files in Node.
+
 ### 5.5 Token on the phone (delicate)
 
 - **Kind:** fine-grained personal access token, only the repo `training-data`, only "Contents: Read and write", expires after 1 year (Rosario's choice 42 b).
@@ -333,6 +391,7 @@ Rules:
 - `sw.js` keeps a cache named `training-<APP_VERSION>` with a fixed list of every app file. **Cache first** for app files; **network only, never cached** for `api.github.com`.
 - On a new version: the new service worker installs and waits. The app shows **"New version ready · Update"**, but only on the Today, Settings or progress screens, never during a workout. Tapping Update tells the worker to take over, then reloads. Old caches are deleted.
 - `APP_VERSION` lives in `js/version.js` and at the top of `sw.js`. A unit test checks that both match and that every file in `app/` is in the cache list.
+- Since 0.7.0 the list also holds the zxing-wasm reader (about 1 MB: the `.wasm` is 946,598 bytes), so the scanner works offline after the first open.
 - Since 0.4.0 (redesign) the list has 164 files, including every photo in `app/media/` (about 5.4 MB of the 5.9 MB app), so the photos work offline. The first open downloads all of it once (Rosario's question 59 a: keep the sharp photos).
 - Exercise videos are plain links to YouTube that open outside the app; nothing from YouTube loads in the page, so the CSP line is unchanged.
 - The data lives in localStorage, not in the cache, so an update never touches it.
@@ -383,6 +442,8 @@ Reviewed on 2026-11-16 (build step 11): every item passes, some after fixes. Fin
 4. **Data loss on the phone** (`store.js`, `model.js`): save on every set; quota errors; migrations with a `prev` copy; resume after close; restore merges, never replaces.
 5. **Untrusted data in the page:** no `innerHTML` with data anywhere; the synced file and backup files are checked before use.
 6. **Body data never in the public repo:** fixtures made up; no personal numbers in code, comments or docs.
+7. **Food data and food sync** (build step 6, 0.7.0): `food/*` and `sync/docsync.js`, `foodsync.js`, `both.js`: food saved at once, its own box and file, the same sync rules as 5.2, a food problem never touches `progress.json`.
+8. **Open Food Facts and the barcode reader** (build steps 7 and 8, 0.7.0): only the barcode or word leaves the phone; their text only as text, cut to 120 letters, numbers range-checked; the reader from our own site with its licences; the camera always stopped. Wave 3 check record: [checks/2026-11-18-wave3.md](checks/2026-11-18-wave3.md).
 
 ---
 

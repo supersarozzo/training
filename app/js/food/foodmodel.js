@@ -3,7 +3,8 @@
 // Text is cleaned and cut to 120 letters; numbers are range-checked, so the phone never holds what
 // foodvalidate.js would refuse later.
 import { nowUtc, newId } from "../ids.js";
-import { MEALS } from "./foodvalidate.js";
+import { MEALS, validateFoodDoc } from "./foodvalidate.js";
+import { mergeFoodDocs, hasFoodData } from "./foodmerge.js";
 import { cleanText, numbersFor, againAmount, entriesOn, PER100_MAX } from "./foodmath.js";
 import { normalizeBarcode, foodIdFor } from "./barcode.js";
 
@@ -201,6 +202,22 @@ export function createFoodModel(store, clock = () => new Date()) {
         const set = new Set(ids);
         for (const e of doc.food_log) if (e && set.has(e.id) && e.deleted !== true) Object.assign(e, { deleted: true, deleted_at: t, updated_at: t });
       });
+    },
+
+    // Restore from a food backup file (untrusted data: checked first). An empty food box takes the file as it is;
+    // a box with food MERGES it in with the sync rules, after a safety copy. Nothing on the phone is dropped.
+    restore(raw) {
+      const checked = validateFoodDoc(raw);
+      if (!checked.ok) return { ok: false, error: checked.error };
+      let current;
+      try { current = store.load(); } catch (e) { return { ok: false, error: e && e.message ? e.message : "The food data on this phone could not be read. Nothing was changed." }; }
+      const merging = hasFoodData(current);
+      const doc = merging ? mergeFoodDocs(current, checked.doc) : checked.doc;
+      try {
+        store.savePrev();
+        store.save(doc);
+      } catch (e) { return { ok: false, error: e && e.message ? e.message : "Could not save. Nothing was changed." }; }
+      return { ok: true, merged: merging, count: doc.food_log.filter((r) => r.deleted !== true).length };
     },
 
     removeFood(id) {

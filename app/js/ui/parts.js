@@ -5,10 +5,9 @@ import { beep } from "../sound.js";
 import { icon } from "./icons.js";
 import { bump, reduced } from "./motion.js";
 
-// Tab order of answers 67 a and 68 a: Today · Plan · Gym · Diet · Progress. Diet comes with build step 7; until then the
-// bar has 4 tabs. Settings is not a tab: since 0.6.0 it is a "Settings" button in words at the top right of Progress
+// Tab order of answers 67 a and 68 a: Today · Plan · Gym · Diet · Progress (Diet came with build step 7). Settings is not a tab: since 0.6.0 it is a "Settings" button in words at the top right of Progress
 // (settingsButton). Rosario read the gear icon as a brightness button that does nothing, so it left Today, Plan and Gym.
-const TABS = [["today", "Today"], ["plan", "Plan"], ["gym", "Gym"], ["progress", "Progress"]];
+const TABS = [["today", "Today"], ["plan", "Plan"], ["gym", "Gym"], ["diet", "Diet"], ["progress", "Progress"]];
 
 export function tabBar(active) {
   return h("nav", { class: "bar", "aria-label": "Main" },

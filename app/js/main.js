@@ -1,4 +1,4 @@
-// Start-up and router. Hash routes: #/today, #/plan, #/gym, #/progress (tabs), #/settings (the gear; tab bar shown),
+// Start-up and router. Hash routes: #/today, #/plan, #/gym, #/diet, #/progress (tabs), #/settings (the gear; tab bar shown),
 // and #/setup, #/intake, #/targets (the first-start flow, no tabs).
 import { mount, h } from "./h.js";
 import { renderToday } from "./ui/today.js";
@@ -24,9 +24,11 @@ import { getActive } from "./active.js";
 import { watchStoreErrors } from "./errors.js";
 import { resetSyncDraft } from "./ui/settings-sync.js";
 import { renderGym } from "./ui/machines.js";
+import { renderDiet } from "./diet/diet.js";
+import { stopScanner } from "./diet/scan.js";
 import { applyTheme, applyMotion } from "./ui/theme.js";
 
-const tabRoutes = { today: renderToday, progress: renderProgress, plan: renderPlan, gym: renderGym, settings: renderSettings };
+const tabRoutes = { today: renderToday, progress: renderProgress, plan: renderPlan, gym: renderGym, diet: renderDiet, settings: renderSettings };
 const flowRoutes = { setup: renderSetup, intake: renderIntake, targets: renderTargets, workout: renderWorkout, weighin: renderWeighin, weekly: renderWeekly };
 const DEFAULT_ROUTE = "today";
 
@@ -62,6 +64,7 @@ function enter(root) {
 let lastRoute = "";
 function render() {
   const root = document.getElementById("app");
+  stopScanner(); // the camera of the old screen stops first
   clearTickers(); // timers of the old screen stop
   closeSheets();
   try {
@@ -95,4 +98,5 @@ registerWorker();
 // Sync when the app opens, comes to the front, or gets signal back. Never during a workout.
 startAutoSync({ syncer, win: window, inWorkout: () => getActive() !== null });
 // When a sync ends, redraw the quiet screens so the status line is right (never a workout or a form being filled in).
-syncer.subscribe(() => { if (["#/today", "#/settings", "#/progress"].includes(location.hash) || location.hash === "") render(); });
+// The Diet tab redraws after a sync only when no sheet or scanner is open (a redraw closes them: typed text would be lost).
+syncer.subscribe(() => { if (["#/today", "#/settings", "#/progress"].includes(location.hash) || location.hash === "" || (location.hash === "#/diet" && !document.querySelector("[data-sheet], [data-scan]"))) render(); });
