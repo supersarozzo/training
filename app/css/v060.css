@@ -1,0 +1,3 @@
+/* 0.6.0 screens (worker 8.35, 2026-11-18): Today's day picker, sets/reps/weight in the Plan, weights on the cards,
+   "Stop this exercise here", the Settings button in words. Colours only through the tokens in app.css, so light and
+   dark follow the theme. Kept apart from app.css so the dark-mode fix can change app.css at the same time. */
