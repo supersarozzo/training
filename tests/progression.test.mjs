@@ -123,7 +123,7 @@ test("steps: dumbbell sizes, stacks and the Smith machine (2.5 kg each side)", (
   assert.equal(stepUp(12, "db_curl", settings, 2), 16);
   assert.equal(stepUp(30, "db_curl", settings), 32); // past the list: same gap again
   assert.equal(stepDown(12, "db_curl", settings), 10);
-  assert.equal(stepDown(2, "db_curl", settings), 0);
+  assert.equal(stepDown(2, "db_curl", settings), 2); // trainer D19 (0.7.6): never below the lightest dumbbell (was 0)
   assert.equal(stepUp(60, "chest_press", settings), 65);
   assert.equal(stepUp(60, "chest_press", { stack_step_kg: { default: 5, chest_press: 2.5 } }), 62.5); // per-exercise step
   assert.equal(stepUp(60, "smith_squat", settings), 65);
@@ -132,11 +132,11 @@ test("steps: dumbbell sizes, stacks and the Smith machine (2.5 kg each side)", (
   assert.equal(stepUp(10, "db_curl", {}), 12);
 });
 
-test("lowerBy rounds down to a size the gym has and is always at least one step lower", () => {
+test("lowerBy rounds down to a size the gym has and is always at least one step lower (never below the floor, D19)", () => {
   assert.equal(lowerBy(60, 0.1, "chest_press", settings), 50);
   assert.equal(lowerBy(20, 0.1, "db_curl", settings), 18);
   assert.equal(lowerBy(10, 0.1, "db_curl", settings), 8);
-  assert.equal(lowerBy(5, 0.1, "chest_press", settings), 0);
+  assert.equal(lowerBy(5, 0.1, "chest_press", settings), 5); // trainer D19 (0.7.6): never below one stack step (was 0)
   assert.ok(lowerBy(60, 0.01, "chest_press", settings) < 60); // 1 % still drops one step
 });
 
