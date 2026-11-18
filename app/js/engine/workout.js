@@ -239,14 +239,16 @@ export function lighterFor(newExerciseId, originalWeight, settings) {
   return lowerBy(originalWeight, 0.3, newExerciseId, settings);
 }
 
-// The weight an "It hurts" swap starts at (0.7.1, checker round 2): 30 % under the original's weight (a set done, else
-// its known weight); null when the new exercise has its own history. When the original only had a first-try number
-// (nothing logged, trainer D12), the new exercise's own weight is lowered instead, so the swap is never above the
-// trainer's table and still starts lighter.
+// The weight an "It hurts" swap starts at (0.7.1, checker round 2, auditor round 3): null when the new exercise has its
+// own history. With a set done today or a log of the original: 30 % under that weight (the rule since 0.5). With
+// nothing logged (only a first-try number or a Plan weight of the original, which are not in the new exercise's
+// units): 30 % under the new exercise's own weight, never below its first try (its lightest step; D12: never 0).
 export function painSwapStart(newExerciseId, { lastWorkKg, origSugg, newSugg }, settings) {
   if (newSugg?.last) return null;
-  const base = lastWorkKg ?? (origSugg?.action === "first_try" ? newSugg?.weight_kg : origSugg?.weight_kg) ?? 0;
-  return lighterFor(newExerciseId, base, settings);
+  const nothingLogged = lastWorkKg == null && !origSugg?.last;
+  const base = (nothingLogged ? newSugg?.weight_kg : lastWorkKg ?? origSugg?.weight_kg) ?? 0;
+  const kg = lighterFor(newExerciseId, base, settings);
+  return nothingLogged && kg === 0 && newSugg?.weight_kg > 0 ? newSugg.weight_kg : kg;
 }
 
 // The smallest weight step for the + and - buttons.
