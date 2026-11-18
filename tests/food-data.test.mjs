@@ -387,3 +387,45 @@ test("F26 cleanText removes control and direction letters, trims, and cuts witho
   assert.equal(s, "x".repeat(119));
   assert.equal(cleanText("abc", 2), "ab");
 });
+
+// ---------- food backup file and restore (food lives only on the phone until GitHub is set up) ----------
+
+import { makeFoodBackup, foodBackupFilename } from "../app/js/food/foodbackup.js";
+
+test("F27 food backup: its own file name; the food box only, never the key or device data; restore on an empty phone gives the same food", () => {
+  const a = phone();
+  a.model.saveAndLog(OATS, { date: "2026-03-02", meal: "breakfast", amount_g: 40 });
+  a.model.quickAdd({ date: "2026-03-02", meal: "lunch", kcal: 500, protein_g: 30 });
+  a.storage.setItem("trn.device.v1", JSON.stringify({ token: "made-up-key-123", owner: "o" }));
+  assert.equal(foodBackupFilename(new Date(2026, 2, 2)), "training-food-backup-2026-03-02.json");
+  const b = makeFoodBackup(a.store, new Date(2026, 2, 2));
+  assert.equal(b.filename, "training-food-backup-2026-03-02.json");
+  assert.ok(!b.text.includes("made-up-key-123"));
+  assert.equal(b.bytes, new TextEncoder().encode(b.text).length);
+  const fresh = phone();
+  const res = fresh.model.restore(JSON.parse(b.text));
+  assert.equal(res.ok, true);
+  assert.equal(res.merged, false);
+  assert.equal(canonical(fresh.model.doc()), canonical(a.model.doc()));
+});
+
+test("F28 food restore on a phone with food merges (nothing dropped, safety copy first); twice changes nothing; bad files refused", () => {
+  const a = phone();
+  a.model.quickAdd({ date: "2026-03-01", meal: "lunch", kcal: 111, protein_g: 1 });
+  const file = JSON.parse(makeFoodBackup(a.store).text);
+  const b = phone("2026-03-02T10:00:00.000Z");
+  b.model.quickAdd({ date: "2026-03-02", meal: "lunch", kcal: 222, protein_g: 2 });
+  const before = b.storage.getItem(FOOD_KEYS.data);
+  const res = b.model.restore(file);
+  assert.equal(res.ok, true);
+  assert.equal(res.merged, true);
+  assert.equal(b.storage.getItem(FOOD_KEYS.prev), before);
+  assert.deepEqual(b.model.doc().food_log.map((r) => r.kcal).sort(), [111, 222]);
+  const once = canonical(b.model.doc());
+  b.model.restore(file);
+  assert.equal(canonical(b.model.doc()), once);
+  assert.equal(b.model.restore({ format: 1, app: "training", sessions: [] }).ok, false, "a workout backup is not a food backup");
+  assert.equal(b.model.restore({ format: 9, app: FOOD_APP }).ok, false);
+  assert.match(b.model.restore("nope").error, /not a training food file/);
+  assert.equal(canonical(b.model.doc()), once, "a refused file changes nothing");
+});
