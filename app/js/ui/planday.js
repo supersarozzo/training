@@ -123,7 +123,7 @@ export function renderPlan() {
   const isToday = day === page.todayDay && week === page.week;
   const prev = stepDay(day, week, -1);
   const next = stepDay(day, week, 1);
-  const go = (to) => { state.edit = false; state.day = to.day; state.week = to.week === page.week ? null : to.week; rerender(); };
+  const toDay = (to) => { state.edit = false; state.day = to.day; state.week = to.week === page.week ? null : to.week; rerender(); };
   const weekWords = (to) => (to.week === week ? "" : `, week ${to.week}`);
 
   const units = unitsIn(slots).map((u) => [
@@ -166,7 +166,7 @@ export function renderPlan() {
       editCard,
       lockCard,
       newerLine,
-      !edit && view.edited ? changedCard(day, view.record) : null,
+      !edit && view.edited ? changedCard(day, view.record, { canReset: view.canEdit }) : null,
       walkCard(lay.walk.minutes, day),
       units,
       addButton,
@@ -181,7 +181,7 @@ export function renderPlan() {
   const bar = h("div", { class: "bar action-bar day-bar" }, h("div", { class: "bar-inner" }, edit
     ? h("button", { class: "button", type: "button", onclick: () => { state.edit = false; rerender(); } }, icon("check", 22), "Done editing")
     : h("nav", { class: "day-nav", "aria-label": "Other days" },
-      h("button", { class: "button secondary", type: "button", onclick: () => go(prev), "aria-label": `Previous day: ${days[prev.day].name}${weekWords(prev)}` }, icon("back", 20), days[prev.day].name),
-      h("button", { class: "button secondary", type: "button", onclick: () => go(next), "aria-label": `Next day: ${days[next.day].name}${weekWords(next)}` }, days[next.day].name, icon("chevron", 20)))));
+      h("button", { class: "button secondary", type: "button", onclick: () => toDay(prev), "aria-label": `Previous day: ${days[prev.day].name}${weekWords(prev)}` }, icon("back", 20), days[prev.day].name),
+      h("button", { class: "button secondary", type: "button", onclick: () => toDay(next), "aria-label": `Next day: ${days[next.day].name}${weekWords(next)}` }, days[next.day].name, icon("chevron", 20)))));
   return [main, bar];
 }

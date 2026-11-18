@@ -182,6 +182,10 @@ export function openBackToPlan(day) {
   const back = () => {
     let before;
     try {
+      const now = dayState(model.doc(), day, 1);
+      // Read again at the tap: a day saved by a newer app (after a sync) or a day whose workout is running is never reset here.
+      if (now.newerVersion) throw new Error("This day was changed on a newer app version. Update the app to change it.");
+      if (now.locked) throw new Error("Workout running. This day can be changed after the workout ends.");
       before = clone(model.effectivePlanDay(day).slots);
       model.resetPlanDay(day);
     } catch (e) { toast(e.message); return; }
@@ -199,11 +203,11 @@ export function openBackToPlan(day) {
 }
 
 // The "Changed by you · 17 Nov" card (accent border).
-export function changedCard(day, record) {
+export function changedCard(day, record, { canReset = true } = {}) {
   const name = dayName(day);
   const when = changedOn(record);
   return h("div", { class: "card changed-card" },
     h("p", {}, h("b", {}, `Changed by you${when ? ` · ${when}` : ""}`), dayChanges(day, record).map((c) => [h("br"), c.text])),
     h("p", { class: "small muted" }, `Lasts every ${name}. Past workouts are not changed.`),
-    h("button", { class: "text-button back-plan", type: "button", onclick: () => openBackToPlan(day) }, icon("undo", 18), `Back to the plan's ${name}`));
+    canReset ? h("button", { class: "text-button back-plan", type: "button", onclick: () => openBackToPlan(day) }, icon("undo", 18), `Back to the plan's ${name}`) : null);
 }
