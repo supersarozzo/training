@@ -16,6 +16,8 @@ Machines instead of awkward moves (trainer decision D18) and "1 set", built by c
 - **The first weight of a new move comes from the old one.** If you logged the hip thrust, the cable crunch or the
   standing calf raise, the new move starts from that weight, converted by your trainer's table and rounded down. A
   weight you set yourself in the Plan wins.
+  After a break, the old weight is made lighter first, then converted. The first workout of a new move has 2 work
+  sets, then the full sets.
 - **One-tap offers after the first visit.** When the first-visit check in Settings says the gym has a leg curl, lat
   pulldown, seated row, ab crunch or pec deck machine, the Plan day offers it once: **Use it** or **Keep**. The ab crunch
   machine is a new line in the first-visit check.

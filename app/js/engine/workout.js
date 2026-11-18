@@ -186,14 +186,17 @@ export const REPLACED_BY_D18 = Object.freeze({
   weighted_crunch: "cable_crunch",
   calf_raise_leg_press: "calf_raise_standing",
 });
-export function fromReplaced(doc, exerciseId) {
+// After a break (factor < 1) the old weight is lowered first by the break rule, then converted (trainer answer 1 a to
+// 8.42: "Coming back after a break is when too heavy hurts most").
+export function fromReplaced(doc, exerciseId, breakFactor = 1) {
   const oldId = REPLACED_BY_D18[exerciseId];
   const tableNew = firstTryKg[exerciseId];
   const tableOld = firstTryKg[oldId];
   if (!oldId || !(tableNew > 0) || !(tableOld > 0)) return null;
   const old = performances(doc.sessions, oldId)[0];
   if (!old || !(old.weight_kg > 0)) return null;
-  return { weight_kg: gymFloor(old.weight_kg * (tableNew / tableOld), exerciseId, doc.shared_settings), from: oldId };
+  const oldKg = breakFactor < 1 ? weightAfterBreak(old.weight_kg, breakFactor, oldId, doc.shared_settings) : old.weight_kg;
+  return { weight_kg: gymFloor(oldKg * (tableNew / tableOld), exerciseId, doc.shared_settings), from: oldId };
 }
 // From week 2 the find-your-weight steps do not run, so the note says what to do instead (trainer D12 addition, dc59f13).
 export const FIRST_TRY_NOTE_LATER = "First try. Set 1 too easy (4 or more reps left) or too hard? Change the weight one step for the next set.";
@@ -221,7 +224,7 @@ export function suggestFor(doc, exerciseId, ctx) {
     }
     if (ex.step === "bodyweight") return { ...base, weight_kg: 0, action: "unknown", note: "" };
     // Trainer D18 (0.7.5): a new exercise in the place of an old one starts from the old one's logged weight.
-    const conv = fromReplaced(doc, exerciseId);
+    const conv = fromReplaced(doc, exerciseId, ctx.missed?.weightFactor ?? 1);
     if (conv) {
       const from = `From your ${exercises[conv.from].name.toLowerCase()} weight.`;
       return { ...base, weight_kg: conv.weight_kg, action: "first_try", from: conv.from, note: ctx.week > 1 ? `${from} ${FIRST_TRY_NOTE_LATER.replace(/^First try. /, "")}` : `${from} Set 1 tells us if it is right.` };
