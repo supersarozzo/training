@@ -503,6 +503,39 @@ Swap additions on old exercises: `hip_thrust` gets `booty_builder_hip_thrust` fi
 
 **Not verified:** the gym's real machines (the website lists the Booty Builder V8 and the Glute Drive, but not how they are set up); the exact Booty Builder V8 stack numbers (so the first try of 20 is a guess, aimed low); whether the gym's benches go flat for the crunch.
 
+### D19. The lowest weight: never below the smallest step — **new**
+
+Asked by the Training Agent on 2026-11-18, from 8.42's 0.7.5 report. The app sometimes lowers a weight: after a break (plan v2 section 11: about 10 % or 20 % lower), after two bad sessions ("lower10"), after an "It hurts" swap (D15), and in the find-your-weight steps. On a light cable exercise this can reach **0 kg**: for example a 5 kg face pull, 20 % lower, rounds down to 0. For a dumbbell, a step down from the lightest dumbbell can also give 0. A suggestion of 0 kg makes no sense on a weighted exercise, and in the app 0 means "let the app choose".
+
+**My rule:**
+1. **No suggestion for a weighted exercise is ever below its smallest step:**
+   - dumbbells: the lightest dumbbell in Settings › Gym weights (no list: 2 kg);
+   - stacks (machines and cables): one stack step (`stackStep`, fallback 5 kg);
+   - Smith machine and plate-loaded moves (`smith_2x2.5`): 5 kg (2.5 kg each side), the same floor as D12.
+   Bodyweight and timed exercises stay at 0 (no weight), as today.
+2. It applies to every lowering: the break rule, "lower10", the pain swap (D15), and every step down (find-your-weight steps, the minus button's suggestion). In code this means `lowerBy` and `stepDown`, so every caller gets it.
+3. **Already at the floor and a rule asks for less:** keep the weight, and make that workout easier by effort instead. Stop with at least 3 reps left (the week-1 effort), and the card says: "Lightest weight already. Stop with 3 reps left today." After a break of more than 4 weeks, the 2-set week still applies on top (plan v2 section 11).
+4. A weight Rosario sets (a Plan weight or a logged set) is used exactly as set. The floor is only for the app's suggestions.
+
+**Why:**
+- *A break costs little strength.* Strength drops after training stops, and more as the break gets longer (Bosquet 2013, 103 studies). Still, in one study, three 3-week breaks inside 24 weeks gave the same muscle and strength as training without breaks, and gains came back fast on return (Ogasawara 2013). So lowering by more than one step on the lightest weight has no use.
+- *Effort is the other way to make a session easier.* Stopping further from failure lowers fatigue, and adjusting effort to the day works as well as a fixed plan (Hickmott 2022, D10). 3 reps left is the plan's learn-week effort (plan v2 section 5, D3).
+- *A weight that does not exist cannot be used.* The floor equals the smallest step the gym has, the same floors as the first-try rounding (D12) and the pain swap (D15). So one rule covers every case.
+
+Sources (read 2026-11-18): Bosquet et al. 2013, Scand J Med Sci Sports 23(3):e140-e149, training cessation meta-analysis ([abstract record](https://zendy.io/title/10.1111/sms.12047)); Ogasawara et al. 2013, Eur J Appl Physiol, continuous vs periodic training with 3-week breaks ([Springer](https://link.springer.com/article/10.1007/s00421-012-2511-9)); Hickmott et al. 2022 (D10); plan v2 sections 5 and 11; D12 and D15.
+
+**Exact data for the builder:** in `engine/progression.js`, add `minWeight(exerciseId, settings)`: dumbbell → the lightest dumbbell in the list, else 2; stack → `stackStep(exerciseId, settings)`; `smith_2x2.5` → 5; bodyweight → 0. `lowerBy` and `stepDown` return `max(result, minWeight)` for weighted exercises. When a lowering would have gone below the floor (the result equals the floor and is not below the input), the suggestion gets `atFloor: true`; then the workout card uses RIR `max(planned, 3)` and the note above.
+
+**Tests to write first (they fail until the build):**
+1. A cable exercise at 5 kg (stack step 5), break factor 0.8 → 5 kg, `atFloor` true, note shown, stop with 3 reps left.
+2. Dumbbells [2, 4, 6]: from 2 kg, "lower10" → 2 kg. No dumbbell list: from 2 kg → 2 kg.
+3. Smith squat at 5 kg added, break 0.8 → 5 kg.
+4. `stepDown` with n from 1 to 5 never goes below the floor, for every step type.
+5. The pain swap (D15) never returns 0 and never goes below the floor for a weighted exercise.
+6. Above the floor, lowering works as today: a cable at 20 kg (step 5), factor 0.8 → 15 kg, `atFloor` false.
+7. Bodyweight and timed exercises still give 0.
+8. A Plan weight set by Rosario below the floor is shown exactly as set.
+
 ## 5. Changes to your earlier choices
 
 **None.** I kept 74 b and 80-83 exactly:
