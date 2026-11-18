@@ -52,10 +52,11 @@ export function dayState(doc, day, week) {
 
 let toastEl = null;
 let toastTimer = null;
-export function undoToast(text, onUndo, ms = 8000) {
+// `top`: show it at the top, where other messages show (the workout screen, so it never sits near "Undo last set").
+export function undoToast(text, onUndo, ms = 8000, { top = false } = {}) {
   toastEl?.remove();
   clearTimeout(toastTimer);
-  const el = h("div", { class: "toast undo-toast", role: "status" },
+  const el = h("div", { class: top ? "toast undo-toast at-top" : "toast undo-toast", role: "status" },
     h("span", { class: "undo-text" }, text),
     h("button", {
       class: "undo-btn", type: "button",

@@ -14,6 +14,10 @@ The lowest weight (trainer decision D19), safer old versions, and small fixes, b
 - **A newer app's workout no longer breaks this app.** If another phone with a newer app saves a workout with a new
   exercise, this app now leaves that exercise out of its screens instead of failing (the workout stays in your file as
   it is). This works from 0.7.6 on: phones still on 0.7.5 or older must update first, as before.
+- **"Try 20 kg" everywhere.** The Today list and the exercise sheet now use the same words as the Plan card for a
+  first-try weight.
+- **The Undo after "Stop this exercise here" shows at the top** of the workout screen, away from "Undo last set".
+- **Food that did not sync shows on Today.** If the food file could not sync, Today says "Food did not sync. See Diet."
 
 ## 0.7.5 · 2026-11-18
 

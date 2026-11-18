@@ -56,7 +56,7 @@ function askStop(session, entry, ex, doneCount) {
       close();
       model.stopExercise(session.id, entry.slot, true);
       rerender();
-      undoToast(`${ex.name}: stopped after ${doneCount} of ${entry.sets} ${setWord(entry.sets)}.`, () => undoStop(session.id, entry.slot));
+      undoToast(`${ex.name}: stopped after ${doneCount} of ${entry.sets} ${setWord(entry.sets)}.`, () => undoStop(session.id, entry.slot), 8000, { top: true });
     } }, "Yes, move on"),
     h("button", { class: "button secondary", type: "button", onclick: () => close() }, "No, keep going"));
 }

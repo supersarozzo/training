@@ -52,6 +52,15 @@ export function createFoodSyncer({ store, foodStore, getFetch, nowIso = () => ne
   return createDocSyncer({ kind: foodKind(foodStore), device: store, getFetch, nowIso });
 }
 
+// Today's food hint (0.7.6): the workout sync line can say "Synced" while food is stuck. Only when GitHub is set up and
+// the last food sync had a problem; the Diet tab and Settings say which problem.
+export const FOOD_HINT = Object.freeze({ text: "Food did not sync.", link: "See Diet." });
+export function foodHint(device) {
+  if (!connectionOf(device)) return null;
+  const r = device[RESULT];
+  return r && r !== "ok" ? `${FOOD_HINT.text} ${FOOD_HINT.link}` : null;
+}
+
 // A short line for the Diet tab. `unsynced` = food changed after the last good food sync.
 // 0.7.2 (review M4): the same words and order as the workout line (sync.js statusText): a problem, then "not sent
 // yet, will send automatically", then "Food synced 12:25." (today) or "Food synced 18 Nov, 12:25.".

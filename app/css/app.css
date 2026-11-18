@@ -832,6 +832,8 @@ button.pcard:active { transform: scale(.98); }
   top: auto; bottom: calc(var(--tap-main) * 2 + var(--s8) + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: var(--s3);
   background: var(--ink); color: #fff; border: 1px solid rgba(255, 255, 255, .14); animation: undo-in var(--t-normal) var(--ease) both;
 }
+/* 0.7.6: on the workout screen the Undo message shows at the top, as other messages, away from "Undo last set". */
+.toast.undo-toast.at-top { top: calc(var(--s3) + var(--top-clear) + env(safe-area-inset-top)); bottom: auto; }
 .undo-text { flex: 1; min-width: 0; }
 .undo-btn { min-width: var(--tap-min); min-height: var(--tap-min); padding: 0 var(--s2); background: none; border: 0; color: var(--volt); font: 800 16px/1 var(--font); text-decoration: underline; cursor: pointer; }
 @keyframes undo-in { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }

@@ -25,6 +25,7 @@ import { installHintShown, dismissInstallHint } from "./update.js";
 import { store } from "./app.js";
 import { syncer } from "../syncer.js";
 import { statusText, keyEndsSoon, connectionOf } from "../sync/sync.js";
+import { foodHint, FOOD_HINT } from "../sync/foodsync.js";
 import { weekInfo, weeks } from "../plan/plan-v2.js";
 import { planForDay } from "../engine/schedule.js";
 import { photosFor } from "../plan/media.js";
@@ -106,14 +107,16 @@ function exerciseList(doc, planDay, week, missed) {
       const sg = suggestFor(doc, exId, { week, missed, exerciseState: st });
       // The reps set in the Plan for this exercise count on every day (0.6.0), else the plan's range.
       const reps = `${rangeText(rangeFor(doc, exId))}${ex.kind === "hold" ? " s" : ""}`;
-      const end = ex.kind === "hold" ? `${sg.range[0]} s` : ex.step === "bodyweight" ? `${sg.reps}` : sg.weight_kg ? `${fmtKg(sg.weight_kg)} kg` : "–";
-      const what = ex.kind === "hold" ? "hold" : ex.step === "bodyweight" ? "reps" : sg.weight_kg ? (sg.action === "mine" ? "your weight" : sg.action === "first_try" ? "first try" : "suggested") : "start light";
-      return h("button", { class: "ex-row", type: "button", "aria-label": `${slot.slot} ${ex.name}: ${nSets(slot.sets)} of ${reps}${ex.perSide ? " each side" : ""}, ${end} ${what}. Open tips.`, onclick: () => openExerciseInfo(exId, { settingsNote: false }) },
+      // A first-try weight uses the D12 words "Try 20 kg", as the Plan card (0.7.6); no small word under it.
+      const first = ex.kind !== "hold" && ex.step !== "bodyweight" && sg.weight_kg && sg.action === "first_try";
+      const end = ex.kind === "hold" ? `${sg.range[0]} s` : ex.step === "bodyweight" ? `${sg.reps}` : first ? `Try ${fmtKg(sg.weight_kg)} kg` : sg.weight_kg ? `${fmtKg(sg.weight_kg)} kg` : "–";
+      const what = first ? null : ex.kind === "hold" ? "hold" : ex.step === "bodyweight" ? "reps" : sg.weight_kg ? (sg.action === "mine" ? "your weight" : "suggested") : "start light";
+      return h("button", { class: "ex-row", type: "button", "aria-label": `${slot.slot} ${ex.name}: ${nSets(slot.sets)} of ${reps}${ex.perSide ? " each side" : ""}, ${what ? `${end} ${what}` : end}. Open tips.`, onclick: () => openExerciseInfo(exId, { settingsNote: false }) },
         thumb(exId, { small: true }),
         h("span", { class: "grow" },
           h("span", { class: "title" }, h("span", { class: "badge slot" }, slot.slot), h("span", {}, ex.name)),
           h("span", { class: "sub small muted" }, `${slot.sets} × ${reps}${ex.perSide ? " each side" : ""}`)),
-        h("span", { class: "end" }, h("b", {}, end), h("small", {}, what)));
+        h("span", { class: "end" }, h("b", {}, end), what ? h("small", {}, what) : null));
     }))));
 }
 
@@ -258,6 +261,8 @@ export function renderToday() {
   children.push(h("p", { class: `status-line ${bad ? "small status-warning" : "small muted"}`, role: "status" },
     h("span", { class: `dot ${configured && !bad && !unsynced ? "ok" : ""}` }),
     statusText(device, unsynced), " ", configured ? null : h("a", { href: "#/settings" }, "Settings"), bad ? h("a", { href: "#/settings" }, "Settings") : null));
+  // Food stuck while the workout line says "Synced" (0.7.6): one short line, the link goes to Diet.
+  if (foodHint(device)) children.push(h("p", { class: "small status-warning" }, `${FOOD_HINT.text} `, h("a", { href: "#/diet" }, FOOD_HINT.link)));
 
   if (!calm) onMount(() => stagger(document.querySelectorAll(".screen > .hero, .screen > .card, .screen > .tiles, .screen > .day-actions")));
   calm = false;
