@@ -58,10 +58,11 @@ test("T3 a workout finished today keeps its day on Today (Done for today shows w
   assert.equal(defaultShown(doc, "2026-01-14"), "fri");
 });
 
-test("T4 Saturday and Sunday show the rest day until a day is picked; before the plan starts there is no day", () => {
+// 0.7.1, trainer D11: a weekday before the plan starts is a practice day, so Today shows the calendar's day.
+test("T4 Saturday and Sunday show the rest day until a day is picked; before the plan starts it is a practice day", () => {
   assert.equal(defaultShown(validDoc(), "2026-01-17"), null);
   assert.equal(defaultShown(validDoc(), "2026-01-18"), null);
-  assert.equal(defaultShown(validDoc(), "2026-01-05"), null);
+  assert.equal(defaultShown(validDoc(), "2026-01-05"), "mon");
   const t = src("js/ui/today.js");
   assert.match(t, /Rest day/, "the rest-day card is kept");
   assert.match(t, /dayPicker\(/, "the picker is shown, also on the rest day");

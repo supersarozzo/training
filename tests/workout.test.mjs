@@ -94,10 +94,12 @@ function finished({ date = "2026-01-05", week = 2, day = "mon", slot = "A1", ex 
 }
 const docWith = (sessions, extra = {}) => ({ ...validDoc(), sessions, ...extra });
 
-test("no history: nothing to suggest (weight unknown), bodyweight starts at 0", () => {
+// 0.7.1, trainer D12: with no history a weighted exercise gets its first-try weight (tests/v071-practice.test.mjs).
+test("no history: the first-try weight, bodyweight starts at 0", () => {
   const doc = docWith([]);
   const s = suggestFor(doc, "chest_press", { week: 2, missed: null, exerciseState: undefined });
-  assert.equal(s.weight_kg, null);
+  assert.equal(s.action, "first_try");
+  assert.ok(s.weight_kg > 0 && s.weight_kg <= 20);
   assert.equal(suggestFor(doc, "plank", { week: 2, missed: null }).weight_kg, 0);
 });
 
