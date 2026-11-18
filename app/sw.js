@@ -234,9 +234,11 @@ const MARK = fileUrl("sw-cache-complete");
 
 // "0.7.2" is older than "0.7.10"; anything that is not a version number is never "older".
 function isOlder(name) {
+  // Only a real version number ("0.7.2") counts; "training-", "training--1" or other names are never ours to delete
+  // (the origin is shared with other projects; review round 2).
+  if (!name.startsWith(PREFIX) || !/^\d+(\.\d+)*$/.test(name.slice(PREFIX.length))) return false;
   const a = name.slice(PREFIX.length).split(".").map(Number);
   const b = APP_VERSION.split(".").map(Number);
-  if (!name.startsWith(PREFIX) || a.some((n) => !Number.isInteger(n))) return false;
   for (let i = 0; i < Math.max(a.length, b.length); i++) {
     const d = (a[i] || 0) - (b[i] || 0);
     if (d !== 0) return d < 0;
@@ -361,7 +363,8 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   // The Settings Update button asks the live site for js/version.js with cache "no-store": never answer that from the
   // cache. A page load (navigate) always opens from the cache, so the app still opens offline.
-  if (req.cache === "no-store" && req.mode !== "navigate") return;
+  // The same for an address with "live=" (the button adds it, in case Safari does not pass the cache mode on).
+  if (req.mode !== "navigate" && (req.cache === "no-store" || url.searchParams.has("live"))) return;
   event.respondWith(answer(req));
   if (!cleaned) event.waitUntil(cleanOnce());
 });

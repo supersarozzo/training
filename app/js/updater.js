@@ -24,6 +24,8 @@ const WORDS = {
   checking: "Looking for a new version…",
   downloading: "Downloading the new version…",
   ready: "A new version is ready. Tap Update.",
+  restarting: "Starting the new version…",
+  siteupdating: "The website is still updating. Try again in 10 minutes.",
   none: "You have the newest version.",
   offline: "No signal. Try again later.",
   reinstalling: "Getting the new version from the website…",
@@ -125,16 +127,22 @@ export function createUpdater({ sw, doc, win, onChange = () => {}, fetch = null,
     else { updating = true; reload(); }
   }
 
-  // What the live site says its version is; null with no signal or no good answer.
-  async function liveVersion() {
+  // A file from the live site, never from a cache: cache "no-store", and "live=" in the address, which the worker
+  // never answers (in case Safari does not pass the cache mode on to the worker; review round 2). null: no signal.
+  async function liveText(file) {
     try {
-      const res = await fetch("js/version.js", { cache: "no-store" });
+      const res = await fetch(`${file}?live=${now()}`, { cache: "no-store" });
       if (!res || !res.ok) return null;
-      const found = /APP_VERSION\s*=\s*"([^"]+)"/.exec(await res.text());
-      return found ? found[1] : null;
+      return await res.text();
     } catch {
       return null;
     }
+  }
+  // What the live site says its version is; null with no signal or no good answer.
+  async function liveVersion() {
+    const text = await liveText("js/version.js");
+    const found = text === null ? null : /APP_VERSION\s*=\s*"([^"]+)"/.exec(text);
+    return found ? found[1] : null;
   }
 
   // Wait for a worker that is ready. 20 s when nothing is downloading, up to 90 s while a worker downloads.
@@ -164,13 +172,22 @@ export function createUpdater({ sw, doc, win, onChange = () => {}, fetch = null,
       if (reg) {
         try { await reg.update(); } catch { /* the wait below decides */ }
         const worker = await waitForWorker();
-        if (worker) { set("ready"); takeOver(worker); return; }
+        // A workout may have started during the wait (20-90 s): then change nothing; the worker waits for the bar.
+        if (inWorkout()) { set("workout"); return; }
+        if (worker) { set("restarting"); takeOver(worker); return; }
       }
+      if (inWorkout()) { set("workout"); return; }
+      // Before deleting anything: the website's sw.js must already be the live version. Right after a release a CDN
+      // copy can still serve the old sw.js; a fresh start would then fail and leave the app online-only (round 2).
+      const swText = await liveText("sw.js");
+      if (swText === null) { set("offline"); return; }
+      if (!swText.includes(`"${live}"`)) { set("siteupdating"); return; }
       // No new worker came: start clean from the website. Only the app's file caches go; saved data stays.
       set("reinstalling");
       try {
         const names = await caches.keys();
-        await Promise.all(names.filter((k) => k.startsWith("training-")).map((k) => caches.delete(k)));
+        // Only this app's version caches ("training-0.7.3"); other projects share the github.io address (round 2).
+        await Promise.all(names.filter((k) => /^training-\d+(\.\d+)*$/.test(k)).map((k) => caches.delete(k)));
       } catch { /* the reload still gets fresh files from the network */ }
       try { if (reg) await reg.unregister(); } catch { /* same */ }
       reload();
