@@ -36,6 +36,7 @@ const FILES = [
   "js/plan/media.js",
   "js/plan/muscles.js",
   "js/plan/plan-v2.js",
+  "js/planview.js",
   "js/prefs.js",
   "js/shortcuts.js",
   "js/sound.js",
