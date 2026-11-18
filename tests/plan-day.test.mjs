@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  pageFor, daySets, dayTotals, setsByMuscle, daySoFar, levelFor, exerciseLevels, muscleWords, unitHeader,
+  pageFor, stepDay, daySets, dayTotals, setsByMuscle, daySoFar, levelFor, exerciseLevels, muscleWords, unitHeader,
   unitsOf, slotRole, restTile, neighbours, GYM_GROUPS, gymGroupOf, planDaysOf, soFarText, mainView,
 } from "../app/js/engine/planpage.js";
 import { exercises, DAY_IDS } from "../app/js/plan/plan-v2.js";
@@ -174,4 +174,15 @@ test("planDaysOf: the plan days an exercise is on (empty = swap only)", () => {
   assert.deepEqual(planDaysOf("face_pull"), ["tue", "thu"]);
   assert.deepEqual(planDaysOf("plank"), ["mon", "thu"]);
   assert.deepEqual(planDaysOf("cable_curl"), []);
+});
+
+// ---------- day arrows (audit 2026-11-18: Friday's "Monday ›" must not go back to this week's Monday) ----------
+test("stepDay: the arrows go to the day before or after, into the next or previous week", () => {
+  assert.deepEqual(stepDay("tue", 3, 1), { day: "wed", week: 3 });
+  assert.deepEqual(stepDay("tue", 3, -1), { day: "mon", week: 3 });
+  assert.deepEqual(stepDay("fri", 3, 1), { day: "mon", week: 4 });
+  assert.deepEqual(stepDay("mon", 3, -1), { day: "fri", week: 2 });
+  // the block's two ends: wrap inside the week (there is no week 0 or 13)
+  assert.deepEqual(stepDay("mon", 1, -1), { day: "fri", week: 1 });
+  assert.deepEqual(stepDay("fri", 12, 1), { day: "mon", week: 12 });
 });
