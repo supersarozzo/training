@@ -2,6 +2,39 @@
 
 What is new in each app version, in plain words. Newest first. Older versions: see `docs/HANDOVER.md` and the git log.
 
+## 0.7.0 · 2026-11-18
+
+The Diet part of the Plan, Gym and Diet redesign (build steps 6, 7 and 8 of `redesign/plan-diet/judge/JUDGING.md`
+section 7), built by chat 8.38 on top of 0.6.0. Rosario's answers 62, 63 a, 64 a, 76 b, 77 b, 78 a, 79 a.
+0.6.0 is already on GitHub; 0.7.0 is not pushed until Rosario types "push": that one push sends 0.7.0.
+
+**A Diet tab** (5 tabs now: Today · Plan · Gym · Diet · Progress)
+- Today's food against your targets: two rings, protein first, then calories ("76 g to go", "1,550 kcal left"),
+  a carbs and fat line, and the average of the last 7 days. The targets are the same numbers Today shows.
+- Today's foods by meal: Breakfast, Lunch, Dinner, Snacks. The meal is picked from the clock; you can change it.
+- Four ways to add food: Search, Digits, Quick add, Copy yesterday. "Log again" adds a usual food with one tap.
+  Every add has Undo for 8 seconds. Tap a food to change the amount or the meal, or remove it.
+- Your foods work with no signal. "Make a new food" for anything without a barcode.
+- Download a food backup and restore it from a file (food is only on this phone until GitHub sync is set up).
+
+**Scan a barcode**
+- The camera reads the barcode on the pack (EAN-13, EAN-8, UPC-A). The reader is open source and lives in the app
+  itself (zxing-wasm 3.1.7), so it works offline after the first open and nothing is loaded from other sites.
+- The last digit of a barcode is checked first: a misread keeps the camera open and makes no lookup.
+- "Type the digits" and "Take a photo" are always there, also when the camera is refused.
+- The camera stops when the scanner closes, when a barcode is read, and when the app goes to the back.
+
+**Open Food Facts**
+- A scanned barcode or a searched name is looked up on Open Food Facts. Only the barcode number or the search
+  word is sent. Name search shows UK products only.
+- Every food from Open Food Facts is checked by you before it is saved ("Check before saving"), with soft warnings
+  when the numbers look wrong (for example "The pack size says 1 gram"). The credit line for their data is on
+  every sheet that shows it.
+
+**Food sync**
+- Food syncs in its own file, `food.json`, in the same private GitHub repo, with the same rules as the workout log.
+  A food sync problem never changes the workout log, and a damaged food box never stops Today or Settings.
+
 ## 0.6.0 · 2026-11-18
 
 Rosario's batch of 2026-11-18 (chat 8.35). Decisions: `docs/DECISIONS.md` (rows dated 2026-11-18) and the personal
