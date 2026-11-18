@@ -2,7 +2,7 @@
 
 What is new in each app version, in plain words. Newest first. Older versions: see `docs/HANDOVER.md` and the git log.
 
-## 0.5.0 · 2026-11-18 (not pushed yet)
+## 0.5.0 · 2026-11-18 (live since 2026-11-18, commit 20cdbbd)
 
 The Plan and Gym part of the Plan, Gym and Diet redesign (build steps 1 to 5 of
 `redesign/plan-diet/judge/JUDGING.md` section 7). Diet, food sync and the barcode reader come later (steps 6 to 8).
