@@ -22,6 +22,7 @@ import * as workout from "../app/js/engine/workout.js";
 import { validDoc, fakeStorage } from "./fixtures/profiles.mjs";
 import * as today from "../app/js/ui/today.js";
 import * as flow from "../app/js/ui/flow.js";
+import { days } from "../app/js/plan/plan-v2.js";
 const defaultShown = (doc, date) => today.defaultShown(doc, date);
 
 const src = (p) => readFileSync(new URL(`../app/${p}`, import.meta.url), "utf8");
@@ -105,7 +106,7 @@ test("T8 the set screen has a text button 'Stop this exercise here' that asks fi
   assert.match(p, /Move on with \$\{/);
   assert.match(p, /The sets you did are saved\./);
   assert.match(p, /model\.stopExercise\(session\.id, entry\.slot, true\)/);
-  assert.match(p, /model\.stopExercise\(session\.id, entry\.slot, false\)/);
+  assert.match(p, /model\.stopExercise\(sessionId, slot, false\)/, "Undo (undoStop, tested for real in T16) un-stops it");
   assert.match(p, /import \{ undoToast \} from "\.\/planedit\.js"/);
   assert.match(p, /undoToast\(/);
 });
@@ -150,14 +151,23 @@ test("T11 no innerHTML, no style attributes; the Today styles use only the token
 // ---------- auditor M2: the stopped sets are skipped by the rest, "Next" and the progress bar ----------
 
 // Tuesday, week 3: A1/A2, B1/B2, C1/C2 pairs of 3 sets (30 s move inside a pair, then the pair rest), D on its own.
+// Every move was done the Tuesday before, so none starts with the 2 sets of a new move (answer 83 a).
 function tuesday() {
   const store = createStore(fakeStorage());
   let ms = Date.parse(T);
-  store.save(validDoc());
+  const doc = validDoc();
+  const done = (n) => ({ n, type: "work", weight_kg: 20, reps: 10, seconds: null, rir: 2, done_at: "2026-02-24T09:00:00.000Z" });
+  doc.sessions = [{
+    id: "s-20260224-tue", updated_at: "2026-02-24T10:00:00.000Z", date: "2026-02-24", plan_day: "tue", week: 2, kind: "full",
+    swapped_from: null, status: "finished", started_at: "2026-02-24T08:00:00.000Z", finished_at: "2026-02-24T10:00:00.000Z", walk: null,
+    exercises: days.tue.slots.map((s) => ({ slot: s.slot, plan_exercise: s.ex, done_exercise: s.ex, swap_reason: null, sets: [done(1), done(2)], note: "" })), note: "",
+  }];
+  store.save(doc);
   const model = createModel(store, () => new Date((ms += 1000)));
   const s0 = model.startSession({ planDay: "tue", week: 3, kind: "full" });
   const plan = { slots: s0.exercises.map((e) => ({ slot: e.slot, ex: e.plan_exercise, sets: e.planned_sets, rest: e.planned_rest })) };
   const { seq } = workout.buildSequence(plan.slots);
+  assert.ok(["A1", "A2", "D"].every((slot) => seq.some((e) => e.slot === slot && e.setNumber === 3)), "test data: 3 sets each");
   const get = () => model.doc().sessions.find((x) => x.id === s0.id);
   const at = (slot, n) => seq.findIndex((e) => e.slot === slot && e.setNumber === n);
   return { model, id: s0.id, seq, get, at };

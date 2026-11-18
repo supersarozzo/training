@@ -3,7 +3,7 @@ import { model, go, rerender } from "./app.js";
 import { getActive, setActive, patchActive, clearActive } from "../active.js";
 import { exercises, days } from "../plan/plan-v2.js";
 import { planForSession, missedRule, canStartWorkout, blockPosition, sessionLayout } from "../engine/schedule.js";
-import { buildSequence, nextPosition, walkSuggestion, finishedSessions, suggestFor, slotRecord } from "../engine/workout.js";
+import { buildSequence, nextPosition, walkSuggestion, finishedSessions, suggestFor, slotRecord, workSets } from "../engine/workout.js";
 import { startTimer } from "../timer.js";
 import { today } from "../clock.js";
 import { keepScreenOn, releaseScreen } from "../wakelock.js";
@@ -32,6 +32,35 @@ export function buildCtx(doc, session, act) {
     position: () => nextPosition(session, seq),
   };
   return ctx;
+}
+
+// ---------- the sets still planned after "Stop this exercise here" (auditor M2) ----------
+// A set past its exercise's `stopped_after` is not asked any more (nextPosition skips it). These helpers make the
+// rest, the "Next" line and the progress bar skip it too.
+const skipped = (session, e) => {
+  const rec = slotRecord(session, e.slot);
+  return Boolean(rec && Number.isInteger(rec.stopped_after) && e.setNumber > rec.stopped_after);
+};
+const saved = (session, e) => workSets(slotRecord(session, e.slot)).length >= e.setNumber;
+
+// The first set after `index` that is still to do: { index, entry }, or null when nothing is left (Finish next).
+export function nextDue(session, seq, index) {
+  for (let i = index + 1; i < seq.length; i++) if (!skipped(session, seq[i]) && !saved(session, seq[i])) return { index: i, entry: seq[i] };
+  return null;
+}
+
+// The rest between the set at `from` and the next set to do at `to`: the longest planned rest on the way, so a
+// stopped partner gives the pair rest, not the 30 s move. { seconds, kind }; seconds 0 when none is planned.
+export function restBetween(seq, from, to) {
+  let best = { seconds: 0, kind: null };
+  for (let i = from; i < to; i++) if ((seq[i].restAfter ?? 0) > best.seconds) best = { seconds: seq[i].restAfter, kind: seq[i].restKind };
+  return best;
+}
+
+// The progress bar: sets saved and sets planned, leaving out the stopped ones, so it fills after a stop.
+export function progressOf(session, seq) {
+  const planned = seq.filter((e) => !skipped(session, e));
+  return { done: planned.filter((e) => saved(session, e)).length, total: planned.length };
 }
 
 // Change the screen of the workout. `seconds` starts a timer for the new screen.

@@ -9,7 +9,7 @@ import { h } from "../h.js";
 import { workoutScreen, topBar, actionBar, lockedButton, timerView, choiceRow } from "./parts.js";
 import { model, rerender } from "./app.js";
 import { patchActive, getActive } from "../active.js";
-import { askEnd, nextText } from "./flow.js";
+import { askEnd, nextText, progressOf } from "./flow.js";
 import { adjustTimer } from "../timer.js";
 import { exercises } from "../plan/plan-v2.js";
 import { slotRecord, workSets } from "../engine/workout.js";
@@ -32,7 +32,7 @@ export function renderRest(ctx, pos) {
   const nextLine = pos.label ?? nextText(ctx, pos.entry);
   const nextId = pos.entry ? slotRecord(ctx.session, pos.entry.slot)?.done_exercise : null;
   const move = rest.kind === "move";
-  const progress = pos.entry && ctx.seq ? { done: pos.index, total: ctx.seq.length } : null;
+  const progress = pos.entry && ctx.seq ? progressOf(ctx.session, ctx.seq) : null; // stopped sets left out (auditor M2)
 
   // The set just saved. Week 1 has its own "how many more" steps, so it is not asked here.
   const rec = rest.slot ? slotRecord(ctx.session, rest.slot) : null;

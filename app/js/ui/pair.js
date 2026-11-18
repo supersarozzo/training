@@ -12,12 +12,12 @@ import { MAX_TEXT } from "../validate.js";
 import { h } from "../h.js";
 import { workoutScreen, topBar, actionBar, lockedButton, stepper, openSheet, timerView, choiceRow } from "./parts.js";
 import { model, rerender } from "./app.js";
-import { patchActive } from "../active.js";
+import { patchActive, getActive } from "../active.js";
 import { exercises } from "../plan/plan-v2.js";
 import { cues } from "../plan/cues.js";
 import { stepUp, stepDown, warmupSets } from "../engine/progression.js";
 import { slotRecord, workSets, warmupDone, wantsWarmup, unitLabel, targetText } from "../engine/workout.js";
-import { askEnd, nextText } from "./flow.js";
+import { askEnd, nextText, nextDue, restBetween, progressOf } from "./flow.js";
 import { openSwap } from "./swap.js";
 import { startTimer } from "../timer.js";
 import { prime } from "../sound.js";
@@ -54,9 +54,16 @@ function askStop(session, entry, ex, doneCount) {
       close();
       model.stopExercise(session.id, entry.slot, true);
       rerender();
-      undoToast(`${ex.name}: stopped after ${doneCount} of ${entry.sets} sets.`, () => model.stopExercise(session.id, entry.slot, false));
+      undoToast(`${ex.name}: stopped after ${doneCount} of ${entry.sets} sets.`, () => undoStop(session.id, entry.slot));
     } }, "Yes, move on"),
     h("button", { class: "button secondary", type: "button", onclick: () => close() }, "No, keep going"));
+}
+
+// Undo of a stop. A stop of the last exercise leaves no set to do, so the workout screen has already saved phase
+// "finish" (ui/workout.js): go back to the sets, or the stopped sets could never be done (auditor M3).
+export function undoStop(sessionId, slot) {
+  model.stopExercise(sessionId, slot, false);
+  if (getActive()?.phase === "finish") patchActive({ phase: "weights", rest: null, hold: null });
 }
 
 // Tips: the info sheet (picture, form tips, video, machine card and the machine settings note).
@@ -140,13 +147,16 @@ export function renderPair(ctx, pos) {
       : { type: "work", weight_kg: bodyweight ? 0 : draft.weight, reps: draft.reps };
     model.logSet(session.id, entry.slot, set);
     justDone = `${session.id}:${entry.slot}:${done.length + 1}`;
-    const nextEntry = seq[pos.index + 1] ?? null;
-    if (!nextEntry) patchActive({ phase: "finish", rest: null, hold: null });
-    else if (entry.restAfter) patchActive({ rest: { end: startTimer(entry.restAfter, Date.now()), total: entry.restAfter * 1000, kind: entry.restKind, slot: entry.slot }, hold: null });
+    // The next set still to do, skipping stopped sets (auditor M2); the rest is the longest planned on the way there.
+    const after = model.doc().sessions.find((x) => x.id === session.id) ?? session;
+    const due = nextDue(after, seq, pos.index);
+    const rest = due ? restBetween(seq, pos.index, due.index) : null;
+    if (!due) patchActive({ phase: "finish", rest: null, hold: null });
+    else if (rest.seconds) patchActive({ rest: { end: startTimer(rest.seconds, Date.now()), total: rest.seconds * 1000, kind: rest.kind, slot: entry.slot }, hold: null });
     else patchActive({ hold: null });
     // The rest screen asks "How many more?" inline; only without a rest after this set does the sheet ask (builder C).
     // The sheet opens after the redraw (a redraw closes open sheets).
-    askAfter = !nextEntry || !entry.restAfter;
+    askAfter = !due || !rest.seconds;
   };
   const saveWarmup = () => {
     const w = wsets[wDone];
@@ -211,7 +221,7 @@ export function renderPair(ctx, pos) {
     controls = h("div", {}, prevBtn, weightStep, repsStep, holdBox);
   }
 
-  const nextEntry = seq[pos.index + 1] ?? null;
+  const nextEntry = nextDue(session, seq, pos.index)?.entry ?? null; // never a stopped set (auditor M2)
   const nextLine = nextEntry ? nextText(ctx, nextEntry) : null;
   const unknown = !hold && !bodyweight && !startKg && !done.length;
 
@@ -223,7 +233,7 @@ export function renderPair(ctx, pos) {
     : lockedButton("Done", { key: lockKey, sub: doneSub(), doneText: "Saved", work: saveWork, after: () => { rerender(); if (askAfter) askRir(session.id, entry.slot, ex); } });
   return [
     workoutScreen(
-      topBar(title, () => askEnd(ctx), { done: pos.index, total: seq.length }),
+      topBar(title, () => askEnd(ctx), progressOf(session, seq)),
       exerciseHeader(ctx, rec),
       h("div", { class: "target" }, targetText(exId, entry.sets, ctx.plan.rir, rangeFor(ctx.doc, exId))),
       h("div", { class: "info-lines" },
