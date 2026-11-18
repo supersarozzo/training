@@ -223,7 +223,7 @@ export function openCheck({ mode = "own", product = null, food: rec = null, pref
   const second = secondaryButton("Save without adding", () => save(false));
 
   function refresh() {
-    const c = checkFood({ per100g: per100g(), serving_g: src.serving_g ?? null });
+    const c = checkFood({ per100g: per100g(), serving_g: src.serving_g ?? null, quantity: mode === "off" ? src.quantity ?? null : null });
     mount(result, c.ok ? h("p", { class: "okline" }, c.line)
       : h("div", { class: "warnbox" }, c.warnings.map((w) => h("p", {}, icon("warn", 16), " ", w))));
     const a = amountG();

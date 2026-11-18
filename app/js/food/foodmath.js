@@ -105,7 +105,13 @@ export function averageLast7(doc, today) {
 }
 
 // The check step's soft warnings (DESIGN 15.9). They never block saving.
-export function checkFood({ per100g = {}, serving_g = null } = {}) {
+// The pack size text from Open Food Facts ("450 g", "1 gram"): grams only, else null.
+function packGrams(text) {
+  const m = typeof text === "string" ? /^\s*(\d+(?:[.,]\d+)?)\s*(g|gr|gram|grams)\b/i.exec(text) : null;
+  return m ? Number(m[1].replace(",", ".")) : null;
+}
+
+export function checkFood({ per100g = {}, serving_g = null, quantity = null } = {}) {
   const w = [];
   const { kcal, protein_g: p, carbs_g: c, fat_g: f } = per100g;
   if (!fin(kcal)) w.push("The calories are missing. Type them from the pack.");
@@ -118,7 +124,9 @@ export function checkFood({ per100g = {}, serving_g = null } = {}) {
     const calc = 4 * p + 4 * c + 9 * f;
     if (Math.abs(calc - kcal) > Math.max(40, 0.2 * kcal)) w.push(`The calories do not match protein, carbs and fat (about ${Math.round(calc)} kcal). Compare with the pack.`);
   }
-  if (fin(serving_g) && serving_g > 0 && serving_g <= 2) w.push(`The pack size says ${serving_g === 1 ? "1 gram" : `${serving_g} grams`}. That is likely wrong.`);
+  const pack = packGrams(quantity);
+  const tiny = fin(pack) && pack > 0 && pack <= 2 ? pack : fin(serving_g) && serving_g > 0 && serving_g <= 2 ? serving_g : null;
+  if (tiny !== null) w.push(`The pack size says ${tiny === 1 ? "1 gram" : `${tiny} grams`}. That is likely wrong.`);
   return w.length ? { ok: false, warnings: w, line: null } : { ok: true, warnings: [], line: "✓ The numbers add up." };
 }
 

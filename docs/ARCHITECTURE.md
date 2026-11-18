@@ -361,7 +361,7 @@ Rules:
 - **Both files in turn** (`sync/both.js`): every sync (open, front, signal back, Finish, the Settings buttons) runs progress.json first, then food.json. The result is the workout result (the status lines on Today and in Settings stay about the workout log) with the food result in `food`. Only "not sent yet" also counts new food, so unsent food is never hidden; a damaged food box counts as "nothing new" there, so it never stops Today or Settings from drawing. A failed round is not run again (same as 5.2). A damaged `food.json` never stops or changes the workout sync, and a damaged `progress.json` never stops the food sync. When the problem is the connection itself (no signal, wrong key, no access, rate limit, not set up), the food call is skipped. The Diet tab shows the food line ("Food synced …" or the food problem in words).
 - **Merge:** `food/foodmerge.js` uses the same `pick` as `merge.js` (later `updated_at`, then the tombstone, then the JSON text), lists by id, sorted.
 - **Not before there is food:** a phone with no food never creates `food.json`.
-- **Tests:** `tests/food-sync.test.mjs` (25 tests against the pretend GitHub, with one pretend repo holding both files) and `tests/food-data.test.mjs`. In the browser, `?fake-github=1` on localhost gives the food file its own pretend GitHub (`trn.fake.food.v1`).
+- **Tests:** `tests/food-sync.test.mjs` (27 tests against the pretend GitHub, with one pretend repo holding both files) and `tests/food-data.test.mjs`. In the browser, `?fake-github=1` on localhost gives the food file its own pretend GitHub (`trn.fake.food.v1`).
 
 ### 5.4c Open Food Facts and the barcode reader (build steps 7 and 8, delicate)
 
