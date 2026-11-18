@@ -28,7 +28,7 @@ export function openScanner() {
   const video = h("video", { class: "scan-video", playsinline: "", muted: "", autoplay: "" });
   video.muted = true;
   const canvas = document.createElement("canvas");
-  const msg = h("p", { class: "scan-msg", role: "status", "aria-live": "polite" }, "Hold the barcode inside the frame.");
+  const msg = h("p", { class: "scan-msg", role: "status", "aria-live": "polite" }, "Hold the barcode inside the frame. It reads by itself.");
   const file = h("input", { class: "scan-file", type: "file", accept: "image/*", capture: "environment", "aria-label": "Take a photo of the barcode" });
   let scanner = null;
   let closed = false;
@@ -80,7 +80,8 @@ export function openScanner() {
       msg,
       h("button", { class: "button", type: "button", onclick: () => { close(); openDigits(); } }, icon("digits", 20), "Type the digits"),
       h("button", { class: "button secondary", type: "button", onclick: pickPhoto }, icon("camera", 20), "Take a photo of the barcode"),
-      file));
+      file,
+      h("p", { class: "small scan-note" }, "Your iPhone may ask for the camera each time you open the app. The camera stops when you close this.")));
   file.addEventListener("cancel", resumeCamera);
   file.addEventListener("change", async () => {
     picking = false;
@@ -112,13 +113,14 @@ export function openScanner() {
     let reader;
     try { reader = await sharedReader(); } catch { if (!closed) msg.textContent = WORDS.failed; return; }
     if (closed) return;
+    const startWhenFree = () => { if (picking) camWasOn = true; else scanner.start(video); }; // the photo picker holds the camera
     scanner = createScanner({
       reader, media, grab: (v) => grabFrame(v, canvas),
       onCode: (code) => { looked(code); },
       onMisread: () => { if (!closed) msg.textContent = BARCODE_WORDS.misread; },
       onError: (kind) => { if (!closed) msg.textContent = WORDS[kind] ?? WORDS.failed; },
     });
-    scanner.start(video);
+    startWhenFree();
   })();
   return close;
 }

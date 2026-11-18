@@ -3,7 +3,7 @@
 // Text is cleaned and cut to 120 letters; numbers are range-checked, so the phone never holds what
 // foodvalidate.js would refuse later.
 import { nowUtc, newId } from "../ids.js";
-import { MEALS, validateFoodDoc } from "./foodvalidate.js";
+import { MEALS, CHECK, validateFoodDoc } from "./foodvalidate.js";
 import { mergeFoodDocs, hasFoodData } from "./foodmerge.js";
 import { cleanText, numbersFor, againAmount, entriesOn, PER100_MAX } from "./foodmath.js";
 import { normalizeBarcode, foodIdFor } from "./barcode.js";
@@ -31,6 +31,14 @@ function cleanPer100(p) {
 function cleanDay(date, meal) {
   need(isDate(date), "That day is not a date.");
   need(meal === null || MEALS.includes(meal), "Pick a meal.");
+}
+// The numbers of one entry must stay inside the food check (foodvalidate.js CHECK.entry), or every later food sync
+// would stop with "local_invalid". A huge portion of a rich food is refused here, in words, and nothing is saved.
+function entryFits(n) {
+  const macros = [n.protein_g, n.carbs_g, n.fat_g].filter(fin);
+  need(fin(n.kcal) && n.kcal <= CHECK.entry.kcal && macros.every((v) => v <= CHECK.entry.macro),
+    `That amount gives more than ${CHECK.entry.kcal.toLocaleString("en-GB")} kcal or ${CHECK.entry.macro.toLocaleString("en-GB")} g of protein, carbs or fat. Check the amount.`);
+  return n;
 }
 function cleanAmount(amount_g) {
   need(fin(amount_g) && amount_g > 0 && amount_g <= MAX_AMOUNT, `The amount must be between 0 and ${MAX_AMOUNT} g.`);
@@ -89,7 +97,7 @@ export function createFoodModel(store, clock = () => new Date()) {
       food: food ?? null,
       name: cleanText(name) || "Food",
       amount_g: amount, servings: null,
-      ...numbersFor(per100g, amount),
+      ...entryFits(numbersFor(per100g, amount)),
       per100g: { ...per100g },
       source,
     };
@@ -152,11 +160,11 @@ export function createFoodModel(store, clock = () => new Date()) {
           const amount = cleanAmount(amount_g);
           need(fin(e.amount_g) && e.amount_g > 0, "A quick add has no amount to change.");
           const per = e.per100g && typeof e.per100g === "object" ? e.per100g : null;
-          if (per) Object.assign(e, numbersFor(per, amount));
+          if (per) Object.assign(e, entryFits(numbersFor(per, amount)));
           else {
             const f = amount / e.amount_g;
             const s = (v) => (fin(v) ? Math.round(v * f * 10) / 10 : v);
-            Object.assign(e, { kcal: Math.round(e.kcal * f), protein_g: s(e.protein_g), carbs_g: s(e.carbs_g), fat_g: s(e.fat_g) });
+            Object.assign(e, entryFits({ kcal: Math.round(e.kcal * f), protein_g: s(e.protein_g), carbs_g: s(e.carbs_g), fat_g: s(e.fat_g) }));
           }
           e.amount_g = amount;
         }

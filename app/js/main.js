@@ -1,4 +1,4 @@
-// Start-up and router. Hash routes: #/today, #/plan, #/gym, #/diet, #/progress (tabs), #/settings (the gear; tab bar shown),
+// Start-up and router. Hash routes: #/today, #/plan, #/gym, #/diet, #/progress (tabs), #/settings (the Settings button on Progress; tab bar shown),
 // and #/setup, #/intake, #/targets (the first-start flow, no tabs).
 import { mount, h } from "./h.js";
 import { renderToday } from "./ui/today.js";

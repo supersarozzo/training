@@ -40,7 +40,7 @@ export function undoToast(text, onUndo, ms = 8000) {
       onclick: () => {
         el.remove();
         try { onUndo(); } catch (e) { messageToast(errText(e)); }
-        rerender();
+        if (!document.querySelector("[data-sheet], [data-scan]")) rerender(); // never close a sheet with typed text
       },
     }, icon("undo", 18), "Undo"));
   document.body.append(el);
@@ -179,8 +179,7 @@ export function openSearch() {
     mount(online,
       h("h3", {}, "From Open Food Facts"),
       res.products.length ? res.products.map((p) => row(p.name, p.brand, `${show(p.per100g.kcal)} kcal / 100 g`, () => openCheck({ mode: "off", product: p })))
-        : h("p", { class: "muted small" }, "Nothing found. Try another word, or make a new food."),
-      creditLine());
+        : h("p", { class: "muted small" }, "Nothing found. Try another word, or make a new food."));
   }
 
   const form = h("form", { class: "searchbar", onsubmit: (e) => { e.preventDefault(); runSearch(); } },
@@ -191,7 +190,8 @@ export function openSearch() {
     form,
     h("p", { class: "muted small" }, "Search runs when you tap Search. UK products only."),
     mine, online,
-    secondaryButton("Make a new food", () => openCheck({ mode: "own", prefill: q.trim() && !/^[\d\s-]+$/.test(q) ? { name: cleanText(q) } : {} })));
+    secondaryButton("Make a new food", () => openCheck({ mode: "own", prefill: q.trim() && !/^[\d\s-]+$/.test(q) ? { name: cleanText(q) } : {} })),
+    creditLine());
 }
 
 // ---------- The check step ----------
@@ -258,7 +258,7 @@ export function openCheck({ mode = "own", product = null, food: rec = null, pref
     h("div", { class: "label" }, "Meal"),
     mealRow(st.meal, (m) => { st.meal = m; }),
     error, btn, second,
-    mode === "off" ? creditLine() : null);
+    mode === "off" || (mode === "saved" && rec && rec.source === "off") ? creditLine() : null);
   refresh();
   return close;
 }
