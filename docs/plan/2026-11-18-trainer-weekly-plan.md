@@ -333,6 +333,32 @@ Sources (read 2026-11-18): Ramos-Campo et al. 2024, J Strength Cond Res 38(7):13
 
 **Tests:** none. The existing tests `trainer 3` (exact days) and `trainer 5` (calves and back of thighs on 2 days or more) already lock this.
 
+### D15. The weight after an "It hurts" swap — **convert between exercises, then 30 % lighter**
+
+Found on 2026-11-18 while checking 8.39's swap fixes (f5a214f, c758035). When an exercise hurts and you swap it, the new exercise starts lighter (WORKFLOW D5). Since 0.5, after a set today or with a log of the old exercise, the app took 30 % off **the old exercise's kilograms**. Many swaps change the kind of weight, so that number can be far too heavy:
+
+| Old exercise, weight | New exercise | Rule since 0.5 | New rule |
+|---|---|---|---|
+| Chest press 40 (stack) | Dumbbell bench press | 28 per dumbbell | 14 per dumbbell |
+| Leg press 80 (stack) | Smith machine squat | 55 in plates | 10 in plates |
+| Face pull 25 (stack) | Dumbbell rear-delt raise | 16 per dumbbell | 4 per dumbbell |
+| Goblet squat 16 (1 dumbbell) | Leg press | 10 | 35 |
+
+(Made-up weights; both columns use the fallback gym steps: dumbbells 2 kg, stacks 5 kg, Smith 5 kg, as computed with the app's own rounding.)
+
+**My rule:** if the new exercise has its own history, use its own suggestion (as today). Otherwise, with a weight of the old exercise (a set today or its log), start at
+**old weight × (first-try value of the new ÷ first-try value of the old) × 0.7**, rounded **down** to the gym's steps (D12 rounding), at least one step.
+The first-try values come from the D12 table, without the profile factor (it cancels out). An exercise with no table value (bodyweight or timed) keeps today's rule. With nothing logged, 8.39's rule from c758035 stays: the new exercise's own first try.
+
+**Why:** the D12 table already holds the usual ratio between exercises (a leg press stack takes about 4 times the plates of a Smith squat; a chest press stack about 2 times one dumbbell). After pain, too light is safe and costs one set. Too heavy is exactly the wrong risk then. The 30 % cut is unchanged (WORKFLOW D5).
+
+**Tests for 8.39 to write first:**
+1. The four rows above, with made-up gym settings, give the new-rule numbers.
+2. For every swap pair, with a made-up logged weight, the start is never above 0.7 × (old weight × new table ÷ old table) and never 0.
+3. A new exercise with its own history still uses its own suggestion.
+4. Nothing logged: unchanged from c758035.
+5. A bodyweight or timed exercise is unchanged.
+
 ## 5. Changes to your earlier choices
 
 **None.** I kept 74 b and 80-83 exactly:
