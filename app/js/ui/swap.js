@@ -6,7 +6,7 @@ import { h } from "../h.js";
 import { openSheet } from "./parts.js";
 import { model, rerender } from "./app.js";
 import { exercises } from "../plan/plan-v2.js";
-import { lighterFor, workSets } from "../engine/workout.js";
+import { painSwapStart, workSets } from "../engine/workout.js";
 import { thumb } from "./media.js";
 import { icon } from "./icons.js";
 
@@ -38,9 +38,7 @@ export function openSwap(ctx, rec) {
     const go = (id) => {
       if (hurts && !note) { warn.textContent = "Write a short note first, so you remember what hurt."; return; }
       const last = workSets(rec).slice(-1)[0];
-      const orig = last?.weight_kg ?? ctx.sugg(rec.done_exercise).weight_kg ?? 0;
-      const own = ctx.sugg(id).last;
-      const startKg = hurts && !own ? lighterFor(id, orig, ctx.settings) : null;
+      const startKg = hurts ? painSwapStart(id, { lastWorkKg: last?.weight_kg, origSugg: ctx.sugg(rec.done_exercise), newSugg: ctx.sugg(id) }, ctx.settings) : null;
       model.swapExercise(ctx.session.id, rec.slot, id, reason, note, startKg);
       document.querySelectorAll("[data-sheet]").forEach((el) => el.remove());
       rerender();
