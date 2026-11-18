@@ -1,0 +1,17 @@
+zxing-wasm 3.1.7 (reader build)
+Copyright (c) 2023 Ze-Zheng Wu
+https://github.com/Sec-ant/zxing-wasm
+The JavaScript wrapper is under the MIT License (LICENSE).
+
+This copy contains the WebAssembly reader built from:
+
+- zxing-cpp, commit f19f7c6e0509fe0eeb822bf35c41b0f637dec290
+  Copyright 2016 Nu-book Inc. and the zxing-cpp contributors
+  https://github.com/zxing-cpp/zxing-cpp
+  Apache License, Version 2.0 (LICENSE-zxing-cpp)
+
+- src/cpp/ZXingWasm.cpp of zxing-wasm
+  Apache License, Version 2.0 (LICENSE-zxing-wasm-cpp)
+
+zint (BSD 3-Clause) is used only by the zxing-wasm writer build, which is not copied here.
+zxing-cpp has no NOTICE file of its own at that commit.

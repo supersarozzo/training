@@ -8,6 +8,7 @@
 //  - the time of "last synced" is the time the sync STARTED;
 //  - the token is only handed to github.js. It never appears in a result, a message or a log.
 import { createGithub, SyncError, validName } from "./github.js";
+import { createDocSyncer } from "./docsync.js";
 import { mergeDocs, canonical, hasChangesSince } from "./merge.js";
 import { validateDocument, emptyDoc } from "../validate.js";
 import { hasData } from "../store.js";
@@ -28,8 +29,10 @@ export const MESSAGES = {
   error: "Saved on phone. Will sync later.",
 };
 
+// The food file's sync state in the device box (sync/foodsync.js). Forget key and a new connection clear it too.
+export const FOOD_SYNC_KEYS = ["food_last_sha", "food_last_sync_at", "food_last_sync_result", "food_last_sync_attempt_at"];
+
 const DEFAULTS = { repo: "training-data", branch: "main", path: "progress.json" };
-const MAX_TRIES = 3;
 
 export function connectionOf(device) {
   if (!device || typeof device.token !== "string" || !device.token || !device.owner) return null;
@@ -57,10 +60,13 @@ export function saveConnection(store, { owner, repo, token, token_expires }) {
     else return { ok: false, error: "The end date must look like 2027-11-16." };
   }
   delete next.last_sha; // a new connection starts clean
+  delete next.food_last_sha;
   // The last result belongs to the old key or repo: a new key that works must not still show "key wrong" (review F3).
   delete next.last_sync_result;
   delete next.last_sync_attempt_at;
-  if (owner !== device.owner || repo !== device.repo) delete next.last_sync_at; // another repo: not synced there yet
+  delete next.food_last_sync_result;
+  delete next.food_last_sync_attempt_at;
+  if (owner !== device.owner || repo !== device.repo) { delete next.last_sync_at; delete next.food_last_sync_at; } // another repo: not synced there yet
   store.saveDevice(next);
   return { ok: true };
 }
@@ -68,125 +74,36 @@ export function saveConnection(store, { owner, repo, token, token_expires }) {
 // "Forget GitHub key": the token and the sync state leave the phone. The data stays.
 export function forgetKey(store) {
   const device = { ...store.loadDevice() };
-  for (const k of ["token", "last_sha", "last_sync_at", "last_sync_result", "last_sync_attempt_at", "token_expires"]) delete device[k];
+  for (const k of ["token", "last_sha", "last_sync_at", "last_sync_result", "last_sync_attempt_at", "token_expires", ...FOOD_SYNC_KEYS]) delete device[k];
   store.saveDevice(device);
 }
 
 const codeOf = (e) => (e instanceof SyncError ? e.code : "error");
-function storeCode(e) {
-  if (e && e.code === "full") return "full";
-  return "local_problem";
+
+// What makes progress.json different from food.json; the flow itself lives in docsync.js.
+export function progressKind(store) {
+  return {
+    connection: connectionOf,
+    keys: { sha: "last_sha", at: "last_sync_at", result: "last_sync_result", attempt: "last_sync_attempt_at" },
+    messages: MESSAGES,
+    load: () => store.load(),
+    save: (doc) => store.save(doc),
+    savePrev: () => store.savePrev(),
+    validate: validateDocument,
+    empty: emptyDoc,
+    merge: mergeDocs,
+    canonical,
+    hasData,
+    changesSince: hasChangesSince,
+    commitMessage: (startedAt) => `Training log ${startedAt}`,
+  };
 }
 
 // store: createStore(...). getFetch: () => fetch-like function. nowIso: () => ISO time.
 export function createSyncer({ store, getFetch, nowIso = () => new Date().toISOString() }) {
-  let running = null;
-  let again = null;
-  const listeners = new Set();
-
-  function patchDevice(patch) {
-    try { store.saveDevice({ ...store.loadDevice(), ...patch }); } catch { /* a full phone must not hide the sync result */ }
-  }
-
-  function done(result, extra = {}, devicePatch = {}) {
-    patchDevice({ last_sync_result: result, last_sync_attempt_at: nowIso(), ...devicePatch });
-    return { result, message: MESSAGES[result], ...extra };
-  }
-
-  // Read GitHub's file text into a clean document, or say what is wrong with it.
-  function readRemote(file) {
-    if (!file.found) return { ok: true, doc: emptyDoc() };
-    let raw;
-    try { raw = JSON.parse(file.text); } catch { return { ok: false, code: "broken_remote" }; }
-    const checked = validateDocument(raw);
-    if (!checked.ok) return { ok: false, code: checked.tooNew ? "too_new" : "broken_remote" };
-    return { ok: true, doc: checked.doc };
-  }
-
-  async function once(mode) {
-    const cfg = connectionOf(store.loadDevice());
-    if (!cfg) return done("not_set_up");
-    const startedAt = nowIso();
-    let gh;
-    try { gh = createGithub({ fetch: getFetch(), ...cfg }); } catch (e) { return done(codeOf(e)); }
-
-    for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
-      let file;
-      try { file = await gh.getFile(); } catch (e) { return done(codeOf(e)); }
-
-      const remote = readRemote(file);
-      if (!remote.ok) return done(remote.code); // never PUT over a file we could not read
-
-      let merged;
-      try {
-        const local = store.load();
-        merged = mergeDocs(local, remote.doc);
-        if (canonical(merged) !== canonical(mergeDocs(local, local))) {
-          store.savePrev();
-          // Merge again with what is stored right now, so nothing typed in the meantime is lost.
-          store.save(mergeDocs(store.load(), merged));
-        }
-      } catch (e) { return done(storeCode(e)); }
-
-      const found = file.found;
-      if (mode === "get") return done("ok", { merged: true, found }, file.sha ? { last_sha: file.sha } : {});
-      if (!hasData(merged)) return done("ok", { found }); // nothing to send yet
-      if (found && canonical(merged) === canonical(remote.doc)) {
-        return done("ok", { found }, { last_sha: file.sha, last_sync_at: startedAt }); // GitHub already has everything
-      }
-
-      // Never write a file that this app could not read back: the next GET would call it damaged (review F1).
-      if (!validateDocument(JSON.parse(JSON.stringify(merged))).ok) return done("local_invalid");
-
-      try {
-        const sent = await gh.putFile({ text: `${JSON.stringify(merged, null, 2)}\n`, sha: file.sha, message: `Training log ${startedAt}` });
-        return done("ok", { found, sent: true }, { ...(sent.sha ? { last_sha: sent.sha } : {}), last_sync_at: startedAt });
-      } catch (e) {
-        if (e instanceof SyncError && e.code === "conflict" && attempt < MAX_TRIES) continue;
-        return done(codeOf(e));
-      }
-    }
-    return done("conflict");
-  }
-
-  // mode "full" = get, merge, send. mode "get" = get and merge only (never sends).
-  function request(mode = "full") {
-    if (running) {
-      again = again === "full" || mode === "full" ? "full" : "get";
-      return running;
-    }
-    running = (async () => {
-      let res;
-      let m = mode;
-      try {
-        do {
-          again = null;
-          res = await once(m);
-          m = again;
-        } while (m && res.result === "ok");
-      } catch {
-        res = done("error");
-      } finally {
-        running = null;
-        again = null;
-      }
-      listeners.forEach((fn) => { try { fn(res); } catch { /* a screen problem must not stop sync */ } });
-      return res;
-    })();
-    return running;
-  }
-
+  const core = createDocSyncer({ kind: progressKind(store), device: store, getFetch, nowIso });
   return {
-    request,
-    isRunning: () => running !== null,
-    subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
-    isConfigured: () => connectionOf(store.loadDevice()) !== null,
-    // Is there something on the phone that was changed after the last good sync?
-    hasUnsynced() {
-      const device = store.loadDevice();
-      if (!connectionOf(device)) return false;
-      return hasChangesSince(store.load(), device.last_sync_at);
-    },
+    ...core,
     // "Test connection": calls the repo only. The answer is a plain code.
     async test() {
       const cfg = connectionOf(store.loadDevice());
