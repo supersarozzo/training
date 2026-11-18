@@ -429,3 +429,17 @@ test("F28 food restore on a phone with food merges (nothing dropped, safety copy
   assert.match(b.model.restore("nope").error, /not a training food file/);
   assert.equal(canonical(b.model.doc()), once, "a refused file changes nothing");
 });
+
+test("F29 the model never saves an entry the food check would refuse (a huge portion is refused in words, and sync is never blocked)", () => {
+  const p = phone();
+  const OIL = { name: "Test oil", per100g: { kcal: 884, protein_g: 0, carbs_g: 0, fat_g: 100 }, source: "own" };
+  const PROT = { name: "Test powder", per100g: { kcal: 400, protein_g: 100, carbs_g: 0, fat_g: 0 }, source: "own" };
+  assert.throws(() => p.model.saveAndLog(OIL, { date: "2026-03-02", meal: "lunch", amount_g: 3000 }), /amount/i);
+  assert.throws(() => p.model.saveAndLog(PROT, { date: "2026-03-02", meal: "lunch", amount_g: 2500 }), /amount/i);
+  const ok = p.model.saveAndLog(OIL, { date: "2026-03-02", meal: "lunch", amount_g: 100 });
+  assert.throws(() => p.model.updateEntry(ok.entry.id, { amount_g: 4000 }), /amount/i);
+  const f = p.model.saveFood(PROT);
+  assert.throws(() => p.model.logAgain(f.id, { date: "2026-03-02", meal: "lunch", amount_g: 5000 }), /amount/i);
+  assert.equal(validateFoodDoc(p.model.doc()).ok, true, "what the phone holds always passes the check");
+  assert.equal(live(p.model.doc().food_log).length, 1, "a refused entry saves nothing");
+});

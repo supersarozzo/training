@@ -427,3 +427,30 @@ test("S25 food status line in words", () => {
   assert.match(foodStatusText({ ...dev, food_last_sync_result: "ok", food_last_sync_at: "2026-03-02T09:00:00.000Z" }), /^Food synced /);
   assert.match(foodStatusText({ ...dev, food_last_sync_result: "ok", food_last_sync_at: "2026-03-02T09:00:00.000Z" }, true), /Newer food not sent yet\.$/);
 });
+
+test("S26 a damaged food box never stops Today or Settings: hasUnsynced still answers for the workout log", async () => {
+  const r = repo();
+  const p = phone(r);
+  p.model.setProfile(intake());
+  await p.both.request();
+  p.storage.setItem(FOOD_KEYS.data, "{broken");
+  assert.doesNotThrow(() => p.both.hasUnsynced());
+  assert.equal(p.both.hasUnsynced(), false);
+  p.model.updateSettings({ body_unit: "kg" });
+  assert.equal(p.both.hasUnsynced(), true, "new workout data still shows as not sent");
+});
+
+test("S27 a failed round is not run again because a second request came in while it ran (same as the workout sync)", async () => {
+  const r = repo();
+  let calls = 0;
+  const counting = (url, init) => { calls += 1; return r.fetch(url, init); };
+  const p = phone(r, { fetch: counting });
+  p.model.setProfile(intake());
+  r.prog.setBlocked(true);
+  const first = p.both.request();
+  const second = p.both.request();
+  const [a, b] = await Promise.all([first, second]);
+  assert.equal(a.result, "offline");
+  assert.equal(b.result, "offline");
+  assert.equal(calls, 1, "one GET, no second round while offline");
+});
