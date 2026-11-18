@@ -359,6 +359,41 @@ The first-try values come from the D12 table, without the profile factor (it can
 4. Nothing logged: unchanged from c758035.
 5. A bodyweight or timed exercise is unchanged.
 
+### D16. Editing the walk in Plan › Edit (0.7.4) — **yes to all six lines, with three small additions**
+
+Asked by the Training Agent for worker 8.41 on 2026-11-18. Rosario asked to edit the walk. The walk decisions D1 to D7 are in `2026-11-18-trainer-decisions.md` (by 8.36); the numbers below follow them.
+
+| # | 8.41's proposal | My answer |
+|---|---|---|
+| 1 | The edit saves fixed numbers for that day (speed, slope, minutes), used every week until Reset. The walk rule no longer moves that day; other days still follow it. The D7 small change on the walk screen still works on top. | **Yes.** Addition A below. |
+| 2 | Speed 2.0 to 5.0 km/h, 0.1 steps | **Yes** (D6 floor, D3 top, D7 step). |
+| 3 | Slope 0 to 12 %, leg days 0 to 10 %, 1 % steps | **Yes** (D3: leg days stay 2 % under the top). |
+| 4 | Minutes 10 to 30, 1-minute steps | **Yes, 10 is a good floor.** The minutes include the build-up, as today. Addition B below. |
+| 5 | Short day: the walk is at most 15 minutes (the smaller of the edit and 15) | **Yes.** |
+| 6 | Back from a break: the break rule still applies to an edited day, whichever is lower | **Yes, compared number by number.** Addition C below. |
+
+**Additions:**
+- **A. Say it on screen.** On an edited day, Plan › Edit and the walk screen show one line: "Your own walk. The walk rule does not change this day." Reset puts the day back on the walk rule. The rule then starts from the last saved walk of that day, as it always does (D7), and the D5 top still applies. The D7 small change still never goes above the top (5 km/h, 12 %; leg days 10 %).
+- **B. Under 30 minutes, one hint line** under the minutes stepper: "Under 30 minutes a day means under 150 minutes of walking a week." No warning colour and no block. Short walks still count.
+- **C. The break rule, number by number, for the break week only.** 2 to 4 weeks away: the slope is the edit minus 2 % (never below 0); speed and minutes stay as edited. More than 4 weeks away: for speed, slope and minutes, each takes the lower of the edit and the starting settings. After that week the edit applies again.
+
+**Why:**
+- *Fixed numbers are fine.* People keep going better, and accept more effort, when they choose the intensity themselves (Oliveira 2015; Ekkekakis 2011, as in D7). An edited day only stops the automatic climb on that one day. The other days still progress, and Reset brings the rule back.
+- *Speed and slope limits:* the same safety limits as the rest of the walk. 5 km/h and 12 % (leg days 10 %) keep the walk moderate before the weights, because harder cardio lowers strength more right after it (Markov 2022, D3). 2 km/h is the result screen's floor (D6).
+- *Minutes:* 30 stays the top, because longer cardio before weights lowers strength more (Markov 2022, D2). For the floor, the guidelines no longer ask for a 10-minute minimum: any amount of activity counts toward the weekly total (WHO 2020; US Physical Activity Guidelines 2018). So 10 is a practical floor, not a health rule. It leaves 7 fast minutes after the 3-minute build-up, which is still worth doing before the weights. The weekly 150 minutes (CDC) is the reason for the hint line.
+- *Short day and break:* these protect Rosario on a busy day or after time away, so they must also win over an edit. The lower number is always the safer one.
+
+Sources (read 2026-11-18): Bull et al. 2020, WHO guidelines on physical activity, Br J Sports Med ([UEA record](https://research-portal.uea.ac.uk/en/publications/world-health-organization-2020-guidelines-on-physical-activity-an/)); [Physical Activity Guidelines for Americans, 2nd edition (2018), health.gov](https://health.gov/our-work/nutrition-physical-activity/physical-activity-guidelines/current-guidelines); [CDC, measuring physical activity](https://www.cdc.gov/physical-activity-basics/measuring/index.html); Markov et al. 2022, Oliveira 2015 and Ekkekakis 2011, as cited in the walk decisions D2, D3 and D7 (`2026-11-18-trainer-decisions.md`); plan v2 sections 4 (short day) and 11 (breaks).
+
+**Tests for 8.41 to write first (they fail until the build):**
+1. An edited Wednesday walk (made-up 4.6 km/h, 7 %, 25 minutes) is suggested every week until Reset, even after easy walks; Monday still follows the walk rule.
+2. Limits: speed 2.0 to 5.0 in 0.1 steps; slope 0 to 12 (Tuesday and Friday 0 to 10) in 1 % steps; minutes 10 to 30 in 1-minute steps; anything outside is refused or clamped.
+3. On an edited day, the D7 change still works and never goes above 5 km/h or 12 % (leg days 10 %).
+4. Short day: an edit of 25 minutes gives 15; an edit of 12 gives 12.
+5. Break of 3 weeks: edit 7 % gives 5 % (edit 1 % gives 0 %) for the break week only. Break of 5 weeks: each number is the lower of the edit and the starting settings.
+6. Reset: the day follows the rule again, starting from its last saved walk.
+7. The line "Your own walk. The walk rule does not change this day." shows on an edited day. The hint line shows when the minutes are under 30, and only then.
+
 ## 5. Changes to your earlier choices
 
 **None.** I kept 74 b and 80-83 exactly:
