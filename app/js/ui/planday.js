@@ -175,7 +175,7 @@ export function renderPlan() {
         h("span", { class: "grow" }, h("b", {}, "Whole plan check"), h("span", { class: "small muted" }, "Weekly sets per muscle, Monday to Friday")),
         h("span", { class: "chev" }, icon("chevron", 18))),
       h("p", { class: "small muted center" }, "Tap an exercise for its muscles, photos and tips.")));
-  main.className = edit ? "screen has-bar plan-screen" : "screen has-tabs plan-screen";
+  main.className = edit ? "screen has-bar over-tabs plan-screen" : "screen has-tabs plan-screen";
   onMount(() => stagger(main.querySelectorAll(".pcard")));
 
   if (!edit) return main;

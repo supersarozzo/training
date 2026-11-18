@@ -87,9 +87,13 @@ function foodList(date) {
       }))),
   ].filter(Boolean);
 }
+// Undo with a sheet open (0.7.1, auditor finding 1): the whole Diet screen behind the sheet is drawn again (rings,
+// Log again, Copy yesterday, the food line), not only the list. The sheet itself lives outside the screen and stays.
 setListRedraw(() => {
-  const el = document.querySelector(".diet-list");
-  if (el) el.replaceChildren(...foodList(today()));
+  const el = document.querySelector("main.screen");
+  if (!el || !el.querySelector(".diet-list")) return; // only while the Diet screen is the one drawn
+  const [fresh] = renderDiet();
+  el.replaceChildren(...fresh.childNodes);
 });
 
 export function renderDiet() {

@@ -252,6 +252,6 @@ export function renderToday() {
 
   if (!calm) onMount(() => stagger(document.querySelectorAll(".screen > .hero, .screen > .card, .screen > .tiles, .screen > .day-actions")));
   calm = false;
-  const main = h("main", { class: "screen has-bar" }, ...children);
+  const main = h("main", { class: "screen has-bar over-tabs" }, ...children);
   return bar ? [main, tabActionBar(bar)] : [h("main", { class: "screen has-tabs" }, ...children)];
 }

@@ -43,7 +43,7 @@ Leftovers wave, built by chat 8.39 on top of 0.7.0. The trainer (8.37) decided e
 - "Set up GitHub" now says where: "in Progress › Settings" outside Settings, "below" inside Settings.
 - Today: the Start workout button no longer covers the last line.
 - Diet: each food shows its protein in bold, then the calories, and the time it was added (or last changed).
-  After Undo, the list behind an open sheet updates at once.
+  After Undo, the whole Diet screen behind an open sheet updates at once (rings, "Log again", the food line).
 - Small fixes: the week chip stays on one line; the small "Settings" link on Today is easier to tap; the walk shows
   "5" in both places; the body map outline is easier to see in dark mode.
 

@@ -112,7 +112,8 @@ svg.ic { flex-shrink: 0; } /* an icon keeps its size next to a long text (the Gy
   padding: calc(var(--s4) + var(--top-clear) + env(safe-area-inset-top)) var(--s4) var(--s8);
 }
 .screen.has-tabs { padding-bottom: calc(var(--tap-main) + 28px + var(--s8) + env(safe-area-inset-bottom)); }
-.screen.has-bar { padding-bottom: calc(var(--tap-main) * 3 + var(--s6) + env(safe-area-inset-bottom)); } /* tab bar + floating button + air (0.7.1: the last line was covered) */
+.screen.has-bar { padding-bottom: calc(var(--tap-main) * 2 + var(--s8) + var(--s4) + env(safe-area-inset-bottom)); } /* the action bar alone (workout, setup) */
+.screen.has-bar.over-tabs { padding-bottom: calc(var(--tap-main) * 3 + var(--s6) + env(safe-area-inset-bottom)); } /* tab bar + floating button + air (0.7.1: the last line was covered) */
 .screen.wide { max-width: 1000px; }
 .screen { position: relative; } /* the Settings gear sits at its top right */
 .screen.enter { animation: screen-in var(--t-normal) var(--ease) both; }
