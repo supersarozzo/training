@@ -94,6 +94,7 @@ app/
     prefs.js             reads and saves theme / motion_off in the device box (pure, tested)
     dayplan.js           Today's blocks and minutes, walk minutes from walkSuggestion() (pure, tested)
     version.js           APP_VERSION (same as in sw.js)
+    updater.js           the page side of updates: update checks, the waiting worker, Check for update (pure, tested; 0.7.3)
     h.js                 h(tag, props, ...children) helper
     store.js             load/save, schema, migrations
     validate.js          checks a data document (backup, synced file) before use
@@ -403,8 +404,14 @@ Automatic sync (0.7.2, Rosario: "the sync is too complicated"; `autosync.js`). E
 
 ## 7. Service worker and updates
 
-- `sw.js` keeps a cache named `training-<APP_VERSION>` with a fixed list of every app file. **Cache first** for app files; **network only, never cached** for `api.github.com`.
-- On a new version: the new service worker installs and waits. The app shows **"New version ready · Update"**, but only on the Today, Settings or progress screens, never during a workout. Tapping Update tells the worker to take over, then reloads. Old caches are deleted.
+- `sw.js` keeps a cache named `training-<APP_VERSION>` with a fixed list of every app file. **Cache first** for app files, and **only from this version's own cache** (never a search across all caches); **network only, never cached** for `api.github.com`.
+- On a new version: the new service worker installs and waits. The app shows **"New version ready · Update"**, but only on the main tab screens, never during a workout. Tapping Update tells the worker to take over, then reloads. If the app is closed instead, the browser makes the new worker active by itself and the next open runs the new version (normal service-worker behaviour, no tap needed). Old caches are deleted once the new one is complete.
+- **Update rules since 0.7.3** (the iPhone never showed the bar and kept old files; check record [checks/2026-11-18-v073-update.md](checks/2026-11-18-v073-update.md)):
+  1. **Install fetches every file fresh:** a new address per version (`?v=<APP_VERSION>`) and `cache: "reload"`, so a copy in the phone's HTTP cache (GitHub Pages sends `max-age=600`) or on GitHub's CDN from before the push can never fill the new cache. Before 0.7.3 `cache.addAll` could fill a "new" cache with old files. `js/version.js` is fetched first and must say `APP_VERSION`, else the install stops.
+  2. **Never a half-filled cache:** each file gets 3 tries (0.5 s, then 1 s apart), at most 6 at a time; a 404, a 500 or a redirect is a failure. One file that still fails fails the install: the new cache is deleted (only if this install made it), the old version keeps working, and the next update check tries again.
+  3. **Own cache only; old caches go from activate or the first fetch:** Safari (WebKit) stores a worker on disk when its install ends and, after its background process restarts, loads it back as the *active* worker without running `activate`. So the old cache could stay, and the old fetch code (`caches.match` over all caches, oldest first) served the old files with no bar shown. Now `activate` and the first fetch of the active worker both delete *older* `training-*` caches, and only when this version's cache holds its start page and `js/version.js`. A newer version's cache (it may be installing) and other caches are never touched.
+  4. **The page (`js/updater.js`, drawn by `ui/update.js`):** registers with `updateViaCache: "none"`; asks for an update at start, on coming to the front and on `pageshow`; follows a worker that was already installing when the page registered; shows the bar whenever a worker waits (with a controller); redraws only on a quiet main screen (no workout, sheet, scanner or typing). It never reloads unless the user tapped Update. Settings shows **"This phone runs version X"** and a **Check for update** button with a plain result line.
+  - Reach: rules 1-3 are in `sw.js`, and only the NEW worker's install, activate and fetch code runs during an update, so they reach a phone on 0.7.0-0.7.2 with no action. Rule 4 is page code: it runs only after one update has landed.
 - `APP_VERSION` lives in `js/version.js` and at the top of `sw.js`. A unit test checks that both match and that every file in `app/` is in the cache list.
 - Since 0.7.0 the list also holds the zxing-wasm reader (about 1 MB: the `.wasm` is 946,598 bytes), so the scanner works offline after the first open.
 - Since 0.4.0 (redesign) the list has 164 files, including every photo in `app/media/` (about 5.4 MB of the 5.9 MB app), so the photos work offline. The first open downloads all of it once (Rosario's question 59 a: keep the sharp photos).
@@ -459,6 +466,7 @@ Reviewed on 2026-11-16 (build step 11): every item passes, some after fixes. Fin
 6. **Body data never in the public repo:** fixtures made up; no personal numbers in code, comments or docs.
 7. **Food data and food sync** (build step 6, 0.7.0): `food/*` and `sync/docsync.js`, `foodsync.js`, `both.js`: food saved at once, its own box and file, the same sync rules as 5.2, a food problem never touches `progress.json`.
 8. **Open Food Facts and the barcode reader** (build steps 7 and 8, 0.7.0): only the barcode or word leaves the phone; their text only as text, cut to 120 letters, numbers range-checked; the reader from our own site with its licences; the camera always stopped. Wave 3 check record: [checks/2026-11-18-wave3.md](checks/2026-11-18-wave3.md).
+9. **Updates and offline files** (0.7.3): `sw.js` install, activate and fetch, `updater.js`: a new version never fills its cache with old files, never keeps a half-filled cache, answers only from its own cache, deletes only older caches and only when its own is complete, never reloads the page by itself, never touches localStorage. Check record: [checks/2026-11-18-v073-update.md](checks/2026-11-18-v073-update.md).
 
 ---
 

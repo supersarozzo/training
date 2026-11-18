@@ -53,7 +53,7 @@ function fakeWorld(origin = "https://example.test") {
       const rel = (u) => { const p = new URL(typeof u === "string" ? u : u.url).pathname; return p === "/" ? "./" : p.slice(1); };
       return {
         put: async (key, res) => { if (stores.get(name) === m) m.set(new URL(key).pathname, "cached:" + rel(key)); },
-        match: async (req) => m.get(new URL(req.url).pathname),
+        match: async (req) => m.get(new URL(typeof req === "string" ? req : req.url).pathname),
       };
     },
     has: async (name) => stores.has(name),

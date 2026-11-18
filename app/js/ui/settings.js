@@ -1,5 +1,5 @@
 // Settings: GitHub sync, backup and restore, the Log to Health button, gym weights, body unit, Look and Animations,
-// sound. Look (Auto / Light / Dark, builder C) and the Animations switch (builder D) stay on this phone only: they are
+// sound, and the app version with Check for update (0.7.3). Look (Auto / Light / Dark, builder C) and the Animations switch (builder D) stay on this phone only: they are
 // in the device box, never synced or backed up (prefs.js). The sync card (settings-sync.js) is unchanged.
 import { h } from "../h.js";
 import { screen, choiceRow } from "./parts.js";
@@ -14,6 +14,8 @@ import { shortcutOn, shortcutName } from "../shortcuts.js";
 import { now } from "../clock.js";
 import { THEMES, currentTheme, setTheme, motionOff, setMotionOff } from "./theme.js";
 import { icon } from "./icons.js";
+import { APP_VERSION } from "../version.js";
+import { updatesOn, checkForUpdate, updateStatusWords } from "./update.js";
 
 const MACHINE_NAMES = { lat_pulldown: "Lat pulldown machine", seated_row: "Seated row machine", leg_curl: "Leg curl machine", pec_deck: "Pec deck", calf_raise: "Calf raise machine" };
 let gymMessage = null;
@@ -168,5 +170,16 @@ export function renderSettings() {
     h("div", { class: "card" },
       h("h2", {}, "Sound"),
       h("p", { class: "muted" }, "A beep when a timer ends. It only plays with the app open and the phone's ring switch on. The screen flash always shows."),
-      h("button", { class: "choice", type: "button", "aria-pressed": on ? "true" : "false", onclick: toggle }, on ? "Sound is on" : "Sound is off")));
+      h("button", { class: "choice", type: "button", "aria-pressed": on ? "true" : "false", onclick: toggle }, on ? "Sound is on" : "Sound is off")),
+    appCard());
+}
+
+// The app's version, so you can see which one this phone runs, and a way to look for a new one now (0.7.3).
+function appCard() {
+  const words = updateStatusWords();
+  return h("div", { class: "card" },
+    h("h2", {}, "App version"),
+    h("p", {}, `This phone runs version ${APP_VERSION}.`),
+    updatesOn() ? h("button", { class: "button secondary", type: "button", onclick: () => checkForUpdate() }, "Check for update") : null,
+    words ? h("p", { class: "small muted", role: "status" }, words) : null);
 }

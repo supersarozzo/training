@@ -2,6 +2,25 @@
 
 What is new in each app version, in plain words. Newest first. Older versions: see `docs/HANDOVER.md` and the git log.
 
+## 0.7.3 · 2026-11-18
+
+The update fix, built by chat 8.40. Not pushed yet. The editable walk moves to 0.7.4.
+
+- Your iPhone did not get 0.7.1 and 0.7.2: the "New version ready" bar never showed and the app stayed old. Two
+  mistakes in the app's offline helper (the service worker) caused it:
+  - It looked for each app file in every saved copy of the app, oldest first. Safari can switch to a new version
+    without running the step that deletes the old copy, so the old files kept winning.
+  - When it downloaded a new version, the phone could hand it files it had kept from a few minutes before, so the
+    "new" copy could hold old files.
+- Now the app uses only the copy of its own version, downloads every file fresh, checks that it really got the new
+  version, and tries a file again if the signal drops. If a download still fails, the old version keeps working and
+  the app tries again later. Your saved data is never touched by any of this.
+- The fix is in the helper itself, so your phone picks it up by itself the next time the app opens with internet.
+- Settings has a new card at the bottom: **App version** says which version the phone runs, and **Check for update**
+  looks for a new one now and says what it found.
+- The bar can still stay away if you close the app before the download ends. That is fine: the next time you open
+  the app it runs the new version.
+
 ## 0.7.2 · 2026-11-18
 
 Automatic sync, built by chat 8.39 on top of 0.7.1. Not pushed yet.
