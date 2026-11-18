@@ -50,11 +50,13 @@ function setup(doc = validDoc(), start = "2026-01-26T08:00:00.000Z", make = crea
 }
 const find = (doc, day) => (doc.plan_days ?? []).find((r) => r.id === `p-plan-v2-${day}`);
 
-test("V0 version: 0.7.4 in js/version.js and at the top of sw.js", async () => {
+// 0.7.5 (worker 8.42): "0.7.4 or later", the same in both files; tests/v075-d18.test.mjs V0 pins 0.7.5.
+test("V0 version: 0.7.4 or later in js/version.js, the same at the top of sw.js", async () => {
   const { readFileSync } = await import("node:fs");
   const { APP_VERSION } = await import("../app/js/version.js");
-  assert.equal(APP_VERSION, "0.7.4");
-  assert.equal(readFileSync(new URL("../app/sw.js", import.meta.url), "utf8").match(/const APP_VERSION = "([^"]+)"/)[1], "0.7.4");
+  const n = APP_VERSION.split(".").map(Number);
+  assert.ok(n[0] > 0 || n[1] > 7 || (n[1] === 7 && n[2] >= 4), APP_VERSION);
+  assert.equal(readFileSync(new URL("../app/sw.js", import.meta.url), "utf8").match(/const APP_VERSION = "([^"]+)"/)[1], APP_VERSION);
 });
 
 // ---------- 1. the limits (trainer D2, D3, D6, D7 steps) ----------

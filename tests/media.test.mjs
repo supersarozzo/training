@@ -84,7 +84,7 @@ test("the chest press card does not promise a weight stack under a plate-loaded 
 test("exercisesOn lists the exercises of a machine", () => {
   assert.ok(exercisesOn("leg_press").includes("leg_press"));
   assert.ok(exercisesOn("leg_press").includes("calf_raise_leg_press"));
-  assert.deepEqual(exercisesOn("pec_deck"), []);
+  assert.deepEqual(exercisesOn("pec_deck"), ["reverse_pec_deck"]); // trainer D18 (0.7.5): the rear-delt fly on the pec deck
 });
 
 test("every exercise of the plan has a form video: a plain https YouTube link, no extra parameters, channel recorded", () => {

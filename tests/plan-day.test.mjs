@@ -155,7 +155,7 @@ test("slotRole and restTile: the sheet's eyebrow and its Rest tile", () => {
 
 test("neighbours: Previous and Next are the cards before and after, none past the ends", () => {
   const n = neighbours("tue", 3, "B1");
-  assert.equal(n.prev.ex, "cable_crunch");
+  assert.equal(n.prev.ex, "weighted_crunch"); // trainer D18 (0.7.5): was cable_crunch
   assert.equal(n.next.ex, "face_pull");
   assert.equal(neighbours("tue", 3, "A1").prev, null);
   assert.equal(neighbours("tue", 3, "D").next, null);
@@ -174,7 +174,7 @@ test("Gym groups: every exercise sits in exactly one group; chest 3 and back 5 a
 
 test("planDaysOf: the plan days an exercise is on (empty = swap only)", () => {
   assert.deepEqual(planDaysOf("face_pull"), ["tue", "thu"]);
-  assert.deepEqual(planDaysOf("plank"), ["mon", "thu"]);
+  assert.deepEqual(planDaysOf("plank"), ["mon", "tue", "thu"]); // trainer D18 (0.7.5): Tuesday C2 dead bug -> plank
   assert.deepEqual(planDaysOf("cable_curl"), []);
 });
 

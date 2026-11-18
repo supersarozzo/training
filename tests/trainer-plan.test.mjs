@@ -18,15 +18,18 @@ const SHIPPED_IDS = [
   "cable_pull_through", "calf_raise_standing", "calf_raise_leg_press", "db_lying_leg_curl", "cable_curl",
   "cable_lateral_raise", "rear_delt_raise", "db_glute_bridge", "lat_pulldown_machine", "seated_row_machine",
   "leg_curl_machine", "calf_raise_machine", "one_leg_db_calf_raise", "cable_leg_curl",
+  // Trainer D18 (0.7.5)
+  "booty_builder_hip_thrust", "weighted_crunch", "ab_crunch_machine", "reverse_pec_deck",
 ];
 
-// The plan's days as the trainer kept them: [slot, exercise id, sets, rest].
+// The plan's days as the trainer kept them: [slot, exercise id, sets, rest]. Tuesday and Friday: trainer D18 (0.7.5), with
+// the trainer's agreement in D18 test 7 (hip thrust machine, crunch with a dumbbell, plank, calf raise on the leg press).
 const KEPT_DAYS = {
   mon: [["A1", "chest_press", 3, null], ["A2", "pulldown", 3, 90], ["B1", "shoulder_press_machine", 3, null], ["B2", "one_arm_db_row", 3, 90], ["C1", "db_curl", 3, null], ["C2", "triceps_pushdown", 3, 60], ["Abs1", "plank", 2, 30], ["D", "calf_raise_leg_press", 3, 60]],
-  tue: [["A1", "leg_press", 3, null], ["A2", "cable_crunch", 3, 90], ["B1", "romanian_deadlift", 3, null], ["B2", "face_pull", 3, 90], ["C1", "hip_thrust", 3, null], ["C2", "dead_bug", 3, 75], ["D", "leg_extension", 3, 60]],
+  tue: [["A1", "leg_press", 3, null], ["A2", "weighted_crunch", 3, 90], ["B1", "romanian_deadlift", 3, null], ["B2", "face_pull", 3, 90], ["C1", "booty_builder_hip_thrust", 3, null], ["C2", "plank", 3, 75], ["D", "leg_extension", 3, 60]],
   wed: [["A1", "goblet_squat", 3, null], ["A2", "db_bench_press", 3, 90], ["B1", "pulldown", 3, null], ["B2", "lateral_raise", 2, 75], ["C1", "hammer_curl", 2, null], ["C2", "overhead_triceps_ext", 2, 60], ["Abs1", "side_plank", 2, 30], ["D", "calf_raise_leg_press", 3, 60]],
   thu: [["A1", "incline_db_press", 3, null], ["A2", "seated_cable_row", 3, 90], ["B1", "seated_db_shoulder_press", 3, null], ["B2", "face_pull", 3, 75], ["C1", "lateral_raise", 3, null], ["C2", "triceps_pushdown", 3, 60], ["Abs1", "plank", 2, 30], ["D", "db_lying_leg_curl", 3, 60]],
-  fri: [["A1", "smith_squat", 3, null], ["A2", "reverse_crunch", 3, 90], ["B1", "hip_thrust", 3, null], ["B2", "lateral_raise", 3, 75], ["C1", "cable_pull_through", 3, null], ["C2", "side_plank", 2, 60], ["D", "calf_raise_standing", 3, 60]],
+  fri: [["A1", "smith_squat", 3, null], ["A2", "reverse_crunch", 3, 90], ["B1", "booty_builder_hip_thrust", 3, null], ["B2", "lateral_raise", 3, 75], ["C1", "cable_pull_through", 3, null], ["C2", "side_plank", 2, 60], ["D", "calf_raise_leg_press", 3, 60]],
 };
 
 const BUILD_WEEKS = [2, 3, 4, 5, 7, 8, 9, 10, 11];

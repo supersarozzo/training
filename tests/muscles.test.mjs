@@ -26,9 +26,12 @@ const planIds = [...new Set(Object.values(days).flatMap((d) => d.slots.map((s) =
 const swapOnlyIds = Object.keys(exercises).filter((id) => !planIds.includes(id));
 const allIds = Object.keys(exercises);
 
-test("the plan has 29 exercises in its days and 10 swap-only ones (plan change 2026-11-18)", () => {
-  assert.equal(planIds.length, 29); // 27 + calf raise on the leg press + dumbbell lying leg curl
-  assert.equal(swapOnlyIds.length, 10); // 9 - calf raise on the leg press + one-leg dumbbell calf raise + cable leg curl
+test("the plan has 27 exercises in its days and 16 swap-only ones (trainer D18, 0.7.5)", () => {
+  // Plan change 2026-11-18: 29 in the days, 10 swap-only. D18: hip thrust, cable crunch, dead bug and Smith standing calf
+  // raise leave the days (they stay as swaps); hip thrust machine and crunch with a dumbbell join; plank and calf raise on
+  // the leg press were already in the days. Ab crunch machine and reverse pec deck are new swap-only exercises.
+  assert.equal(planIds.length, 27); // 29 - 4 + 2
+  assert.equal(swapOnlyIds.length, 16); // 10 + 4 + 2
   for (const id of allIds) for (const s of exercises[id].swaps) assert.ok(exercises[s.id], `${id} swap ${s.id} is a known exercise`);
 });
 
@@ -105,7 +108,7 @@ const SHOULDER_PART = {
   chest_press: "front_delts", db_bench_press: "front_delts", incline_db_press: "front_delts",
   shoulder_press_machine: "front_delts", seated_db_shoulder_press: "front_delts", goblet_squat: "front_delts",
   lateral_raise: "side_delts", cable_lateral_raise: "side_delts", side_plank: "side_delts",
-  face_pull: "rear_delts", rear_delt_raise: "rear_delts",
+  face_pull: "rear_delts", rear_delt_raise: "rear_delts", reverse_pec_deck: "rear_delts", // reverse_pec_deck: trainer D18 (0.7.5)
   pulldown: "rear_delts", lat_pulldown_machine: "rear_delts", one_arm_db_row: "rear_delts", seated_cable_row: "rear_delts",
 };
 

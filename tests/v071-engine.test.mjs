@@ -131,7 +131,9 @@ function counts(dayId, week = 3, record = null, exOf) {
 test("B2-1 the big lifts list is the trainer's", () => {
   assert.deepEqual([...plan.BIG_LIFTS].sort(), ["chest_press", "db_bench_press", "incline_db_press", "shoulder_press_machine", "seated_db_shoulder_press",
     "pulldown", "lat_pulldown_machine", "one_arm_db_row", "seated_cable_row", "seated_row_machine", "leg_press", "smith_squat", "goblet_squat",
-    "hip_thrust", "db_glute_bridge", "romanian_deadlift"].sort());
+    "hip_thrust", "db_glute_bridge", "romanian_deadlift",
+    "booty_builder_hip_thrust", // trainer D18 (0.7.5): the hip thrust machine takes the hip thrust's place and its warm-up sets
+  ].sort());
 });
 
 test("B2-2 every plan day: big lift first for its muscle = 2, small = 1, muscle already worked = 0; others 0", () => {

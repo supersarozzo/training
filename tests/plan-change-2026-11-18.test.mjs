@@ -33,14 +33,14 @@ test("Monday, Wednesday and Thursday: Abs1 has 2 sets, there is no Abs2, D follo
   assert.deepEqual(["mon", "wed", "thu"].map((d) => slotOf(d, "D").ex), ["calf_raise_leg_press", "calf_raise_leg_press", "db_lying_leg_curl"]);
 });
 
-test("Tuesday and Friday did not change", () => {
-  assert.deepEqual(days.tue.slots.map((s) => [s.slot, s.ex, s.sets, s.rest]), [
-    ["A1", "leg_press", 3, null], ["A2", "cable_crunch", 3, 90], ["B1", "romanian_deadlift", 3, null], ["B2", "face_pull", 3, 90],
-    ["C1", "hip_thrust", 3, null], ["C2", "dead_bug", 3, 75], ["D", "leg_extension", 3, 60],
+// This change left Tuesday and Friday alone. Trainer D18 (0.7.5) later swapped five of their exercises for machines and
+// simpler moves, with the same slots, sets and rest (tests/v075-d18.test.mjs D18-1): checked here as slots, sets, rest.
+test("Tuesday and Friday did not change here (exercises changed later by D18, 0.7.5; slots, sets and rest the same)", () => {
+  assert.deepEqual(days.tue.slots.map((s) => [s.slot, s.sets, s.rest]), [
+    ["A1", 3, null], ["A2", 3, 90], ["B1", 3, null], ["B2", 3, 90], ["C1", 3, null], ["C2", 3, 75], ["D", 3, 60],
   ]);
-  assert.deepEqual(days.fri.slots.map((s) => [s.slot, s.ex, s.sets, s.rest]), [
-    ["A1", "smith_squat", 3, null], ["A2", "reverse_crunch", 3, 90], ["B1", "hip_thrust", 3, null], ["B2", "lateral_raise", 3, 75],
-    ["C1", "cable_pull_through", 3, null], ["C2", "side_plank", 2, 60], ["D", "calf_raise_standing", 3, 60],
+  assert.deepEqual(days.fri.slots.map((s) => [s.slot, s.sets, s.rest]), [
+    ["A1", 3, null], ["A2", 3, 90], ["B1", 3, null], ["B2", 3, 75], ["C1", 3, null], ["C2", 2, 60], ["D", 3, 60],
   ]);
 });
 

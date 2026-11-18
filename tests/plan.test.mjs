@@ -5,7 +5,8 @@ import assert from "node:assert/strict";
 import { exercises, days, weeks, setsFor, rirFor, DAY_IDS, extraMachines, weekInfo } from "../app/js/plan/plan-v2.js";
 import { cues } from "../app/js/plan/cues.js";
 
-// Plan v2 section 6: slot, exercise, sets, reps, rest after pair, swaps
+// Plan v2 section 6: slot, exercise, sets, reps, rest after pair, swaps. Tuesday and Friday changed by trainer D18 (0.7.5,
+// docs/plan/2026-11-18-trainer-weekly-plan.md): machines instead of awkward moves; sets and rest unchanged.
 const SECTION_6 = {
   mon: [
     ["A1", "chest_press", 3, [8, 12], null, ["db_bench_press"]],
@@ -19,11 +20,11 @@ const SECTION_6 = {
   ],
   tue: [
     ["A1", "leg_press", 3, [10, 12], null, ["smith_squat"]],
-    ["A2", "cable_crunch", 3, [10, 15], 90, ["reverse_crunch"]],
+    ["A2", "weighted_crunch", 3, [10, 15], 90, ["ab_crunch_machine", "cable_crunch", "reverse_crunch"]], // D18: was cable_crunch
     ["B1", "romanian_deadlift", 3, [8, 12], null, ["cable_pull_through"]],
-    ["B2", "face_pull", 3, [12, 15], 90, ["rear_delt_raise"]],
-    ["C1", "hip_thrust", 3, [8, 12], null, ["db_glute_bridge"]],
-    ["C2", "dead_bug", 3, [8, 8], 75, ["plank"]],
+    ["B2", "face_pull", 3, [12, 15], 90, ["rear_delt_raise", "reverse_pec_deck"]], // D18: reverse pec deck if the gym has a pec deck
+    ["C1", "booty_builder_hip_thrust", 3, [8, 12], null, ["hip_thrust", "db_glute_bridge"]], // D18: was hip_thrust
+    ["C2", "plank", 3, [20, 40], 75, ["dead_bug"]], // D18: was dead_bug
     ["D", "leg_extension", 3, [12, 15], 60, ["goblet_squat"]],
   ],
   wed: [
@@ -40,7 +41,7 @@ const SECTION_6 = {
     ["A1", "incline_db_press", 3, [8, 12], null, ["chest_press"]],
     ["A2", "seated_cable_row", 3, [8, 12], 90, ["one_arm_db_row", "seated_row_machine"]],
     ["B1", "seated_db_shoulder_press", 3, [8, 12], null, ["shoulder_press_machine"]],
-    ["B2", "face_pull", 3, [12, 15], 75, ["rear_delt_raise"]],
+    ["B2", "face_pull", 3, [12, 15], 75, ["rear_delt_raise", "reverse_pec_deck"]], // D18
     ["C1", "lateral_raise", 3, [12, 15], null, ["cable_lateral_raise"]],
     ["C2", "triceps_pushdown", 3, [10, 15], 60, ["overhead_triceps_ext"]],
     ["Abs1", "plank", 2, [20, 40], 30, ["dead_bug"]], // changed 2026-11-18: 3 -> 2 sets
@@ -49,11 +50,11 @@ const SECTION_6 = {
   fri: [
     ["A1", "smith_squat", 3, [8, 12], null, ["leg_press"]],
     ["A2", "reverse_crunch", 3, [10, 15], 90, ["dead_bug"]],
-    ["B1", "hip_thrust", 3, [8, 12], null, ["db_glute_bridge"]],
+    ["B1", "booty_builder_hip_thrust", 3, [8, 12], null, ["hip_thrust", "db_glute_bridge"]], // D18: was hip_thrust
     ["B2", "lateral_raise", 3, [12, 15], 75, ["cable_lateral_raise"]],
     ["C1", "cable_pull_through", 3, [12, 15], null, ["romanian_deadlift", "leg_curl_machine"]],
     ["C2", "side_plank", 2, [15, 30], 60, ["plank"]],
-    ["D", "calf_raise_standing", 3, [12, 15], 60, ["calf_raise_leg_press", "calf_raise_machine"]],
+    ["D", "calf_raise_leg_press", 3, [12, 15], 60, ["calf_raise_machine", "calf_raise_standing", "one_leg_db_calf_raise"]], // D18: was calf_raise_standing
   ],
 };
 
@@ -158,7 +159,7 @@ test("every swap points to a real exercise; Q17 swaps name a known machine", () 
     }
   }
   const needing = Object.values(exercises).flatMap((e) => e.swaps.filter((s) => s.needsMachine).map((s) => s.needsMachine));
-  assert.deepEqual([...new Set(needing)].sort(), ["calf_raise", "lat_pulldown", "leg_curl", "seated_row"]);
+  assert.deepEqual([...new Set(needing)].sort(), ["ab_crunch", "calf_raise", "lat_pulldown", "leg_curl", "pec_deck", "seated_row"]); // ab_crunch, pec_deck: trainer D18 (0.7.5)
 });
 
 test("every exercise has a form cue and every plan exercise appears in a day", () => {

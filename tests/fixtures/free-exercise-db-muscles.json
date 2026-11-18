@@ -3,7 +3,7 @@
   "licence": "The Unlicense (public domain)",
   "commit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
   "read": "2026-11-17",
-  "note": "Only the entries our exercises use (app/js/plan/media.js `lib`), only name and muscle fields, copied unchanged. Test data for tests/muscles.test.mjs.",
+  "note": "Only the entries our exercises use (app/js/plan/media.js `lib`), only name and muscle fields, copied unchanged. Test data for tests/muscles.test.mjs. Weighted_Crunches, Ab_Crunch_Machine and Reverse_Machine_Flyes added 2026-11-18 (trainer D18, 0.7.5), same commit.",
   "entries": {
     "Barbell_Glute_Bridge": {
       "name": "Barbell Glute Bridge",
@@ -342,6 +342,27 @@
       "name": "Standing Leg Curl",
       "primaryMuscles": [
         "hamstrings"
+      ],
+      "secondaryMuscles": []
+    },
+    "Weighted_Crunches": {
+      "name": "Weighted Crunches",
+      "primaryMuscles": [
+        "abdominals"
+      ],
+      "secondaryMuscles": []
+    },
+    "Ab_Crunch_Machine": {
+      "name": "Ab Crunch Machine",
+      "primaryMuscles": [
+        "abdominals"
+      ],
+      "secondaryMuscles": []
+    },
+    "Reverse_Machine_Flyes": {
+      "name": "Reverse Machine Flyes",
+      "primaryMuscles": [
+        "shoulders"
       ],
       "secondaryMuscles": []
     }
