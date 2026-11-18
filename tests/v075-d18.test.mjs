@@ -345,11 +345,13 @@ test("D18-7 tests/trainer-plan.test.mjs locks the new days and knows the four ne
   assert.ok(src.includes('["D", "calf_raise_leg_press", 3, 60]]'), "KEPT_DAYS has the new Friday D");
 });
 
-test("V0 version: 0.7.5 in js/version.js and at the top of sw.js", async () => {
+// 0.7.6 (worker 8.43): "0.7.5 or later", the same in both files; tests/v076-release.test.mjs V0 pins 0.7.6.
+test("V0 version: 0.7.5 or later in js/version.js, the same at the top of sw.js", async () => {
   const { readFileSync } = await import("node:fs");
   const { APP_VERSION } = await import("../app/js/version.js");
-  assert.equal(APP_VERSION, "0.7.5");
-  assert.equal(readFileSync(new URL("../app/sw.js", import.meta.url), "utf8").match(/const APP_VERSION = "([^"]+)"/)[1], "0.7.5");
+  const n = APP_VERSION.split(".").map(Number);
+  assert.ok(n[0] > 0 || n[1] > 7 || (n[1] === 7 && n[2] >= 5), APP_VERSION);
+  assert.equal(readFileSync(new URL("../app/sw.js", import.meta.url), "utf8").match(/const APP_VERSION = "([^"]+)"/)[1], APP_VERSION);
 });
 
 // ---------- trainer's answers to 8.42 (commit 8ba08e5, D18 "Answers to 8.42") ----------
