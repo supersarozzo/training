@@ -57,14 +57,17 @@ test("R6 the pain swap never starts above the new exercise's own first try when 
     assert.equal(kg, lighterFor(to, own, doc.shared_settings), `${from} -> ${to}: 30 % under its own first try`);
   }
   // A weight really lifted or known (a set done, the logs, the Plan) keeps the old rule: 30 % under it.
-  assert.equal(painSwapStart("smith_squat", { lastWorkKg: 40, origSugg: sg("leg_press"), newSugg: sg("smith_squat") }, doc.shared_settings), lighterFor("smith_squat", 40, doc.shared_settings));
+  // Test change (trainer D15, commit 84cc920): a weight of the old exercise is converted by the first-try ratio before
+  // the 30 % cut: leg press 40 x (Smith 10 / leg press 40) x 0.7 = 7, down to Smith steps = 5.
+  assert.equal(painSwapStart("smith_squat", { origId: "leg_press", lastWorkKg: 40, origSugg: sg("leg_press"), newSugg: sg("smith_squat") }, doc.shared_settings), 5);
   // Test change (auditor round 3, F2): a Plan weight on the original with nothing logged no longer counts in the new
   // exercise's units; with nothing logged the swap starts from the new exercise's own weight (below).
-  assert.equal(painSwapStart("smith_squat", { lastWorkKg: undefined, origSugg: { action: "mine", weight_kg: 40, last: { weight_kg: 40 } }, newSugg: sg("smith_squat") }, doc.shared_settings), lighterFor("smith_squat", 40, doc.shared_settings));
+  assert.equal(painSwapStart("smith_squat", { origId: "leg_press", lastWorkKg: undefined, origSugg: { action: "mine", weight_kg: 40, last: { weight_kg: 40 } }, newSugg: sg("smith_squat") }, doc.shared_settings), 5);
   // The new exercise's own history decides by itself (no swap weight saved).
   assert.equal(painSwapStart("smith_squat", { lastWorkKg: 40, origSugg: sg("leg_press"), newSugg: { ...sg("smith_squat"), last: { weight_kg: 20 } } }, doc.shared_settings), null);
   const ui = src("js/ui/swap.js");
-  assert.match(ui, /painSwapStart\(id, \{ lastWorkKg: last\?\.weight_kg, origSugg: ctx\.sugg\(rec\.done_exercise\), newSugg: ctx\.sugg\(id\) \}, ctx\.settings\)/);
+  // (D15: the swap also passes the old exercise's id, for the first-try ratio.)
+  assert.match(ui, /painSwapStart\(id, \{ origId: rec\.done_exercise, lastWorkKg: last\?\.weight_kg, origSugg: ctx\.sugg\(rec\.done_exercise\), newSugg: ctx\.sugg\(id\) \}, ctx\.settings\)/);
 });
 
 // D12 addition (trainer 8.37, 2026-11-18, commit dc59f13; checker round 2, finding 3): an exercise first done in week 2
@@ -153,6 +156,63 @@ test("R8 every pain swap with nothing logged: never 0, never above the new exerc
   const woman = { ...base, profile: { ...base.profile, intake: intake({ q22_sex: "female" }) } };
   const wsg = (id) => suggestFor(woman, id, { week: 3, missed: null, exerciseState: undefined });
   assert.equal(painSwapStart("smith_squat", { origSugg: wsg("leg_press"), newSugg: wsg("smith_squat") }, woman.shared_settings), firstTryWeight("smith_squat", woman.shared_settings, woman.profile));
-  // a set done today keeps the old rule (known limit)
-  assert.equal(painSwapStart("smith_squat", { lastWorkKg: 40, origSugg: wsg("leg_press"), newSugg: wsg("smith_squat") }, woman.shared_settings), lighterFor("smith_squat", 40, woman.shared_settings));
+  // a set done today: the D15 ratio (test change for trainer D15, 84cc920; the profile factor cancels out)
+  assert.equal(painSwapStart("smith_squat", { origId: "leg_press", lastWorkKg: 40, origSugg: wsg("leg_press"), newSugg: wsg("smith_squat") }, woman.shared_settings), 5);
+});
+
+// D15 trainer 8.37 (commit 84cc920, docs/plan/2026-11-18-trainer-weekly-plan.md): after "It hurts" with a weight of the
+// old exercise (a set today or its log), start at old kg x (first-try table of the new / of the old) x 0.7, rounded
+// down to the gym (D12 rounding), at least one step. Raw table values (no profile factor). No table value (bodyweight
+// or timed): the old rule. Own history of the new exercise: null. Nothing logged: unchanged (c758035).
+import { firstTryKg } from "../app/js/plan/plan-v2.js";
+import { gymFloor } from "../app/js/engine/progression.js";
+
+const fallbackGym = {}; // no dumbbell list, no stack steps: dumbbells 2 kg, stacks 5 kg, Smith 5 kg
+const logged = (kg) => ({ action: "progress", weight_kg: kg, last: { weight_kg: kg } });
+
+test("D15-1 the trainer's four rows (fallback gym steps)", () => {
+  const start = (from, to, kg) => painSwapStart(to, { origId: from, lastWorkKg: kg, origSugg: logged(kg), newSugg: { action: "first_try", weight_kg: 1 } }, fallbackGym);
+  assert.equal(start("chest_press", "db_bench_press", 40), 14);
+  assert.equal(start("leg_press", "smith_squat", 80), 10);
+  assert.equal(start("face_pull", "rear_delt_raise", 25), 4);
+  assert.equal(start("goblet_squat", "leg_press", 16), 35);
+  // the same from a log of the old exercise (no set today)
+  assert.equal(painSwapStart("db_bench_press", { origId: "chest_press", origSugg: logged(40), newSugg: { action: "first_try", weight_kg: 1 } }, fallbackGym), 14);
+});
+
+test("D15-2 every swap pair with a logged weight: never above old x new / old x 0.7 (or the lightest step), never 0", () => {
+  let checked = 0;
+  for (const settings of [fallbackGym, validDoc().shared_settings]) {
+    for (const [from, ex] of Object.entries(exercises)) {
+      for (const { id: to } of ex.swaps ?? []) {
+        if (!firstTryKg[from] || !firstTryKg[to]) continue;
+        for (const kg of [8, 25, 50, 100]) {
+          const got = painSwapStart(to, { origId: from, lastWorkKg: kg, origSugg: logged(kg), newSugg: { action: "first_try", weight_kg: 1 } }, settings);
+          const bound = kg * firstTryKg[to] / firstTryKg[from] * 0.7;
+          const lightest = gymFloor(0, to, settings);
+          assert.ok(Number.isFinite(got) && got > 0, `${from} ${kg} -> ${to}: ${got}`);
+          assert.ok(got <= Math.max(bound, lightest) + 1e-9, `${from} ${kg} -> ${to}: ${got} > ${bound.toFixed(2)}`);
+          assert.equal(got, gymFloor(bound, to, settings), `${from} ${kg} -> ${to}: rounded down to the gym`);
+          checked++;
+        }
+      }
+    }
+  }
+  assert.ok(checked > 200, `checked ${checked}`);
+});
+
+test("D15-3 own history of the new exercise: null (its own suggestion); D15-4 nothing logged: unchanged", () => {
+  assert.equal(painSwapStart("db_bench_press", { origId: "chest_press", lastWorkKg: 40, origSugg: logged(40), newSugg: { action: "progress", weight_kg: 12, last: { weight_kg: 12 } } }, fallbackGym), null);
+  const doc = { ...validDoc(), sessions: [], exercise_state: [] };
+  const sg = (id) => suggestFor(doc, id, { week: 3, missed: null, exerciseState: undefined });
+  const own = firstTryWeight("db_bench_press", doc.shared_settings, doc.profile);
+  const lower = lighterFor("db_bench_press", own, doc.shared_settings);
+  assert.equal(painSwapStart("db_bench_press", { origId: "chest_press", origSugg: sg("chest_press"), newSugg: sg("db_bench_press") }, doc.shared_settings), lower > 0 ? lower : own);
+});
+
+test("D15-5 no table value (bodyweight or timed): the old rule", () => {
+  assert.equal(painSwapStart("reverse_crunch", { origId: "cable_crunch", lastWorkKg: 30, origSugg: logged(30), newSugg: { action: "unknown", weight_kg: 0 } }, fallbackGym), lighterFor("reverse_crunch", 30, fallbackGym));
+  assert.equal(gymFloor(0.1, "chest_press", fallbackGym), 5, "at least one step");
+  assert.equal(gymFloor(13.9, "db_bench_press", fallbackGym), 12);
+  assert.equal(gymFloor(13.9, "db_bench_press", { dumbbell_steps_kg: [5, 7.5, 10, 12.5, 15] }), 12.5);
 });
