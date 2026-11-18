@@ -48,14 +48,15 @@ test("F1-2 other counts: '2 eggs', '2 sausages', 'about 2 hash browns', a pack's
 
 test("F1-3 no count, count 1, or a weight: as before (the whole serving is 1 piece)", () => {
   assert.deepEqual(fmath.pieceOf({ serving_g: 5, serving_label: "1 teaspoon" }), { g: 5, label: "1 teaspoon" });
-  assert.deepEqual(fmath.pieceOf({ serving_g: 100, serving_label: "100 g" }), { g: 100, label: "100 g" });
-  assert.deepEqual(fmath.pieceOf({ serving_g: 100, serving_label: "100g" }), { g: 100, label: "100g" });
+  // 0.7.6 (food P1): a serving named only in grams, or with no words, is no piece weight (Pieces asks).
+  assert.equal(fmath.pieceOf({ serving_g: 100, serving_label: "100 g" }), null);
+  assert.equal(fmath.pieceOf({ serving_g: 100, serving_label: "100g" }), null);
   assert.deepEqual(fmath.pieceOf({ serving_g: 250, serving_label: "250 ml" }), { g: 250, label: "250 ml" });
   assert.deepEqual(fmath.pieceOf({ serving_g: 62.5, serving_label: "egg" }), { g: 62.5, label: "egg" });
   assert.deepEqual(fmath.pieceOf({ serving_g: 30, serving_label: "1 bar (30 g)" }), { g: 30, label: "1 bar (30 g)" });
-  assert.deepEqual(fmath.pieceOf({ serving_g: 30, serving_label: "" }), { g: 30, label: "piece" });
+  assert.equal(fmath.pieceOf({ serving_g: 30, serving_label: "" }), null);
   assert.equal(fmath.pieceWords(fmath.pieceOf({ serving_g: 5, serving_label: "1 teaspoon" })), "1 teaspoon");
-  assert.equal(fmath.pieceWords(fmath.pieceOf({ serving_g: 100, serving_label: "100 g" })), "1 piece = 100 g");
+  assert.equal(fmath.pieceWords({ g: 100, label: "100 g" }), "1 piece = 100 g");
   // A piece under 1 g would be refused, so a count that gives one is not used.
   assert.deepEqual(fmath.pieceOf({ serving_g: 3, serving_label: "6 drops" }), { g: 3, label: "6 drops" });
 });

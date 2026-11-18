@@ -25,8 +25,10 @@ function foodModel() {
 
 test("P1 pieceOf: a piece weight of 1 to 2000 g; the words default to 'piece'; anything else is no piece weight", () => {
   assert.deepEqual(fmath.pieceOf(egg({ serving_g: 62.5, serving_label: "egg" })), { g: 62.5, label: "egg" });
-  assert.deepEqual(fmath.pieceOf(egg({ serving_g: 62.5, serving_label: null })), { g: 62.5, label: "piece" });
-  assert.deepEqual(fmath.pieceOf(egg({ serving_g: 30, serving_label: "  " })), { g: 30, label: "piece" });
+  // 0.7.6 (food P1): no words is no piece weight (Pieces asks); a typed weight saves the words "piece".
+  assert.equal(fmath.pieceOf(egg({ serving_g: 62.5, serving_label: null })), null);
+  assert.equal(fmath.pieceOf(egg({ serving_g: 30, serving_label: "  " })), null);
+  assert.deepEqual(fmath.pieceOf(egg({ serving_g: 62.5, serving_label: "piece" })), { g: 62.5, label: "piece" });
   for (const g of [null, undefined, 0, 0.5, 2001, NaN, "60", -5]) assert.equal(fmath.pieceOf(egg({ serving_g: g, serving_label: "egg" })), null, String(g));
   assert.equal(fmath.pieceOf(null), null);
 });
@@ -106,7 +108,8 @@ test("P6 the last mode per food is remembered on this phone only (device box), a
 test("P7 the sheet opens in the mode used last; with no memory, Pieces when the food has a piece weight, else Grams", () => {
   assert.equal(modes.startMode(egg({ serving_g: 62.5 }), "grams"), "grams");
   assert.equal(modes.startMode(egg(), "pieces"), "pieces", "Pieces works for every food (it asks for the weight)");
-  assert.equal(modes.startMode(egg({ serving_g: 62.5 }), null), "pieces");
+  assert.equal(modes.startMode(egg({ serving_g: 62.5, serving_label: "egg" }), null), "pieces");
+  assert.equal(modes.startMode(egg({ serving_g: 62.5 }), null), "grams", "0.7.6 (food P1): grams with no words are no piece weight");
   assert.equal(modes.startMode(egg(), null), "grams");
 });
 

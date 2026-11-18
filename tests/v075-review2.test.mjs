@@ -28,9 +28,11 @@ const { food: fm } = await import("../app/js/diet/foodapp.js");
 // ---------- F1: labels ----------
 
 test("V1 weight and volume labels stay as before: the whole serving is 1 piece", () => {
-  for (const [label, g] of [["30 g serving", 30], ["25 g bag", 25], ["30 gr", 30], ["30 gm", 30], ["30 gms", 30], ["50 g.", 50], ["40 grammes", 40], ["12 fl oz (355 ml)", 355], ["8 fl. oz", 240], ["2 pints", 1136], ["1 teaspoon", 5]]) {
+  for (const [label, g] of [["30 g serving", 30], ["25 g bag", 25], ["12 fl oz (355 ml)", 355], ["8 fl. oz", 240], ["2 pints", 1136], ["1 teaspoon", 5]]) {
     assert.deepEqual(fmath.pieceOf({ serving_g: g, serving_label: label }), { g, label }, label);
   }
+  // 0.7.6 (food P1): only a weight in grams is no piece weight at all (Pieces asks); never a count either.
+  for (const [label, g] of [["30 gr", 30], ["30 gm", 30], ["30 gms", 30], ["50 g.", 50], ["40 grammes", 40]]) assert.equal(fmath.pieceOf({ serving_g: g, serving_label: label }), null, label);
   assert.equal(fmath.withPieceWeight({ serving_g: 30, serving_label: "30 g serving" }, 28).serving_label, "piece", "a typed weight never keeps a broken name");
 });
 
@@ -167,5 +169,6 @@ test("V10 an old Tuesday whose card shows A2 and C2: Rosario swaps C1 back to th
 });
 
 test("V11 'Gramm' and kJ labels are weights or energy, not pieces", () => {
-  for (const [label, g] of [["30 Gramm", 30], ["500 kJ", 30]]) assert.deepEqual(fmath.pieceOf({ serving_g: g, serving_label: label }), { g, label }, label);
+  assert.deepEqual(fmath.pieceOf({ serving_g: 30, serving_label: "500 kJ" }), { g: 30, label: "500 kJ" });
+  assert.equal(fmath.pieceOf({ serving_g: 30, serving_label: "30 Gramm" }), null, "0.7.6 (food P1): grams only, so Pieces asks");
 });
