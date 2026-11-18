@@ -4,11 +4,12 @@
 import { h, mount } from "../h.js";
 import { openSheet, mainButton, secondaryButton, stepper } from "../ui/parts.js";
 import { icon } from "../ui/icons.js";
-import { rerender } from "../ui/app.js";
+import { rerender, store } from "../ui/app.js";
 import { food as fm, off } from "./foodapp.js";
 import { OFF_CREDIT_LINKS } from "../food/off.js";
 import { MEALS } from "../food/foodvalidate.js";
-import { MEAL_WORDS, mealAt, savedFoods, checkFood, startAmount, cleanText, servingOf, gramsForCount, countForGrams, stepCount, maxCount } from "../food/foodmath.js";
+import { MEAL_WORDS, mealAt, savedFoods, checkFood, startAmount, cleanText, gramsForCount, stepCount, maxCount, pieceOf, checkPieceWeight, piecesLine, withPieceWeight, pieceWords, piecesStart } from "../food/foodmath.js";
+import { readMode, withMode, startMode } from "../food/foodmodes.js";
 import { normalizeBarcode, BARCODE_WORDS, foodIdFor } from "../food/barcode.js";
 import { now, today } from "../clock.js";
 
@@ -216,7 +217,7 @@ export function openCheck({ mode = "own", product = null, food: rec = null, pref
   const fields = () => ({
     ...(rec ? { id: rec.id } : {}),
     name: cleanText(st.name), brand: cleanText(st.brand), barcode: st.barcode || undefined, per100g: per100g(),
-    serving_g: src.serving_g ?? null, serving_label: src.serving_label ?? "",
+    ...servingFields(),
     source: mode === "own" ? "own" : (src.source ?? "own"), off_fetched_at: mode === "off" ? product.off_fetched_at : undefined,
     edited: edited() ? true : undefined,
   });
@@ -237,8 +238,9 @@ export function openCheck({ mode = "own", product = null, food: rec = null, pref
   function save(add) {
     error.textContent = "";
     try {
-      if (!add) { const f = fm.saveFood(fields()); close(); rerender(); messageToast(`Saved ${f.name}.`); return; }
+      if (!add) { const f = fm.saveFood(fields()); remember(f.id); close(); rerender(); messageToast(`Saved ${f.name}.`); return; }
       const r = fm.saveAndLog(fields(), { date: today(), meal: st.meal, amount_g: amountG() });
+      remember(r.entry.food);
       close(); rerender();
       undoToast(`Added ${r.entry.name} · ${r.entry.kcal} kcal`, () => fm.removeEntry(r.entry.id));
     } catch (e) { error.textContent = errText(e); }
@@ -248,23 +250,74 @@ export function openCheck({ mode = "own", product = null, food: rec = null, pref
   const numIn = (key, label) => field(label, numInput(`${id}${key}`, st[key], bind(key), label), `${id}${key}`);
   const pack = [st.brand, st.quantity, st.barcode].filter(Boolean).join(" · ");
 
-  // "How many" (0.7.4): with a serving, a count stepper next to the grams; each one sets the other. Grams are saved.
-  const serving = servingOf(src);
-  let countBox = null;
-  const gramsBox = stepper({
-    label: "Portion", unit: "g", value: num(st.amount) ?? 100, step: 10, min: 1, max: 5000, decimals: 1,
-    onChange: (n) => { st.amount = String(n); const c = serving ? countForGrams(n, serving.g) : null; if (countBox && c !== null) countBox.setValue(c); refresh(); },
-  });
-  if (serving) {
-    countBox = stepper({
-      label: "How many", value: countForGrams(num(st.amount) ?? serving.g, serving.g) ?? 1, min: 0.1, max: maxCount(serving.g), decimals: 1,
-      next: (v, dir) => stepCount(v, dir),
-      onChange: (n) => { const g = gramsForCount(n, serving.g); if (g === null) return; st.amount = String(g); gramsBox.setValue(g); refresh(); },
-    });
+  // Grams | Pieces (0.7.4; Rosario: "so i can put 2 eggs instead of 125g of eggs"). Pieces works for every food: with no
+  // piece weight it asks once "How much does 1 piece weigh? (g)" (1 to 2000 g). The weight goes on the food (serving_g,
+  // words "piece" if none) when Save is tapped, through the normal food save, so it syncs; it can be changed here later.
+  // The log always gets grams. The mode used last is remembered per food on this phone only (foodmodes.js).
+  const baseServing = { serving_g: src.serving_g ?? null, serving_label: src.serving_label ?? "" };
+  let piece = pieceOf(src); // { g, label } or null
+  let pieceSet = false; // a weight typed on this sheet: saved with the food
+  let asking = false;
+  const knownId = rec ? rec.id : (() => { const b = normalizeBarcode(String(st.barcode || "")); return b.ok ? foodIdFor(b.code) : null; })();
+  const device = () => { try { return store.loadDevice() ?? {}; } catch { return {}; } };
+  let amountMode = startMode(src, knownId ? readMode(device(), knownId) : null);
+  function servingFields() { return pieceSet ? withPieceWeight(baseServing, piece.g) : { ...baseServing }; }
+  function remember(foodId) {
+    if (!foodId || (amountMode === "pieces" && !piece)) return;
+    try { store.saveDevice(withMode(device(), foodId, amountMode)); } catch { /* a phone setting must never break a save */ }
   }
-  const amountRow = serving
-    ? [h("div", { class: "dose-pair" }, countBox, gramsBox), h("p", { class: "small muted" }, `1 = ${serving.label}`)]
-    : gramsBox;
+  const seg = h("div", { class: "segmented two", role: "tablist", "aria-label": "Amount in" });
+  const amountBox = h("div", {});
+  const gramsView = () => stepper({
+    label: "Portion", unit: "g", value: num(st.amount) ?? 100, step: 10, min: 1, max: 5000, decimals: 1,
+    onChange: (n) => { st.amount = String(n); refresh(); },
+  });
+  function piecesView() {
+    const start = piecesStart(num(st.amount), piece.g); // the saved grams follow the count shown (reviewers)
+    const count0 = start.count;
+    st.amount = String(start.grams);
+    refresh();
+    const line = h("p", { class: "small muted", "aria-live": "polite" }, piecesLine(count0, piece.g));
+    return [
+      stepper({
+        label: "Pieces", value: count0, min: 0.1, max: maxCount(piece.g), decimals: 1, next: (v, dir) => stepCount(v, dir),
+        onChange: (n) => { const g = gramsForCount(n, piece.g); if (g === null) return; st.amount = String(g); line.textContent = piecesLine(n, piece.g); refresh(); },
+      }),
+      line,
+      h("button", { class: "text-button", type: "button", onclick: () => { asking = true; drawAmount(); } }, `${pieceWords(piece)} · Change`),
+    ];
+  }
+  function askView() {
+    const wid = `${id}pw`;
+    // A text box with the decimal keypad: a number box drops a typed comma ("62,5" on a phone set to Italian).
+    const input = h("input", { id: wid, type: "text", inputmode: "decimal", autocomplete: "off", maxlength: "8", value: piece ? show(piece.g) : "", "aria-label": "Weight of 1 piece" });
+    const err = h("p", { class: "error-text", role: "alert" });
+    const use = () => {
+      const r = checkPieceWeight(input.value);
+      if (!r.ok) { err.textContent = r.reason; return; }
+      const before = piece ? piecesStart(num(st.amount), piece.g).count : 1; // a new weight keeps the count (checker)
+      piece = pieceOf(withPieceWeight(baseServing, r.g));
+      pieceSet = true;
+      asking = false;
+      st.amount = String(gramsForCount(before, r.g));
+      drawAmount();
+      refresh();
+    };
+    return [
+      field("How much does 1 piece weigh? (g)", input, wid),
+      err,
+      h("button", { class: "button secondary", type: "button", onclick: use }, "Use this weight"),
+      piece ? h("button", { class: "text-button", type: "button", onclick: () => { asking = false; drawAmount(); } }, "Keep the old weight") : null,
+    ];
+  }
+  function drawAmount() {
+    seg.replaceChildren(...[["grams", "Grams"], ["pieces", "Pieces"]].map(([value, label]) =>
+      h("button", { type: "button", role: "tab", "aria-selected": value === amountMode ? "true" : "false", onclick: () => { if (amountMode === value) return; amountMode = value; asking = false; drawAmount(); } }, label)));
+    const view = amountMode === "grams" ? [gramsView()] : asking || !piece ? askView() : piecesView();
+    amountBox.replaceChildren(...view.filter(Boolean));
+  }
+  drawAmount();
+  const amountRow = [seg, amountBox];
 
   const heading = mode === "off" ? "From Open Food Facts · check before saving" : mode === "saved" ? "Your food" : "Make a new food";
   const close = openSheet(

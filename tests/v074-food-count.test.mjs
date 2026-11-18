@@ -75,7 +75,7 @@ test("F6 the check step's Pieces count turns pieces into grams and back (whole s
   assert.match(t, /pieceOf\(/, "the count uses the food's piece weight");
   assert.match(t, /label: "Pieces"/);
   assert.match(t, /gramsForCount\(/);
-  assert.match(t, /countForGrams\(/);
+  assert.match(t, /piecesStart\(/, "grams to pieces go through piecesStart (count and grams in step: P11, P12)");
   assert.match(t, /stepCount\(/);
   const parts = src("js/ui/parts.js");
   assert.match(parts, /\.setValue = \(n\) =>/, "the shared stepper can be set from outside (no onChange loop)");

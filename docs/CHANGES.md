@@ -16,10 +16,13 @@ The editable walk and the food counter, built by chat 8.41. Not pushed yet.
 - Today and the Plan show the same changed walk. A workout that is already running keeps the walk it started with.
 - A changed walk stays the same every week: the app no longer makes that day's walk harder by itself. Other days still
   follow the walk rule. Before you start, the walk screen still lets you change speed and slope a little.
-- **"How many" for food.** When a food has a serving size (for example "1 bar (30 g)"), the food sheet has a "How
-  many" counter above the grams. 2 bars = 60 g. Change either one and the other follows. The app still saves grams.
+- **Grams or Pieces for food.** "How much did you have?" has a switch: Grams | Pieces. Pieces works for every food: so
+  you can put 2 eggs instead of 125 g. The first time, the app asks how much 1 piece weighs and keeps it on the food
+  (you can change it later). The sheet opens in the way you used last for that food. The app still saves grams.
 - Two safety fixes found by the reviewers: a walk you reset can no longer come back from a phone still on 0.7.3, and the
   walk sheet no longer saves a break week's easier numbers for good.
+- **No double-tap zoom, second guard.** A quick second tap no longer zooms the screen, and it still counts as a tap
+  (for example a fast second + on a number). Typing fields work as before, and pinch zoom still works.
 - For later builders: a test now fails when an app file changes but the version number does not.
 
 ## 0.7.3 · 2026-11-18

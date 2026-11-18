@@ -159,6 +159,53 @@ export function stepCount(count, dir) {
 }
 export const maxCount = (serving_g) => Math.max(1, Math.floor(MAX_PORTION_G / serving_g + 1e-9));
 
+// ---------- Pieces (0.7.4; Rosario: "so i can put 2 eggs instead of 125g of eggs") ----------
+// Every food can be counted in pieces. The weight of one piece is the food's serving_g (1 to 2000 g; a value from Open
+// Food Facts is untrusted and range-checked here too); its words default to "piece". Grams stay the truth in the log.
+export const PIECE_MIN_G = 1;
+export const PIECE_MAX_G = 2000;
+const PIECE_WORDS = `The weight of 1 piece must be ${PIECE_MIN_G} to ${PIECE_MAX_G} g.`;
+const okPiece = (g) => typeof g === "number" && Number.isFinite(g) && g >= PIECE_MIN_G && g <= PIECE_MAX_G;
+export function pieceOf(food) {
+  if (!food || !okPiece(food.serving_g)) return null;
+  const words = typeof food.serving_label === "string" ? food.serving_label.trim() : "";
+  return { g: food.serving_g, label: words || "piece" };
+}
+// The typed weight of one piece ("62,5" works too), rounded to 0.1 g.
+export function checkPieceWeight(text) {
+  const t = String(text ?? "").trim().replace(",", ".");
+  const g = t === "" ? NaN : Math.round(Number(t) * 10) / 10;
+  return okPiece(g) ? { ok: true, g } : { ok: false, reason: PIECE_WORDS };
+}
+// The words under the Pieces stepper: "1 egg = 62.5 g"; the pack's own "1 bar (30 g)" as it is; "2 biscuits (25 g)"
+// (a serving of more than one) as "1 piece = 25 g (2 biscuits (25 g))".
+export function pieceWords(piece) {
+  if (/^\d+(\.\d+)?\s*g$/i.test(piece.label)) return `1 piece = ${round1(piece.g)} g`; // the pack named only grams
+  if (/^1\s/.test(piece.label)) return piece.label;
+  if (/^\d/.test(piece.label)) return `1 piece = ${round1(piece.g)} g (${piece.label})`;
+  return `1 ${piece.label} = ${round1(piece.g)} g`;
+}
+// Pieces from the grams on the sheet, and the grams that count really gives, so the line and the saved amount agree
+// (100 g of a 30 g piece: 3.3 pieces = 99 g). Less than 0.1 piece (or no grams): 1 piece.
+export function piecesStart(grams, piece_g) {
+  const c = countForGrams(grams, piece_g);
+  const count = c !== null && c >= 0.1 ? c : 1;
+  return { count, grams: gramsForCount(count, piece_g) };
+}
+// The live line under the Pieces stepper: "= 125 g".
+export function piecesLine(count, piece_g) {
+  const g = gramsForCount(count, piece_g);
+  return g === null ? "" : `= ${g} g`;
+}
+// The food's fields with a new piece weight. The words stay when they still fit (same weight, or words without a
+// number, like "egg"); the pack's "1 bar (30 g)" with a new weight becomes "piece".
+export function withPieceWeight(food, g) {
+  if (!okPiece(g)) throw new Error(PIECE_WORDS);
+  const words = food && typeof food.serving_label === "string" ? food.serving_label.trim() : "";
+  const keep = words !== "" && (food.serving_g === g || !/\d/.test(words));
+  return { ...food, serving_g: g, serving_label: keep ? food.serving_label : "piece" };
+}
+
 // Log again: the last amount first (fast apps remember the last portion), else the serving, else 100 g.
 export function againAmount(food = {}) {
   if (goodAmount(food.last_amount_g)) return food.last_amount_g;

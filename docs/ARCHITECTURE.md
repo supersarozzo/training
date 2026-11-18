@@ -290,6 +290,7 @@ Food lives in its **own document**: on the phone in its own box `trn.food.v1` (s
 - `last_sha`, `last_sync_at`, `last_sync_result` (`ok`, `offline`, `auth`, `conflict`, `broken_remote`, `too_new`, `error`).
 - `sound_on`, `active` (the running workout: session id, screen, timer end time), `last_backup_at`.
 - `theme` (`auto` / `light` / `dark`) and `motion_off` (true when Settings > Look > Animations is off), added 2026-11-17 (`prefs.js`). Read by `boot.js` before the first paint.
+- `food_amount_mode` (0.7.4, `food/foodmodes.js`): `{ <food id>: "grams" | "pieces" }`, the mode the food sheet used last for each food, at most 300 foods (the oldest go first). Phone-only on purpose: no synced field, so no file format, merge or older app is touched. Written as a new copy of the whole box (the token and the other keys stay).
 
 `localStorage` key `trn.prev.v1`: a full copy of the data from just before the last merge or restore (one-step safety net).
 

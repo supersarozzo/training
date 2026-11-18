@@ -28,6 +28,7 @@ import { renderGym } from "./ui/machines.js";
 import { renderDiet } from "./diet/diet.js";
 import { stopScanner } from "./diet/scan.js";
 import { applyTheme, applyMotion } from "./ui/theme.js";
+import { guardDoubleTap } from "./ui/tapzoom.js";
 
 const tabRoutes = { today: renderToday, progress: renderProgress, plan: renderPlan, gym: renderGym, diet: renderDiet, settings: renderSettings };
 const flowRoutes = { setup: renderSetup, intake: renderIntake, targets: renderTargets, workout: renderWorkout, weighin: renderWeighin, weekly: renderWeekly };
@@ -95,6 +96,7 @@ applyMotion();
 setRedraw(render);
 window.addEventListener("hashchange", render);
 render();
+guardDoubleTap(); // no double-tap zoom on the iPhone (0.7.4); the CSS touch-action stays the first line
 registerWorker();
 // Automatic sync (0.7.2): about 10 s after a change, on going to the background, when the app opens or comes to the
 // front with something not sent, and on signal back. Never during a workout (Finish syncs). After a failed sync it
