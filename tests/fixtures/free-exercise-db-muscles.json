@@ -323,6 +323,27 @@
         "middle back",
         "shoulders"
       ]
+    },
+    "Standing_Dumbbell_Calf_Raise": {
+      "name": "Standing Dumbbell Calf Raise",
+      "primaryMuscles": [
+        "calves"
+      ],
+      "secondaryMuscles": []
+    },
+    "Lying_Leg_Curls": {
+      "name": "Lying Leg Curls",
+      "primaryMuscles": [
+        "hamstrings"
+      ],
+      "secondaryMuscles": []
+    },
+    "Standing_Leg_Curl": {
+      "name": "Standing Leg Curl",
+      "primaryMuscles": [
+        "hamstrings"
+      ],
+      "secondaryMuscles": []
     }
   }
 }

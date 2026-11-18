@@ -26,9 +26,9 @@ const planIds = [...new Set(Object.values(days).flatMap((d) => d.slots.map((s) =
 const swapOnlyIds = Object.keys(exercises).filter((id) => !planIds.includes(id));
 const allIds = Object.keys(exercises);
 
-test("the plan has 27 exercises in its days and 9 swap-only ones", () => {
-  assert.equal(planIds.length, 27);
-  assert.equal(swapOnlyIds.length, 9);
+test("the plan has 29 exercises in its days and 10 swap-only ones (plan change 2026-11-18)", () => {
+  assert.equal(planIds.length, 29); // 27 + calf raise on the leg press + dumbbell lying leg curl
+  assert.equal(swapOnlyIds.length, 10); // 9 - calf raise on the leg press + one-leg dumbbell calf raise + cable leg curl
   for (const id of allIds) for (const s of exercises[id].swaps) assert.ok(exercises[s.id], `${id} swap ${s.id} is a known exercise`);
 });
 

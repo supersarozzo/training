@@ -13,11 +13,11 @@ import { fakeStorage, validDoc } from "./fixtures/profiles.mjs";
 const slotsOf = (day, week, kind = "full") => planForDay(day, week, kind).slots;
 const names = (seq) => seq.map((e) => `${e.slot}#${e.setNumber}`);
 
-test("Monday week 2: pairs alternate A1 A2 A1 A2 ..., then abs one after the other", () => {
+test("Monday week 2: pairs alternate A1 A2 A1 A2 ..., then the plank and the calf raise (D) one after the other", () => {
   const { seq } = buildSequence(slotsOf("mon", 2));
   assert.deepEqual(names(seq).slice(0, 6), ["A1#1", "A2#1", "A1#2", "A2#2", "A1#3", "A2#3"]);
-  assert.equal(seq.length, 6 * 3 + 3 + 2); // 3 pairs x 3 sets x 2, plank 3, dead bug 2
-  assert.deepEqual(names(seq).slice(18), ["Abs1#1", "Abs1#2", "Abs1#3", "Abs2#1", "Abs2#2"]);
+  assert.equal(seq.length, 6 * 3 + 2 + 3); // 3 pairs x 3 sets x 2, plank 2, calf raise (D) 3 (changed 2026-11-18)
+  assert.deepEqual(names(seq).slice(18), ["Abs1#1", "Abs1#2", "D#1", "D#2", "D#3"]);
 });
 
 test("rest: 30 s to move inside a pair, the pair rest after the second exercise, nothing after the very last set", () => {

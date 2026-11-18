@@ -14,8 +14,8 @@ const SECTION_6 = {
     ["B2", "one_arm_db_row", 3, [8, 12], 90, ["seated_cable_row", "seated_row_machine"]],
     ["C1", "db_curl", 3, [10, 15], null, ["cable_curl"]],
     ["C2", "triceps_pushdown", 3, [10, 15], 60, ["overhead_triceps_ext"]],
-    ["Abs1", "plank", 3, [20, 40], 30, ["dead_bug"]],
-    ["Abs2", "dead_bug", 2, [8, 8], 30, ["plank"]],
+    ["Abs1", "plank", 2, [20, 40], 30, ["dead_bug"]], // changed 2026-11-18 (answer 80 a): 3 -> 2 sets
+    ["D", "calf_raise_leg_press", 3, [12, 15], 60, ["calf_raise_machine", "calf_raise_standing", "one_leg_db_calf_raise"]], // was Abs2 dead bug
   ],
   tue: [
     ["A1", "leg_press", 3, [10, 12], null, ["smith_squat"]],
@@ -33,8 +33,8 @@ const SECTION_6 = {
     ["B2", "lateral_raise", 2, [12, 15], 75, ["cable_lateral_raise"]],
     ["C1", "hammer_curl", 2, [10, 15], null, ["db_curl"]],
     ["C2", "overhead_triceps_ext", 2, [10, 15], 60, ["triceps_pushdown"]],
-    ["Abs1", "side_plank", 3, [15, 30], 30, ["plank"]],
-    ["Abs2", "dead_bug", 2, [8, 8], 30, ["plank"]],
+    ["Abs1", "side_plank", 2, [15, 30], 30, ["plank"]], // changed 2026-11-18: 3 -> 2 sets
+    ["D", "calf_raise_leg_press", 3, [12, 15], 60, ["calf_raise_machine", "calf_raise_standing", "one_leg_db_calf_raise"]], // was Abs2 dead bug
   ],
   thu: [
     ["A1", "incline_db_press", 3, [8, 12], null, ["chest_press"]],
@@ -43,8 +43,8 @@ const SECTION_6 = {
     ["B2", "face_pull", 3, [12, 15], 75, ["rear_delt_raise"]],
     ["C1", "lateral_raise", 3, [12, 15], null, ["cable_lateral_raise"]],
     ["C2", "triceps_pushdown", 3, [10, 15], 60, ["overhead_triceps_ext"]],
-    ["Abs1", "plank", 3, [20, 40], 30, ["dead_bug"]],
-    ["Abs2", "cable_crunch", 3, [10, 15], 45, ["reverse_crunch"]],
+    ["Abs1", "plank", 2, [20, 40], 30, ["dead_bug"]], // changed 2026-11-18: 3 -> 2 sets
+    ["D", "db_lying_leg_curl", 3, [10, 15], 60, ["leg_curl_machine", "cable_leg_curl", "romanian_deadlift"]], // was Abs2 cable crunch
   ],
   fri: [
     ["A1", "smith_squat", 3, [8, 12], null, ["leg_press"]],
@@ -60,13 +60,14 @@ const SECTION_6 = {
 // Hand-computed total sets per day for each phase (plan v2 sections 5, 6, 10).
 const DAY_TOTALS = {
   //          week 1, weeks 2-5, week 6 (and 12), weeks 7-11
-  mon: [16, 23, 15, 25],
+  // Changed 2026-11-18 (answers 80-83): Mon, Wed, Thu abs slot = Abs1 (2 sets) + D (3 sets; 2 in weeks 7-11).
+  mon: [16, 23, 15, 24],
   tue: [14, 21, 14, 22],
-  wed: [16, 20, 12, 22],
-  thu: [16, 24, 16, 26],
+  wed: [16, 20, 12, 21],
+  thu: [16, 23, 15, 24],
   fri: [14, 20, 13, 21],
 };
-const WEEK_TOTALS = [76, 108, 70, 116]; // sums of the columns above
+const WEEK_TOTALS = [76, 107, 69, 112]; // sums of the columns above
 
 const phaseColumn = (week) => (week === 1 ? 0 : week <= 5 ? 1 : week === 6 || week === 12 ? 2 : 3);
 const sumDay = (week, day) => days[day].slots.reduce((n, s) => n + setsFor(week, day, s.slot), 0);
@@ -108,7 +109,7 @@ test("sets per week: totals per day and week match the hand calculation", () => 
 
 test("sets per week: named rows", () => {
   assert.equal(setsFor(1, "mon", "A1"), 2); // week 1: two sets
-  assert.equal(setsFor(1, "mon", "Abs2"), 2);
+  assert.equal(setsFor(1, "mon", "D"), 2); // the new D move starts like week 1
   assert.equal(setsFor(3, "mon", "A1"), 3);
   assert.equal(setsFor(6, "mon", "A1"), 2); // easier week: one less
   assert.equal(setsFor(6, "wed", "B2"), 1);
