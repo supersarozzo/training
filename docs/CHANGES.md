@@ -4,7 +4,7 @@ What is new in each app version, in plain words. Newest first. Older versions: s
 
 ## 0.7.3 · 2026-11-18
 
-The update fix, built by chat 8.40. Not pushed yet. The editable walk moves to 0.7.4.
+The update fix, built by chat 8.40. Live since 2026-11-18 16:23. The editable walk moves to 0.7.4.
 
 - Your iPhone did not get 0.7.1 and 0.7.2: the "New version ready" bar never showed and the app stayed old. Two
   mistakes in the app's offline helper (the service worker) caused it:
