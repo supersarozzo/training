@@ -114,8 +114,9 @@ test("T8 the set screen has a text button 'Stop this exercise here' that asks fi
 
 test("T9 the target line uses the reps set in the Plan", () => {
   const p = src("js/ui/pair.js");
-  // 0.7.6 (trainer D19): at the floor the effort is at least 3 reps left; the reps still come from the Plan (rangeFor).
-  assert.match(p, /targetText\(exId, entry\.sets, sg\.atFloor \? floorRir\(ctx\.plan\.rir\) : ctx\.plan\.rir, rangeFor\(ctx\.doc, exId\)\)/);
+  // 0.7.6 (trainer D19 and its answer 1 to 8.43): at the floor, also after a pain swap, the effort is at least 3 reps
+  // left (tests/v076-d19.test.mjs on the real card); the reps still come from the Plan (rangeFor).
+  assert.match(p, /targetText\(exId, entry\.sets, atFloor \? floorRir\(ctx\.plan\.rir\) : ctx\.plan\.rir, rangeFor\(ctx\.doc, exId\)\)/);
 });
 
 test("T10 a set below the range is saved as it is; after Stop the workout moves on and keeps the sets done", () => {
