@@ -1,6 +1,7 @@
 // Schedule: which week and day it is, how a session is laid out, the short day, missed-time rules,
 // swapping a day. Pure. Source: plan v2 sections 2, 4, 10, 11.
 import { days, weeks, weekInfo, setsFor, rirFor, sessionMinutes, warmupMoves, upperDayWarmupExtra, DAY_IDS } from "../plan/plan-v2.js";
+import { effectiveDay, setsForSlot } from "./planedits.js";
 
 const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 const MS_DAY = 86400000;
@@ -72,27 +73,59 @@ export function expectedMinutes(kind, week) {
 }
 
 // Slots of a day for a week, with the sets that week.
-export function daySlots(dayId, week) {
-  return days[dayId].slots.map((s) => ({ ...s, sets: setsFor(week, dayId, s.slot) }));
+// `edit` (optional): the day's plan_days record (engine/planedits.js). A usable edit gives the edited day; no record,
+// a tombstone or a record this app cannot use gives the plan's day exactly as before.
+export function daySlots(dayId, week, edit) {
+  const eff = edit === undefined || edit === null ? null : effectiveDay(dayId, edit);
+  if (!eff || !eff.edited) return days[dayId].slots.map((s) => ({ ...s, sets: setsFor(week, dayId, s.slot) }));
+  return eff.slots.map((s) => ({ ...s, sets: setsForSlot(week, s) }));
 }
 
 // Short day: pairs A and B only, then the first abs exercise only. On leg days there is no abs slot
-// (the abs are inside the pairs, and the exercise done on its own, D, is skipped).
-export function shortDaySlots(dayId, week) {
-  const slots = daySlots(dayId, week);
+// (the abs are inside the pairs, and the exercise done on its own, D, is skipped). Added exercises (E1, E2) are skipped too.
+export function shortDaySlots(dayId, week, edit) {
+  const slots = daySlots(dayId, week, edit);
   const pairs = slots.filter((s) => /^[AB][12]$/.test(s.slot));
   const abs = slots.filter((s) => s.slot === "Abs1");
   return { pairs, abs };
 }
 
-// Everything for one day: slots, effort, walk kind.
-export function planForDay(dayId, week, kind = "full") {
+// Everything for one day: slots, effort, walk kind. `edit` as in daySlots.
+// edited: the slots come from a saved Plan edit. newerVersion: a saved edit exists but this app cannot use it
+// (the plan's day is shown; a screen can say "This day was changed on a newer app version").
+export function planForDay(dayId, week, kind = "full", edit) {
   const day = days[dayId];
+  const eff = edit === undefined || edit === null ? { edited: false, newerVersion: false } : effectiveDay(dayId, edit);
+  const flags = { edited: eff.edited, newerVersion: eff.newerVersion };
   if (kind === "short") {
-    const { pairs, abs } = shortDaySlots(dayId, week);
-    return { dayId, kind, week, focus: day.focus, walk: day.walk, rir: rirFor(week, dayId), slots: [...pairs, ...abs] };
+    const { pairs, abs } = shortDaySlots(dayId, week, edit);
+    return { dayId, kind, week, focus: day.focus, walk: day.walk, rir: rirFor(week, dayId), slots: [...pairs, ...abs], ...flags };
   }
-  return { dayId, kind, week, focus: day.focus, walk: day.walk, rir: rirFor(week, dayId), slots: daySlots(dayId, week) };
+  return { dayId, kind, week, focus: day.focus, walk: day.walk, rir: rirFor(week, dayId), slots: daySlots(dayId, week, edit), ...flags };
+}
+
+// The slots of a workout already started (running or finished), from the workout itself: its own places and
+// exercises, and the sets and rest saved when it started (planned_sets, planned_rest). A Plan edit or a plan change
+// made later never changes it. A workout saved before planned_sets existed reads the sets and rest of its place in
+// the plan; a place the plan no longer has (Abs2 before 2026-11-18) gets the larger of 2 and the sets already saved.
+// Never throws on a place or exercise the plan does not know. Same shape as planForDay.
+export function planForSession(session) {
+  const dayId = session.plan_day;
+  const day = days[dayId];
+  const week = session.week;
+  const planSlots = new Map((day?.slots ?? []).map((s) => [s.slot, s]));
+  const seen = new Set();
+  const records = (Array.isArray(session.exercises) ? session.exercises : []).filter((e) => e && typeof e.slot === "string" && (seen.has(e.slot) ? false : (seen.add(e.slot), true)));
+  const okSets = (n) => Number.isInteger(n) && n >= 1 && n <= 10;
+  const okRest = (r) => r === null || (typeof r === "number" && Number.isFinite(r) && r >= 0 && r <= 600);
+  const slots = records.map((rec) => {
+    const p = planSlots.get(rec.slot);
+    const saved = (Array.isArray(rec.sets) ? rec.sets : []).filter((x) => x && x.type === "work").length;
+    const sets = okSets(rec.planned_sets) ? rec.planned_sets : p ? setsForSlot(week, p) : Math.min(Math.max(2, saved), 10);
+    const rest = "planned_rest" in rec && okRest(rec.planned_rest) ? rec.planned_rest : p ? p.rest : null;
+    return { slot: rec.slot, ex: rec.plan_exercise, sets, rest };
+  });
+  return { dayId, kind: session.kind, week, focus: day?.focus ?? "", walk: day?.walk ?? "normal", rir: rirFor(week, dayId), slots };
 }
 
 // The 4-minute lift warm-up: all six moves (the short day uses the short list); upper days add push-ups.

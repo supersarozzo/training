@@ -105,6 +105,7 @@ app/
     plan/media.js        which photos, machine, area, usual sign, tip and video belong to each exercise (public data)
     engine/schedule.js   week, day, short day, swap, gaps
     engine/workout.js    pair order, resume position, suggestions, walk suggestion
+    engine/planedits.js  saved Plan edits (plan_days): slot rules, week rule per slot, edited day, swap choices
     engine/planpage.js   Plan day page logic: which day and week opens, real sets, pair headers in words,
                          muscle counts ("Day so far", map steps), Gym exercise groups (build step 2)
     active.js            the running workout screen and timer end times (device box)
@@ -222,6 +223,8 @@ One JSON document holds everything that syncs. It has the same shape on the phon
 
 **`gym_spots`** (added 2026-11-17, app 0.4.0, same format 1): the "Where it is in my gym" note, one record per machine or station. `id` is `g-<machine>` (`ids.js gymSpotId`); `machine` is an id from the ONE frozen list in `plan/machine-ids.js` (15 ids, the last five equal the `extra_machines` keys); `where` is optional text up to `MAX_TEXT`; a tombstone has `deleted` / `deleted_at`; unknown fields are kept. `model.setGymSpot(machineId, where)` refuses an id that is not in the list or not `^[a-z0-9_]{1,50}$`, trims and clips the text, keeps the old record's unknown fields and clears a tombstone. The list is optional: a file without it validates and comes back unchanged (`OPTIONAL_LISTS` in `validate.js`); the first saved note adds it. It is merged like every list, counted by `hasData`, and backed up and synced with no other change. Not the same as `exercise_state.machine_note` (seat and pin settings of one exercise). A machine id must never be renamed once a note exists (tests/gym-spots.test.mjs test 17).
 
+**`plan_days`** (added 2026-11-18, build step 3, same format 1): saved Plan edits, "forever" for that day of the plan (answer 65). One record per edited day holds the whole day: `{ id: "p-plan-v2-<day>", updated_at, plan_id: "plan-v2", day, slots: [{ slot, ex, sets, rest }], changes?: [{ at, what, slot, from, to }] }`; `sets` are the base sets, the week rule is applied when read. The fixed id means two phones make the same record, so it merges as one unit (later `updated_at` wins). "Back to the plan's day" is a tombstone that keeps the fields; the day then falls back to `plan/plan-v2.js`, which is never edited. Rules live in `engine/planedits.js`: slot names `A1`-`C2`, `Abs1`, `Abs2`, `D`, and `E1`, `E2` for added exercises (at the end, on their own, 3 sets, 60 s rest, at most 2 a day, answer 72 a; E follows the D week rule and is skipped on the short day); every exercise from the catalogue, never twice in a day; sets 1 to 5; rest null or 30/45/60/75/90/120. `validate.js` checks only the record itself (optional list like `gym_spots`): a record this app cannot use (for example from a newer app) is kept and synced, never dropped, but not used: the day shows the plan and the engine says `newerVersion: true`. The engine reads an edit through an optional last argument: `daySlots(day, week, edit)`, `shortDaySlots(day, week, edit)`, `planForDay(day, week, kind, edit)` (`edit` = the day's record, `planedits.findPlanDay(doc, day)`); without it they behave exactly as before. Model calls: `effectivePlanDay`, `swapPlanSlot`, `removePlanSlot`, `addPlanSlot`, `savePlanDay` (Undo), `resetPlanDay`; they refuse a duplicate, a third added exercise and edits over a newer app's record. Past and running workouts never change: `startSession` stores `planned_sets` and `planned_rest` on each exercise record, and `schedule.planForSession(session)` rebuilds a started workout from the workout itself (older workouts without them read their place in the plan; a place the plan no longer has, like `Abs2`, never throws).
+
 All `0` and `"…"` above are placeholders, not real values. Body weight is always stored in kg; stones and pounds are only for display.
 
 ### 4.3 Device-only data (never synced, never in a backup)
@@ -292,7 +295,7 @@ Rules:
 
 ### 5.3 Merge rules (`sync/merge.js`, pure)
 
-- **Lists** (`sessions`, `weighins`, `measurements`, `exercise_state`, `gym_spots`): join by `id`. A record on one side only is kept. On both sides: the later `updated_at` wins. Same time: the tombstone wins; still the same: the one whose JSON text sorts first (so both devices pick the same).
+- **Lists** (`sessions`, `weighins`, `measurements`, `exercise_state`, `gym_spots`, `plan_days`): join by `id`. A record on one side only is kept. On both sides: the later `updated_at` wins. Same time: the tombstone wins; still the same: the one whose JSON text sorts first (so both devices pick the same).
 - **Single objects** (`profile`, `shared_settings`, `block`): the later `updated_at` wins, as a whole.
 - **`format`:** if the remote `format` is higher than the app knows, stop ("Update the app first").
 - **Properties the merge must have** (unit tests): nothing is ever dropped; merging twice gives the same result; `merge(a, b)` equals `merge(b, a)`; a tombstone is never brought back to life by an older copy.

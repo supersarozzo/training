@@ -11,7 +11,9 @@ import { startWalk, nextWalkBase, walkForDay, walkAfterBreak } from "./walk.js";
 
 const isPairSlot = (slot) => /^[A-C][12]$/.test(slot);
 
-// Units of a day: pairs (A, B, C) and singles (Abs1, Abs2, D). `slots` come from planForDay (they carry sets for the week).
+// Units of a day: pairs (A, B, C) and singles (Abs1, Abs2, D, and the added E1, E2). `slots` come from planForDay
+// (they carry sets for the week). A pair that lost one exercise by a Plan edit is a single unit: the exercise left
+// keeps its own rest (or the pair's rest, engine/planedits.js effectiveDay) and its warm-up sets (wantsWarmup).
 export function buildUnits(slots) {
   const units = [];
   for (const s of slots) {
@@ -24,13 +26,13 @@ export function buildUnits(slots) {
       units.push({ type: "single", id: s.slot, slots: [s] });
     }
   }
-  return units;
+  return units.map((u) => (u.type === "pair" && u.slots.length === 1 ? { type: "single", id: u.slots[0].slot, slots: u.slots } : u));
 }
 
-// Label for a unit: "Pair A", "Abs", "On its own".
+// Label for a unit: "Pair A", "Abs", "On its own" (D, an added exercise, or a pair exercise left on its own).
 export function unitLabel(unit) {
   if (unit.type === "pair") return `Pair ${unit.id}`;
-  return unit.id === "D" ? "On its own" : "Abs";
+  return /^Abs/.test(unit.id) ? "Abs" : "On its own";
 }
 
 // The set-by-set order of the whole weights block.
@@ -88,9 +90,11 @@ export function nextPosition(session, seq) {
 }
 
 // Is this entry the first set of the first exercise of a pair (warm-up sets come first)?
+// A pair exercise left on its own by a Plan edit keeps its warm-up sets.
 export function wantsWarmup(entry, units) {
   const unit = units[entry.unitIndex];
-  return unit.type === "pair" && unit.slots[0].slot === entry.slot && entry.setNumber === 1;
+  if (entry.setNumber !== 1 || unit.slots[0].slot !== entry.slot) return false;
+  return unit.type === "pair" || isPairSlot(entry.slot);
 }
 
 // ---------- history and suggestions ----------

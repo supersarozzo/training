@@ -6,9 +6,9 @@
 export const FORMAT = 1;
 const APP = "training";
 const BAD_KEYS = new Set(["__proto__", "constructor", "prototype"]);
-const LISTS = ["sessions", "weighins", "measurements", "exercise_state", "gym_spots"];
+const LISTS = ["sessions", "weighins", "measurements", "exercise_state", "gym_spots", "plan_days"];
 // Lists added after the first version (additive, same format 1). A file without them is valid and comes back unchanged.
-const OPTIONAL_LISTS = new Set(["gym_spots"]);
+const OPTIONAL_LISTS = new Set(["gym_spots", "plan_days"]);
 // Same list as LEFT_CHOICES in engine/week1.js (kept here so this file stays small; tests/review-low.test.mjs checks they match).
 const LEFT_CHOICES = ["0-1", "2-3", "4-6", "7+"];
 export const MAX_TEXT = 2000;
@@ -35,6 +35,7 @@ export function emptyDoc() {
     measurements: [],
     exercise_state: [],
     gym_spots: [],
+    plan_days: [],
   };
 }
 
@@ -239,6 +240,9 @@ const CHECKS = {
     text(x.machine, `gym spot ${n} machine`, { max: 60, allowEmpty: false });
     text(x.where ?? "", `gym spot ${n} note`);
   }),
+  // Saved Plan edits (engine/planedits.js). Only the record itself is checked here: the slots are checked by the engine
+  // before use, and a record it cannot use (for example from a newer app) is kept and synced, never refused or dropped.
+  plan_days: (r, n) => checkRecord(r, `plan day ${n}`),
 };
 
 const MAX_RECORDS = 20000;
