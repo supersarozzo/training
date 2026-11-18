@@ -210,7 +210,9 @@ test("D12-1 with nothing known, every weighted exercise shows 'Try <kg>' with th
       const sg = workout.suggestFor(doc, id, { week, missed: null, exerciseState: undefined });
       assert.equal(sg.action, "first_try", id);
       assert.equal(sg.weight_kg, progression.firstTryWeight(id, doc.shared_settings, doc.profile));
-      assert.equal(sg.note, "First try. Set 1 tells us if it is right.");
+      // Test change (trainer D12 addition, 2026-11-18, commit dc59f13): from week 2 the find-your-weight steps do not
+      // run, so the first-try note there tells you to change the weight one step for the next set.
+      assert.equal(sg.note, week <= 1 ? "First try. Set 1 tells us if it is right." : "First try. Set 1 too easy (4 or more reps left) or too hard? Change the weight one step for the next set.");
       const wl = weightLine(doc, id, week);
       assert.equal(wl.text, `Try ${sg.weight_kg} kg`, id);
       assert.equal(wl.kg, sg.weight_kg);

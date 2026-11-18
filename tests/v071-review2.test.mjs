@@ -64,3 +64,23 @@ test("R6 the pain swap never starts above the new exercise's own first try when 
   const ui = src("js/ui/swap.js");
   assert.match(ui, /painSwapStart\(id, \{ lastWorkKg: last\?\.weight_kg, origSugg: ctx\.sugg\(rec\.done_exercise\), newSugg: ctx\.sugg\(id\) \}, ctx\.settings\)/);
 });
+
+// D12 addition (trainer 8.37, 2026-11-18, commit dc59f13; checker round 2, finding 3): an exercise first done in week 2
+// or later still starts at "Try <kg>", with its own note, because the find-your-weight steps only run in the practice
+// week and week 1. The weight is the same; only the words change.
+import { FIRST_TRY_NOTE, FIRST_TRY_NOTE_LATER } from "../app/js/engine/workout.js";
+import { weightLine } from "../app/js/planview.js";
+
+test("D12-W2 week 2 and later: the first-try note says to change the weight one step for the next set", () => {
+  assert.equal(FIRST_TRY_NOTE_LATER, "First try. Set 1 too easy (4 or more reps left) or too hard? Change the weight one step for the next set.");
+  assert.equal(FIRST_TRY_NOTE, "First try. Set 1 tells us if it is right.");
+  const doc = { ...validDoc(), sessions: [], exercise_state: [] };
+  for (const week of [0, 1]) assert.equal(suggestFor(doc, "chest_press", { week, missed: null, exerciseState: undefined }).note, FIRST_TRY_NOTE, `week ${week}`);
+  for (const week of [2, 5, 12]) {
+    const sg = suggestFor(doc, "chest_press", { week, missed: null, exerciseState: undefined });
+    assert.equal(sg.action, "first_try");
+    assert.equal(sg.note, FIRST_TRY_NOTE_LATER, `week ${week}`);
+    assert.equal(sg.weight_kg, firstTryWeight("chest_press", doc.shared_settings, doc.profile));
+    assert.equal(weightLine(doc, "chest_press", week).note, FIRST_TRY_NOTE_LATER, "the Plan card says the same");
+  }
+});
