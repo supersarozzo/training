@@ -68,14 +68,15 @@ test("F5 a portion logged by count is saved as grams only: food_log.servings sta
   assert.equal(r.entry.kcal, 360);
 });
 
-test("F6 the check step shows the count stepper only for a food with a serving, and both steppers update each other", () => {
+// Changed by the Grams | Pieces refinement (same 0.7.4, not released): Pieces works for every food (it asks for the
+// weight when there is none), so the count no longer depends on servingOf, and it is called "Pieces".
+test("F6 the check step's Pieces count turns pieces into grams and back (whole steps on the buttons)", () => {
   const t = src("js/diet/sheets.js");
-  assert.match(t, /servingOf\(src\)/, "the counter depends on the food's serving");
-  assert.match(t, /label: "How many"/);
+  assert.match(t, /pieceOf\(/, "the count uses the food's piece weight");
+  assert.match(t, /label: "Pieces"/);
   assert.match(t, /gramsForCount\(/);
   assert.match(t, /countForGrams\(/);
   assert.match(t, /stepCount\(/);
-  assert.match(t, /\.setValue\(/, "a change in one stepper sets the other without a redraw");
   const parts = src("js/ui/parts.js");
   assert.match(parts, /\.setValue = \(n\) =>/, "the shared stepper can be set from outside (no onChange loop)");
 });
@@ -103,10 +104,10 @@ test("F8 under one serving, the count's minus changes nothing (the grams never j
   const { stepCount, countForGrams } = await import("../app/js/food/foodmath.js");
   const { readFileSync } = await import("node:fs");
   const sheets = readFileSync(new URL("../app/js/diet/sheets.js", import.meta.url), "utf8");
-  const min = Number(sheets.match(/label: "How many"[^\n]*?min: ([\d.]+)/)[1]);
+  const min = Number(sheets.match(/label: "Pieces"[^\n]*?min: ([\d.]+)/)[1]);
   const seen = [];
   const c = countForGrams(100, 300); // 0.3 of a 300 g serving
-  const el = stepper({ label: "How many", value: c, min, max: 16, decimals: 1, next: stepCount, onChange: (v) => seen.push(v) });
+  const el = stepper({ label: "Pieces", value: c, min, max: 16, decimals: 1, next: stepCount, onChange: (v) => seen.push(v) });
   const all = (n) => [n, ...(n.childNodes ?? []).flatMap(all)];
   const [minus, plus] = all(el).filter((n) => n.tagName === "BUTTON");
   minus.click();

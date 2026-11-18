@@ -118,3 +118,22 @@ test("D6 wiring: started once in main.js, in the offline list, pinch zoom kept, 
   const code = src("js/ui/tapzoom.js").split("\n").filter((l) => !l.trim().startsWith("//")).join("\n");
   assert.doesNotMatch(code, /innerHTML|console|style/);
 });
+
+// ---------- Review gaps (auditor, 2026-11-18) ----------
+test("D7 a short drag (15 to 45 px) is a scroll: never cancelled, never a first tap; a touchend that cannot be cancelled gets no replay", () => {
+  const doc = fakeDoc();
+  tz.guardDoubleTap(doc);
+  const row = el("DIV");
+  for (const d of [15, 30, 45]) {
+    tap(doc, row, 1000 * d);
+    assert.equal(tap(doc, row, 1000 * d + 150, 100, 200, { moveTo: [100, 200 + d] }), 0, `${d} px drag after a tap`);
+    assert.equal(tap(doc, row, 1000 * d + 300), 0, `a tap right after a ${d} px drag is a first tap`);
+  }
+  assert.equal(row.dispatched.length, 0);
+  // iOS could mark a touchend as not cancellable: then the phone's own click comes, so no second click from us.
+  const b = el("BUTTON");
+  tap(doc, b, 90000);
+  doc.on.touchstart.fn({ target: b, touches: [touch(100, 200)], changedTouches: [touch(100, 200)], timeStamp: 90150 });
+  doc.on.touchend.fn({ target: b, touches: [], changedTouches: [touch(100, 200)], timeStamp: 90190, cancelable: false, preventDefault: () => {} });
+  assert.equal(b.dispatched.length, 0, "no replayed click when the tap could not be cancelled");
+});
