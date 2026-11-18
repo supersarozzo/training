@@ -7,8 +7,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const css = (f) => readFileSync(new URL(`../app/css/${f}`, import.meta.url), "utf8");
-const html = readFileSync(new URL("../app/index.html", import.meta.url), "utf8");
+// Windows checkouts have CRLF line ends: compare with LF.
+const css = (f) => readFileSync(new URL(`../app/css/${f}`, import.meta.url), "utf8").replaceAll("\r\n", "\n");
+const html = readFileSync(new URL("../app/index.html", import.meta.url), "utf8").replaceAll("\r\n", "\n");
 
 test("P1-1 the page background is one plain colour (no glow for iOS to blur at the top)", () => {
   const t = css("app.css");

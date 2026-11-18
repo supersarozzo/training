@@ -12,6 +12,7 @@
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px; --s12: 48px;
   --r-chip: 999px; --r-input: 14px; --r-button: 16px; --r-card: 20px; --r-hero: 24px;
   --tap-min: 44px; --tap-main: 58px;
+  --top-clear: 0px; /* extra room under the status bar, Home Screen app only (below) */
   --t-fast: 160ms; --t-normal: 280ms; --t-slow: 460ms; --t-flash: 2000ms;
   --ease: cubic-bezier(.2, .8, .2, 1); --spring: cubic-bezier(.34, 1.4, .64, 1);
 
@@ -44,7 +45,6 @@
   --hero-fade: linear-gradient(180deg, rgba(255,255,255,0) 45%, rgba(242,243,245,.85) 100%);
   --scrim-text: linear-gradient(180deg, rgba(8,9,12,0) 0%, rgba(8,9,12,.55) 40%, rgba(8,9,12,.82) 100%); /* under any text on a photo, both looks */
   --bar-glass: rgba(242, 243, 245, .82);
-  --canvas-glow: radial-gradient(120% 60% at 50% 0%, rgba(77, 124, 15, .07), transparent 70%);
   --map-base: #e3e6eb; --map-muscle: #cfd4dc; --map-line: #ffffff; /* body maps (DESIGN.md 15.4, mock-up) */
 }
 @media (prefers-color-scheme: dark) {
@@ -63,7 +63,6 @@
     --photo-plate: #1a1d24; --photo-band: #121419; --accent-on-soft: var(--volt); --gold: #fbbf24;
     --hero-fade: linear-gradient(180deg, rgba(8,9,12,0) 30%, rgba(8,9,12,.94) 100%);
     --bar-glass: rgba(8, 9, 12, .78);
-    --canvas-glow: radial-gradient(120% 60% at 50% 0%, rgba(215, 255, 60, .07), transparent 70%);
     --map-base: #2a2f39; --map-muscle: #3b414d; --map-line: #121419;
   }
 }
@@ -82,7 +81,6 @@
   --photo-plate: #1a1d24; --photo-band: #121419; --accent-on-soft: var(--volt); --gold: #fbbf24;
   --hero-fade: linear-gradient(180deg, rgba(8,9,12,0) 30%, rgba(8,9,12,.94) 100%);
   --bar-glass: rgba(8, 9, 12, .78);
-  --canvas-glow: radial-gradient(120% 60% at 50% 0%, rgba(215, 255, 60, .07), transparent 70%);
   --map-base: #2a2f39; --map-muscle: #3b414d; --map-line: #121419;
 }
 
@@ -91,8 +89,14 @@
    (SimpleHost's lesson). theme.js adds the class for two frames. */
 html.theme-switching *, html.theme-switching *::before, html.theme-switching *::after { transition: none !important; }
 html { -webkit-text-size-adjust: 100%; background: var(--bg-canvas); }
+/* iPhone 0.7.1 (P1): iOS 26+ draws its own soft blur under the status bar of a Home Screen app (the scroll edge effect;
+   a page can not turn it off). The page is one plain colour (the old green glow at the top was blurred into fog), and
+   each screen starts lower, so its first line is out of that blur. */
+@media (display-mode: standalone) { :root { --top-clear: 20px; } }
+/* P4: no double-tap zoom on any part (Rosario's taste); pinch-zoom and scrolling stay. */
+html, body, *, *::before, *::after { touch-action: manipulation; }
 body {
-  margin: 0; background: var(--bg-canvas) var(--canvas-glow) no-repeat; color: var(--text-primary);
+  margin: 0; background: var(--bg-canvas); color: var(--text-primary);
   font: 400 17px/1.5 var(--font); font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
   overflow-wrap: anywhere; /* a long word or a pasted link in a note wraps; it never widens the screen (review 8.25 R3) */
@@ -105,7 +109,7 @@ svg.ic { flex-shrink: 0; } /* an icon keeps its size next to a long text (the Gy
 /* ---------- layout ---------- */
 .screen {
   flex: 1; width: 100%; max-width: 520px; margin: 0 auto;
-  padding: calc(var(--s4) + env(safe-area-inset-top)) var(--s4) var(--s8);
+  padding: calc(var(--s4) + var(--top-clear) + env(safe-area-inset-top)) var(--s4) var(--s8);
 }
 .screen.has-tabs { padding-bottom: calc(var(--tap-main) + 28px + var(--s8) + env(safe-area-inset-bottom)); }
 .screen.has-bar { padding-bottom: calc(var(--tap-main) * 3 + var(--s6) + env(safe-area-inset-bottom)); } /* tab bar + floating button + air (0.7.1: the last line was covered) */
@@ -666,7 +670,7 @@ a.text-button { display: inline-flex; align-items: center; gap: 2px; text-decora
 
 /* ---------- build step 2: gear, Plan day page, opened exercise, body maps, Gym (DESIGN.md 15) ---------- */
 .gear {
-  position: absolute; z-index: 2; top: calc(var(--s4) + env(safe-area-inset-top)); right: var(--s4);
+  position: absolute; z-index: 2; top: calc(var(--s4) + var(--top-clear) + env(safe-area-inset-top)); right: var(--s4);
   width: var(--tap-min); height: var(--tap-min); border-radius: 50%; display: grid; place-items: center;
   background: var(--bg-raised); border: 1px solid var(--border-default); box-shadow: var(--shadow-card); color: var(--text-primary);
   transition: transform var(--t-fast) var(--ease);

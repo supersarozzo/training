@@ -76,7 +76,7 @@ How the look reaches every part (dark-mode check, 2026-11-18, `docs/checks/2026-
 
 | Role | Use |
 |---|---|
-| `--bg-canvas` | page background (with a faint accent glow at the top) |
+| `--bg-canvas` | page background, one plain colour (0.7.1: the faint glow at the top is gone; iOS blurred it into fog) |
 | `--bg-surface` / `--bg-raised` | cards, sheets / chips and raised controls |
 | `--bg-subtle` | done sets, secondary fills, empty bars |
 | `--border-default` / `--border-strong` | hairlines / input and stepper outlines (needs 3:1) |
@@ -109,7 +109,8 @@ Balance: about 60 % neutral, 30 % surfaces and photos, 10 % accent. Status colou
 ## 5. Layout and spacing
 
 - **One column**, full width, side gutters 16 px. Max content width 520 px, centred on bigger screens.
-- **Safe areas:** pad top and bottom with `env(safe-area-inset-*)` (notch and home bar).
+- **Safe areas:** pad top and bottom with `env(safe-area-inset-*)` (notch and home bar). In the Home Screen app every top also adds `--top-clear` (20 px, `display-mode: standalone`): iOS 26+ draws its own soft blur under the status bar (the scroll edge effect, which a page can not turn off), so the first line starts below it (0.7.1, iPhone P1).
+- **No double-tap zoom** anywhere (Rosario's taste): `touch-action: manipulation` on every element; pinch-zoom and scrolling stay (0.7.1, iPhone P4).
 - **Thumb zone:** the main action sits in a fixed bottom bar (58 px button plus padding plus the safe area), on a frosted glass bar. Back and End sit at the top.
 - **One focus per screen:** the current set or the timer. Everything else is smaller and muted.
 - **No horizontal scrolling** anywhere, at 320 px wide too. Chip rows wrap or shrink.
@@ -192,7 +193,7 @@ Do
 - Test at 375 × 812, light and dark, motion on and off.
 
 Don't
-- Gradients other than the photo scrim and the faint canvas glow; shadows on cards in dark mode.
+- Gradients other than the photo scrim; shadows on cards in dark mode.
 - Tiny tap targets, swipe-only actions, buttons near the top edge for frequent actions.
 - Rely on sound, colour or a picture alone for anything important.
 - Use `innerHTML` with data (security rule in ARCHITECTURE.md). All text goes in through `h()`.

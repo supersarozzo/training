@@ -4,7 +4,7 @@
 
 /* Settings in words, top right of Progress (the gear icon looked like a brightness button). */
 .settings-btn {
-  position: absolute; z-index: 2; top: calc(var(--s4) + env(safe-area-inset-top)); right: var(--s4);
+  position: absolute; z-index: 2; top: calc(var(--s4) + var(--top-clear) + env(safe-area-inset-top)); right: var(--s4);
   min-height: var(--tap-min); padding: 0 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px;
   background: var(--bg-raised); border: 1px solid var(--border-default); box-shadow: var(--shadow-card); color: var(--text-primary);
   font-weight: 700; font-size: 15px; text-decoration: none;
