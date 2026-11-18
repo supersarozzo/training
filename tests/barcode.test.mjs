@@ -216,9 +216,9 @@ test("B14 CSP: only script-src gains 'wasm-unsafe-eval' and connect-src gains Op
 
 test("B15 the offline list holds the reader files, so the scanner works with no signal after the first visit", () => {
   const sw = read("sw.js");
-  for (const f of ["reader/index.js", "share.js", "reader/zxing_reader.wasm", "LICENSE", "NOTICE", "CHANGES.md"]) assert.ok(sw.includes(`"./${VENDOR}${f}"`), f);
-  assert.ok(sw.includes(`"./js/food/scanner.js"`));
-  assert.ok(sw.includes(`"./js/food/barcode.js"`));
+  for (const f of ["reader/index.js", "share.js", "reader/zxing_reader.wasm", "LICENSE", "NOTICE", "CHANGES.md"]) assert.ok(sw.includes(`"${VENDOR}${f}"`), f);
+  assert.ok(sw.includes(`"js/food/scanner.js"`));
+  assert.ok(sw.includes(`"js/food/barcode.js"`));
 });
 
 test("B16 scanner.js: no innerHTML or eval; reader loaded only when asked (dynamic import); no other site named", () => {
