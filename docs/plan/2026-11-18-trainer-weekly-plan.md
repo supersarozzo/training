@@ -272,6 +272,65 @@ Sources (read 2026-11-18): ACSM novice loading (8-12 RM, about 50 to 70 % of 1RM
 5. Two profiles with different made-up body weights get the same first-try weights (the rule does not read body weight); a profile other than "man" gets 0.6 × the table, rounded down.
 6. Every weighted exercise id in `plan-v2.js` has a table value.
 
+### D13. Wednesday full body and muscle recovery — **keep Wednesday as it is; fix one wrong sentence; add one watch rule**
+
+Asked by the Training Agent on 2026-11-18, for you: "Isn't it better to always rest a muscle for 24 hours?"
+
+**What the week really does (weeks 2-5 sets; Wednesday stops with 3 reps left, the other days with 2):**
+
+| Muscle | Hard days (sets) | Wednesday (sets) | Back to back with Wednesday |
+|---|---|---|---|
+| Chest | Mon 3, Thu 3 | bench press 3 | Wed → Thu |
+| Back (lats, mid back) | Mon 6, Thu 3 | pulldown 3 | Wed → Thu |
+| Front of thighs (quads) | Tue 6, Fri 3 | goblet squat 3 | Tue → Wed |
+| Triceps | Mon 3, Thu 3 | overhead extension 2 | Wed → Thu |
+| Side shoulders | Thu 3, Fri 3 | lateral raise 2 | Wed → Thu → Fri |
+| Calves | Mon 3, Fri 3 | calf raise 3 | none (48 h apart), plus the daily walk |
+
+```
+        Mon Tue Wed Thu Fri
+Upper    H   .   l   H   .
+Legs     .   H   l   .   H
+H = hard day  l = light touch
+```
+
+**Your 24-hour rule is already kept.** Two days in a row at the same time of day are 24 hours apart. What the plan does not give is 48 hours for every muscle every time. The two hard sessions for each muscle are 72 hours apart (Monday → Thursday for the upper body, Tuesday → Friday for the legs). Wednesday is a third, lighter touch in between.
+
+**My decision:**
+1. **Wednesday stays: same exercises, same days, same sets, same minutes, still 3 reps left.** No plan data changes. Exercise ids and saved logs are not touched.
+2. **The sentence in plan v2 section 2 is wrong** ("Upper and lower days are never back to back with the same muscles"). The true version: "Each muscle has two hard sessions a week, 3 days apart (Monday and Thursday for the upper body, Tuesday and Friday for the legs). Wednesday is a lighter full-body day in between (stop with 3 reps left), so some muscles work two days in a row; this is safe because no set goes to failure (trainer plan D13)." Plan v2 is my file; I change that line only when the Training Agent says yes, because this task commits the trainer plan only.
+3. **New watch rule (words only, like the calf rule):** in weeks 1 to 3, if the front of your thighs is still very sore on Wednesday (it hurts to sit down or take stairs), do the goblet squat with the weight one step lighter for that day. If chest or shoulders are very sore on Thursday, use the same rule for the first exercise. Normal soreness is fine (plan v2 section 9). Joint pain is not: skip that exercise for the day.
+
+**Why:**
+- *Recovery depends on how hard the sets are, not only on the hours.* Sets taken to failure need 48 hours or more to recover; the same work stopped 2 to 3 reps short recovers much of the way within 24 to 48 hours (Morán-Navarro 2017). All your sets stop 2 to 3 reps short, and Wednesday 3 short.
+- *Training a muscle on two days in a row works when each session is moderate.* Studies with 5 or 6 sessions a week, which put the same muscle on consecutive days, gave the same or more muscle growth than fewer sessions with the same weekly sets (Saric 2019; Zaroni 2019). Frequency itself adds little once the weekly sets are equal (Pelland 2026), so the reason for Wednesday is to spread the sets: fewer sets per session, fresher sets, shorter days.
+- *Wednesday is a light touch.* It has 2 to 3 sets per muscle, at 3 reps left, with lighter exercises (goblet squat, not leg press or Smith squat). The heavy work for each muscle stays 72 hours apart.
+- *Small muscles recover fast.* Lateral raises use light weights and cause little damage, so three days in a row is common practice. Calves get 48 hours between raise days; the uphill walk is easy endurance work (effort 5 to 6 out of 10), not a strength session.
+- *The 48-hour rule is an old, general rule for beginners.* Older guidelines advise 2 to 3 full-body days a week for beginners, which gives about 48 hours between sessions (ACSM 2009; I could not open its full text to confirm an exact "48 hours" sentence). The 2026 update says what matters most is weekly sets and effort, with each muscle trained at least twice a week; the split does not matter.
+- *Not "move the Wednesday exercises":* making Wednesday arms-and-abs only would drop chest, back and quads to 2 sessions with more sets each, so Monday, Tuesday, Thursday and Friday would get longer. Making Wednesday a rest day would lose about 15 muscle sets a week or add them to the other days. Neither has evidence of a benefit.
+- *Watch for the real risk:* the first 2 to 3 weeks bring the worst soreness for a beginner. It drops fast after that (the repeated bout effect, D11). The watch rule covers those weeks.
+
+Sources (read 2026-11-18): Morán-Navarro et al. 2017, Eur J Appl Physiol, recovery after failure vs non-failure sets ([PubMed 28965198](https://pubmed.ncbi.nlm.nih.gov/28965198/)); Saric et al. 2019, J Strength Cond Res, 3 vs 6 sessions a week with equal sets ([PubMed 30363041](https://pubmed.ncbi.nlm.nih.gov/30363041/)); Zaroni et al. 2019, J Strength Cond Res, whole-body 5 days a week vs split ([PubMed 31260419](https://pubmed.ncbi.nlm.nih.gov/31260419/)); Pelland et al. 2026 (D1); ACSM 2009 progression models position stand ([PubMed 19204579](https://pubmed.ncbi.nlm.nih.gov/19204579/), abstract only) and ACSM 2026 (D1); Hyldahl, Chen and Nosaka 2017 (D11).
+
+**Tests:** none. No plan data and no app behaviour change. The existing test `trainer 3` already locks Wednesday's exercises, sets and rest.
+
+### D14. Mixed days (an upper day ends with a leg exercise, a leg day has shoulder exercises) — **keep the mixed days**
+
+Asked by the Training Agent on 2026-11-18. Monday ends with a calf raise, Thursday with a leg curl. Tuesday has the face pull, Friday the lateral raise. Should days be pure upper or pure lower?
+
+**My decision: keep them as they are.** No plan data changes.
+
+**Why:**
+- *The muscle does not know the name of the day.* Growth follows the weekly sets per muscle, the effort, and at least 2 sessions a week per muscle. How the week is split does not change the result when the sets are equal (Ramos-Campo 2024, 14 studies; ACSM 2026; Pelland 2026).
+- *The small extras fill rest time.* On leg days the face pull and lateral raise are paired with leg exercises: while the legs rest, the shoulders work. Paired sets of muscles that do not compete save time without losing results (Zhang 2025, D4). Pure leg days would need these 6 sets on the upper days, which are already the longest days.
+- *Calves and the back of the thighs get 2 days a week this way.* Monday's calf raise and Thursday's leg curl give them a second day (D7 needs at least 2 days; test `trainer 5` checks it). Moving them to the leg days would put calf raises, leg curl, Romanian deadlift and hip thrust together, so leg days get longer and the legs more tired.
+- *They come last and are small.* A calf raise or leg curl at the end of an upper day adds almost no whole-body tiredness. Nothing tires a muscle before its own main exercise (exercise order: Eddens 2018, D8).
+- *Rear and side shoulders do not suffer on leg days.* Squats and hip thrusts do not use them, so they are fresh.
+
+Sources (read 2026-11-18): Ramos-Campo et al. 2024, J Strength Cond Res 38(7):1330-1340, split vs full-body with equal sets ([PubMed 38595233](https://pubmed.ncbi.nlm.nih.gov/38595233/)); Zhang et al. 2025, supersets (D4); Eddens et al. 2018, exercise order (D8); ACSM 2026 (D1); Pelland et al. 2026 (D1).
+
+**Tests:** none. The existing tests `trainer 3` (exact days) and `trainer 5` (calves and back of thighs on 2 days or more) already lock this.
+
 ## 5. Changes to your earlier choices
 
 **None.** I kept 74 b and 80-83 exactly:
