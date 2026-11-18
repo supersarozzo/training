@@ -129,9 +129,11 @@ const familyOf = (id) => EQUIPMENT[exerciseMuscles[id]?.equip]?.family ?? null;
 const groupName = (gid) => GYM_GROUPS.find((g) => g.id === gid)?.name ?? "";
 
 // Everything the Swap sheet shows for one slot of a day:
-// { current, sets, rest, muscle ("front thighs"), same: [{ id, pick }], already: [names], hidden: [names],
+// { current, sets, rest, muscle ("front thighs"), same: [{ id, pick, sameKit }], already: [names], hidden: [names],
 //   others: [{ id, name, items: [ids] }] }. `pick`: "Plan's pick" for the plan's own swaps (and the plan's own exercise
-// when the place was swapped), else null. Never the exercise there now, never one already in the day.
+// when the place was swapped), else null. sameKit: same kind of equipment as the exercise there now (shown in a second
+// group under its own heading; the plan's picks always stay in the first). Never the exercise there now, never one
+// already in the day.
 export function swapSheet(doc, dayId, slotName, settings) {
   const record = editOf(doc, dayId);
   const eff = effectiveDay(dayId, record);
@@ -149,7 +151,7 @@ export function swapSheet(doc, dayId, slotName, settings) {
     if (id === cur.ex || same.some((x) => x.id === id)) return;
     if (inDay.has(id)) { if (!already.includes(exName(id))) already.push(exName(id)); return; }
     if (!picks.has(id) && !machineFound(id, settings)) { if (!hidden.includes(exName(id))) hidden.push(exName(id)); return; }
-    same.push({ id, pick: picks.has(id) ? "Plan's pick" : null });
+    same.push({ id, pick: picks.has(id) ? "Plan's pick" : null, sameKit: !picks.has(id) && familyOf(id) === familyOf(cur.ex) });
   };
   for (const id of planIds) consider(id);
   const sameGroup = Object.keys(exerciseMuscles).filter((id) => exercises[id] && gymGroupOf(id) === gid);
@@ -179,7 +181,7 @@ export function addSheet(doc, dayId, week, settings) {
     return { id: g.id, name: g.name, low: low.has(g.id), items: all.filter((id) => machineFound(id, settings)), hidden: all.filter((id) => !machineFound(id, settings)).map(exName) };
   });
   const probe = { slot: ADDED_SLOTS[Math.min(added, MAX_ADDED - 1)], sets: ADDED_SETS };
-  return { left: Math.max(0, MAX_ADDED - added), max: MAX_ADDED, setsThisWeek: setsForSlot(clampWeek(week), probe), setsNormal: ADDED_SETS, rest: ADDED_REST, minutes: Math.round(ADDED_SETS * MINUTES_PER_SET), groups };
+  return { left: Math.max(0, MAX_ADDED - added), max: MAX_ADDED, setsThisWeek: setsForSlot(clampWeek(week), probe), setsNormal: ADDED_SETS, rest: ADDED_REST, minutes: Math.round(setsForSlot(clampWeek(week), probe) * MINUTES_PER_SET), groups };
 }
 
 // ---------- whole-plan muscle check (DESIGN.md 15.6) ----------

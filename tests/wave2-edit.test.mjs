@@ -104,7 +104,7 @@ test("W2-6 Swap sheet: the plan's own swaps are always offered and marked; 'Alre
   const sh = pv.swapSheet(model.doc(), "tue", "A1", {});
   assert.equal(sh.current, "leg_press");
   assert.equal(sh.muscle, "front thighs");
-  assert.deepEqual(sh.same[0], { id: "smith_squat", pick: "Plan's pick" });
+  assert.deepEqual(sh.same[0], { id: "smith_squat", pick: "Plan's pick", sameKit: false });
   assert.ok(sh.already.includes("Leg extension"));
   assert.ok(!sh.same.some((x) => x.id === "leg_extension"));
   // The Romanian deadlift always offers its plan swap (A's hidden-swap bug, mock-up note).
@@ -291,4 +291,16 @@ test("W2-21 the 'Whole plan check' card opens the muscle check: no local go() hi
   assert.ok(!/\bconst go\s*=/.test(src), "planday.js declares its own go()");
   assert.match(src, /import \{[^}]*\bgo\b[^}]*\} from "\.\/app\.js"/);
   assert.match(src, /go\("#\/plan\/muscles"\)/);
+});
+
+test("W2-22 Swap groups: the plan's picks and other equipment first, same kind of equipment after; Add minutes follow this week's sets (checker round 1)", () => {
+  const doc = validDoc();
+  const wedGoblet = DAY_IDS.find((d) => days[d].slots.some((s) => s.ex === "goblet_squat"));
+  const slot = days[wedGoblet].slots.find((s) => s.ex === "goblet_squat").slot;
+  const sh = pv.swapSheet(doc, wedGoblet, slot, {});
+  for (const x of sh.same) if (x.pick) assert.equal(x.sameKit, false, "a plan's pick is always in the first group");
+  const firstKinIndex = sh.same.findIndex((x) => x.sameKit);
+  if (firstKinIndex >= 0) assert.ok(sh.same.slice(firstKinIndex).every((x) => x.sameKit), "same-kind exercises come last");
+  assert.equal(pv.addSheet(doc, "tue", 1, {}).minutes, 5, "week 1: 2 sets, about 5 minutes");
+  assert.equal(pv.addSheet(doc, "tue", 3, {}).minutes, 8);
 });

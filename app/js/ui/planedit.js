@@ -93,6 +93,8 @@ export function openSwapSheet(day, week, slotName) {
   const sh = swapSheet(doc, day, slotName, doc.shared_settings);
   if (!sh) { toast("This exercise is no longer in the day."); return; }
   const oldName = exName(sh.current);
+  const first = sh.same.filter((x) => !x.sameKit);
+  const kin = sh.same.filter((x) => x.sameKit);
 
   const pick = (id) => save(day, `Swapped ${oldName} for ${exName(id)}.`, () => model.swapPlanSlot(day, slotName, id));
   const row = (id, badge) => {
@@ -100,7 +102,7 @@ export function openSwapSheet(day, week, slotName) {
     return h("button", { class: "mach-row", type: "button", "aria-label": `Swap ${oldName} for ${ex.name}${badge ? ` (${badge})` : ""}. ${ex.equipment}. ${repsText(ex)}.`, onclick: () => pick(id) },
       thumb(id, { small: true }),
       h("span", { class: "grow" },
-        h("b", {}, ex.name, badge ? h("span", { class: "badge inline" }, badge) : null),
+        h("b", {}, ex.name, badge ? h("span", { class: "badge inline acc" }, badge) : null),
         h("span", { class: "small muted" }, `${ex.equipment} · ${repsText(ex)}`)),
       miniMap(id),
       h("span", { class: "muted" }, icon("chevron", 18)));
@@ -125,9 +127,10 @@ export function openSwapSheet(day, week, slotName) {
     lastsBox(day),
     h("p", { class: "small muted" }, `Keeps the slot's ${sh.sets} sets and its rest. The reps come from the new exercise.`),
     h("span", { class: "eyebrow" }, `Same muscle (${sh.muscle}), other equipment`),
-    sh.same.length
-      ? h("div", { class: "card" }, sh.same.map((x) => row(x.id, x.pick)))
+    first.length
+      ? h("div", { class: "card" }, first.map((x) => row(x.id, x.pick)))
       : h("p", { class: "muted" }, "No other exercise for this muscle fits here."),
+    kin.length ? [h("span", { class: "eyebrow" }, `Same muscle (${sh.muscle}), same kind of equipment`), h("div", { class: "card" }, kin.map((x) => row(x.id, x.pick)))] : null,
     sh.already.length ? h("p", { class: "small muted" }, `Already in ${dayName(day)}: ${sh.already.join(", ")}.`) : null,
     hiddenLine(sh.hidden),
     sh.others.length ? toggle : null,

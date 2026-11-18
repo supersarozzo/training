@@ -772,7 +772,6 @@ button.pcard:active { transform: scale(.98); }
 /* ===== Build step 4 · Plan edits (Edit mode, Swap, Add, Undo, Changed by you, lock) · helper A only ===== */
 .edit-chip { margin-left: auto; flex: none; white-space: nowrap; }
 .plan-top .week-chip { min-width: 0; }
-.edit-chip[aria-pressed="true"] { background: var(--btn-bg); color: var(--btn-text); border-color: transparent; }
 .chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-on-soft); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
 .chip .badge { height: 20px; font-size: 12px; }
 .day-strip .chg-mark { position: absolute; top: -9px; right: -6px; height: auto; min-width: 0; padding: 2px 6px; font-size: 10px; line-height: 1.2; background: var(--bg-surface); color: var(--accent-text); border: 1px solid var(--accent); }
@@ -782,7 +781,11 @@ button.pcard:active { transform: scale(.98); }
 .back-plan { display: inline-flex; align-items: center; gap: 6px; margin: 6px 0 0 calc(var(--s3) * -1); }
 .card.lock-card { display: flex; align-items: center; gap: var(--s3); }
 .card.lock-card p { margin: 0; font-weight: 600; }
-.ecard { display: flex; flex-direction: column; gap: 8px; }
+.ecard { display: flex; flex-direction: column; gap: 10px; padding: 12px; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--r-card); box-shadow: var(--shadow-card); }
+.ecard > .pcard { padding: 0; border: 0; border-radius: 0; box-shadow: none; background: none; }
+.ecard > .pcard .chev { display: none; }
+.badge.acc { background: var(--accent-soft); color: var(--accent-on-soft); }
+.chip[aria-pressed="true"] .badge { background: var(--bg-surface); color: var(--accent-text); }
 .ebtns { display: flex; gap: 8px; }
 .ebtns button {
   flex: 1; min-height: var(--tap-min); display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 var(--s3);

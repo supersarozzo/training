@@ -38,7 +38,7 @@ function checkText(doc, m) {
   const v = doc.shared_settings?.extra_machines?.[m.check];
   if (v === true) return h("span", { class: "check-yes" }, "Your gym has it");
   if (v === false) return h("span", { class: "check-no" }, "Your gym does not have it");
-  return h("span", { class: "muted" }, "Not checked yet (first visit: Settings > Gym)");
+  return h("span", { class: "muted" }, "Not checked yet (first visit: Settings > Gym weights)");
 }
 
 // The machine card as a bottom sheet. `edit`: open with the note editor shown (the one-tap "Add where it is"); the
