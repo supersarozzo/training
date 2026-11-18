@@ -129,7 +129,7 @@ test("O8 the lookup gives up after 20 s: 'Open Food Facts did not answer'", asyn
 test("O9 rate limits: 10 lookups and 8 searches a minute; the 11th lookup waits, makes no call, says how long", async () => {
   assert.deepEqual(OFF_LIMITS, { reads: 10, searches: 8, windowMs: 60000 });
   clock = 1_000_000;
-  const net = fakeNet((url) => (url.includes("/cgi/search.pl") ? { body: { products: [] } } : found(TWIX)));
+  const net = fakeNet((url) => (url.startsWith("https://search.openfoodfacts.org/") ? { body: { hits: [] } } : url.includes("/cgi/search.pl") ? { body: { products: [] } } : found(TWIX)));
   const off = createOff({ fetch: net.fetch, version: "0.7.0", now });
   for (let i = 0; i < 10; i++) assert.equal((await off.lookup("5000159484695")).ok, true);
   const over = await off.lookup("5000159484695");
@@ -144,13 +144,15 @@ test("O9 rate limits: 10 lookups and 8 searches a minute; the 11th lookup waits,
   assert.equal((await off.search("skyr")).ok, true);
 });
 
-test("O10 search sends only the word, UK products only, a few fields; never the barcode route", async () => {
+// 0.7.6 (food S1): the old search address is now the fallback, used once when search.openfoodfacts.org fails.
+test("O10 the fallback search sends only the word, UK products only, a few fields; never the barcode route", async () => {
   clock = 5_000_000;
-  const net = fakeNet({ body: { count: 2, products: [{ code: "5000159484695", product_name: "Skyr A", brands: "X", nutriments: { "energy-kcal_100g": 60, proteins_100g: 11 } }, { code: "abc", product_name: "Bad code", nutriments: {} }] } });
+  const net = fakeNet((url) => url.startsWith("https://search.openfoodfacts.org/") ? { status: 503, body: {} } : { body: { count: 2, products: [{ code: "5000159484695", product_name: "Skyr A", brands: "X", nutriments: { "energy-kcal_100g": 60, proteins_100g: 11 } }, { code: "abc", product_name: "Bad code", nutriments: {} }] } });
   const off = createOff({ fetch: net.fetch, version: "0.7.0", now });
   const res = await off.search("  skyr  ");
   assert.equal(res.ok, true);
-  const u = new URL(net.calls[0].url);
+  assert.equal(net.calls.length, 2, "the new address first, then the old one once");
+  const u = new URL(net.calls[1].url);
   assert.equal(u.origin, OFF_ORIGIN);
   assert.equal(u.pathname, "/cgi/search.pl");
   assert.equal(u.searchParams.get("search_terms"), "skyr");
@@ -163,29 +165,29 @@ test("O10 search sends only the word, UK products only, a few fields; never the 
   assert.equal(res.products.length, 2);
   assert.equal(res.products[0].name, "Skyr A");
   assert.equal(res.products[1].barcode, null, "a code that is not a real barcode is dropped, the food can still be checked");
-  assert.equal(new Headers(net.calls[0].init.headers || {}).get("authorization"), null);
+  assert.equal(new Headers(net.calls[1].init.headers || {}).get("authorization"), null);
 });
 
 test("O11 search refuses a too short or too long word without a call, and strips control letters", async () => {
-  const net = fakeNet({ body: { products: [] } });
+  const net = fakeNet({ body: { hits: [] } });
   const off = createOff({ fetch: net.fetch, version: "0.7.0", now });
   assert.equal((await off.search("a")).code, "short");
   assert.equal((await off.search("   ")).code, "short");
   assert.equal(net.calls.length, 0);
   await off.search(`oat\u0000s ${"x".repeat(200)}`);
-  const term = new URL(net.calls[0].url).searchParams.get("search_terms");
+  const term = new URL(net.calls[0].url).searchParams.get("q").replace(/ countries_tags:"en:united-kingdom"$/, ""); // 0.7.6: the new address
   assert.ok(term.startsWith("oats "));
   assert.ok(term.length <= 60);
 });
 
 test("O12 search results: at most 20, each through the same checks", async () => {
   const many = Array.from({ length: 50 }, (_, i) => ({ code: "5000159484695", product_name: `P${i}`, nutriments: { "energy-kcal_100g": 9999 } }));
-  const off = createOff({ fetch: fakeNet({ body: { products: many } }).fetch, version: "0.7.0", now: () => 9_000_000 });
+  const off = createOff({ fetch: fakeNet({ body: { hits: many } }).fetch, version: "0.7.0", now: () => 9_000_000 }); // 0.7.6: the new address
   const res = await off.search("many");
   assert.equal(res.products.length, 20);
   assert.equal(res.products[0].per100g.kcal, null);
   const junk = createOff({ fetch: fakeNet({ body: { products: "nope" } }).fetch, version: "0.7.0", now: () => 9_000_000 });
-  assert.equal((await junk.search("junk")).code, "bad");
+  assert.equal((await junk.search("junk")).code, "search_down", "0.7.6: both addresses gave junk");
 });
 
 test("O13 the credit links point to Open Food Facts and the ODbL", () => {

@@ -207,7 +207,7 @@ test("B14 CSP: only script-src gains 'wasm-unsafe-eval' and connect-src gains Op
     "script-src": "'self' 'wasm-unsafe-eval'",
     "style-src": "'self'",
     "img-src": "'self' data:",
-    "connect-src": "'self' https://api.github.com https://world.openfoodfacts.org",
+    "connect-src": "'self' https://api.github.com https://world.openfoodfacts.org https://search.openfoodfacts.org", // + the name search (0.7.6, S1)
     "object-src": "'none'",
     "base-uri": "'none'",
     "form-action": "'none'",
