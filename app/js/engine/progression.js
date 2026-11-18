@@ -63,6 +63,8 @@ export function lowerHitFloor(w, result, exerciseId) {
 // D19 rule 3: at the floor, the workout is made easier by effort: stop with at least 3 reps left.
 export const FLOOR_RIR = 3;
 export const FLOOR_NOTE = "Lightest weight already. Stop with 3 reps left today.";
+// Week 1 already stops with 3 reps left, so its floor words say what to do instead (trainer answer 5 to 8.43, 71d3aa5).
+export const WEEK1_FLOOR_NOTE = "Lightest weight already. Do the reps you can with good form, or swap the exercise.";
 // Trainer answer 1 to 8.43: a pain swap that starts at the new exercise's floor gets one combined note.
 export const PAIN_FLOOR_NOTE = "You swapped because it hurt. Lightest weight already: stop with 3 reps left today.";
 export function floorRir(rir) {

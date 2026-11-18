@@ -9,7 +9,7 @@ import { nSets, repWord } from "../words.js";
 import { exerciseMuscles } from "../plan/muscles.js";
 import { localDate } from "../ids.js";
 import { planForDay, missedRule, knownRecord } from "./schedule.js";
-import { nextSuggestion, warmupSets, stepSize, weightAfterBreak, stepDown, lowerBy, firstTryWeight, gymFloor, lowerHitFloor, FLOOR_NOTE } from "./progression.js";
+import { nextSuggestion, warmupSets, stepSize, weightAfterBreak, stepDown, lowerBy, firstTryWeight, gymFloor, lowerHitFloor, minWeight, FLOOR_NOTE } from "./progression.js";
 import { startWalk, nextWalkBase, walkForDay, walkAfterBreak } from "./walk.js";
 
 const isPairSlot = (slot) => /^[A-C][12]$/.test(slot);
@@ -229,6 +229,10 @@ export function suggestFor(doc, exerciseId, ctx) {
     // Trainer D18 (0.7.5): a new exercise in the place of an old one starts from the old one's logged weight.
     const conv = fromReplaced(doc, exerciseId, ctx.missed?.weightFactor ?? 1);
     if (conv) {
+      // Trainer answer 4 to 8.43 (71d3aa5): after a break, a converted start at the new move's floor is at the floor.
+      if ((ctx.missed?.weightFactor ?? 1) < 1 && conv.weight_kg > 0 && conv.weight_kg <= minWeight(exerciseId, settings)) {
+        return { ...base, weight_kg: conv.weight_kg, action: "first_try", from: conv.from, atFloor: true, note: FLOOR_NOTE };
+      }
       const from = `From your ${exercises[conv.from].name.toLowerCase()} weight.`;
       return { ...base, weight_kg: conv.weight_kg, action: "first_try", from: conv.from, note: ctx.week > 1 ? `${from} ${FIRST_TRY_NOTE_LATER.replace(/^First try. /, "")}` : `${from} Set 1 tells us if it is right.` };
     }

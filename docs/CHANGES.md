@@ -21,9 +21,12 @@ The lowest weight (trainer decision D19), safer old versions, and small fixes, b
 - **The Undo after "Stop this exercise here" shows near the top** of the workout screen, under the top bar: away from
   "Undo last set", and it never covers "End".
 - **Week 1 at the lightest weight:** when set 1 is too heavy but the weight is already the lightest, the app says
-  "Lightest weight already. Stop with 3 reps left today." instead of "Remove 2 steps".
+  "Lightest weight already. Do the reps you can with good form, or swap the exercise." instead of "Remove 2 steps".
+- **A new machine move after a break:** if its first weight is already the lightest, the card says "Lightest weight
+  already. Stop with 3 reps left today."
 - **Food that did not sync shows on Today.** If the food file could not sync, Today says "Food did not sync. See Diet."
-  It stays quiet when the food will sync by itself (no signal, or GitHub asked to wait).
+  It stays quiet when the food says it will sync by itself ("Will sync when online" or "Will sync later", or GitHub
+  asked to wait).
 - **Pieces for foods that only say grams.** A food whose pack serving says only "30 g" no longer counts the whole
   30 g as 1 piece. Pieces now asks "How much does 1 piece weigh? (g)" once. Foods like "4 bites" or "2 eggs" work as
   before.
