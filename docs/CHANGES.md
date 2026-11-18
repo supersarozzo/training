@@ -4,7 +4,7 @@ What is new in each app version, in plain words. Newest first. Older versions: s
 
 ## 0.7.4 · 2026-11-18
 
-The editable walk and the food counter, built by chat 8.41. Not pushed yet.
+The editable walk, food Grams | Pieces, the double-tap guard and hold words, built by chat 8.41. Live since 2026-11-18 18:20 (pushed 273bb24..aa42645 on Rosario's typed push).
 
 - **You can change a day's warm-up walk.** In Plan, tap Edit, then Change on the walk card. Set the speed, the slope
   and the minutes. Your trainer's limits apply: 2 to 5 km/h, slope up to 12 % (10 % on Tuesday and Friday, the leg
