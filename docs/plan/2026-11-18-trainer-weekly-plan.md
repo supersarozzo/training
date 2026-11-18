@@ -222,6 +222,8 @@ Asked by the Training Agent on 2026-11-18. In the learn week the cards say "Find
 
 **My rule:** before an exercise has any weight (none set in the Plan, none logged, none found), the card shows **"Try <kg>"**, with the note "First try. Set 1 tells us if it is right." The find-your-weight steps (D5, plan v2 section 8) then correct it from set 1: up to 2 steps up or down.
 
+**Week 2 and later (added 2026-11-18, asked by 8.39's checker):** an exercise first done in week 2 or later (for example one added in the Plan) still starts at "Try <kg>". The find-your-weight steps do not run then, so the note reads instead: "First try. Set 1 too easy (4 or more reps left) or too hard? Change the weight one step for the next set." The normal progression takes over from the next workout. The practice week and week 1 keep the note above.
+
 **Order (the first one that exists wins):** your own weight set in the Plan → the suggestion from your logs (progression) → the weight found in week 1 or practice → **the first-try table below**.
 
 **First-try table (adult man, beginner).** Dumbbell numbers are **per dumbbell**. Stack numbers are the number on the machine's weight stack. Smith machine and hip thrust numbers are **the plates added in total (both sides), the bar not counted**.
