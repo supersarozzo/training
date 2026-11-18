@@ -186,7 +186,7 @@ export function addSheet(doc, dayId, week, settings) {
     return { id: g.id, name: g.name, low: low.has(g.id), items: all.filter((id) => machineFound(id, settings)), hidden: all.filter((id) => !machineFound(id, settings)).map(exName) };
   });
   const probe = { slot: ADDED_SLOTS[Math.min(added, MAX_ADDED - 1)], sets: ADDED_SETS };
-  return { left: Math.max(0, MAX_ADDED - added), max: MAX_ADDED, setsThisWeek: setsForSlot(clampWeek(week), probe), setsNormal: ADDED_SETS, rest: ADDED_REST, minutes: Math.round(setsForSlot(clampWeek(week), probe) * MINUTES_PER_SET), groups };
+  return { left: Math.max(0, MAX_ADDED - added), max: MAX_ADDED, setsThisWeek: setsForSlot(clampWeek(week), probe, dayId), setsNormal: ADDED_SETS, rest: ADDED_REST, minutes: Math.round(setsForSlot(clampWeek(week), probe, dayId) * MINUTES_PER_SET), groups };
 }
 
 // ---------- whole-plan muscle check (DESIGN.md 15.6) ----------
@@ -218,7 +218,29 @@ export function weekMuscles(doc, week) {
   return { direct, weighted, daysWith };
 }
 
-// The rows of the check. Groups add their muscles' sets (an exercise has one main muscle, so nothing counts twice).
+// Sets of one row of the check for every day of one week: a set counts 1 for the row when one of its main muscles is
+// in the row, else 0.5 when one of its helpers is; never twice (0.7.1, trainer M4 / T5: the rows have two main back
+// muscles, lats and mid back, and the Back row must count each of their sets once).
+// { direct, weighted, dayList: [dayIds with direct sets] }
+export function rowSets(doc, week, muscles) {
+  let direct = 0;
+  let weighted = 0;
+  const dayList = [];
+  for (const d of DAY_IDS) {
+    let dayDirect = 0;
+    for (const s of daySlots(d, clampWeek(week), editOf(doc, d))) {
+      const m = exerciseMuscles[s.ex];
+      if (!m) continue;
+      if (m.main.some((g) => muscles.includes(g))) { dayDirect += s.sets; weighted += s.sets; }
+      else if (m.helpers.some((g) => muscles.includes(g))) weighted += s.sets / 2;
+    }
+    direct += dayDirect;
+    if (dayDirect > 0) dayList.push(d);
+  }
+  return { direct, weighted, dayList };
+}
+
+// The rows of the check. A row counts each set once (rowSets), even when an exercise has two main muscles in it.
 const ROWS = [
   { id: "chest", name: "Chest", muscles: ["chest"], half: 1 },
   { id: "back", name: "Back (lats, middle back)", muscles: ["lats", "mid_back"], half: 1 },
@@ -257,12 +279,8 @@ export function verdict(direct, weighted, dayCount, { noWarning = false, part = 
 
 // [{ id, name, direct, weighted (null on part rows), part, days: "Mon Wed Thu", verdict: { text, cls, flag } }]
 export function checkRows(doc, week) {
-  const m = weekMuscles(doc, week);
   return ROWS.map((r) => {
-    const direct = r.muscles.reduce((n, g) => n + (m.direct[g] ?? 0), 0);
-    const weighted = r.muscles.reduce((n, g) => n + (m.weighted[g] ?? 0), 0);
-    const dset = new Set(r.muscles.flatMap((g) => m.daysWith[g] ?? []));
-    const dlist = DAY_IDS.filter((d) => dset.has(d));
+    const { direct, weighted, dayList: dlist } = rowSets(doc, week, r.muscles);
     return {
       id: r.id, name: r.name, part: !!r.part, half: r.half,
       direct, weighted: r.part ? null : weighted,

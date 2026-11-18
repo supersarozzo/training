@@ -77,9 +77,10 @@ export function lowerBy(w, fraction, exerciseId, settings) {
   return round1(Math.max(out, 0));
 }
 
-// Warm-up sets before the first exercise of each pair: about 50 % x 10 and about 75 % x 5 (plan v2 section 5),
+// Warm-up sets before the first exercise of a pair: about 50 % x 10 and about 75 % x 5 (plan v2 section 5),
 // rounded to sizes the gym has, never above the working weight, never repeating a weight.
-export function warmupSets(workWeight, exerciseId, settings) {
+// `count` (trainer L1, answer T2; engine/workout.js warmupCount): 2 = both sets, 1 = only the light set, 0 = none.
+export function warmupSets(workWeight, exerciseId, settings, count = 2) {
   const ex = exercises[exerciseId];
   if (ex.step === "bodyweight" || workWeight <= 0) return [];
   const round = (target) => {
@@ -94,8 +95,8 @@ export function warmupSets(workWeight, exerciseId, settings) {
   const first = round(workWeight * 0.5);
   const second = round(workWeight * 0.75);
   const sets = [];
-  if (first < workWeight) sets.push({ weight_kg: round1(first), reps: 10 });
-  if (second < workWeight && second > first) sets.push({ weight_kg: round1(second), reps: 5 });
+  if (count >= 1 && first < workWeight) sets.push({ weight_kg: round1(first), reps: 10 });
+  if (count >= 2 && second < workWeight && second > first) sets.push({ weight_kg: round1(second), reps: 5 });
   return sets;
 }
 
@@ -135,8 +136,17 @@ export function nextSuggestion(last, previous, opts) {
     return { ...base, action: "hold", note: "No increase this week. Same weight." };
   }
 
+  // Stopped early twice in a row, with a set below the range both times (trainer D10 rule 2, answer T1 to 8.39):
+  // one smallest step lighter, back to the bottom. Only in weeks with progress (it sits after the hold above).
+  // Bodyweight and timed exercises never go lighter. Pain has its own path (Swap › It hurts), above.
+  const belowLow = (session) => session.sets.some((s) => (ex.kind === "hold" ? s.seconds ?? s.reps : s.reps) < low);
+  if (last.stopped && previous?.stopped && ex.step !== "bodyweight" && belowLow(last) && belowLow(previous)) {
+    return { ...base, action: "lower", weight_kg: stepDown(w, exerciseId, settings),
+      note: "You stopped early twice and missed the range. One step lighter." };
+  }
+
   // Stopped early last time ("Stop this exercise here", 0.6.0): fewer sets than planned never count as a full
-  // workout at the top, so the weight stays (audit M1; a safe default, the trainer may refine it).
+  // workout at the top, so the weight stays (audit M1; trainer D10: same weight, aim to finish every set).
   if (last.stopped) {
     return { ...base, action: "hold", note: "You stopped this exercise early last time. Same weight." };
   }

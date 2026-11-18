@@ -249,7 +249,7 @@ export function openDoseSheet(day, week, slotName) {
   const unit = hold ? "s" : "reps";
 
   const weekLine = h("p", { class: "small muted" });
-  const showWeek = () => { weekLine.textContent = `This week: ${setsForSlot(week, { ...slot, sets: draft.sets })} sets (the week ${week} rule).`; };
+  const showWeek = () => { weekLine.textContent = `This week: ${setsForSlot(week, { ...slot, sets: draft.sets }, day)} sets (the week ${week} rule).`; };
   showWeek();
   const rangeNote = h("p", { class: "small muted" });
   const showRange = () => {
@@ -287,7 +287,7 @@ export function openDoseSheet(day, week, slotName) {
     rerender();
     undoToast(`${ex.name} changed.`, () => {
       if (didSets) model.savePlanDay(day, beforeSlots);
-      if (didPrefs) model.setExerciseState(slot.ex, { my_range: stNow?.my_range ?? null, my_weight_kg: stNow?.my_weight_kg ?? null, my_weight_at: stNow?.my_weight_at ?? null });
+      if (didPrefs) model.setExerciseState(slot.ex, { my_range: stNow?.my_range ?? null, my_weight_kg: stNow?.my_weight_kg ?? null, my_weight_at: stNow?.my_weight_at ?? null, my_weight_time: stNow?.my_weight_time ?? null });
     });
   };
 
@@ -309,7 +309,7 @@ export function openDoseSheet(day, week, slotName) {
     } catch (e) { toast(e.message); return; }
     closeSheets();
     rerender();
-    undoToast(`${ex.name}: the app chooses the weight again.`, () => model.setExerciseState(slot.ex, { my_weight_kg: stOld.my_weight_kg, my_weight_at: stOld.my_weight_at ?? null }));
+    undoToast(`${ex.name}: the app chooses the weight again.`, () => model.setExerciseState(slot.ex, { my_weight_kg: stOld.my_weight_kg, my_weight_at: stOld.my_weight_at ?? null, my_weight_time: stOld.my_weight_time ?? null }));
   };
 
   openSheet(

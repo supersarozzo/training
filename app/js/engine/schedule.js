@@ -78,7 +78,7 @@ export function expectedMinutes(kind, week) {
 export function daySlots(dayId, week, edit) {
   const eff = edit === undefined || edit === null ? null : effectiveDay(dayId, edit);
   if (!eff || !eff.edited) return days[dayId].slots.map((s) => ({ ...s, sets: setsFor(week, dayId, s.slot) }));
-  return eff.slots.map((s) => ({ ...s, sets: setsForSlot(week, s) }));
+  return eff.slots.map((s) => ({ ...s, sets: setsForSlot(week, s, dayId) }));
 }
 
 // Short day: pairs A and B only, then the first abs exercise only. On leg days there is no abs slot
@@ -131,6 +131,8 @@ export function planForSession(session) {
     const old = okSets(rec.planned_sets) ? null : BEFORE_2026_11_18[dayId]?.[rec.slot];
     const p = old ? { slot: rec.slot, sets: old.sets, rest: old.rest } : planSlots.get(rec.slot);
     const saved = (Array.isArray(rec.sets) ? rec.sets : []).filter((x) => x && x.type === "work").length;
+    // A record with no planned_sets is from before 0.6.0: it keeps the week rule it was started with (no day passed =
+    // the rule before 0.7.1), so a past workout never changes.
     const sets = okSets(rec.planned_sets) ? rec.planned_sets : p ? setsForSlot(week, p) : Math.min(Math.max(2, saved), 10);
     const rest = "planned_rest" in rec && okRest(rec.planned_rest) ? rec.planned_rest : p ? p.rest : null;
     return { slot: rec.slot, ex: rec.plan_exercise, sets, rest };

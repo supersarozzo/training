@@ -16,7 +16,7 @@ import { patchActive, getActive } from "../active.js";
 import { exercises } from "../plan/plan-v2.js";
 import { cues } from "../plan/cues.js";
 import { stepUp, stepDown, warmupSets } from "../engine/progression.js";
-import { slotRecord, workSets, warmupDone, wantsWarmup, unitLabel, targetText } from "../engine/workout.js";
+import { slotRecord, workSets, warmupDone, warmupCount, unitLabel, targetText } from "../engine/workout.js";
 import { askEnd, nextText, nextDue, restBetween, progressOf } from "./flow.js";
 import { openSwap } from "./swap.js";
 import { startTimer } from "../timer.js";
@@ -50,6 +50,7 @@ function askStop(session, entry, ex, doneCount) {
   const close = openSheet(
     h("h2", {}, `Move on with ${doneCount} of ${entry.sets} sets?`),
     h("p", { class: "muted" }, `The sets you did are saved. ${ex.name} ends here and the workout goes on.`),
+    h("p", { class: "small muted" }, "Does it hurt? Use Swap › It hurts instead."), // trainer D10: pain goes through Swap
     h("button", { class: "button", type: "button", onclick: () => {
       close();
       model.stopExercise(session.id, entry.slot, true);
@@ -119,9 +120,11 @@ export function renderPair(ctx, pos) {
   const done = workSets(rec);
   const startKg = rec.swap_reason === "hurts" && rec.swap_weight_kg != null ? rec.swap_weight_kg : sg.weight_kg;
 
-  // Warm-up sets: first exercise of each pair, from the suggested working weight.
-  const wantW = wantsWarmup(entry, units) && !rec.warmup_skipped && !bodyweight && !hold;
-  const wsets = wantW && startKg ? warmupSets(startKg, exId, ctx.settings) : [];
+  // Warm-up sets: first exercise of a pair, from the suggested working weight. How many (0, 1 or 2) follows the
+  // trainer's L1 rule (engine warmupCount), on the day as it really is: the exercise really done in each slot.
+  const exOf = (slot) => slotRecord(session, slot.slot)?.done_exercise ?? slot.ex;
+  const wCount = !rec.warmup_skipped && !bodyweight && !hold ? warmupCount(entry, units, exOf) : 0;
+  const wsets = wCount && startKg ? warmupSets(startKg, exId, ctx.settings, wCount) : [];
   const wDone = warmupDone(rec);
   const warmupPending = wsets.length > 0 && wDone < wsets.length;
 

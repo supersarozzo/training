@@ -4,7 +4,9 @@
 // - what to suggest for each exercise (last time, next weight)
 // - walk suggestion
 // Source: plan v2 sections 3 to 6, 8, 9, 11; WORKFLOW D.
-import { exercises, MOVE_SECONDS, weekInfo, walkRules } from "../plan/plan-v2.js";
+import { exercises, MOVE_SECONDS, weekInfo, walkRules, BIG_LIFTS } from "../plan/plan-v2.js";
+import { exerciseMuscles } from "../plan/muscles.js";
+import { localDate } from "../ids.js";
 import { planForDay, missedRule } from "./schedule.js";
 import { nextSuggestion, warmupSets, stepSize, weightAfterBreak, stepDown, lowerBy } from "./progression.js";
 import { startWalk, nextWalkBase, walkForDay, walkAfterBreak } from "./walk.js";
@@ -105,6 +107,23 @@ export function wantsWarmup(entry, units) {
   return unit.type === "pair" || isPairSlot(entry.slot);
 }
 
+// How many warm-up sets this entry gets: 0, 1 (the light set, about 50 % x 10) or 2 (trainer L1, answer T2 to 8.39):
+// only the first set of the first exercise of a pair (wantsWarmup); none when one of its main muscles was a main
+// muscle of an earlier exercise that day (helpers do not count); else 2 for a big lift, 1 for a small exercise.
+// Bodyweight and timed exercises: none. The day as it really is: `exOf(slot)` gives the exercise really done in a
+// slot (a swap during the workout); by default the slot's own exercise (Plan edits are already in the slots).
+export function warmupCount(entry, units, exOf = (slot) => slot.ex) {
+  if (!wantsWarmup(entry, units)) return 0;
+  const unit = units[entry.unitIndex];
+  const exId = exOf(unit.slots[0]);
+  const ex = exercises[exId];
+  if (!ex || ex.step === "bodyweight" || ex.kind === "hold") return 0;
+  const mainOf = (id) => exerciseMuscles[id]?.main ?? [];
+  const earlier = new Set(units.slice(0, entry.unitIndex).flatMap((u) => u.slots.flatMap((s) => mainOf(exOf(s)))));
+  if (mainOf(exId).some((g) => earlier.has(g))) return 0;
+  return BIG_LIFTS.includes(exId) ? 2 : 1;
+}
+
 // ---------- history and suggestions ----------
 
 // Finished sessions, newest first. A deleted or unfinished session never counts.
@@ -124,7 +143,7 @@ export function performances(sessions, exerciseId) {
       out.push({
         weight_kg: work[work.length - 1].weight_kg ?? 0,
         sets: work.map((w) => ({ reps: w.reps ?? 0, seconds: w.seconds ?? null, rir: w.rir ?? null })),
-        date: s.date, week: s.week,
+        date: s.date, week: s.week, finished_at: s.finished_at ?? null,
         pain: rec.swap_reason === "hurts" ? true : undefined,
         // "Stop this exercise here" (0.6.0): fewer sets than planned; the next suggestion holds the weight (audit M1).
         stopped: Number.isInteger(rec.stopped_after) && rec.stopped_after >= 0 ? true : undefined,
@@ -143,6 +162,18 @@ export function describeLast(perf, exerciseId) {
   return `Last time: ${perf.weight_kg} kg × ${nums}${unit}`;
 }
 
+// Was the weight set in the Plan set after the last workout of this exercise? 0.7.1 (0.6.0 audit m4): with its time
+// (my_weight_time) it must be later than the moment that workout finished, so a weight set in the morning of a
+// workout no longer wins after it. The time counts only when it falls on the saved day (my_weight_at): an older app
+// that changes the weight writes a new day but keeps the old time, and then the day decides, as before 0.7.1.
+export function planWeightNewer(state, last) {
+  if (typeof state.my_weight_at !== "string") return false;
+  const t = typeof state.my_weight_time === "string" ? Date.parse(state.my_weight_time) : NaN;
+  const end = Date.parse(last.finished_at ?? "");
+  if (!Number.isNaN(t) && !Number.isNaN(end) && localDate(new Date(t)) === state.my_weight_at) return t > end;
+  return state.my_weight_at >= last.date;
+}
+
 // What to show for one exercise today.
 // doc: the data document. ctx: { week, missed (result of missedRule), exerciseState (record or undefined) }
 // Returns { weight_kg (or null when nothing is known), reps, range, note, last, lastText, action }
@@ -157,8 +188,7 @@ export function suggestFor(doc, exerciseId, ctx) {
   const own = validRange(state?.my_range) ?? ex.range;
   const [low] = own;
   const base = { range: own, reps: low, last, lastText: describeLast(last, exerciseId) };
-  const mine = state && typeof state.my_weight_kg === "number" && ex.step !== "bodyweight"
-    && (!last || (typeof state.my_weight_at === "string" && state.my_weight_at >= last.date));
+  const mine = state && typeof state.my_weight_kg === "number" && ex.step !== "bodyweight" && (!last || planWeightNewer(state, last));
   if (mine) return { ...base, weight_kg: state.my_weight_kg, action: "mine", note: "Your weight, set in the Plan." };
 
   if (!last) {

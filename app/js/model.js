@@ -266,7 +266,13 @@ ${note}` : note);
       if (weightKg === 0) weightKg = null;
       const patch = {};
       if (range !== undefined) patch.my_range = range ? [range[0], range[1]] : null;
-      if (weightKg !== undefined) { patch.my_weight_kg = weightKg; patch.my_weight_at = weightKg === null ? null : localDate(clock()); }
+      // 0.7.1: the time too (my_weight_time), so a weight set in the morning of a workout does not win after it.
+      if (weightKg !== undefined) {
+        const now = clock();
+        patch.my_weight_kg = weightKg;
+        patch.my_weight_at = weightKg === null ? null : localDate(now);
+        patch.my_weight_time = weightKg === null ? null : now.toISOString();
+      }
       return this.setExerciseState(exerciseId, patch);
     },
 

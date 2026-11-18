@@ -37,16 +37,21 @@ const pick = (s) => ({ slot: s.slot, ex: s.ex, sets: s.sets, rest: s.rest });
 // The plan's own day, as plain slots.
 export const planDaySlots = (dayId) => days[dayId].slots.map(pick);
 
-// Sets for one slot object in one week. The same rule as setsFor() in plan-v2.js (tests/plan-edits.test.mjs test 6
-// checks every plan slot in every week), plus the added slots E1 and E2, which follow the D rule.
-export function setsForSlot(weekNumber, slot) {
+// Sets for one slot object in one week, on one plan day. The same rule as setsFor() in plan-v2.js
+// (tests/plan-edits.test.mjs test 6 checks every plan slot in every week), plus the added slots E1 and E2, which
+// stay at 2 sets in weeks 7-11 on every day (trainer T3 b). Trainer L2 (T3 a, 0.7.1): weeks 7-11, days that are not
+// leg days keep D's sets and give Abs1 one set less. No known day = the leg-day rule (the rule before 0.7.1).
+export function setsForSlot(weekNumber, slot, dayId) {
   const base = slot.sets;
+  const leg = isPlanDayId(dayId) ? days[dayId].leg : true;
   switch (weekInfo(weekNumber).setsMode) {
     case "two": return Math.min(base, 2);
     case "easier": return Math.max(base - 1, 1);
     case "build2":
       if (slot.slot === "A1" || slot.slot === "A2") return base + 1;
-      if (slot.slot === "D" || ADDED_SLOTS.includes(slot.slot)) return Math.min(base, 2);
+      if (ADDED_SLOTS.includes(slot.slot)) return Math.min(base, 2);
+      if (slot.slot === "D") return leg ? Math.min(base, 2) : base;
+      if (slot.slot === "Abs1" && !leg) return Math.max(base - 1, 1);
       return base;
     default: return base;
   }

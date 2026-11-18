@@ -95,9 +95,10 @@ test("swaps, in the order of answer 82 a and proposal section 5", () => {
 });
 
 test("sets in every week for the new D slots and the Abs1 slots (answer 83 a: new moves start like week 1)", () => {
-  // [week 1, weeks 2-5, week 6 and 12, weeks 7-11] by setsFor (D: two sets in weeks 7-11, one less in weeks 6 and 12)
-  const expectD = { w1: 2, w2to5: 3, w6: 2, w7to11: 2 };
-  const expectAbs1 = { w1: 2, w2to5: 2, w6: 1, w7to11: 2 };
+  // [week 1, weeks 2-5, week 6 and 12, weeks 7-11] by setsFor (one less in weeks 6 and 12). Weeks 7-11 changed in
+  // 0.7.1 by the trainer's L2 (answer T3 to 8.39): on Mon, Wed, Thu D keeps 3 sets and Abs1 has one set less.
+  const expectD = { w1: 2, w2to5: 3, w6: 2, w7to11: 3 };
+  const expectAbs1 = { w1: 2, w2to5: 2, w6: 1, w7to11: 1 };
   for (const [phase, wk] of Object.entries(PHASE_WEEKS)) {
     for (const week of wk) {
       for (const day of ["mon", "wed", "thu"]) {
@@ -118,8 +119,9 @@ const weeklySets = (week, muscle) => {
 };
 
 test("weekly sets per muscle match proposal section 4 (calves, back of the thighs direct, abs)", () => {
-  // Proposal section 4, "after" columns: week 1, weeks 2-5, weeks 6 and 12, weeks 7-11.
-  const after = { calves: [6, 9, 6, 6], hamstrings: [4, 6, 4, 5], abs: [14, 17, 10, 19] };
+  // Proposal section 4, "after" columns: week 1, weeks 2-5, weeks 6 and 12, weeks 7-11. Weeks 7-11 changed in 0.7.1
+  // by the trainer's L2 (answer T3 to 8.39): calves 6 -> 8, back of the thighs 5 -> 6, abs 19 -> 16.
+  const after = { calves: [6, 9, 6, 8], hamstrings: [4, 6, 4, 6], abs: [14, 17, 10, 16] };
   const cols = { w1: 0, w2to5: 1, w6: 2, w7to11: 3 };
   for (const [muscle, row] of Object.entries(after)) {
     for (const [phase, wk] of Object.entries(PHASE_WEEKS)) for (const week of wk) assert.equal(weeklySets(week, muscle), row[cols[phase]], `${muscle} week ${week}`);

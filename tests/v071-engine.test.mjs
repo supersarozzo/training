@@ -144,7 +144,7 @@ test("B2-2 every plan day: big lift first for its muscle = 2, small = 1, muscle 
 
 test("B2-3 the day as it really is: a Plan edit removes Friday's hip thrust -> the pull-through gets one light set", () => {
   const slots = pe.planDaySlots("fri").filter((s) => s.slot !== "B1");
-  const rec = { id: pe.planDayId("fri"), updated_at: "2026-03-02T09:00:00.000Z", slots };
+  const rec = { id: pe.planDayId("fri"), updated_at: "2026-03-02T09:00:00.000Z", plan_id: "plan-v2", day: "fri", slots };
   assert.equal(counts("fri", 3, rec).C1, 1);
 });
 
@@ -159,7 +159,7 @@ test("B2-4 the day as it really is: a swap during the workout counts the exercis
 
 test("B2-5 a pair exercise left on its own by a Plan edit still follows the rule", () => {
   const slots = pe.planDaySlots("fri").filter((s) => s.slot !== "B1");
-  const rec = { id: pe.planDayId("fri"), updated_at: "2026-03-02T09:00:00.000Z", slots };
+  const rec = { id: pe.planDayId("fri"), updated_at: "2026-03-02T09:00:00.000Z", plan_id: "plan-v2", day: "fri", slots };
   assert.equal(counts("fri", 3, rec).B2, 1, "the lateral raise is now first of its pair place and small");
 });
 
@@ -210,7 +210,7 @@ test("B3-5 the engine's day (plain and edited) uses the new rule", () => {
   assert.equal(schedule.daySlots("mon", 8).find((s) => s.slot === "D").sets, 3);
   assert.equal(schedule.daySlots("mon", 8).find((s) => s.slot === "Abs1").sets, 1);
   const slots = pe.planDaySlots("thu").map((s) => (s.slot === "C2" ? { ...s, ex: "overhead_triceps_ext" } : s));
-  const rec = { id: pe.planDayId("thu"), updated_at: "2026-03-02T09:00:00.000Z", slots };
+  const rec = { id: pe.planDayId("thu"), updated_at: "2026-03-02T09:00:00.000Z", plan_id: "plan-v2", day: "thu", slots };
   assert.equal(schedule.daySlots("thu", 9, rec).find((s) => s.slot === "D").sets, 3);
   assert.equal(schedule.daySlots("thu", 9, rec).find((s) => s.slot === "Abs1").sets, 1);
   assert.equal(schedule.daySlots("fri", 9, rec).find((s) => s.slot === "D").sets, 2, "a leg day: no change");

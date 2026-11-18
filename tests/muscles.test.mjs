@@ -206,7 +206,8 @@ const TRAINER_FIXES_2026_11_18 = {
   smith_squat: { main: ["quads"], helpers: ["glutes", "adductors", "calves", "lower_back"] },
   hip_thrust: { main: ["glutes"], helpers: ["hamstrings"] },
   db_glute_bridge: { main: ["glutes"], helpers: ["hamstrings"] },
-  seated_row_machine: { main: ["lats"], helpers: ["biceps", "mid_back", "rear_delts"] },
+  // 0.7.1, trainer T5 (docs/plan/2026-11-18-trainer-weekly-plan.md 7.1): rows have main lats + mid back.
+  seated_row_machine: { main: ["lats", "mid_back"], helpers: ["biceps", "rear_delts"] },
   hammer_curl: { main: ["biceps"], helpers: ["forearms"] },
   cable_curl: { main: ["biceps"], helpers: ["forearms"] },
   side_plank: { main: ["abs"], helpers: ["glutes"] },
@@ -226,11 +227,12 @@ test("trainer muscle fixes 2026-11-18: the 13 exercises have the decided main mu
   // No calves where the ankle does not move; no hamstrings as helpers of squats or the leg press.
   for (const id of ["leg_press", "hip_thrust", "db_glute_bridge"]) assert.ok(!exerciseMuscles[id].helpers.includes("calves"), id);
   for (const id of ["leg_press", "goblet_squat", "smith_squat"]) assert.ok(!exerciseMuscles[id].helpers.includes("hamstrings"), id);
-  // Decision M4: one main muscle per exercise, because the muscle check adds lats and mid back into one "Back" row
-  // (two main muscles in a row would count its sets twice). Rows keep mid back main and lats as a helper for now.
-  for (const id of Object.keys(exerciseMuscles)) assert.equal(exerciseMuscles[id].main.length, 1, `${id}: one main muscle`);
-  for (const id of ["one_arm_db_row", "seated_cable_row"]) {
-    assert.deepEqual(exerciseMuscles[id].main, ["mid_back"], id);
-    assert.ok(exerciseMuscles[id].helpers.includes("lats"), id);
+  // Decision M4, finished in 0.7.1 (trainer T5): the muscle check now counts a set once per row (planview.js rowSets),
+  // so the rows have main lats + mid back. Every other exercise keeps one main muscle.
+  const ROWS_TWO_MAIN = ["one_arm_db_row", "seated_cable_row", "seated_row_machine"];
+  for (const id of ROWS_TWO_MAIN) {
+    assert.deepEqual(exerciseMuscles[id].main, ["lats", "mid_back"], id);
+    assert.ok(!exerciseMuscles[id].helpers.includes("lats") && !exerciseMuscles[id].helpers.includes("mid_back"), id);
   }
+  for (const id of Object.keys(exerciseMuscles)) if (!ROWS_TWO_MAIN.includes(id)) assert.equal(exerciseMuscles[id].main.length, 1, `${id}: one main muscle`);
 });

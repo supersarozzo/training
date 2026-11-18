@@ -10,8 +10,8 @@
 // Trainer fixes 2026-11-18 (docs/plan/2026-11-18-trainer-decisions.md, M1 to M9; evidence in
 // docs/research/2026-11-18-muscle-map-check.md): 15 exercises read differently from free-exercise-db, each with 2+ sources.
 // Kept generosity: calves as helpers of squats (2 sources name them; they do little work there).
-// One main muscle per exercise for now: the muscle check adds lats and mid back into one "Back" row and counts every
-// main muscle, so two main muscles in a row would count its sets twice. Rows keep mid back as main (decision M4).
+// Two main muscles are fine since 0.7.1: the muscle check counts a set once per row (planview.js checkRows), so the
+// rows have main lats + mid back (trainer M4, answer T5 to 8.39) and the Back row does not count them twice.
 
 // Our muscle groups. `name`: plain words for the screen (DESIGN.md 15.4). `fedb`: the free-exercise-db name it comes from.
 // `view`: where the group is drawn best on the body map.
@@ -51,7 +51,7 @@ export const exerciseMuscles = {
   chest_press: { main: ["chest"], helpers: ["front_delts", "triceps"], equip: "machine" },
   pulldown: { main: ["lats"], helpers: ["biceps", "mid_back", "rear_delts"], equip: "cable" },
   shoulder_press_machine: { main: ["front_delts"], helpers: ["triceps", "side_delts"], equip: "machine", own: { reason: "Trainer M9: the side shoulders help in presses (StrengthLog lateral delt; Saeterbakken 2013 EMG)" } },
-  one_arm_db_row: { main: ["mid_back"], helpers: ["biceps", "lats", "rear_delts"], equip: "dumbbell" }, // M4: lats should be main too; waits for the check to count a set once (see decisions file)
+  one_arm_db_row: { main: ["lats", "mid_back"], helpers: ["biceps", "rear_delts"], equip: "dumbbell", own: { reason: "Trainer T5 (0.7.1): the lats are a main muscle of rows too (StrengthLog dumbbell row; Lehman 2004 EMG); the muscle check counts a set once per row" } },
   db_curl: { main: ["biceps"], helpers: ["forearms"], equip: "dumbbell" },
   triceps_pushdown: { main: ["triceps"], helpers: [], equip: "cable" },
   plank: { main: ["abs"], helpers: [], equip: "bodyweight" },
@@ -69,7 +69,7 @@ export const exerciseMuscles = {
   overhead_triceps_ext: { main: ["triceps"], helpers: [], equip: "cable" },
   side_plank: { main: ["abs"], helpers: ["glutes"], equip: "bodyweight", own: { reason: "Trainer M6: the shoulder only holds still; the side glute (gluteus medius) works hard (Wikipedia Plank; Youdas 2014 EMG)" } },
   incline_db_press: { main: ["chest"], helpers: ["front_delts", "triceps"], equip: "dumbbell" },
-  seated_cable_row: { main: ["mid_back"], helpers: ["biceps", "lats", "rear_delts"], equip: "cable" }, // M4: as the one-arm row
+  seated_cable_row: { main: ["lats", "mid_back"], helpers: ["biceps", "rear_delts"], equip: "cable", own: { reason: "Trainer T5 (0.7.1): the lats are a main muscle of rows too (StrengthLog dumbbell row; Lehman 2004 EMG); the muscle check counts a set once per row" } },
   seated_db_shoulder_press: { main: ["front_delts"], helpers: ["triceps", "side_delts"], equip: "dumbbell", own: { reason: "Trainer M9: the side shoulders help in presses (StrengthLog lateral delt; Saeterbakken 2013 EMG)" } },
   smith_squat: { main: ["quads"], helpers: ["glutes", "adductors", "calves", "lower_back"], equip: "smith", own: { reason: "Trainer M2: inner thighs work hard, hamstrings only steady the leg (StrengthLog; Wikipedia Squat; Kubo 2019)" } },
   reverse_crunch: { main: ["abs"], helpers: [], equip: "bodyweight" },
@@ -86,7 +86,7 @@ export const exerciseMuscles = {
   rear_delt_raise: { main: ["rear_delts"], helpers: ["mid_back"], equip: "dumbbell", own: { reason: "Trainer M8: the muscles between the shoulder blades help (StrengthLog trapezius; Ekstrom 2003 EMG: middle trapezius)" } },
   db_glute_bridge: { main: ["glutes"], helpers: ["hamstrings"], equip: "dumbbell", own: { reason: "Trainer M1: the ankle does not move, so no calves (StrengthLog; NASM floor bridge)" } },
   lat_pulldown_machine: { main: ["lats"], helpers: ["biceps", "mid_back", "rear_delts"], equip: "machine" },
-  seated_row_machine: { main: ["lats"], helpers: ["biceps", "mid_back", "rear_delts"], equip: "machine", own: { reason: "Trainer M4: rear shoulders help, as in the other rows (StrengthLog: rear delts; Lehman 2004 EMG: high mid-back work in the seated row)" } },
+  seated_row_machine: { main: ["lats", "mid_back"], helpers: ["biceps", "rear_delts"], equip: "machine", own: { reason: "Trainer M4 and T5 (0.7.1): lats and mid back are main, rear shoulders help, as in the other rows (StrengthLog: rear delts; Lehman 2004 EMG: high mid-back work in the seated row)" } },
   leg_curl_machine: { main: ["hamstrings"], helpers: [], equip: "machine" },
   calf_raise_machine: { main: ["calves"], helpers: [], equip: "machine" },
   // Added 2026-11-18 (plan change); muscles copied from the free-exercise-db entry used for the photo (no own reading needed).

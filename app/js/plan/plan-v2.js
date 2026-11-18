@@ -34,7 +34,7 @@ export const exercises = {
   seated_db_shoulder_press: { name: "Seated dumbbell shoulder press", equipment: "Dumbbells + upright bench", kind: "reps", range: [8, 12], step: "dumbbell", muscle: "shoulders", swaps: [{ id: "shoulder_press_machine" }] },
   smith_squat: { name: "Smith machine squat", equipment: "Smith press station, safety stops set", kind: "reps", range: [8, 12], step: "smith_2x2.5", muscle: "quads", swaps: [{ id: "leg_press" }] },
   reverse_crunch: { name: "Reverse crunch", equipment: "Bench or mat", kind: "reps", range: [10, 15], step: "bodyweight", muscle: "abs", swaps: [{ id: "dead_bug" }] },
-  cable_pull_through: { name: "Cable pull-through", equipment: "Cable, low pulley, rope", kind: "reps", range: [12, 15], step: "stack", muscle: "hamstrings", swaps: [{ id: "romanian_deadlift" }, { id: "leg_curl_machine", needsMachine: "leg_curl" }] },
+  cable_pull_through: { name: "Cable pull-through", equipment: "Cable, low pulley, rope", kind: "reps", range: [12, 15], step: "stack", muscle: "glutes", swaps: [{ id: "romanian_deadlift" }, { id: "leg_curl_machine", needsMachine: "leg_curl" }] },
   calf_raise_standing: { name: "Standing calf raise", equipment: "Smith machine, step or plate under the toes", kind: "reps", range: [12, 15], step: "smith_2x2.5", muscle: "calves", swaps: [{ id: "calf_raise_leg_press" }, { id: "calf_raise_machine", needsMachine: "calf_raise" }] },
   // Added 2026-11-18 (plan change, answers 80-83): planned on Mon and Wed (calf raise) and Thu (leg curl) in the D slot.
   calf_raise_leg_press: { name: "Calf raise on the leg press", equipment: "Leg press machine", kind: "reps", range: [12, 15], step: "stack", muscle: "calves", swaps: [{ id: "calf_raise_machine", needsMachine: "calf_raise" }, { id: "calf_raise_standing" }, { id: "one_leg_db_calf_raise" }] },
@@ -127,6 +127,16 @@ export const days = {
   },
 };
 
+// The cable pull-through is labelled glutes, as its muscle data (trainer L4, answer T4 to 8.39, 0.7.1).
+
+// Big lifts (plan v2 section 5; trainer L1, answer T2 to 8.39): the first exercise of a pair gets both warm-up sets
+// only when it is a big lift whose main muscle was not worked earlier that day; a small one gets one light set.
+export const BIG_LIFTS = Object.freeze([
+  "chest_press", "db_bench_press", "incline_db_press", "shoulder_press_machine", "seated_db_shoulder_press",
+  "pulldown", "lat_pulldown_machine", "one_arm_db_row", "seated_cable_row", "seated_row_machine",
+  "leg_press", "smith_squat", "goblet_squat", "hip_thrust", "db_glute_bridge", "romanian_deadlift",
+]);
+
 // Seconds to move from the first to the second exercise of a pair (plan v2 section 5).
 export const MOVE_SECONDS = 30;
 
@@ -154,6 +164,9 @@ export function weekInfo(weekNumber) {
 }
 
 // Sets for one slot in one week. Pure.
+// Weeks 7-11 (build2): pair A gets a 4th set. Trainer L2 (answer T3 to 8.39, 0.7.1): on leg days D drops to 2 sets
+// (plan v2 section 4); on the other days D keeps its sets and Abs1 has one set less.
+// engine/planedits.js setsForSlot is the same rule for a slot object (tests/plan-edits.test.mjs test 6).
 export function setsFor(weekNumber, dayId, slotName) {
   const slot = days[dayId].slots.find((s) => s.slot === slotName);
   if (!slot) throw new Error(`No slot ${slotName} on ${dayId}`);
@@ -163,7 +176,8 @@ export function setsFor(weekNumber, dayId, slotName) {
     case "easier": return Math.max(base - 1, 1);
     case "build2":
       if (slot.slot === "A1" || slot.slot === "A2") return base + 1;
-      if (slot.slot === "D") return Math.min(base, 2); // D drops to 2 sets (plan v2 section 4)
+      if (slot.slot === "D") return days[dayId].leg ? Math.min(base, 2) : base;
+      if (slot.slot === "Abs1" && !days[dayId].leg) return Math.max(base - 1, 1);
       return base;
     default: return base;
   }

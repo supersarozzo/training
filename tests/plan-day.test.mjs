@@ -8,6 +8,7 @@ import {
   unitsOf, slotRole, restTile, neighbours, GYM_GROUPS, gymGroupOf, planDaysOf, soFarText, mainView,
 } from "../app/js/engine/planpage.js";
 import { exercises, DAY_IDS } from "../app/js/plan/plan-v2.js";
+import { exerciseMuscles } from "../app/js/plan/muscles.js";
 
 const START = "2026-11-02"; // a Monday: week 1 = 2 to 8 Nov, week 3 = 16 to 22 Nov
 
@@ -80,7 +81,8 @@ test("daySoFar: every day and week adds up to the day's sets (main muscles get 1
     const slots = daySets(day, week);
     const r = daySoFar(day, week, slots[slots.length - 1].slot);
     const direct = Object.values(r.direct).reduce((a, b) => a + b, 0);
-    const mains = slots.reduce((n, s) => n + s.sets * 1, 0); // every plan exercise has exactly one main muscle
+    // 0.7.1 (trainer T5): the rows have two main muscles (lats, mid back), so a set counts once per main muscle.
+    const mains = slots.reduce((n, s) => n + s.sets * exerciseMuscles[s.ex].main.length, 0);
     assert.equal(direct, mains, `${day} week ${week}`);
   }
 });

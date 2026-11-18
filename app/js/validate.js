@@ -55,6 +55,7 @@ const fail = (msg) => { throw new Bad(msg); };
 
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const isTime = (v) => typeof v === "string" && v.length <= 40 && !Number.isNaN(Date.parse(v));
+const isFullTime = (v) => typeof v === "string" && v.length <= 40 && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v) && !Number.isNaN(Date.parse(v));
 const isDate = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
 
 function text(v, where, { max = MAX_TEXT, allowEmpty = true } = {}) {
@@ -242,6 +243,8 @@ const CHECKS = {
       if (!Array.isArray(r) || r.length !== 2 || !r.every((v) => Number.isInteger(v) && v >= 1 && v <= 100) || r[0] > r[1]) fail(`exercise state ${n} reps must be two whole numbers, low first`);
     }
     if (x.my_weight_at !== undefined && x.my_weight_at !== null && !isDate(x.my_weight_at)) fail(`exercise state ${n} weight date must be a date`);
+    // 0.7.1: the time the weight was set (an older app keeps the field and ignores it).
+    if (x.my_weight_time !== undefined && x.my_weight_time !== null && !isFullTime(x.my_weight_time)) fail(`exercise state ${n} weight time must be a time`);
     text(x.machine_note ?? "", `exercise state ${n} note`);
     numOrNull(x.fail_streak ?? 0, `exercise state ${n} fail streak`, 0, 100);
   }),
