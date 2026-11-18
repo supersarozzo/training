@@ -69,7 +69,7 @@ test("T-1 the stop Undo message on the workout screen shows at the top, away fro
   undoToast("Plan change.", () => {});
   const plain = body.querySelectorAll(".toast").slice(-1)[0];
   assert.ok(!plain.classList.contains("at-top"), "Plan edits keep the bottom place of the mock-up");
-  assert.match(src("js/ui/pair.js"), /undoToast\(`\$\{ex\.name\}: stopped after [^)]*\), 8000, \{ top: true \}\)/);
+  assert.match(src("js/ui/pair.js"), /undoToast\(`\$\{ex\.name\}: stopped after .*\), 8000, \{ top: true \}\);/);
   const css = src("css/app.css");
   assert.match(css, /\.toast\.undo-toast\.at-top \{[^}]*top: calc\(var\(--s3\) \+ var\(--top-clear\) \+ env\(safe-area-inset-top\)\)[^}]*bottom: auto/);
 });
