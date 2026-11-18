@@ -479,6 +479,7 @@ Swap additions on old exercises: `hip_thrust` gets `booty_builder_hip_thrust` fi
 - A saved Plan edit that names an old exercise keeps it: your own choice wins over the plan.
 - **The first weight of a new exercise:** if it has no log of its own, and the old exercise in that slot has a log, start from the old weight × (new first try ÷ old first try), rounded down (the D15 conversion, **without** the 30 % cut, because nothing hurts). Otherwise use the D12 first try. `dead_bug` → `plank` and `calf_raise_standing` → `calf_raise_leg_press` keep their own history if there is any.
 - The muscle check must give the same weekly sets per muscle, before and after, in every week.
+- *Answers to 8.42 (added 2026-11-18):* `booty_builder_hip_thrust` joins `BIG_LIFTS` (it is a big glute lift, like `hip_thrust`). `calf_raise_leg_press` with no log of its own, when `calf_raise_standing` has one, also converts (old kg × 40/10, rounded down, at least one step). A saved Plan edit for Tuesday or Friday that still holds an old D18 exercise in a slot D18 changes is never rewritten silently. The app shows one offer per day, once: "The plan now uses simpler machines on <day>. Use them in your edited <day>?" with **Use them** (changes only those slots, keeps your sets and rest) and **Keep mine** (changes nothing, never asked again).
 
 **Tests for the build worker to write first (they fail until the build):**
 1. The five day changes above; sets and rest unchanged on every slot.
