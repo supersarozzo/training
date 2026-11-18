@@ -220,12 +220,15 @@ test("W2-14 the check's numbers come from setsByMuscle over the 5 days, the same
   }
 });
 
-test("W2-15 check rows: shoulders = its 3 parts; back = lats + mid back; part rows have no 'with helpers' number", () => {
+// 0.7.1 (trainer T5): the rows have two main back muscles, so the Back row counts a set once, not once per muscle
+// (the old "back = lats + mid back" sum would count a row's sets twice). tests/v071-engine.test.mjs C5 checks the rule.
+test("W2-15 check rows: shoulders = its 3 parts; back counts each set once; part rows have no 'with helpers' number", () => {
   const rows = pv.checkRows(validDoc(), 2);
   const by = Object.fromEntries(rows.map((r) => [r.id, r]));
   assert.equal(by.shoulders.direct, by.front_delts.direct + by.side_delts.direct + by.rear_delts.direct);
   const m = pv.weekMuscles(validDoc(), 2);
-  assert.equal(by.back.direct, (m.direct.lats ?? 0) + (m.direct.mid_back ?? 0));
+  assert.ok(by.back.direct <= (m.direct.lats ?? 0) + (m.direct.mid_back ?? 0));
+  assert.ok(by.back.direct >= Math.max(m.direct.lats ?? 0, m.direct.mid_back ?? 0));
   for (const id of ["front_delts", "side_delts", "rear_delts"]) {
     assert.equal(by[id].part, true);
     assert.equal(by[id].weighted, null);

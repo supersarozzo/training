@@ -122,10 +122,11 @@ test("5 a phone still on app 0.3.1 keeps a plan_days list it does not know", () 
 
 // ---------- the week rule on a slot object ----------
 
+// 0.7.1 (trainer T3): the week rule needs the day (D and Abs1 differ on leg days in weeks 7-11), so the day is passed.
 test("6 setsForSlot matches the plan's setsFor for every slot of every day in every week", () => {
   for (const d of DAY_IDS) {
     for (const s of days[d].slots) {
-      for (const w of [0, ...WEEKS, 13]) assert.equal(pe.setsForSlot(w, s), setsFor(w, d, s.slot), `${d} ${s.slot} week ${w}`);
+      for (const w of [0, ...WEEKS, 13]) assert.equal(pe.setsForSlot(w, s, d), setsFor(w, d, s.slot), `${d} ${s.slot} week ${w}`);
     }
   }
 });
