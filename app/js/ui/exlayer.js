@@ -3,10 +3,13 @@
 // two body maps ("This exercise", "Day so far · 3 of 7") with words, the 3-step legend, 4 tiles (Sets, Reps, Rest,
 // Stop with), Previous / Next named after the neighbour. From Gym › Exercises (no ctx): one map, "In the plan" line.
 // Below, unchanged from the 0.4.1 exercise sheet: the moving photo, start and end photos, How to do it, the video link,
-// the machine row; plus "The plan's own swap". Read-only in this step: Swap and Remove come with build step 4.
+// the machine row; plus "The plan's own swap". It reads the day as it is trained (a saved Plan edit included). From a
+// Plan day that can be edited, Swap and Remove sit at the top beside Video (build step 4).
 import { h } from "../h.js";
 import { openSheet, closeSheets } from "./parts.js";
-import { rerender } from "./app.js";
+import { model, rerender } from "./app.js";
+import { dayState, openSwapSheet, removeSlot } from "./planedit.js";
+import { soFarIn, neighboursIn, roleIn, restIn } from "../planview.js";
 import { exercises, days, rirFor } from "../plan/plan-v2.js";
 import { cues } from "../plan/cues.js";
 import { videoFor } from "../plan/media.js";
@@ -14,9 +17,7 @@ import { flip, photoNote, photoPair } from "./media.js";
 import { videoButton, machineRow } from "./exinfo.js";
 import { icon } from "./icons.js";
 import { bodyMap, mapLegend } from "./bodymap.js";
-import {
-  daySets, daySoFar, exerciseLevels, muscleWords, slotRole, restTile, neighbours, planDaysOf,
-} from "../engine/planpage.js";
+import { exerciseLevels, muscleWords, planDaysOf } from "../engine/planpage.js";
 
 export function repRange(ex) {
   const [lo, hi] = ex.range;
@@ -50,7 +51,8 @@ export function openExerciseLayer(exId, ctx = null) {
   if (!ex) return null;
   const video = videoFor(exId);
   const words = muscleWords(exId);
-  const slots = ctx ? daySets(ctx.day, ctx.week) : null;
+  const view = ctx ? dayState(model.doc(), ctx.day, ctx.week) : null;
+  const slots = view ? view.slots : null;
   const slot = slots ? slots.find((x) => x.slot === ctx.slot) : null;
   const thisMap = h("div", { class: "mp" },
     h("span", { class: "eyebrow" }, "This exercise"),
@@ -60,15 +62,15 @@ export function openExerciseLayer(exId, ctx = null) {
   let maps;
   let extra = null;
   if (slot) {
-    const sofar = daySoFar(ctx.day, ctx.week, ctx.slot);
+    const sofar = soFarIn(slots, ctx.slot);
     maps = h("div", { class: "maps" }, thisMap,
       h("div", { class: "mp" },
         h("span", { class: "eyebrow" }, `Day so far · ${sofar.position} of ${sofar.total}`),
         bodyMap(sofar.levels, { label: `${days[ctx.day].name} up to this exercise: ${sofar.text}.` }),
         h("p", {}, h("b", {}, "Sets so far: "), sofar.text)));
-    const rest = restTile(slot);
+    const rest = restIn(slots, slot);
     const rir = rirFor(ctx.week, ctx.day);
-    const nb = neighbours(ctx.day, ctx.week, ctx.slot);
+    const nb = neighboursIn(slots, ctx.slot);
     const go = (x) => openExerciseLayer(x.ex, { ...ctx, slot: x.slot });
     extra = [
       h("div", { class: "ex-tiles" },
@@ -87,13 +89,17 @@ export function openExerciseLayer(exId, ctx = null) {
     extra = h("p", { class: "small muted" }, `${inPlanText(exId)} · ${repRange(ex)}${ex.kind === "hold" ? " s hold" : " reps"}${ex.perSide ? " each side" : ""}`);
   }
 
+  const editable = !!(slot && view.canEdit);
   const swaps = planSwapText(exId);
   const machine = machineRow(exId, { onSaved: () => { closeSheets(); rerender(); } });
   return openSheet(
-    h("div", { class: "eyebrow accent" }, slot ? `${days[ctx.day].name} · ${slotRole(ctx.day, ctx.slot)}` : "Exercise"),
+    h("div", { class: "eyebrow accent" }, slot ? `${days[ctx.day].name} · ${roleIn(slots, ctx.slot)}` : "Exercise"),
     h("h2", { class: "layer-title" }, ex.name),
     h("p", { class: "small muted layer-equip" }, ex.equipment),
-    video ? h("div", { class: "chips layer-chips" }, videoButton(exId, { chip: true })) : null,
+    video || editable ? h("div", { class: "chips layer-chips" },
+      video ? videoButton(exId, { chip: true }) : null,
+      editable ? h("button", { class: "chip", type: "button", "aria-label": `Swap ${ex.name}`, onclick: () => openSwapSheet(ctx.day, ctx.week, ctx.slot) }, icon("swap", 18), "Swap") : null,
+      editable ? h("button", { class: "chip", type: "button", "aria-label": `Remove ${ex.name} from ${days[ctx.day].name}`, onclick: () => removeSlot(ctx.day, ctx.slot) }, icon("close", 18), "Remove") : null) : null,
     maps,
     mapLegend(),
     extra,

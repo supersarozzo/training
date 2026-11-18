@@ -768,3 +768,81 @@ button.pcard:active { transform: scale(.98); }
 .layer-nav .button span { overflow-wrap: normal; }
 .ex-pick .small:last-child { color: var(--text-primary); }
 .ex-pick .thumb { width: 52px; height: 52px; }
+
+/* ===== Build step 4 · Plan edits (Edit mode, Swap, Add, Undo, Changed by you, lock) · helper A only ===== */
+.edit-chip { margin-left: auto; flex: none; white-space: nowrap; }
+.plan-top .week-chip { min-width: 0; }
+.edit-chip[aria-pressed="true"] { background: var(--btn-bg); color: var(--btn-text); border-color: transparent; }
+.chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-on-soft); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.chip .badge { height: 20px; font-size: 12px; }
+.day-strip .chg-mark { position: absolute; top: -9px; right: -6px; height: auto; min-width: 0; padding: 2px 6px; font-size: 10px; line-height: 1.2; background: var(--bg-surface); color: var(--accent-text); border: 1px solid var(--accent); }
+.card.changed-card { border: 1.5px solid var(--accent); }
+.card.changed-card p { margin: 0; }
+.card.changed-card p + p { margin-top: 6px; }
+.back-plan { display: inline-flex; align-items: center; gap: 6px; margin: 6px 0 0 calc(var(--s3) * -1); }
+.card.lock-card { display: flex; align-items: center; gap: var(--s3); }
+.card.lock-card p { margin: 0; font-weight: 600; }
+.ecard { display: flex; flex-direction: column; gap: 8px; }
+.ebtns { display: flex; gap: 8px; }
+.ebtns button {
+  flex: 1; min-height: var(--tap-min); display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 var(--s3);
+  background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-strong); border-radius: 14px; font: 700 15px/1 var(--font); cursor: pointer;
+  transition: transform var(--t-fast) var(--ease);
+}
+.ebtns button:active { transform: scale(.97); }
+.add-ex { margin: 0; }
+.add-ex:disabled { opacity: .6; cursor: default; }
+.lasts { display: flex; gap: 8px; margin: 0 0 var(--s3); padding: 10px 12px; border-radius: 14px; background: var(--accent-soft); color: var(--accent-on-soft); font-size: 15px; line-height: 1.35; }
+.lasts svg { flex: none; margin-top: 1px; }
+.card.tight p { margin: 0; font-size: 15px; }
+.card.tight p + p { margin-top: 6px; }
+.sheet .card + .eyebrow, .sheet p + .eyebrow { display: block; margin-top: var(--s3); }
+.sheet .others-box .eyebrow { display: block; margin: var(--s3) 0 var(--s2); }
+.sheet > .button.secondary { margin-top: var(--s3); }
+.change-line { margin: 0 0 4px; }
+.toast.undo-toast {
+  top: auto; bottom: calc(var(--tap-main) * 2 + var(--s8) + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: var(--s3);
+  background: var(--ink); color: #fff; border: 1px solid rgba(255, 255, 255, .14); animation: undo-in var(--t-normal) var(--ease) both;
+}
+.undo-text { flex: 1; min-width: 0; }
+.undo-btn { min-width: var(--tap-min); min-height: var(--tap-min); padding: 0 var(--s2); background: none; border: 0; color: var(--volt); font: 800 16px/1 var(--font); text-decoration: underline; cursor: pointer; }
+@keyframes undo-in { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+/* ===== end of build step 4 ===== */
+
+/* ===== Build step 5 · Whole-plan muscle check · helper B only ===== */
+.cc-chips .chip { min-height: var(--tap-min); font-size: 14px; padding: 0 var(--s3); }
+.cc-sub { margin: 0 0 var(--s3); }
+.standout { border: 1.5px solid var(--status-warning); }
+.so-title { display: block; font-size: 18px; margin-bottom: var(--s2); }
+.so { display: flex; gap: var(--s2); padding: 6px 0; font-size: 15px; border-bottom: 1px solid var(--border-default); }
+.so:last-child { border-bottom: 0; }
+.so span:first-child { flex: 1; }
+.so .f { color: var(--text-muted); font-size: 14px; }
+.cc-map { width: 250px; max-width: 100%; margin: 6px auto 0; }
+.cc-map svg { display: block; width: 100%; height: auto; }
+.cc-legend { justify-content: center; margin-top: var(--s2); }
+.cc-rowlegend { margin: 0 0 var(--s2); }
+.cc-legend .kh { background: color-mix(in srgb, var(--accent) 40%, var(--bg-subtle)); }
+.cc-list { padding-top: var(--s2); padding-bottom: var(--s2); }
+.ccrow { padding: 11px 0; border-bottom: 1px solid var(--border-default); display: grid; gap: 5px; }
+.ccrow:last-child { border-bottom: 0; }
+.ccrow .top { display: flex; align-items: baseline; gap: 8px; }
+.ccrow .top b { flex: 1; font-size: 16px; }
+.ccrow .num { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ccrow .num small { font-size: 14px; color: var(--text-muted); font-weight: 700; }
+.ccbar { position: relative; height: 10px; border-radius: 6px; background: var(--bg-subtle); }
+.ccbar .w, .ccbar .dd { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; transform-origin: left center; animation: cc-grow var(--t-slow, .4s) var(--ease, ease-out) both; }
+.ccbar .w { background: color-mix(in srgb, var(--accent) 40%, var(--bg-subtle)); }
+.ccbar .dd { background: var(--accent); }
+.ccbar .tk { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--border-strong); }
+@keyframes cc-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.ccrow .vd { display: flex; gap: 8px; font-size: 13px; }
+.ccrow .vd .v { font-weight: 700; flex: 1; }
+.ccrow .vd .v.lo { color: var(--status-warning); }
+.ccrow .vd .v.ok { color: var(--status-success); }
+.ccrow .vd .v.n { color: var(--text-muted); }
+.ccrow .vd .dys { color: var(--text-muted); text-align: right; }
+.ccrow.part { padding-left: 14px; }
+.ccrow.part .top b { font-size: 15px; font-weight: 600; }
+.ccrow.part .num { font-size: 17px; }
+/* ===== end of build step 5 ===== */

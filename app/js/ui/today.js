@@ -25,6 +25,7 @@ import { weekInfo, DAY_IDS, weeks } from "../plan/plan-v2.js";
 import { planForDay } from "../engine/schedule.js";
 import { photosFor } from "../plan/media.js";
 import { icon } from "./icons.js";
+import { editOf, editedMinutes } from "../planview.js";
 import { onMount, stagger } from "./motion.js";
 
 let savedMessage = null; // shown once, after a workout was saved
@@ -34,6 +35,7 @@ export function setSavedMessage(text, link = null) { savedMessage = text; savedL
 const BLOCK_NAMES = {
   walk: "Walk", changeover: "Change-over", lift_warmup: "Lift warm-up", pairs: "Weights (3 pairs)", abs: "Abs and holds",
   finish: "Finish and save", pairs_ab: "Weights (pairs A and B)", abs_first: "First abs exercise",
+  edits: "Your Plan changes",
 };
 
 function resumeCard(doc, session) {
@@ -78,7 +80,7 @@ function weekStrip(doc, label) {
 
 // Today's exercises (builder C): picture, slot, sets × reps and the suggested weight. A tap opens the exercise sheet.
 function exerciseList(doc, planDay, week, missed) {
-  const plan = planForDay(planDay, week, "full");
+  const plan = planForDay(planDay, week, "full", editOf(doc, planDay));
   return h("div", { class: "card ex-list" },
     h("span", { class: "eyebrow" }, "Today's exercises"),
     buildUnits(plan.slots).map((u) => h("div", { class: "pair-group" }, u.slots.map((slot) => {
@@ -101,7 +103,7 @@ function exerciseList(doc, planDay, week, missed) {
 
 // Today's workout as a hero card: photos of the pairs' first exercises, the focus, time, and the blocks.
 function dayHero(label, layout, minutes, doc) {
-  const plan = planForDay(label.planDay, label.week, "full");
+  const plan = planForDay(label.planDay, label.week, "full", editOf(doc, label.planDay));
   const leads = plan.slots.filter((s) => /^[A-D]1$/.test(s.slot) || s.slot === "D").map((s) => s.ex);
   const strip = leads.map((id) => photosFor(id)).filter(Boolean).slice(0, 3);
   const rir = Array.isArray(plan.rir) ? plan.rir.join("-") : plan.rir;
@@ -114,7 +116,7 @@ function dayHero(label, layout, minutes, doc) {
         h("span", {}, h("b", {}, String(minutes)), " min"),
         h("span", {}, h("b", {}, String(plan.slots.length)), " exercises"),
         rir !== undefined ? h("span", {}, "Stop with ", h("b", {}, String(rir)), " left") : null),
-      h("ul", { class: "timeline" }, layout.map((b) => h("li", {}, h("span", {}, BLOCK_NAMES[b.id] ?? b.id), h("span", { class: "min" }, `${b.minutes} min`)))),
+      h("ul", { class: "timeline" }, layout.map((b) => h("li", {}, h("span", {}, BLOCK_NAMES[b.id] ?? b.id), h("span", { class: "min" }, b.id === "edits" ? `${b.minutes > 0 ? "+" : "−"}${Math.abs(b.minutes)} min` : `${b.minutes} min`)))),
       h("p", { class: "small muted" }, `About ${minutes} minutes. Start a Strength workout on your Apple Watch at minute 0.`),
       weekStrip(doc, label)));
 }
@@ -161,7 +163,10 @@ export function renderToday() {
     const lastFinished = finishedSessions(doc.sessions)[0];
     const missed = missedRule(lastFinished ? lastFinished.date : null, t);
     const day = dayLayout(doc, { planDay: label.planDay, week: label.week, today: t, kind });
-    children.push(dayHero(label, day.layout, day.minutes, doc));
+    // A saved Plan edit with more or fewer sets changes the time (about 8 minutes for an added exercise).
+    const total = editedMinutes(day.minutes, label.planDay, label.week, editOf(doc, label.planDay));
+    const blocks = total === day.minutes ? day.layout : [...day.layout.slice(0, -1), { id: "edits", minutes: total - day.minutes }, day.layout[day.layout.length - 1]];
+    children.push(dayHero(label, blocks, total, doc));
     if (label.week === 1) children.push(h("div", { class: "card" }, h("p", {}, "Week 1: learn the moves and find your weights. Two sets of each exercise. It will feel easy on purpose."), h("p", { class: "small muted" }, "In Settings, fill in the gym's dumbbell sizes and weight steps when you know them.")));
     if (lastFinished && missed.kind !== "carry_on") children.push(h("div", { class: "card warn" }, h("p", {}, missed.message)));
     children.push(exerciseList(doc, label.planDay, label.week, missed));
