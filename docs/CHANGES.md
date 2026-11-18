@@ -16,10 +16,12 @@ The update fix, built by chat 8.40. Not pushed yet. The editable walk moves to 0
   version, and tries a file again if the signal drops. If a download still fails, the old version keeps working and
   the app tries again later. Your saved data is never touched by any of this.
 - The fix is in the helper itself, so your phone picks it up by itself the next time the app opens with internet.
-- Settings has a new card at the bottom: **App version** says which version the phone runs, and **Check for update**
-  looks for a new one now and says what it found.
-- The bar can still stay away if you close the app before the download ends. That is fine: the next time you open
-  the app it runs the new version.
+- Settings starts with a new card: **Version 0.7.3** and an **Update** button. The button looks on the website for a
+  newer version and, if there is one, gets it and restarts the app. It says "You have the newest version." or "No
+  signal. Try again later." when there is nothing to do. It is off during a workout. It is part of the new version,
+  so it helps from the next update on.
+- The bar can still stay away if you close the app before the download ends. Then the next open, or the one after,
+  runs the new version or shows the bar.
 
 ## 0.7.2 · 2026-11-18
 

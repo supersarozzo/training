@@ -330,6 +330,9 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  // The Settings Update button asks the live site for js/version.js with cache "no-store": never answer that from the
+  // cache. A page load (navigate) always opens from the cache, so the app still opens offline.
+  if (req.cache === "no-store" && req.mode !== "navigate") return;
   event.respondWith(answer(req));
   if (!cleaned) event.waitUntil(dropOldCaches().catch(() => {}));
 });

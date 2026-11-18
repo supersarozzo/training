@@ -107,7 +107,7 @@ Git project: revert the commit (`git revert <commit>`). Nothing outside this fol
 ## Releasing a new version of the app (step 8)
 1. Change `APP_VERSION` in `app/js/version.js` **and** at the top of `app/sw.js` (same text). `node --test` fails if they differ.
 2. Add any new file in `app/` to the `FILES` list in `app/sw.js`. `node --test` fails if the list and the folder differ.
-3. On the phone the banner "New version ready" appears; tap Update. If the app was closed before the download ended, there is no banner: the next open runs the new version. Settings > App version says which version the phone runs.
+3. On the phone the banner "New version ready" appears; tap Update. If the app was closed before the download ended, there is no banner: the next open, or the one after, runs the new version or shows the bar. The first card in Settings says which version the phone runs, and its Update button gets a newer one now.
 4. To try the worker on your computer: open `http://localhost:8000/?sw=1`. Remove it afterwards in the browser's site data. The built-in preview pane of the Claude app cannot run service workers: test offline in real Chrome or Safari.
 5. Never change a file in `app/` without raising the version: the worker only downloads files again when `sw.js` changes. Never rename the cache prefix `training-`: old caches are found by it.
 6. To replay an update on the computer (as in the 0.7.3 check): a small server that switches between two copies of `app/` and sends `Cache-Control: max-age=600` like GitHub Pages, and headless Chrome driven over its DevTools port. How: docs/checks/2026-11-18-v073-update.md, "How the replay works". Give Chrome a short profile folder (a long Windows path makes its cache fail).
@@ -121,15 +121,15 @@ saved apart from the app files, so none of these steps can delete them.
 
 1. Open the app with Wi-Fi or mobile data on. Stay on Today for about 30 seconds.
 2. If the bar "New version ready" shows, tap **Update**. Done.
-3. If not: go to **Progress > Settings**, scroll to the last card, **App version**, and tap **Check for update**
-   (from 0.7.3 on). It says one of:
-   - "A new version is ready. Tap Update at the top." Tap Update in the bar.
-   - "Downloading the new version…" Wait a few seconds; the bar shows.
+3. If not: go to **Progress > Settings**. The first card says **Version …** with an **Update** button (from 0.7.3 on).
+   Tap **Update**. It says one of:
    - "You have the newest version." Nothing to do.
-   - "Could not get the new version." Check the internet and tap again later.
-4. Older app (no App version card yet): close the app fully (swipe it up in the app switcher), open it again with
+   - "Downloading the new version…" Wait; the app restarts by itself in the new version (up to about a minute and a half).
+   - "No signal. Try again later." Nothing was changed. Try again with internet.
+   The button is off during a workout. Update outside a workout.
+4. Older app (no Version card yet): close the app fully (swipe it up in the app switcher), open it again with
    internet, wait 30 seconds, and do this once more. The new version then starts by itself on the next open.
-5. Still the old version after that: tell the Training chat what Settings > App version says (or that the card is
+5. Still the old version after that: tell the Training chat what the Version card in Settings says (or that it is
    missing). Do not delete the app.
 
 ## Trying sync on the computer (no real GitHub)

@@ -1,10 +1,10 @@
 // Settings: GitHub sync, backup and restore, the Log to Health button, gym weights, body unit, Look and Animations,
-// sound, and the app version with Check for update (0.7.3). Look (Auto / Light / Dark, builder C) and the Animations switch (builder D) stay on this phone only: they are
+// sound; first the version card with the Update button (0.7.3). Look (Auto / Light / Dark, builder C) and the Animations switch (builder D) stay on this phone only: they are
 // in the device box, never synced or backed up (prefs.js). The sync card (settings-sync.js) is unchanged.
 import { h } from "../h.js";
 import { screen, choiceRow } from "./parts.js";
 import { model, store, rerender } from "./app.js";
-import { soundOn, setSound } from "../active.js";
+import { soundOn, setSound, getActive } from "../active.js";
 import { setSoundOn, beep } from "../sound.js";
 import { extraMachines } from "../plan/plan-v2.js";
 import { syncCard, getFromGithub } from "./settings-sync.js";
@@ -15,7 +15,8 @@ import { now } from "../clock.js";
 import { THEMES, currentTheme, setTheme, motionOff, setMotionOff } from "./theme.js";
 import { icon } from "./icons.js";
 import { APP_VERSION } from "../version.js";
-import { updatesOn, checkForUpdate, updateStatusWords } from "./update.js";
+import { updateNow, updateStatusWords } from "./update.js";
+import { updateWords } from "../updater.js";
 
 const MACHINE_NAMES = { lat_pulldown: "Lat pulldown machine", seated_row: "Seated row machine", leg_curl: "Leg curl machine", pec_deck: "Pec deck", calf_raise: "Calf raise machine" };
 let gymMessage = null;
@@ -157,6 +158,7 @@ export function renderSettings() {
     h("a", { class: "text-button back-link", href: "#/today", onclick: (e) => { if (history.length > 1) { e.preventDefault(); history.back(); } } }, icon("back", 18), "Back"),
     h("span", { class: "eyebrow accent" }, "This phone and GitHub"),
     h("h1", {}, "Settings"),
+    versionCard(),
     syncCard(),
     backupCard(),
     gymCard(doc.shared_settings),
@@ -170,16 +172,17 @@ export function renderSettings() {
     h("div", { class: "card" },
       h("h2", {}, "Sound"),
       h("p", { class: "muted" }, "A beep when a timer ends. It only plays with the app open and the phone's ring switch on. The screen flash always shows."),
-      h("button", { class: "choice", type: "button", "aria-pressed": on ? "true" : "false", onclick: toggle }, on ? "Sound is on" : "Sound is off")),
-    appCard());
+      h("button", { class: "choice", type: "button", "aria-pressed": on ? "true" : "false", onclick: toggle }, on ? "Sound is on" : "Sound is off")));
 }
 
-// The app's version, so you can see which one this phone runs, and a way to look for a new one now (0.7.3).
-function appCard() {
-  const words = updateStatusWords();
-  return h("div", { class: "card" },
-    h("h2", {}, "App version"),
-    h("p", {}, `This phone runs version ${APP_VERSION}.`),
-    updatesOn() ? h("button", { class: "button secondary", type: "button", onclick: () => checkForUpdate() }, "Check for update") : null,
+// First card (Rosario, 2026-11-18): which version this phone runs, and Update, which gets the newest version now.
+// Off while a workout runs. The words under it say what the last tap found (updater.js).
+function versionCard() {
+  const inWorkout = getActive() !== null;
+  const words = inWorkout ? updateWords("workout") : updateStatusWords();
+  return h("div", { class: "card version-card" },
+    h("div", { class: "version-row" },
+      h("p", { class: "version-line" }, `Version ${APP_VERSION}`),
+      h("button", { class: "button version-button", type: "button", disabled: inWorkout, onclick: () => updateNow() }, "Update")),
     words ? h("p", { class: "small muted", role: "status" }, words) : null);
 }
