@@ -579,7 +579,7 @@ a.text-button { display: inline-flex; align-items: center; gap: 2px; text-decora
 /* Gym tab (builder C's counter) and machine card (builder B's where editor) */
 .badge { display: inline-flex; align-items: center; justify-content: center; gap: 3px; min-width: 24px; height: 22px; padding: 0 7px; border-radius: 11px; background: var(--bg-subtle); color: var(--text-muted); font: 700 13px/1 var(--font); }
 .badge.pr { background: color-mix(in srgb, var(--gold) 16%, transparent); color: var(--gold); margin-left: 6px; }
-.badge.slot { background: var(--accent-soft); color: var(--accent-on-soft); margin-right: 6px; }
+.badge.slot { background: var(--accent-soft); color: var(--accent-on-soft); margin-right: 6px; flex: none; white-space: nowrap; }
 .card.noted .noted-count { display: flex; align-items: baseline; gap: 4px; }
 .big-num { font: 800 40px/1 var(--font-display); letter-spacing: -.03em; }
 .noted-bar { height: 8px; border-radius: 4px; background: var(--ring-track); overflow: hidden; margin: var(--s3) 0; }

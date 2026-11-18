@@ -126,10 +126,9 @@ export function openSwapSheet(day, week, slotName) {
     h("h2", {}, `Swap ${oldName}`),
     lastsBox(day),
     h("p", { class: "small muted" }, `Keeps the slot's ${sh.sets} sets and its rest. The reps come from the new exercise.`),
-    h("span", { class: "eyebrow" }, `Same muscle (${sh.muscle}), other equipment`),
-    first.length
-      ? h("div", { class: "card" }, first.map((x) => row(x.id, x.pick)))
-      : h("p", { class: "muted" }, "No other exercise for this muscle fits here."),
+    first.length ? [h("span", { class: "eyebrow" }, `Same muscle (${sh.muscle}), other equipment`),
+      h("div", { class: "card" }, first.map((x) => row(x.id, x.pick)))] : null,
+    !first.length && !kin.length ? h("p", { class: "muted" }, "No other exercise for this muscle fits here.") : null,
     kin.length ? [h("span", { class: "eyebrow" }, `Same muscle (${sh.muscle}), same kind of equipment`), h("div", { class: "card" }, kin.map((x) => row(x.id, x.pick)))] : null,
     sh.already.length ? h("p", { class: "small muted" }, `Already in ${dayName(day)}: ${sh.already.join(", ")}.`) : null,
     hiddenLine(sh.hidden),
