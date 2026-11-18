@@ -5,13 +5,20 @@ import { beep } from "../sound.js";
 import { icon } from "./icons.js";
 import { bump, reduced } from "./motion.js";
 
-const TABS = [["today", "Today"], ["progress", "Progress"], ["plan", "Plan"], ["gym", "Gym"], ["settings", "Settings"]];
+// Tab order of answers 67 a and 68 a: Today · Plan · Gym · Diet · Progress. Diet comes with build step 7; until then the
+// bar has 4 tabs. Settings is not a tab: it is the gear at the top right of every tab (gearLink).
+const TABS = [["today", "Today"], ["plan", "Plan"], ["gym", "Gym"], ["progress", "Progress"]];
 
 export function tabBar(active) {
   return h("nav", { class: "bar", "aria-label": "Main" },
     h("div", { class: "tabs" },
       TABS.map(([id, label]) =>
         h("a", { class: "tab", href: `#/${id}`, "aria-current": id === active ? "page" : false }, icon(id, 26, { strokeWidth: id === active ? 2.2 : 1.8 }), label))));
+}
+
+// The Settings gear (44 x 44 px), always at the top right of a tab screen (DESIGN.md 15.2).
+export function gearLink() {
+  return h("a", { class: "gear", href: "#/settings", "aria-label": "Settings" }, icon("settings", 22));
 }
 
 // A standard screen wrapper (with room for the tab bar).

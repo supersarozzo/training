@@ -2,7 +2,7 @@
 // missed-days message, your numbers. Base: redesign A. From builder C: the list of today's exercises. The walk minutes
 // come from dayLayout() (dayplan.js), the same engine call as the walk screen (Rosario's answer 60 a: display only).
 import { h } from "../h.js";
-import { tabActionBar, mainButton, secondaryButton, openSheet } from "./parts.js";
+import { tabActionBar, mainButton, secondaryButton, openSheet, gearLink } from "./parts.js";
 import { model, go, rerender } from "./app.js";
 import { today } from "../clock.js";
 import { getActive, setActive } from "../active.js";
@@ -128,6 +128,7 @@ export function renderToday() {
   const dayName = label.planDay ? days[label.planDay].name : new Date(`${t}T12:00:00`).toLocaleDateString("en-GB", { weekday: "long" });
   const running = label.state === "running";
   const children = [
+    gearLink(),
     h("div", { class: "today-head" },
       h("div", {},
         h("span", { class: "eyebrow accent" }, running ? `Week ${label.week} of ${weeks.length} · ${weekInfo(label.week).phase}` : "Today"),

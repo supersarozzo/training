@@ -79,7 +79,7 @@ From WORKFLOW H, unchanged:
 - Vibration (iPhones do not allow it for web apps).
 - ~~Food logging~~ **moved into scope by Rosario on 2026-11-17** (answer 62 a): a Diet tab with food logging and barcode scan, designed with the Plan tab redesign and built after it. Its feature rows are F28 to F30 (design picked 2026-11-17, answers 67 to 79). Research: [2026-11-17-plan-diet-research.md](research/2026-11-17-plan-diet-research.md).
 - Progress photos inside the app (they stay in the Photos app; the exercise photos of F24 are different).
-- The printable Plan sheet (the print part of F3): **removed by Rosario** (request of 2026-11-17, Plan tab redesign). F3's "plan inside the app" stays; F3's "prints on A4" test goes when build step 2 removes the print code.
+- The printable Plan sheet (the print part of F3): **removed by Rosario** (request of 2026-11-17, Plan tab redesign). F3's "plan inside the app" stays; the print code and F3's "prints on A4" test are gone since build step 2 (2026-11-18).
 - More than one user, accounts, log-in pages, social features.
 - Any paid service, any server of our own, any script loaded from another site, any tracker. (Rule changed by Rosario's answer 63 a on 2026-11-17: one open-source barcode decoder may be copied into the app and served from our own site.)
 - An Android or desktop version (it may work in a browser, but it is not tested).

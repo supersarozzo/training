@@ -1,9 +1,9 @@
-// Start-up and router. Hash routes: #/today, #/progress, #/plan, #/gym, #/settings (with tabs),
+// Start-up and router. Hash routes: #/today, #/plan, #/gym, #/progress (tabs), #/settings (the gear; tab bar shown),
 // and #/setup, #/intake, #/targets (the first-start flow, no tabs).
 import { mount, h } from "./h.js";
 import { renderToday } from "./ui/today.js";
 import { renderProgress } from "./ui/progress.js";
-import { renderPlan } from "./ui/plansheet.js";
+import { renderPlan, resetPlanPage } from "./ui/planday.js";
 import { renderSettings } from "./ui/settings.js";
 import { renderSetup } from "./ui/setup.js";
 import { renderIntake } from "./ui/intake.js";
@@ -59,6 +59,7 @@ function enter(root) {
   lastKey = key;
 }
 
+let lastRoute = "";
 function render() {
   const root = document.getElementById("app");
   clearTickers(); // timers of the old screen stop
@@ -68,6 +69,8 @@ function render() {
     const name = guard(wanted);
     if (name !== "settings" && name !== "setup") resetSyncDraft(); // a typed key never stays in memory after its screen is left (review F6)
     if (name !== wanted) history.replaceState(null, "", `#/${name}`);
+    if (name === "plan" && lastRoute !== "plan") resetPlanPage(); // the Plan tab opens on today each time it is entered
+    lastRoute = name;
     if (Object.hasOwn(flowRoutes, name)) mount(root, flowRoutes[name]());
     else mount(root, tabRoutes[name](), updateBanner(), tabBar(name));
     enter(root);

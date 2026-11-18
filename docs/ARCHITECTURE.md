@@ -105,6 +105,8 @@ app/
     plan/media.js        which photos, machine, area, usual sign, tip and video belong to each exercise (public data)
     engine/schedule.js   week, day, short day, swap, gaps
     engine/workout.js    pair order, resume position, suggestions, walk suggestion
+    engine/planpage.js   Plan day page logic: which day and week opens, real sets, pair headers in words,
+                         muscle counts ("Day so far", map steps), Gym exercise groups (build step 2)
     active.js            the running workout screen and timer end times (device box)
     clock.js             now() and today(); ?date= test override on localhost only
     engine/progression.js  next weight and reps
@@ -127,7 +129,10 @@ app/
     ui/                  one file per screen + parts (workout.js picks the workout screen; flow.js shares its helpers)
                          redesign helpers: icons.js (inline SVG icons), media.js (photo flip, thumbs), drawings.js
                          (line drawings for warm-up moves without photos), exinfo.js (exercise sheet, video link),
-                         machines.js (Gym tab, machine card, where-notes), motion.js, theme.js, stats.js (last time, bests)
+                         machines.js (Gym tab: Machines | Exercises switch, machine card, where-notes), motion.js, theme.js,
+                         stats.js (last time, bests). Build step 2: planday.js (Plan day page, 12 weeks sheet),
+                         exlayer.js (opened exercise with 2 maps), bodymap.js (body-muscles drawing, legend, small map),
+                         gymexercises.js (Gym › Exercises by main muscle). plansheet.js and print are gone
 tests/
   *.test.mjs             node --test (pure modules)
   fake-github.mjs        fake GitHub contents API
@@ -391,7 +396,7 @@ Small phases, one task chat each, in this order. Each phase ends with its own co
 | # | Phase | Model | Files | Done when | Test method |
 |---|---|---|---|---|---|
 | 1 | **Skeleton** | Sonnet | `app/index.html`, `css/app.css` (tokens from DESIGN.md), `js/main.js`, `h.js`, `version.js`, `ids.js`, `tests/` set-up, `.github/workflows/pages.yml` | Empty screens reachable by hash routes; light and dark tokens work; `node --test` runs | Local server + browser at 375 px, both themes; unit test for `ids.js` |
-| 2 | **Plan data + Plan sheet** | Sonnet | `plan/plan-v2.js`, `plan/cues.js`, `ui/plansheet.js`, `tests/plan.test.mjs` | Plan v2 fully in data (5 days, 12 weeks, swaps, cues); Plan sheet shows it and prints | Plan test checks sets per week and swaps against plan v2; print preview |
+| 2 | **Plan data + Plan sheet** | Sonnet | `plan/plan-v2.js`, `plan/cues.js`, `ui/plansheet.js`, `tests/plan.test.mjs` | Plan v2 fully in data (5 days, 12 weeks, swaps, cues); Plan sheet shows it and prints (replaced by the Plan day page in redesign build step 2, 2026-11-18; print removed by Rosario) | Plan test checks sets per week and swaps against plan v2; print preview |
 | 3 | **Storage, model, first start, targets** | Sonnet | `store.js`, `model.js`, `engine/nutrition.js`, `engine/walk.js` (start), `ui/setup.js`, `ui/intake.js`, `ui/targets.js` | Start fresh → intake → targets → Today; data in `trn.data.v1`; formulas and safety limits pass tests | Unit tests with made-up profiles (floors, BMI over 30 rule, safe rates); browser run |
 | 4 | **Rules engines** | Sonnet | `engine/schedule.js`, `engine/progression.js`, `engine/week1.js`, `engine/walk.js` (progress), tests | Every row of plan v2 tables (sections 8, 9, 10, 11) has a passing test | `node --test` |
 | 5 | **Workout screens** (Today, walk, change-over, warm-up, pairs and sets, rest timer, swap, abs/holds, finish without sync, resume) | Sonnet | `ui/today.js`, `ui/walk.js`, `ui/warmup.js`, `ui/pair.js`, `ui/rest.js`, `ui/swap.js`, `ui/finish.js`, `timer.js`, `wakelock.js`, `sound.js` | A full Monday and a full Tuesday can be clicked through; closing the tab mid-set and reopening continues; timers right after a pause | Browser at 375 px; reload mid-workout; change the computer clock or fake `Date.now` in a test |

@@ -1,6 +1,6 @@
 # Training app design system
 
-Date: 2026-11-17 (first version 2026-11-16; section 15 added by worker 8.31 the same day). Rewritten by task chat 8.24 for the redesign merge (redesign/JUDGING.md section 3; Rosario's answers 55 to 61 in [DECISIONS.md](DECISIONS.md)). Agents follow this file for all UI work in `app/`. What the app does: [PRD.md](PRD.md). Screens and flow: [WORKFLOW.md](WORKFLOW.md), section D. Before and after pictures: [redesign-final/LOOK.md](redesign-final/LOOK.md).
+Date: 2026-11-18 (first version 2026-11-16; section 15 added by worker 8.31 on 2026-11-17; build step 2 marks and the body-map values added by worker 8.33 on 2026-11-18). Rewritten by task chat 8.24 for the redesign merge (redesign/JUDGING.md section 3; Rosario's answers 55 to 61 in [DECISIONS.md](DECISIONS.md)). Agents follow this file for all UI work in `app/`. What the app does: [PRD.md](PRD.md). Screens and flow: [WORKFLOW.md](WORKFLOW.md), section D. Before and after pictures: [redesign-final/LOOK.md](redesign-final/LOOK.md).
 
 ## 1. Overview
 
@@ -31,6 +31,7 @@ colors:
     button: { bg: "#0b0c0f", text: volt, pressed: "#2a2d33" }
     status: { success: "#15803d", warning: "#b45309", error: "#c62828" }
     photo_plate: "#ffffff"   photo_band: "#e9ebef"
+    map: { base: "#e3e6eb", muscle: "#cfd4dc", line: "#ffffff" }   # body maps (section 15.4, mock-up)
   dark:
     canvas: "#08090c"   surface: "#121419"   raised: "#1a1d24"   subtle: "#23272f"
     text: "#f5f6f8"     muted: "#a0a6b2"     border_strong: "#6b7280"   border: "rgba(255,255,255,.08)"
@@ -39,6 +40,7 @@ colors:
     button: { bg: volt, text: ink, pressed: volt_deep }
     status: { success: "#4ade80", warning: "#fbbf24", error: "#ff6b6b" }
     photo_plate: "#1a1d24"   photo_band: "#121419"
+    map: { base: "#1c1f26", muscle: "#2c313b", line: "#121419" }
     glow: "drop-shadow(0 0 10px rgba(215,255,60,.35))"   # rings and the main button only
   scrim_text: "linear-gradient(180deg, transparent 0%, rgba(8,9,12,.55) 40%, rgba(8,9,12,.82) 100%)"  # under any text on a photo, both looks
   flash: { bg: volt, text: ink }
@@ -164,11 +166,11 @@ Motion explains what changed; it never decorates. All of it is CSS or the Web An
 | Weigh-in | one number with keypad, last weigh-in | Save |
 | Progress | totals, weight chart, exercise list with chart and the last 3 workouts | – |
 | Weekly summary | tiles with a 5-segment bar | Got it |
-| Plan | Week / Exercises / Machines switch; print tables (until build step 2; then section 15.3) | Print (removed in section 15) |
-| Gym | machines by area, "x of N noted", where-notes (Machines / Exercises switch from section 15.7) | – |
+| Plan | one day per page: week chip, day strip, walk card, pairs in words, exercise cards with a small map (section 15.3; built in step 2) | ‹ day · day › arrows on a frosted bar |
+| Gym | Machines \| Exercises switch: machines by area, "x of N noted", where-notes; every exercise by main muscle (section 15.7; built in step 2) | – |
 | Settings | Sync, Backup, Look (theme, Animations), Gym, Sound, Shortcuts | – |
 
-**Navigation:** a bottom tab bar outside a workout: Today · Progress · Plan · Gym · Settings (icon plus label). Approved replacement, built from build step 2: Today · Plan · Gym · Diet · Progress plus a Settings gear on every tab (section 15.2). During a workout the tab bar is hidden; the top bar shows the progress and an "End" button (44 px, with a confirm sheet).
+**Navigation:** a bottom tab bar outside a workout (icon plus label) plus a Settings gear at the top right of every tab (section 15.2). Since build step 2: Today · Plan · Gym · Progress; Diet joins between Gym and Progress in build step 7. During a workout the tab bar is hidden; the top bar shows the progress and an "End" button (44 px, with a confirm sheet).
 
 ## 10. Do / Don't
 
@@ -202,14 +204,13 @@ Don't
 |---|---|---|
 | phone | < 640 px | the only target; one column, bottom bar, bottom sheets |
 | tablet / desktop | ≥ 640 px | same layout, centred at 520 px |
-| print | – | Plan only: black on white, no bars, no photos, tables not split across pages. **Removed by Rosario** (2026-11-17, section 15.1); goes in build step 2 |
 
 ## 13. Known gaps
 
 - The app icon is still the old teal one; it should move to volt (follow-up, `logo-design` skill).
 - Landscape layouts are not designed; screens scroll.
 - Text-size scaling above "one step larger" is not checked.
-- Print preview and the phone's Reduce Motion setting were checked in code and CSS, not on the phone.
+- The phone's Reduce Motion setting was checked in code and CSS, not on the phone. (Print is gone since build step 2.)
 
 ## 14. Iteration guide
 
@@ -224,13 +225,13 @@ Don't
 
 ### 15.1 What goes, what moves
 
-- The Print button, the printable Plan sheet and the print styles go (PRD F3 print part, removed by Rosario).
+- The Print button, the printable Plan sheet and the print styles go (PRD F3 print part, removed by Rosario). **Done in build step 2** (2026-11-18): no print button, no `@media print`, no print-only code.
 - Exercises and Machines leave the Plan tab and live in the Gym tab (15.7).
 - Nothing else of the 0.4.1 Plan tab is lost: day focus, walk text, sets × reps, rest, the plan's swaps, the 12 weeks and the RIR line all stay (mock-up "Nothing lost").
 
 ### 15.2 Tab bar and Settings (questions 67 a, 68 a)
 
-- **5 tabs, in this order:** Today · Plan · Gym · Diet · Progress (icon plus label).
+- **5 tabs, in this order:** Today · Plan · Gym · Diet · Progress (icon plus label). Until Diet is built (step 7) the bar has 4: Today · Plan · Gym · Progress, never a Diet tab that leads nowhere.
 - **Settings is a gear button at the top right of every tab** (44 × 44 px), always in the same place. Settings keeps its own page, with a "‹ Today" back link.
 - During a workout the tab bar stays hidden, as now.
 
@@ -252,6 +253,7 @@ Don't
   - "This exercise": main muscles strong, helpers light. Words under it: "Main: back thighs · Helps: glutes, lower back".
   - "Day so far": shaded by the sets from the first card down to this one, with "Day so far · 3 of 7" and words that list **every** muscle with sets ("Sets so far: back thighs 4.5, front thighs 3, glutes 3, abs 3, calves 1.5, lower back 1.5").
   - **Legend: one scale in 3 steps, "A little · More · Most", with "Helpers count half"** (**mock-up**). Map fills: plain body = map base; the 3 steps mix the accent into the map colour at about 30 %, 62 % and 100 % (**mock-up**). Never colour alone: the words always say the same.
+  - **Counting and steps** (build step 2, `app/js/engine/planpage.js`): a main muscle counts 1 per set, a helper 0.5. "Day so far" step: under 3 = A little, 3 to under 6 = More, 6 or more = Most. "This exercise": main = Most, helpers = A little. The small card map shows the side (front or back) where the main muscles are.
   - 4 number tiles: Sets, Reps, Rest, "Stop with 2 reps left". Previous and Next are named after the neighbour exercise ("‹ Cable crunch · Face pull ›").
   - Below, unchanged from 0.4.1: the moving photo, start and end photos, How to do it, the video link, the machine row, plus "The plan's own swap: …".
 - **Plain muscle words** everywhere on screen: "front thighs" (not quads), "back thighs" (not hamstrings), "inner thighs", "front / side / rear shoulders", "lats", "mid back". The data and its names: `app/js/plan/muscles.js`.

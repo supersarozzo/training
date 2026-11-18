@@ -7,13 +7,14 @@
 //   itself (JUDGING.md 3.6 item 5). All text goes in through h(), never innerHTML.
 import { h } from "../h.js";
 import { MAX_TEXT } from "../validate.js";
-import { screen, openSheet } from "./parts.js";
+import { screen, openSheet, gearLink } from "./parts.js";
 import { model, rerender } from "./app.js";
 import { machines, machineOf, AREAS, AREA_ORDER, SIGN_CAVEAT, exercisesOn } from "../plan/media.js";
 import { gymSpotId } from "../ids.js";
 import { flip, thumb, nameOf } from "./media.js";
 import { icon } from "./icons.js";
 import { stagger, onMount } from "./motion.js";
+import { exerciseGroups } from "./gymexercises.js";
 
 const QUICK = ["Front", "Back", "Left side", "Right side", "Middle", "Upstairs", "Downstairs", "By the mirrors", "By the windows", "Near the entrance"];
 
@@ -99,11 +100,15 @@ export function openMachineCard(machineId, { edit = false, onSaved = null } = {}
     used.length ? h("ul", { class: "list-plain" }, used.map((id) => h("li", {}, h("span", { class: "row" }, thumb(id, { small: true }), h("span", {}, nameOf(id)))))) : null);
 }
 
-// The Gym tab.
-export function renderGym() {
-  const doc = model.doc();
+// The Gym tab: one switch, Machines | Exercises (build step 2, docs/DESIGN.md 15.7). Machines: the 0.4.1 list and
+// cards, word for word; the machines the first visit said the gym does not have stay hidden, with one line that names
+// them and opens their cards (so the old Plan tab's full Machines list loses nothing). Exercises: gymexercises.js.
+let part = "machines";
+
+function machineGroups(doc) {
   const ids = visibleMachines(doc);
   const noted = ids.filter((id) => whereOf(doc, id)).length;
+  const hidden = Object.keys(machines).filter((id) => !inGym(doc, machines[id]));
   const groups = AREA_ORDER.map((areaId) => {
     const list = ids.filter((id) => machines[id].area === areaId);
     if (!list.length) return null;
@@ -127,15 +132,28 @@ export function renderGym() {
   const pct = ids.length ? Math.round((noted / ids.length) * 100) : 0;
   const bar = h("div", { class: "noted-bar", role: "img", "aria-label": `${noted} of ${ids.length} noted` }, h("span", {}));
   bar.firstChild.style.width = `${pct}%`;
-  const main = screen(
-    h("span", { class: "eyebrow accent" }, "My gym"),
-    h("h1", {}, "Machines"),
+  return [
     h("p", { class: "muted" }, "What each one looks like, the usual name on its sign, and where it is in your gym."),
     h("div", { class: "card noted" },
       h("div", { class: "noted-count" }, h("span", { class: "big-num" }, String(noted)), h("span", { class: "muted" }, ` of ${ids.length} noted`)),
       bar,
       h("p", { class: "small muted" }, noted < ids.length ? "Add where each one is on your first visit." : "Every machine has your note.")),
-    groups);
+    groups,
+    hidden.length ? h("p", { class: "small muted hidden-machines" }, "Not in your gym (first visit): ",
+      hidden.map((id, n) => [n ? ", " : "", h("button", { class: "text-button inline", type: "button", onclick: () => openMachineCard(id, { onSaved: rerender }) }, machines[id].name)]), ".") : null,
+  ];
+}
+
+export function renderGym() {
+  const doc = model.doc();
+  const pick = (v) => { part = v; rerender(); };
+  const main = screen(
+    gearLink(),
+    h("div", { class: "gym-head" }, h("span", { class: "eyebrow accent" }, "My gym"), h("h1", {}, "Gym")),
+    h("div", { class: "segmented two", role: "tablist", "aria-label": "Part of the gym" },
+      [["machines", "Machines"], ["exercises", "Exercises"]].map(([value, label]) =>
+        h("button", { type: "button", role: "tab", "aria-selected": value === part ? "true" : "false", onclick: () => pick(value) }, label))),
+    part === "exercises" ? exerciseGroups() : machineGroups(doc));
   onMount(() => stagger(main.querySelectorAll(".mach-row")));
   return main;
 }

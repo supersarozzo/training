@@ -39,7 +39,7 @@ async function restoreFromFile(file) {
 
 export function renderSetup() {
   const input = h("input", {
-    type: "file", accept: ".json,application/json", class: "no-print", hidden: true,
+    type: "file", accept: ".json,application/json", hidden: true,
     onchange: (e) => restoreFromFile(e.target.files[0]),
   });
   return flowScreen(

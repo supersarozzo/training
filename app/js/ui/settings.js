@@ -94,7 +94,7 @@ function backupCard() {
   let bytes = 0;
   try { bytes = makeBackup(store).bytes; } catch { /* a damaged box is reported elsewhere */ }
   const last = device.last_backup_at ? new Date(device.last_backup_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "never";
-  const input = h("input", { type: "file", accept: ".json,application/json", class: "no-print", hidden: true, onchange: (e) => restoreFile(e.target.files[0]) });
+  const input = h("input", { type: "file", accept: ".json,application/json", hidden: true, onchange: (e) => restoreFile(e.target.files[0]) });
   return h("div", { class: "card" },
     h("h2", {}, "Backup and restore"),
     h("p", { class: "muted" }, `Last backup file: ${last}. The file holds your workouts and profile. It never holds your GitHub key.`),
@@ -146,6 +146,7 @@ export function renderSettings() {
   const toggle = () => { setSound(!on); setSoundOn(!on); if (!on) beep(); rerender(); };
   const doc = model.doc();
   return screen(
+    h("a", { class: "text-button back-link", href: "#/today" }, icon("back", 18), "Today"),
     h("span", { class: "eyebrow accent" }, "This phone and GitHub"),
     h("h1", {}, "Settings"),
     syncCard(),

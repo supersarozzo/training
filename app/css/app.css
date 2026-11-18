@@ -41,6 +41,7 @@
   --scrim-text: linear-gradient(180deg, rgba(8,9,12,0) 0%, rgba(8,9,12,.55) 40%, rgba(8,9,12,.82) 100%); /* under any text on a photo, both looks */
   --bar-glass: rgba(242, 243, 245, .82);
   --canvas-glow: radial-gradient(120% 60% at 50% 0%, rgba(77, 124, 15, .07), transparent 70%);
+  --map-base: #e3e6eb; --map-muscle: #cfd4dc; --map-line: #ffffff; /* body maps (DESIGN.md 15.4, mock-up) */
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -58,6 +59,7 @@
     --hero-fade: linear-gradient(180deg, rgba(8,9,12,0) 30%, rgba(8,9,12,.94) 100%);
     --bar-glass: rgba(8, 9, 12, .78);
     --canvas-glow: radial-gradient(120% 60% at 50% 0%, rgba(215, 255, 60, .07), transparent 70%);
+    --map-base: #1c1f26; --map-muscle: #2c313b; --map-line: #121419;
   }
 }
 :root[data-theme="dark"] {
@@ -75,6 +77,7 @@
   --hero-fade: linear-gradient(180deg, rgba(8,9,12,0) 30%, rgba(8,9,12,.94) 100%);
   --bar-glass: rgba(8, 9, 12, .78);
   --canvas-glow: radial-gradient(120% 60% at 50% 0%, rgba(215, 255, 60, .07), transparent 70%);
+  --map-base: #1c1f26; --map-muscle: #2c313b; --map-line: #121419;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -98,6 +101,7 @@ svg.ic { flex-shrink: 0; } /* an icon keeps its size next to a long text (the Gy
 .screen.has-tabs { padding-bottom: calc(var(--tap-main) + 28px + var(--s8) + env(safe-area-inset-bottom)); }
 .screen.has-bar { padding-bottom: calc(var(--tap-main) * 2 + var(--s12) + env(safe-area-inset-bottom)); }
 .screen.wide { max-width: 1000px; }
+.screen { position: relative; } /* the Settings gear sits at its top right */
 .screen.enter { animation: screen-in var(--t-normal) var(--ease) both; }
 @keyframes screen-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
@@ -247,7 +251,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 .pick[aria-pressed="true"] { background: var(--btn-bg); color: var(--btn-text); border-color: transparent; }
 .pick.big { min-height: var(--tap-main); font-size: 20px; }
 
-/* tables (plan sheet) */
+/* tables (Progress) */
 .table-wrap { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.4; overflow-wrap: normal; } /* plan text only: no word broken in the middle (review 8.25 R3) */
 th, td { text-align: left; padding: var(--s2); border-bottom: 1px solid var(--border-default); vertical-align: top; }
@@ -492,17 +496,6 @@ html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="
   .flip.show-end .f1 { opacity: 1; }
 }
 
-@media print {
-  body { background: #fff; color: #000; font-size: 11pt; }
-  .bar, .no-print, .hero-strip, .thumb { display: none !important; }
-  .screen { max-width: none; padding: 0; }
-  .card { box-shadow: none; border: 1px solid #bbb; }
-  table, tr, .card { break-inside: avoid; }
-  th, td { border-bottom: 1px solid #999; color: #000; }
-  .muted, .eyebrow { color: #333; }
-  a { color: #000; text-decoration: none; }
-}
-
 /* plan sheet exercise buttons, back links, small extras */
 .plan-ex { display: flex; align-items: center; gap: var(--s2); background: none; border: 0; padding: 2px 0; color: var(--text-primary); font: inherit; text-align: left; cursor: pointer; min-height: var(--tap-min); }
 .plan-ex strong { text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px; }
@@ -510,7 +503,6 @@ a.text-button { display: inline-flex; align-items: center; gap: 2px; text-decora
 .tick-sm { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--ink); flex: none; }
 .done-ring { display: inline-block; margin-top: var(--s2); }
 .done-ring .arc { filter: var(--glow-strong); }
-@media print { .plan-ex { min-height: 0; } .plan-ex strong { text-decoration: none; } }
 .qbar { height: 6px; border-radius: 3px; background: var(--ring-track); overflow: hidden; margin: 0 0 var(--s5); }
 .qbar .fill { display: block; height: 100%; background: var(--accent); transform-origin: left; transition: transform var(--t-slow) var(--ease); box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 60%, transparent); }
 
@@ -634,14 +626,12 @@ a.text-button { display: inline-flex; align-items: center; gap: 2px; text-decora
 .seg-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: var(--s2); }
 .seg-bar i { height: 6px; border-radius: 3px; background: var(--ring-track); }
 .seg-bar i.on { background: var(--accent); }
-/* plan sheet (builder B): segmented control, lists on screen, tables in print only */
+/* segmented control (Gym: Machines | Exercises), list heads, week numbers */
 .segmented { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; margin: 0 0 var(--s4); border-radius: var(--r-input); background: var(--bg-subtle); }
 .segmented button { min-height: var(--tap-min); border: 0; border-radius: 11px; background: none; color: var(--text-muted); font: 700 15px/1 var(--font); cursor: pointer; }
 .segmented button[aria-selected="true"] { background: var(--bg-surface); color: var(--text-primary); box-shadow: var(--shadow-card); }
 .list-head { font-size: 19px; margin: var(--s6) 0 var(--s2); }
 .week-num { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: var(--bg-subtle); font-weight: 800; flex: none; font-size: 14px; }
-.print-only { display: none; }
-@media print { .print-only { display: block; } .screen-only { display: none !important; } }
 /* settings: Animations switch (builder D) in the Look card (builder C) */
 .switch-row { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) 0; border-top: 1px solid var(--border-default); }
 .switch-row .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -665,3 +655,119 @@ a.text-button { display: inline-flex; align-items: center; gap: 2px; text-decora
 /* workout steppers: the label sits inside the box, top left of the number, so both steppers fit above Done */
 .workout .stepper-block { position: relative; }
 .workout .stepper-block > .label { position: absolute; z-index: 1; top: 7px; left: 72px; margin: 0; font-size: 11px; pointer-events: none; }
+
+/* ---------- build step 2: gear, Plan day page, opened exercise, body maps, Gym (DESIGN.md 15) ---------- */
+.gear {
+  position: absolute; z-index: 2; top: calc(var(--s4) + env(safe-area-inset-top)); right: var(--s4);
+  width: var(--tap-min); height: var(--tap-min); border-radius: 50%; display: grid; place-items: center;
+  background: var(--bg-raised); border: 1px solid var(--border-default); box-shadow: var(--shadow-card); color: var(--text-primary);
+  transition: transform var(--t-fast) var(--ease);
+}
+.gear:active { transform: scale(.92); }
+.today-head, .gym-head, .plan-top { padding-right: 52px; }
+.screen > .gear + .eyebrow { padding-right: 52px; min-height: 22px; }
+.back-link { margin-bottom: var(--s2); }
+.gym-head { margin-bottom: var(--s3); }
+.gym-head h1 { font-size: 40px; line-height: 1.05; margin: 0; }
+.segmented.two { grid-template-columns: 1fr 1fr; }
+.text-button.inline { min-height: var(--tap-min); padding: 0 4px; font-size: inherit; }
+.hidden-machines { margin-top: var(--s3); }
+
+/* Plan day */
+.plan-flow { display: flex; flex-direction: column; gap: 10px; }
+.plan-flow > p { margin: 0; }
+.plan-top { display: flex; align-items: center; min-height: var(--tap-min); }
+.week-chip {
+  display: inline-flex; align-items: center; gap: 2px; min-height: var(--tap-min); padding: 0; border: 0; background: none; cursor: pointer;
+  color: var(--accent-text); font: 800 13px/1.2 var(--font); letter-spacing: .08em; text-transform: uppercase; text-align: left;
+}
+.plan-day { display: flex; align-items: center; gap: 10px; }
+.plan-day h1 { margin: 0; font-size: 40px; line-height: 1; letter-spacing: -.02em; }
+.today-tag { font: 800 13px/1 var(--font); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-on-soft); background: var(--accent-soft); border-radius: var(--r-chip); padding: 6px 10px; }
+.day-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.day-strip button {
+  position: relative; min-height: 64px; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 2px 8px;
+  background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 14px; box-shadow: var(--shadow-card);
+  color: var(--text-primary); font: inherit; cursor: pointer; transition: transform var(--t-fast) var(--ease);
+}
+.day-strip button:active { transform: scale(.95); }
+.day-strip b { font-size: 16px; line-height: 1.2; }
+.day-strip small { font-size: 12px; line-height: 1.2; color: var(--text-muted); white-space: nowrap; }
+.day-strip i { display: grid; place-items: center; width: 18px; height: 18px; margin-top: 4px; border-radius: 50%; border: 2px solid var(--border-strong); opacity: .7; }
+.day-strip .is-done i { background: var(--accent); border-color: var(--accent); color: var(--bg-surface); opacity: 1; }
+.day-strip .is-today { border: 2px solid var(--accent); }
+.day-strip button[aria-selected="true"] { background: var(--btn-bg); color: var(--btn-text); border-color: transparent; }
+.day-strip button[aria-selected="true"] small { color: inherit; }
+.day-strip button[aria-selected="true"] i { border-color: currentColor; opacity: 1; }
+.plan-focus { font-size: 18px; font-weight: 700; line-height: 1.3; }
+.plan-meta { display: flex; flex-wrap: wrap; gap: 0 14px; font-size: 17px; color: var(--text-muted); }
+.plan-meta b { color: var(--text-primary); font-weight: 800; }
+.note-line { display: flex; align-items: center; flex-wrap: wrap; gap: 0 6px; font-size: 14px; color: var(--text-muted); }
+.note-line .text-button { padding: 0 var(--s2); }
+.unit-head { font-size: 14px; font-weight: 700; color: var(--text-muted); padding: 2px 4px 0; }
+.pcard {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; text-align: left; font: inherit; color: var(--text-primary);
+  background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--r-card); box-shadow: var(--shadow-card);
+  transition: transform var(--t-fast) var(--ease);
+}
+button.pcard { cursor: pointer; }
+button.pcard:active { transform: scale(.98); }
+.pcard .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.pcard .grow > b { font-size: 18px; line-height: 1.25; }
+.pcard .thumb { width: 64px; height: 64px; }
+.pcard .dose { font-size: 17px; line-height: 1.3; }
+.pcard .dose b { font-size: 19px; font-weight: 800; }
+.pcard .small { line-height: 1.3; }
+.pcard .chev { color: var(--text-muted); flex: none; display: grid; }
+.pcard.walk, .pcard.check { gap: 14px; padding: 14px 16px; }
+.tile-ic { width: 56px; height: 56px; border-radius: 14px; flex: none; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-text); }
+.walk-min { font-size: 18px; }
+.walk-min b { font-size: 22px; font-weight: 800; }
+.bar.action-bar.day-bar {
+  border-top: 1px solid var(--border-default); background: var(--bar-glass);
+  -webkit-backdrop-filter: saturate(160%) blur(20px); backdrop-filter: saturate(160%) blur(20px);
+}
+.day-bar .bar-inner { padding: var(--s2) var(--s4); }
+.day-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.day-nav .button, .day-nav .button + .button { margin: 0; min-height: var(--tap-main); font-size: 17px; font-weight: 800; border-color: var(--border-strong); }
+.week-num.now { background: var(--accent-soft); color: var(--accent-on-soft); }
+.badge.inline { margin-left: 6px; vertical-align: 2px; }
+.weeks-list .mach-row[aria-current="true"] b { color: var(--accent-text); }
+.accent-text { color: var(--accent-text); display: grid; }
+
+/* body maps (body-muscles, Apache-2.0): plain body = map base; the 3 steps mix the accent into the map colour */
+.bmap { display: block; width: 100%; height: auto; }
+.bmap path { stroke: var(--map-line); stroke-width: .18; stroke-linejoin: round; }
+.bmap .body { fill: var(--map-base); }
+.bmap .l0 { fill: var(--map-muscle); }
+.bmap .l1 { fill: color-mix(in srgb, var(--accent) 30%, var(--map-muscle)); }
+.bmap .l2 { fill: color-mix(in srgb, var(--accent) 62%, var(--map-muscle)); }
+.bmap .l3 { fill: var(--accent); }
+.bmap-mini { flex: none; display: block; width: 26px; }
+.bmap-mini .bmap path { stroke-width: .3; }
+
+/* opened exercise */
+.layer-title { margin-bottom: 2px; }
+.layer-equip { margin-bottom: var(--s2); }
+.layer-chips { margin: 0 0 var(--s3); }
+.maps { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: var(--s2); }
+.maps.one { grid-template-columns: minmax(0, 220px); justify-content: center; }
+.mp { display: grid; gap: 6px; align-content: start; min-width: 0; padding: 10px 8px 8px; background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: var(--r-card); }
+.mp .eyebrow { margin: 0; font-size: 11px; text-align: center; }
+.mp p { margin: 0; font-size: 13px; line-height: 1.3; }
+.map-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: var(--s3); font-size: 13px; font-weight: 600; color: var(--text-muted); }
+.map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.map-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; }
+.map-legend .k1 { background: color-mix(in srgb, var(--accent) 30%, var(--map-muscle)); }
+.map-legend .k2 { background: color-mix(in srgb, var(--accent) 62%, var(--map-muscle)); }
+.map-legend .k3 { background: var(--accent); }
+.ex-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: var(--s3); }
+.ex-tile { min-width: 0; padding: 8px 6px; background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: 14px; }
+.ex-tile .eyebrow { margin: 0; font-size: 11px; letter-spacing: .02em; white-space: nowrap; }
+.ex-tile b { display: block; font-size: 20px; font-weight: 800; line-height: 1.2; }
+.ex-tile small { display: block; font-size: 12px; line-height: 1.2; color: var(--text-muted); }
+.layer-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: var(--s3); }
+.layer-nav .button, .layer-nav .button + .button { margin: 0; min-height: 48px; font-size: 15px; padding: 0 var(--s2); }
+.layer-nav .button span { overflow-wrap: normal; }
+.ex-pick .small:last-child { color: var(--text-primary); }
+.ex-pick .thumb { width: 52px; height: 52px; }

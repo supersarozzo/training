@@ -133,8 +133,9 @@ test("unitHeader: pair headers in words, with the week's rounds", () => {
   assert.equal(head("tue", 3, 2), "Pair C · back and forth · 3 rounds · rest 75 s after each round");
   assert.equal(head("tue", 7, 0), "Pair A · back and forth · 4 rounds · rest 90 s after each round");
   assert.equal(head("tue", 3, 3), "On its own · rest 60 s between sets");
-  assert.equal(head("mon", 3, 3), "Abs · rest 30 s between sets");
-  assert.equal(head("thu", 3, 4), "Abs · rest 45 s between sets");
+  // abs units by slot name: the 2026-11-18 plan change (answer 80 a) removed the second abs slot on Mon, Wed and Thu
+  const absHead = (day) => unitHeader(unitsOf(daySets(day, 3)).find((u) => u.id === "Abs1"));
+  assert.equal(absHead("mon"), "Abs · rest 30 s between sets");
   assert.equal(head("wed", 3, 1), "Pair B · back and forth · 3 rounds · rest 75 s after each round"); // pulldown 3, lateral raise 2
 });
 
@@ -142,7 +143,7 @@ test("slotRole and restTile: the sheet's eyebrow and its Rest tile", () => {
   assert.equal(slotRole("tue", "B1"), "Pair B · first of the pair");
   assert.equal(slotRole("tue", "B2"), "Pair B · second of the pair");
   assert.equal(slotRole("tue", "D"), "On its own");
-  assert.equal(slotRole("mon", "Abs2"), "Abs");
+  assert.equal(slotRole("mon", "Abs1"), "Abs");
   const slot = (day, name) => daySets(day, 3).find((s) => s.slot === name);
   assert.deepEqual(restTile(slot("tue", "B1")), { value: "30 s", note: "to move" });
   assert.deepEqual(restTile(slot("tue", "B2")), { value: "90 s", note: "after the round" });
@@ -171,6 +172,6 @@ test("Gym groups: every exercise sits in exactly one group; chest 3 and back 5 a
 
 test("planDaysOf: the plan days an exercise is on (empty = swap only)", () => {
   assert.deepEqual(planDaysOf("face_pull"), ["tue", "thu"]);
-  assert.deepEqual(planDaysOf("dead_bug"), ["mon", "tue", "wed"]);
+  assert.deepEqual(planDaysOf("plank"), ["mon", "thu"]);
   assert.deepEqual(planDaysOf("cable_curl"), []);
 });

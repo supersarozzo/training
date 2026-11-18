@@ -1,0 +1,148 @@
+// The Plan tab (build step 2, docs/DESIGN.md 15.3; mock-up "Plan day"): one day per page, read like Today, opened on
+// today with the real sets of this week. Base: builder A's day page; B's focus words, done ticks and the "Whole plan
+// check" card. Top: week chip (opens the 12 weeks), the gear. Then the day name with "Today", the day strip, focus and
+// meta line, the walk card first, pair headers in words, cards with a small body map, the "Whole plan check" card.
+// Day arrows at the bottom on a solid frosted bar above the tabs (answer 69 a). No big day map (answer 70 a).
+// Read-only in this step: Edit comes with build steps 3 and 4. No Print (removed by Rosario, PRD F3).
+// All text through h(); no innerHTML; no style attributes.
+import { h } from "../h.js";
+import { screen, openSheet, closeSheets, gearLink } from "./parts.js";
+import { model, rerender } from "./app.js";
+import { today } from "../clock.js";
+import { dayLayout } from "../dayplan.js";
+import { days, exercises, weeks, weekInfo, rirFor, DAY_IDS, walkRules } from "../plan/plan-v2.js";
+import { thumb } from "./media.js";
+import { icon } from "./icons.js";
+import { onMount, stagger } from "./motion.js";
+import { miniMap } from "./bodymap.js";
+import { openExerciseLayer, doseParts } from "./exlayer.js";
+import { pageFor, daySets, dayTotals, unitsOf, unitHeader, muscleWords } from "../engine/planpage.js";
+
+// The page remembers the picked day and week while you stay on the tab; coming back to the tab opens today again.
+const state = { day: null, week: null };
+export function resetPlanPage() { state.day = null; state.week = null; }
+
+const dayShort = (d) => days[d].name.slice(0, 3);
+// "Upper body A" -> "Upper A", "Full body (a bit lighter)" -> "Full" (builder B's strip words).
+const focusShort = (d) => days[d].focus.replace(/\s*\(.*\)/, "").replace(" body", "");
+const rirText = (r) => (Array.isArray(r) ? `${r[0]}–${r[1]}` : String(r));
+const setsRule = (w) => (w.setsMode === "two" ? "2 per exercise" : w.setsMode === "easier" ? "1 set less" : w.setsMode === "build2" ? "Pair A: 4th set" : "As in the tables");
+
+function openWeeks(thisWeek, shown) {
+  openSheet(
+    h("h2", {}, "The 12 weeks"),
+    h("p", { class: "small muted" }, "Pick a week to see its real sets on every day."),
+    h("div", { class: "card weeks-list" }, weeks.map((w) => h("button", {
+      class: "mach-row", type: "button", "aria-current": w.week === shown ? "true" : null,
+      "aria-label": `Week ${w.week}${w.week === thisWeek ? ", this week" : ""}: ${w.phase}. ${setsRule(w)}, RIR ${rirText(w.rir)}. Show this week's sets.`,
+      onclick: () => { state.week = w.week === thisWeek ? null : w.week; closeSheets(); rerender(); },
+    },
+    h("span", { class: `week-num ${w.week === thisWeek ? "now" : ""}` }, String(w.week)),
+    h("span", { class: "grow" },
+      h("b", {}, w.phase, w.week === thisWeek ? h("span", { class: "badge slot inline" }, "This week") : null),
+      h("span", { class: "small muted" }, `${setsRule(w)} · RIR ${rirText(w.rir)}${w.wedRir !== w.rir ? ` (Wed ${w.wedRir})` : ""} · ${w.walkNote}`)),
+    w.week === shown ? h("span", { class: "accent-text" }, icon("check", 20)) : null))),
+    h("p", { class: "small muted" }, "RIR = reps in reserve: how many more good reps you could still do when you stop."));
+}
+
+function openCheckPlaceholder() {
+  openSheet(
+    h("h2", {}, "Whole plan check"),
+    h("p", {}, "Weekly sets per muscle, Monday to Friday, for the whole plan."),
+    h("p", { class: "muted" }, "This screen comes in the next build step. Each exercise already shows its muscles and the day so far."));
+}
+
+function dayStrip(doc, shown, todayDay, week) {
+  const done = new Set(doc.sessions.filter((x) => !x.deleted && x.week === week && x.status === "finished").map((x) => x.plan_day));
+  return h("div", { class: "day-strip", role: "tablist", "aria-label": "Day of the plan" },
+    DAY_IDS.map((d) => h("button", {
+      class: `${d === todayDay ? "is-today" : ""} ${done.has(d) ? "is-done" : ""}`.trim() || null, type: "button", role: "tab",
+      "aria-selected": d === shown ? "true" : "false",
+      "aria-label": `${days[d].name}, ${days[d].focus}${d === todayDay ? ", today" : ""}${done.has(d) ? ", done" : ""}`,
+      onclick: () => { state.day = d; rerender(); },
+    }, h("b", {}, dayShort(d)), h("small", {}, focusShort(d)), h("i", { "aria-hidden": "true" }, done.has(d) ? icon("check", 12, { strokeWidth: 3.2 }) : null))));
+}
+
+function walkCard(minutes, day) {
+  const easy = days[day].walk === "easy";
+  return h("div", { class: "pcard walk" },
+    h("span", { class: "tile-ic" }, icon("walk", 26)),
+    h("span", { class: "grow" },
+      h("b", {}, "Walk first"),
+      h("span", { class: "walk-min" }, h("b", {}, String(minutes)), " min uphill"),
+      h("span", { class: "small muted" }, easy
+        ? `Easier: ${walkRules.legDaySlopeLess_pct} % less slope, effort ${walkRules.legDayEffort.join(" to ")} of 10`
+        : `Normal: effort ${walkRules.normalEffort.join(" to ")} of 10`)));
+}
+
+function exCard(day, week, slot) {
+  const ex = exercises[slot.ex];
+  const words = muscleWords(slot.ex);
+  return h("button", {
+    class: "pcard ex", type: "button",
+    "aria-label": `${ex.name}: ${slot.sets} sets of ${ex.range[0] === ex.range[1] ? ex.range[0] : `${ex.range[0]} to ${ex.range[1]}`}${ex.kind === "hold" ? " seconds" : " reps"}${ex.perSide ? " each side" : ""}. ${words.card}. Open muscles, photos and tips.`,
+    onclick: () => openExerciseLayer(slot.ex, { day, week, slot: slot.slot }),
+  },
+  thumb(slot.ex),
+  h("span", { class: "grow" },
+    h("b", { class: "pc-name" }, ex.name),
+    h("span", { class: "dose" }, doseParts(ex, slot.sets)),
+    h("span", { class: "small muted" }, words.card)),
+  miniMap(slot.ex),
+  h("span", { class: "chev" }, icon("chevron", 18)));
+}
+
+export function renderPlan() {
+  const doc = model.doc();
+  const t = today();
+  const page = pageFor(doc.block.start_monday, t);
+  const day = state.day ?? page.day;
+  const week = state.week ?? page.week;
+  const wi = weekInfo(week);
+  const slots = daySets(day, week);
+  const totals = dayTotals(day, week);
+  const lay = dayLayout(doc, { planDay: day, week, today: t });
+  const isToday = day === page.todayDay && week === page.week;
+  const i = DAY_IDS.indexOf(day);
+  const prev = DAY_IDS[(i + 4) % 5];
+  const next = DAY_IDS[(i + 1) % 5];
+
+  const units = unitsOf(slots).map((u) => [
+    h("div", { class: "unit-head" }, unitHeader(u)),
+    u.slots.map((x) => exCard(day, week, x)),
+  ]);
+
+  const main = screen(
+    gearLink(),
+    h("div", { class: "plan-flow" },
+      h("div", { class: "plan-top" },
+        h("button", { class: "week-chip", type: "button", onclick: () => openWeeks(page.week, week), "aria-label": `Week ${week} of ${weeks.length}, ${wi.phase}. Open the 12 weeks.` },
+          `Week ${week} · ${wi.phase}`, icon("chevron", 16, { strokeWidth: 2.6 }))),
+      h("div", { class: "plan-day" }, h("h1", {}, days[day].name), isToday ? h("span", { class: "today-tag" }, "Today") : null),
+      dayStrip(doc, day, page.todayDay, week),
+      h("div", { class: "plan-sum" },
+        h("div", { class: "plan-focus" }, days[day].focus),
+        h("div", { class: "plan-meta" },
+          h("span", {}, "about ", h("b", {}, String(lay.minutes)), " min"),
+          h("span", {}, h("b", {}, String(totals.sets)), " sets"),
+          h("span", {}, "stop with ", h("b", {}, rirText(rirFor(week, day))), " left"))),
+      week !== page.week ? h("div", { class: "note-line" }, icon("info", 16), h("span", {}, `Showing week ${week}. This week is week ${page.week}.`),
+        h("button", { class: "text-button", type: "button", onclick: () => { state.week = null; rerender(); } }, "Back to this week")) : null,
+      page.state === "before" && week === page.week ? h("p", { class: "small muted" }, `Your plan starts on Monday ${doc.block.start_monday}.`) : null,
+      page.state === "after" && week === page.week ? h("p", { class: "small muted" }, "The 12 weeks are done. This is week 12 of the plan.") : null,
+      walkCard(lay.walk.minutes, day),
+      units,
+      h("button", { class: "pcard check", type: "button", onclick: openCheckPlaceholder },
+        h("span", { class: "tile-ic" }, icon("body", 26)),
+        h("span", { class: "grow" }, h("b", {}, "Whole plan check"), h("span", { class: "small muted" }, "Weekly sets per muscle, Monday to Friday")),
+        h("span", { class: "chev" }, icon("chevron", 18))),
+      h("p", { class: "small muted center" }, "Tap an exercise for its muscles, photos and tips.")));
+  main.className = "screen has-bar plan-screen";
+  onMount(() => stagger(main.querySelectorAll(".pcard")));
+
+  const bar = h("div", { class: "bar action-bar day-bar" }, h("div", { class: "bar-inner" },
+    h("nav", { class: "day-nav", "aria-label": "Other days" },
+      h("button", { class: "button secondary", type: "button", onclick: () => { state.day = prev; rerender(); }, "aria-label": `Previous day: ${days[prev].name}` }, icon("back", 20), days[prev].name),
+      h("button", { class: "button secondary", type: "button", onclick: () => { state.day = next; rerender(); }, "aria-label": `Next day: ${days[next].name}` }, days[next].name, icon("chevron", 20)))));
+  return [main, bar];
+}
