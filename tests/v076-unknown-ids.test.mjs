@@ -37,7 +37,7 @@ const { renderWorkout } = await import("../app/js/ui/workout.js");
 
 const NEW = "zz_move_from_a_newer_app";
 const rec = (slot, plan, done, sets, extra = {}) => ({ slot, plan_exercise: plan, done_exercise: done, swap_reason: plan === done ? null : "busy", note: "",
-  planned_sets: 3, planned_rest: slot.endsWith("1") ? null : 90, sets: sets.map(([kg, reps]) => ({ type: "work", weight_kg: kg, reps, rir: 2 })), ...extra });
+  planned_sets: 3, planned_rest: slot.endsWith("1") ? null : 90, sets: sets.map(([kg, reps], i) => ({ n: i + 1, type: "work", weight_kg: kg, reps, rir: 2 })), ...extra });
 function workout(date, day, week, records, status = "finished") {
   return { id: `s-${date.replaceAll("-", "")}-${day}`, updated_at: `${date}T10:00:00.000Z`, date, plan_day: day, week, kind: "full", swapped_from: null, status,
     started_at: `${date}T08:00:00.000Z`, finished_at: status === "finished" ? `${date}T10:00:00.000Z` : null, walk: null, note: "", exercises: records };
@@ -113,7 +113,8 @@ test("U-4 a workout in progress from a newer app: the workout screen skips the u
   const kept = saved.exercises.find((e) => e.slot === "A1");
   assert.equal(kept.done_exercise, NEW);
   assert.deepEqual(kept.sets.map((x) => [x.weight_kg, x.reps]), [[12, 10]], "its sets untouched");
-  assert.equal(validateDocument(model.doc()).ok ?? true, true);
+  const v = validateDocument(model.doc());
+  assert.equal(v.ok, true, v.error);
   clearActive();
 });
 
