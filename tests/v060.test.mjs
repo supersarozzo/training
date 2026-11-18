@@ -180,7 +180,9 @@ test("V10 dayChoices lists every plan day of this week, marks the ones done, and
   const sat = view.dayChoices(doc, "2026-01-17");
   assert.equal(sat.length, 5);
   assert.ok(sat.every((d) => !d.today));
-  assert.deepEqual(view.dayChoices(doc, "2026-01-05"), [], "before the plan starts: none");
+  // 0.7.1, trainer D11: before the plan starts every weekday is a practice day, so the picker is there too.
+  assert.deepEqual(view.dayChoices(doc, "2026-01-05").map((d) => d.day), ["mon", "tue", "wed", "thu", "fri"], "before the plan starts: practice days");
+  assert.deepEqual(view.dayChoices(doc, "2026-05-01"), [], "after the 12 weeks: none");
 });
 
 // ---------- 5. screens ----------
