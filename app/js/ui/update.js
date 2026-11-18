@@ -2,28 +2,19 @@
 // The banner shows only on the main screens (Today, Progress, Plan, Settings), never in a workout or a flow.
 import { h } from "../h.js";
 import { store, rerender } from "./app.js";
-import { createUpdater, workerWanted, updateWords } from "../updater.js";
+import { createUpdater, workerWanted, updateWords, mayRedraw } from "../updater.js";
 import { APP_VERSION } from "../version.js";
 import { getActive } from "../active.js";
 
 // One updater for the page (app/js/updater.js has the rules; 0.7.3 fixed the iPhone never showing the bar).
 let updater = null;
 
-// A redraw only on a main screen with no sheet, scanner or typing: never in a workout or a form being filled in.
-// Otherwise the bar shows at the next screen change.
-const TAB_HASHES = ["", "#/today", "#/progress", "#/plan", "#/gym", "#/diet", "#/settings"];
-function quietScreen() {
-  if (!TAB_HASHES.includes(location.hash)) return false;
-  if (document.querySelector("[data-sheet], [data-scan]")) return false;
-  const typing = document.activeElement;
-  return !(typing && ["INPUT", "TEXTAREA", "SELECT"].includes(typing.tagName));
-}
-
 export function registerWorker() {
   const on = workerWanted(location, navigator);
   updater = createUpdater({
     sw: on ? navigator.serviceWorker : null, doc: document, win: window,
-    onChange: () => { if (quietScreen()) rerender(); },
+    // Redraw only where it is safe (updater.js mayRedraw), and keep the scroll position (render() scrolls to the top).
+    onChange: () => { if (mayRedraw(location.hash, document)) { const y = window.scrollY; rerender(); window.scrollTo(0, y); } },
     fetch: (...args) => fetch(...args), caches: window.caches ?? null, version: APP_VERSION,
     inWorkout: () => getActive() !== null,
   });

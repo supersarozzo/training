@@ -91,7 +91,7 @@ test("S1 install fetches every file fresh: a ?v=<version> address and cache 'rel
   const w = world();
   await w.run("install");
   const store = w.stores.get(CACHE);
-  assert.equal(store.size, FILES.length);
+  assert.equal(store.size, FILES.length + 1); // + the completion mark written last (review round 1, R2b)
   for (const f of FILES) assert.ok(store.has(plain(f)), f);
   for (const c of w.calls) {
     assert.equal(new URL(c.url).searchParams.get("v"), APP_VERSION, c.url);
@@ -120,7 +120,7 @@ test("S4 a file that fails once is tried again: install still succeeds", async (
   const w = world({ net: (url) => { if (!failed && url.includes("media/exercises/plank/0.jpg")) { failed = true; return new TypeError("network lost"); } return null; } });
   await w.run("install");
   assert.ok(failed);
-  assert.equal(w.stores.get(CACHE).size, FILES.length);
+  assert.equal(w.stores.get(CACHE).size, FILES.length + 1); // + the completion mark (round 1)
 });
 
 test("S5 a file that keeps failing: install fails, the half-filled new cache is deleted, the old version keeps working", async () => {

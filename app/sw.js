@@ -229,6 +229,8 @@ const TRIES = 3;
 const PARALLEL = 6;
 
 const fileUrl = (file) => new URL(file, self.location.href).href;
+// Written last, after every file: the cache is complete (review round 1). No app page ever asks for this address.
+const MARK = fileUrl("sw-cache-complete");
 
 // "0.7.2" is older than "0.7.10"; anything that is not a version number is never "older".
 function isOlder(name) {
@@ -269,6 +271,7 @@ async function fillCache() {
     // js/version.js first: if the server still gives the version before this one (a CDN copy from before the push),
     // stop now; the next check tries again.
     const version = await fetchFresh("js/version.js");
+    const mark = version.clone();
     if (!(await version.clone().text()).includes(`"${APP_VERSION}"`)) throw new Error("the server still has older files");
     await cache.put(fileUrl("js/version.js"), version);
     const rest = FILES.filter((f) => f !== "js/version.js");
@@ -282,22 +285,38 @@ async function fillCache() {
     };
     await Promise.all(Array.from({ length: PARALLEL }, lane));
     if (failed) throw failed;
+    // An older worker's activate (0.7.2 and before deletes every other app cache) may have removed this cache while
+    // it filled: then the files went nowhere. Fail, so the next check installs again (review round 1).
+    if (!(await caches.has(CACHE))) throw new Error("the new cache was removed during the install");
+    await cache.put(MARK, mark);
+    if (!(await caches.has(CACHE)) || !(await (await caches.open(CACHE)).match(MARK))) throw new Error("the new cache was removed during the install");
   } catch (e) {
     if (!existed) await caches.delete(CACHE);
     throw e;
   }
 }
 
-// Old versions' caches go only when this version's cache is complete enough to open the app (its start page and
-// js/version.js are in it). A newer version's cache (it may be installing now) and other caches are never touched.
+// Old versions' caches go only when this version's cache is complete (its mark, written after every file, is in it).
+// A newer version's cache (it may be installing now) and other caches are never touched.
 let cleaned = false;
+let cleaning = null; // one cleanup at a time, however many fetches arrive together
 async function dropOldCaches() {
   if (!(await caches.has(CACHE))) return;
-  const own = await caches.open(CACHE);
-  if (!(await own.match(fileUrl("./"))) || !(await own.match(fileUrl("js/version.js")))) return;
+  if (!(await (await caches.open(CACHE)).match(MARK))) return;
   const keys = await caches.keys();
   await Promise.all(keys.filter(isOlder).map((k) => caches.delete(k)));
   cleaned = true;
+}
+function cleanOnce() {
+  if (!cleaning) cleaning = dropOldCaches().catch(() => {}).then(() => { cleaning = null; });
+  return cleaning;
+}
+
+// Older app caches, newest first (offline fallback only).
+async function olderCaches() {
+  const keys = (await caches.keys()).filter(isOlder);
+  const num = (k) => k.slice(PREFIX.length).split(".").map(Number);
+  return keys.sort((a, b) => { const x = num(a), y = num(b); for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (y[i] || 0) - (x[i] || 0); if (d) return d; } return 0; });
 }
 
 // Install: fill the cache. The new worker then waits; the app shows "New version ready" and the user taps Update.
@@ -307,19 +326,29 @@ self.addEventListener("install", (event) => {
 
 // Activate: delete the caches of older versions. The data lives in localStorage, so this never touches it.
 self.addEventListener("activate", (event) => {
-  event.waitUntil(dropOldCaches());
+  event.waitUntil(cleanOnce());
 });
 
 self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") self.skipWaiting();
 });
 
+// Own cache first, then the network. Offline with a file missing from the own cache (it was removed, or is still
+// filling): the newest older app cache answers, which is better than no app at all (review round 1).
 async function answer(req) {
   if (await caches.has(CACHE)) {
     const hit = await (await caches.open(CACHE)).match(req, { ignoreSearch: true });
     if (hit) return hit;
   }
-  return fetch(req);
+  try {
+    return await fetch(req);
+  } catch (e) {
+    for (const name of await olderCaches()) {
+      const old = await (await caches.open(name)).match(req, { ignoreSearch: true });
+      if (old) return old;
+    }
+    throw e;
+  }
 }
 
 // Fetch: app files come from this version's cache first. Everything else (the GitHub API, other sites) goes straight
@@ -334,5 +363,5 @@ self.addEventListener("fetch", (event) => {
   // cache. A page load (navigate) always opens from the cache, so the app still opens offline.
   if (req.cache === "no-store" && req.mode !== "navigate") return;
   event.respondWith(answer(req));
-  if (!cleaned) event.waitUntil(dropOldCaches().catch(() => {}));
+  if (!cleaned) event.waitUntil(cleanOnce());
 });

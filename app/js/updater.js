@@ -4,6 +4,14 @@
 // when the page registered; show the bar whenever a worker waits; reload only after the user tapped Update.
 // This file never reads or writes the phone's saved data (workouts, food, settings): only the app's file caches.
 
+import { redrawAfterSync } from "./autosync.js";
+
+// May the updater redraw the screen now? The sync's rule (never a workout or the Plan, never while typing, the Diet
+// tab only without a sheet or the scanner) plus: no sheet open on any screen (review round 1).
+export function mayRedraw(hash, doc) {
+  return redrawAfterSync(hash, doc) && !doc.querySelector("[data-sheet], [data-scan]");
+}
+
 // The worker runs on GitHub Pages (https). On localhost it runs only with ?sw=1, so development files never get stuck.
 export function workerWanted(loc, nav) {
   if (!nav || !("serviceWorker" in nav)) return false;
@@ -41,6 +49,7 @@ const SHORT_WAIT = 20000; // no new worker at all after this: the fallback
 const LONG_WAIT = 90000; // a worker that is still downloading gets this long in total
 const TAKEOVER_WAIT = 10000; // after SKIP_WAITING, reload anyway if the new worker has not taken over
 const STEP = 500;
+const CHECK_GAP = 15 * 60000; // automatic checks (front, pageshow) at most this often: a failing install re-downloads
 
 // sw = navigator.serviceWorker (or null), doc = document, win = window; onChange() redraws the screen.
 // fetch, caches, version, inWorkout, sleep and now are for the Update button (tests pass fakes).
@@ -52,6 +61,7 @@ export function createUpdater({ sw, doc, win, onChange = () => {}, fetch = null,
   let updating = false; // true only after a tap on Update, so the page never reloads by itself
   let reloaded = false;
   let busy = false;
+  let lastCheck = -Infinity;
 
   const set = (next) => { if (status !== next) { status = next; onChange(); } };
   const reload = () => { if (reloaded) return; reloaded = true; win.location.reload(); };
@@ -62,22 +72,28 @@ export function createUpdater({ sw, doc, win, onChange = () => {}, fetch = null,
     if (worker.state === "installed" && sw && sw.controller && waiting !== worker) {
       waiting = worker;
       onChange();
-    } else if (worker.state === "redundant" && waiting === worker) {
+    } else if (waiting === worker && worker.state !== "installed") {
+      // It took over without the tap (the app was closed, or Safari restored it as active), or it failed: no bar.
       waiting = null;
       onChange();
     }
   }
+  const followed = new WeakSet();
   function follow(worker) {
     if (!worker) return;
-    worker.addEventListener("statechange", () => see(worker));
+    if (!followed.has(worker)) { followed.add(worker); worker.addEventListener("statechange", () => see(worker)); }
     see(worker);
   }
   function look() {
-    if (reg) see(reg.waiting);
+    if (reg) follow(reg.waiting);
   }
 
-  async function check() {
+  // An update check. Automatic ones (front, pageshow) at most every 15 minutes; a waiting worker is looked at always.
+  async function check(force = false) {
     if (!reg) return;
+    look();
+    if (!force && now() - lastCheck < CHECK_GAP) return;
+    lastCheck = now();
     try { await reg.update(); } catch { /* offline or the server did not answer: the next check tries again */ }
     look();
   }
@@ -92,7 +108,7 @@ export function createUpdater({ sw, doc, win, onChange = () => {}, fetch = null,
       reg.addEventListener("updatefound", () => follow(reg.installing));
       doc.addEventListener("visibilitychange", () => { if (!doc.hidden) check(); });
       win.addEventListener("pageshow", () => check());
-      check();
+      check(true);
     }).catch(() => { /* no worker: the app still works online */ });
   }
 
@@ -103,9 +119,10 @@ export function createUpdater({ sw, doc, win, onChange = () => {}, fetch = null,
     sleep(TAKEOVER_WAIT).then(() => reload());
   }
 
-  // The tap on Update in the bar.
+  // The tap on Update in the bar. A bar still drawn after its worker took over by itself: the tap reloads into it.
   function apply() {
-    if (waiting) takeOver(waiting);
+    if (waiting && waiting.state === "installed") takeOver(waiting);
+    else { updating = true; reload(); }
   }
 
   // What the live site says its version is; null with no signal or no good answer.

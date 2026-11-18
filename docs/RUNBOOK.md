@@ -104,6 +104,8 @@ Before the rewrite to the noreply address, all commits were saved in `private/tr
 
 Git project: revert the commit (`git revert <commit>`). Nothing outside this folder is changed by the project, so no change ledger is needed.
 
+**Never roll back `app/sw.js` to a version before 0.7.3, and never lower `APP_VERSION`.** The old worker searched every cache and an older one would win again (the 0.7.1 bug), and a lower version never deletes a higher version's cache. To undo an app change, release a new, higher version that keeps the 0.7.3 `sw.js` rules.
+
 ## Releasing a new version of the app (step 8)
 1. Change `APP_VERSION` in `app/js/version.js` **and** at the top of `app/sw.js` (same text). `node --test` fails if they differ.
 2. Add any new file in `app/` to the `FILES` list in `app/sw.js`. `node --test` fails if the list and the folder differ.
