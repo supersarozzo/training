@@ -11,7 +11,7 @@ import { days, exercises } from "../plan/plan-v2.js";
 import { thumb } from "./media.js";
 import { icon } from "./icons.js";
 import { miniMap } from "./bodymap.js";
-import { viewDay, swapSheet, addSheet, exName, dayChanges, changedOn, rangeFor, rangeText, weightLine } from "../planview.js";
+import { viewDay, swapSheet, addSheet, exName, dayChanges, changedOn, rangeFor, rangeText, weightLine, workoutRunning } from "../planview.js";
 import { withSets, setsForSlot, MIN_SETS, MAX_SETS } from "../engine/planedits.js";
 import { weightStepFor, validRange } from "../engine/workout.js";
 
@@ -224,8 +224,10 @@ export function changedCard(day, record, { canReset = true } = {}) {
 // for the exercise on every day (exercise_state). One Save; one Undo puts all three back.
 const lockedText = (st) => (st.locked ? "Workout running. This day can be changed after the workout ends." : "This day was changed on a newer app version. Update the app to change it.");
 
+const RUNNING_TEXT = "Workout running. Sets, reps and weight can be changed after the workout ends.";
 export function openDoseSheet(day, week, slotName) {
   const doc = model.doc();
+  if (workoutRunning(doc)) { toast(RUNNING_TEXT); return; }
   const st0 = dayState(doc, day, week);
   if (!st0.canEdit) { toast(lockedText(st0)); return; }
   const slot = model.effectivePlanDay(day).slots.find((s) => s.slot === slotName);
@@ -261,6 +263,7 @@ export function openDoseSheet(day, week, slotName) {
     const stNow = clone(model.doc().exercise_state.find((x) => x.id === `x-${slot.ex}` && !x.deleted) ?? null);
     let beforeSlots, didSets = false, didPrefs = false;
     try {
+      if (workoutRunning(model.doc())) throw new Error(RUNNING_TEXT);
       const now = dayState(model.doc(), day, week);
       if (!now.canEdit) throw new Error(lockedText(now));
       beforeSlots = savedSlots(day);
@@ -284,7 +287,10 @@ export function openDoseSheet(day, week, slotName) {
 
   const hasOwnWeight = typeof stOld?.my_weight_kg === "number";
   const resetWeight = () => {
-    try { model.setExercisePrefs(slot.ex, { weightKg: null }); } catch (e) { toast(e.message); return; }
+    try {
+      if (workoutRunning(model.doc())) throw new Error(RUNNING_TEXT);
+      model.setExercisePrefs(slot.ex, { weightKg: null });
+    } catch (e) { toast(e.message); return; }
     closeSheets();
     rerender();
     undoToast(`${ex.name}: the app chooses the weight again.`, () => model.setExerciseState(slot.ex, { my_weight_kg: stOld.my_weight_kg, my_weight_at: stOld.my_weight_at ?? null }));

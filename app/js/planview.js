@@ -339,3 +339,9 @@ export function weightLine(doc, exId, week) {
   if (typeof sg.weight_kg === "number" && sg.weight_kg > 0) return { text: `${sg.weight_kg} kg`, note: sg.action === "mine" ? sg.note : sg.lastText ?? sg.note ?? "", kg: sg.weight_kg };
   return { text: week === 1 ? "Find it in week 1" : "Pick a light weight", note: "Start light with good form; the app counts up from what you log.", kg: null };
 }
+
+// Is any workout running (any day)? Reps and weight set in the Plan count on every day, so the Change sheet stays
+// closed while a workout runs: a running workout keeps what it started with (JUDGING step 3, Training Agent 2026-11-18).
+export function workoutRunning(doc) {
+  return (doc?.sessions ?? []).some((x) => x && !x.deleted && x.status === "in_progress");
+}
