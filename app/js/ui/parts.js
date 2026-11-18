@@ -19,7 +19,8 @@ export function tabBar(active) {
 
 // The Settings gear (44 x 44 px), always at the top right of a tab screen (DESIGN.md 15.2).
 export function settingsButton() {
-  return h("a", { class: "settings-btn", href: "#/settings" }, icon("settings", 18), "Settings");
+  // The word only: the settings icon looked like a brightness button (screen check m2).
+  return h("a", { class: "settings-btn", href: "#/settings" }, "Settings");
 }
 // The old round gear (kept for any screen that still wants an icon-only link; no tab uses it since 0.6.0).
 export function gearLink() {

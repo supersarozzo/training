@@ -83,7 +83,7 @@ export function openExerciseLayer(exId, ctx = null) {
         tile("Reps", repRange(ex, rangeFor(model.doc(), exId)), ex.kind === "hold" ? "seconds" : ex.perSide ? "each side" : null),
         weightTile(weightLine(model.doc(), exId, ctx.week)),
         tile("Rest", rest.value, rest.note),
-        tile("Stop with", Array.isArray(rir) ? `${rir[0]}–${rir[1]}` : String(rir), "reps left")),
+        tile("Stop with", Array.isArray(rir) ? `${rir[0]}–${rir[1]}` : String(rir), ex.kind === "hold" ? "seconds left" : "reps left")),
       h("div", { class: "layer-nav" },
         h("button", { class: "button secondary", type: "button", disabled: !nb.prev, onclick: () => nb.prev && go(nb.prev), "aria-label": nb.prev ? `Previous exercise: ${exercises[nb.prev.ex].name}` : "No previous exercise" },
           icon("back", 18), h("span", {}, nb.prev ? exercises[nb.prev.ex].name : "First")),

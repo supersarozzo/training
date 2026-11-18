@@ -151,7 +151,8 @@ export function renderSettings() {
   const toggle = () => { setSound(!on); setSoundOn(!on); if (!on) beep(); rerender(); };
   const doc = model.doc();
   return screen(
-    h("a", { class: "text-button back-link", href: "#/today" }, icon("back", 18), "Today"),
+    // Back to where Settings was opened from (Progress or Today); straight to Today when opened on its own.
+    h("a", { class: "text-button back-link", href: "#/today", onclick: (e) => { if (history.length > 1) { e.preventDefault(); history.back(); } } }, icon("back", 18), "Back"),
     h("span", { class: "eyebrow accent" }, "This phone and GitHub"),
     h("h1", {}, "Settings"),
     syncCard(),
