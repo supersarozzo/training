@@ -73,17 +73,23 @@ export const exerciseMuscles = {
   reverse_crunch: { main: ["abs"], helpers: [], equip: "bodyweight" },
   cable_pull_through: { main: ["glutes"], helpers: ["hamstrings", "lower_back"], equip: "cable" },
   calf_raise_standing: { main: ["calves"], helpers: [], equip: "smith" },
+  // Added 2026-11-18 (plan change), planned in the D slot. Muscles copied from the free-exercise-db entry used for the photo.
+  // calf_raise_leg_press moved here from the swap-only part (data unchanged).
+  db_lying_leg_curl: { main: ["hamstrings"], helpers: [], equip: "dumbbell" }, // Lying_Leg_Curls (machine version of the same move)
+  calf_raise_leg_press: { main: ["calves"], helpers: [], equip: "machine" },
 
   // Swap-only exercises
   cable_curl: { main: ["biceps"], helpers: [], equip: "cable" },
   cable_lateral_raise: { main: ["side_delts"], helpers: ["mid_back", "traps"], equip: "cable" },
   rear_delt_raise: { main: ["rear_delts"], helpers: [], equip: "dumbbell" },
   db_glute_bridge: { main: ["glutes"], helpers: ["calves", "hamstrings"], equip: "dumbbell" },
-  calf_raise_leg_press: { main: ["calves"], helpers: [], equip: "machine" },
   lat_pulldown_machine: { main: ["lats"], helpers: ["biceps", "mid_back", "rear_delts"], equip: "machine" },
   seated_row_machine: { main: ["lats"], helpers: ["biceps", "mid_back"], equip: "machine" },
   leg_curl_machine: { main: ["hamstrings"], helpers: [], equip: "machine" },
   calf_raise_machine: { main: ["calves"], helpers: [], equip: "machine" },
+  // Added 2026-11-18 (plan change); muscles copied from the free-exercise-db entry used for the photo (no own reading needed).
+  one_leg_db_calf_raise: { main: ["calves"], helpers: [], equip: "dumbbell" }, // Standing_Dumbbell_Calf_Raise
+  cable_leg_curl: { main: ["hamstrings"], helpers: [], equip: "cable" }, // Standing_Leg_Curl (one leg at a time)
 };
 
 // Body drawing part (app/vendor/body-muscles/shapes.js) -> our muscle group, by the start of the part id.

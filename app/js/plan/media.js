@@ -51,6 +51,10 @@ export const media = {
   seated_row_machine: { lib: "Leverage_Iso_Row", match: "same" },
   leg_curl_machine: { lib: "Seated_Leg_Curl", match: "same" },
   calf_raise_machine: { lib: "Standing_Calf_Raises", match: "same" },
+  // added 2026-11-18 (plan change): no exact library entry for these three, so each is a close match with a note
+  db_lying_leg_curl: { lib: "Lying_Leg_Curls", match: "close", matchNote: "Photo shows the leg curl machine. Lie the same way on a flat bench, a dumbbell between your feet." },
+  one_leg_db_calf_raise: { lib: "Standing_Dumbbell_Calf_Raise", match: "close", matchNote: "Photo shows two legs. Do one leg at a time, a dumbbell in one hand, and hold a rail." },
+  cable_leg_curl: { lib: "Standing_Leg_Curl", match: "close", matchNote: "Photo shows the standing leg curl machine. With the cable, strap on one ankle and curl that leg." },
   // warm-up moves and the walk
   arm_circles: { lib: "Arm_Circles", match: "same" },
   arm_swings: { lib: "Dynamic_Chest_Stretch", match: "close", matchNote: "Swing your arms open and across, like this stretch." },
@@ -105,6 +109,10 @@ export const VIDEOS = {
   seated_row_machine: { url: "https://www.youtube.com/watch?v=TeFo51Q_Nsc", title: "How To Use The Seated Row Machine", channel: "PureGym" },
   leg_curl_machine: { url: "https://www.youtube.com/watch?v=ELOCsoDSmrg", title: "How To: Seated Leg Curl (Cybex)", channel: "ScottHermanFitness" },
   calf_raise_machine: { url: "https://www.youtube.com/watch?v=YMmgqO8Jo-k", title: "How To: Standing Calf (BM)", channel: "ScottHermanFitness" },
+  // added 2026-11-18: YouTube oEmbed answered 200 with this title and channel on 2026-11-18 (docs/MEDIA.md)
+  db_lying_leg_curl: { url: "https://www.youtube.com/watch?v=aPUtiouhcQQ", title: "Dumbbell Lying Leg Curl | How To | Proper Form & Technique", channel: "FITTR" },
+  one_leg_db_calf_raise: { url: "https://www.youtube.com/watch?v=PTn6icEeH3Y", title: "Standing single leg dumbbell calf raises", channel: "FITTR" },
+  cable_leg_curl: { url: "https://www.youtube.com/watch?v=QerRbPE55D8", title: "Standing Cable Leg Curls", channel: "WABBA" },
   arm_circles: { url: "https://www.youtube.com/watch?v=3STTSi_jdHk", title: "How To Arm Circles | Nuffield Health", channel: "Nuffield Health" },
   arm_swings: { url: "https://www.youtube.com/watch?v=p7EnbCprr5w", title: "Arm swings side to side", channel: "NHS inform" },
   cat_cow: { url: "https://www.youtube.com/watch?v=1Y0YjXS9sKI", title: "How to Do a Cat Cow Stretch: A Guide from Physical Therapists", channel: "Hinge Health" },
@@ -173,6 +181,7 @@ export const machineOf = {
   cable_pull_through: "cable_station", calf_raise_standing: "smith_machine", cable_curl: "cable_station", cable_lateral_raise: "cable_station",
   rear_delt_raise: "dumbbells_bench", db_glute_bridge: "mat_area", calf_raise_leg_press: "leg_press", lat_pulldown_machine: "lat_pulldown",
   seated_row_machine: "seated_row", leg_curl_machine: "leg_curl", calf_raise_machine: "calf_raise",
+  db_lying_leg_curl: "dumbbells_bench", one_leg_db_calf_raise: "dumbbells_bench", cable_leg_curl: "cable_station",
   uphill_walk: "treadmill", arm_circles: "mat_area", arm_swings: "mat_area", cat_cow: "mat_area", bodyweight_squats: "mat_area",
   glute_bridges: "mat_area", hip_hinge: "mat_area", pushups_bench: "mat_area",
 };

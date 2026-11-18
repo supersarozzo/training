@@ -36,23 +36,29 @@ export const exercises = {
   reverse_crunch: { name: "Reverse crunch", equipment: "Bench or mat", kind: "reps", range: [10, 15], step: "bodyweight", muscle: "abs", swaps: [{ id: "dead_bug" }] },
   cable_pull_through: { name: "Cable pull-through", equipment: "Cable, low pulley, rope", kind: "reps", range: [12, 15], step: "stack", muscle: "hamstrings", swaps: [{ id: "romanian_deadlift" }, { id: "leg_curl_machine", needsMachine: "leg_curl" }] },
   calf_raise_standing: { name: "Standing calf raise", equipment: "Smith machine, step or plate under the toes", kind: "reps", range: [12, 15], step: "smith_2x2.5", muscle: "calves", swaps: [{ id: "calf_raise_leg_press" }, { id: "calf_raise_machine", needsMachine: "calf_raise" }] },
+  // Added 2026-11-18 (plan change, answers 80-83): planned on Mon and Wed (calf raise) and Thu (leg curl) in the D slot.
+  calf_raise_leg_press: { name: "Calf raise on the leg press", equipment: "Leg press machine", kind: "reps", range: [12, 15], step: "stack", muscle: "calves", swaps: [{ id: "calf_raise_machine", needsMachine: "calf_raise" }, { id: "calf_raise_standing" }, { id: "one_leg_db_calf_raise" }] },
+  db_lying_leg_curl: { name: "Dumbbell lying leg curl", equipment: "Dumbbell + flat bench, lying face down", kind: "reps", range: [10, 15], step: "dumbbell", muscle: "hamstrings", swaps: [{ id: "leg_curl_machine", needsMachine: "leg_curl" }, { id: "cable_leg_curl" }, { id: "romanian_deadlift" }] },
 
   // Swap-only exercises (they appear only as a swap)
   cable_curl: { name: "Cable curl", equipment: "Cable, low pulley", kind: "reps", range: [10, 15], step: "stack", muscle: "biceps", swaps: [] },
   cable_lateral_raise: { name: "Cable lateral raise", equipment: "Cable, low pulley", kind: "reps", range: [12, 15], perSide: true, step: "stack", muscle: "shoulders", swaps: [] },
   rear_delt_raise: { name: "Dumbbell rear-delt raise", equipment: "Dumbbells + incline bench", kind: "reps", range: [12, 15], step: "dumbbell", muscle: "back", swaps: [] },
   db_glute_bridge: { name: "Dumbbell glute bridge", equipment: "Dumbbell, floor", kind: "reps", range: [8, 12], step: "dumbbell", muscle: "glutes", swaps: [] },
-  calf_raise_leg_press: { name: "Calf raise on the leg press", equipment: "Leg press machine", kind: "reps", range: [12, 15], step: "stack", muscle: "calves", swaps: [] },
   lat_pulldown_machine: { name: "Lat pulldown machine", equipment: "Lat pulldown machine (first visit check)", kind: "reps", range: [10, 12], step: "stack", muscle: "back", swaps: [] },
   seated_row_machine: { name: "Seated row machine", equipment: "Seated row machine (first visit check)", kind: "reps", range: [8, 12], step: "stack", muscle: "back", swaps: [] },
   leg_curl_machine: { name: "Leg curl machine", equipment: "Leg curl machine (first visit check)", kind: "reps", range: [10, 15], step: "stack", muscle: "hamstrings", swaps: [] },
   calf_raise_machine: { name: "Calf raise machine", equipment: "Calf raise machine (first visit check)", kind: "reps", range: [12, 15], step: "stack", muscle: "calves", swaps: [] },
+  // Added 2026-11-18 (plan change): swaps for the new D moves.
+  one_leg_db_calf_raise: { name: "One-leg dumbbell calf raise", equipment: "On a step, one dumbbell in one hand", kind: "reps", range: [12, 15], perSide: true, step: "dumbbell", muscle: "calves", swaps: [] },
+  cable_leg_curl: { name: "Standing cable leg curl", equipment: "Cable, low pulley, ankle strap (first visit check)", kind: "reps", range: [10, 15], perSide: true, step: "stack", muscle: "hamstrings", swaps: [] },
 };
 
 // The extra machines the first visit checks (question 17).
 export const extraMachines = ["lat_pulldown", "seated_row", "leg_curl", "pec_deck", "calf_raise"];
 
-// Days. slot: pair letter + 1 or 2 (A1, A2 ...), "Abs1", "Abs2", or "D" (on its own, in the abs slot).
+// Days. slot: pair letter + 1 or 2 (A1, A2 ...), "Abs1", or "D" (on its own, after the pairs or after Abs1). "Abs2" is no longer used by any day (still understood by the engine).
+// Plan change 2026-11-18: Monday, Wednesday and Thursday have Abs1 (2 sets) then D (no Abs2), so D is not only on leg days.
 // rest: seconds after the slot. A first exercise in a pair has rest null (about 30 s to move: see MOVE_SECONDS).
 // For D, rest is the rest between sets.
 export const days = {
@@ -65,8 +71,8 @@ export const days = {
       { slot: "B2", ex: "one_arm_db_row", sets: 3, rest: 90 },
       { slot: "C1", ex: "db_curl", sets: 3, rest: null },
       { slot: "C2", ex: "triceps_pushdown", sets: 3, rest: 60 },
-      { slot: "Abs1", ex: "plank", sets: 3, rest: 30 },
-      { slot: "Abs2", ex: "dead_bug", sets: 2, rest: 30 },
+      { slot: "Abs1", ex: "plank", sets: 2, rest: 30 }, // changed 2026-11-18: 3 -> 2 sets
+      { slot: "D", ex: "calf_raise_leg_press", sets: 3, rest: 60 }, // 2026-11-18: replaces Abs2 (dead bug)
     ],
   },
   tue: {
@@ -90,8 +96,8 @@ export const days = {
       { slot: "B2", ex: "lateral_raise", sets: 2, rest: 75 },
       { slot: "C1", ex: "hammer_curl", sets: 2, rest: null },
       { slot: "C2", ex: "overhead_triceps_ext", sets: 2, rest: 60 },
-      { slot: "Abs1", ex: "side_plank", sets: 3, rest: 30 },
-      { slot: "Abs2", ex: "dead_bug", sets: 2, rest: 30 },
+      { slot: "Abs1", ex: "side_plank", sets: 2, rest: 30 }, // changed 2026-11-18: 3 -> 2 sets
+      { slot: "D", ex: "calf_raise_leg_press", sets: 3, rest: 60 }, // 2026-11-18: replaces Abs2 (dead bug)
     ],
   },
   thu: {
@@ -103,8 +109,8 @@ export const days = {
       { slot: "B2", ex: "face_pull", sets: 3, rest: 75 },
       { slot: "C1", ex: "lateral_raise", sets: 3, rest: null },
       { slot: "C2", ex: "triceps_pushdown", sets: 3, rest: 60 },
-      { slot: "Abs1", ex: "plank", sets: 3, rest: 30 },
-      { slot: "Abs2", ex: "cable_crunch", sets: 3, rest: 45 },
+      { slot: "Abs1", ex: "plank", sets: 2, rest: 30 }, // changed 2026-11-18: 3 -> 2 sets
+      { slot: "D", ex: "db_lying_leg_curl", sets: 3, rest: 60 }, // 2026-11-18: replaces Abs2 (cable crunch)
     ],
   },
   fri: {

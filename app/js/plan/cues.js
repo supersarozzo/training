@@ -22,6 +22,7 @@ export const cues = {
   romanian_deadlift: "Dumbbells in front of your thighs, soft knees. Push your hips back, slide the weights down your legs with a flat back until you feel a stretch behind your thighs. Stand up by pushing your hips forward.",
   smith_squat: "Set the safety stops first. Bar on your upper back. Feet slightly in front of the bar. Sit down and back, knees in line with your toes, go down until thighs are about parallel with the floor, then stand up.",
   hip_thrust: "Upper back on the bench, weight on your hips (use a pad). Push through your heels, squeeze your glutes at the top, ribs down. Lower slowly.",
+  db_lying_leg_curl: "Lie face down on a flat bench, a light dumbbell held between your feet. Curl your heels towards your hips, pause for 1 second, lower slowly. Keep your hips on the bench. Ask staff to hand you the dumbbell the first time.",
   calf_raise_standing: "Balls of your feet on a step or plate. Go all the way up, pause for 1 second. Go slowly all the way down for a good stretch.",
   plank: "Elbows under your shoulders, body in one straight line. Squeeze your glutes and tummy. Breathe normally. Stop if your lower back sags.",
   side_plank: "Lie on your side, one elbow under your shoulder, hips lifted. Keep your body in a straight line. Do both sides.",
@@ -37,6 +38,8 @@ export const cues = {
   lat_pulldown_machine: "Set the thigh pad snug. Pull the bar down to your upper chest, elbows down and back. Do not lean far back. Let the bar rise slowly.",
   seated_row_machine: "Set the seat so the handles are at mid-chest. Pull the handles back, squeeze your shoulder blades, keep your chest on the pad. Return slowly.",
   leg_curl_machine: "Pad just above your heels. Curl your heels towards your hips, pause for 1 second, then lower slowly. Do not lift your hips.",
+  one_leg_db_calf_raise: "Ball of one foot on a step, a dumbbell in the hand on that side, the other hand on a rail. Go all the way up, pause for 1 second, lower slowly for a full stretch. Do both legs.",
+  cable_leg_curl: "Strap on one ankle at the low pulley, hold a frame for balance. Curl your heel towards your seat, pause for 1 second, lower slowly. Keep your thigh still. Do both legs.",
   calf_raise_machine: "Balls of your feet on the plate. Go all the way up, pause for 1 second, then lower slowly all the way for a good stretch.",
 
   // Other cues
