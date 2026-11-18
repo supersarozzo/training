@@ -72,7 +72,7 @@ You chose to do the 30-minute fast uphill walk **before** the weights (intake qu
 | 30 – 33 | Change-over | Water, towel, walk to the weights. Heart rate settles. |
 | 33 – 37 | Lift warm-up | Arm circles × 10, arm swings across the chest × 10, cat-cow on the floor × 8, bodyweight squats × 10, glute bridges × 10, hip hinge with hands on hips × 10. Upper days: add 10 push-ups against a bench. |
 | 37 – 82 | Weights | 3 pairs (A, B, C). Warm-up sets come first in each pair (section 5). Leg days: 3 pairs plus one exercise on its own. |
-| 82 – 89 | Abs | 2 exercises. On leg days the abs are already inside the pairs, so this slot holds the leg exercise done on its own. |
+| 82 – 89 | Abs | 2 exercises. On leg days the abs are already inside the pairs, so this slot holds the leg exercise done on its own. **Changed 2026-11-18 (section 17):** on Monday, Wednesday and Thursday this slot is the first abs exercise (2 sets), then one exercise on its own (D). |
 | 89 – 90 | Finish | Stop the Watch workout. Save in the app (auto sync up). |
 
 The weights block is 45 minutes (WORKFLOW: never under 40).
@@ -105,7 +105,7 @@ Cut exercises, never rest times.
 | Warm-up sets | Before the first exercise of each pair: about 50 % × 10 reps, then about 75 % × 5 reps. Week 1: see section 8. |
 | One-sided exercises | Reps are per side. |
 
-**Weekly hard sets per muscle (weeks 2 to 5):** chest 9, back 12 (plus 6 face pulls for the upper back), side shoulders 8, front shoulders 6 (plus all presses), biceps 5 (plus all rows and pulldowns), triceps 8, quads 12, glutes 6 (plus squats, leg press, Romanian deadlift), hamstrings 6 (plus hip thrusts), calves 3 (plus the uphill walk every day), abs 27. Most muscles sit at the WORKFLOW start of about 8 to 10 hard sets a week. Back and quads get 12, because they are big muscles and the plan uses several exercises for them; most of these sets are on machines and cables, which are easy to recover from. Weeks 7 to 11 add a set to pair A each day: chest about 12, back about 14, quads about 14 (Tuesday's leg extension drops to 2 sets then).
+**Weekly hard sets per muscle (weeks 2 to 5):** chest 9, back 12 (plus 6 face pulls for the upper back), side shoulders 8, front shoulders 6 (plus all presses), biceps 5 (plus all rows and pulldowns), triceps 8, quads 12, glutes 6 (plus squats, leg press, Romanian deadlift), hamstrings 6 (plus hip thrusts), calves 3 (plus the uphill walk every day), abs 27. **Changed 2026-11-18 (section 17): hamstrings 9 (6 of them direct: Romanian deadlift and leg curl), calves 9, abs 17.** Most muscles sit at the WORKFLOW start of about 8 to 10 hard sets a week. Back and quads get 12, because they are big muscles and the plan uses several exercises for them; most of these sets are on machines and cables, which are easy to recover from. Weeks 7 to 11 add a set to pair A each day: chest about 12, back about 14, quads about 14 (Tuesday's leg extension drops to 2 sets then).
 
 ## 6. The five days (WORKFLOW B6 pairs, B7 equipment)
 
@@ -121,8 +121,8 @@ Cut exercises, never rest times.
 | B2 | One-arm dumbbell row | Dumbbell + bench | 3 | 8-12 each side | 90 s | Seated cable row; seated row machine (Q17) |
 | C1 | Dumbbell curl | Dumbbells | 3 | 10-15 | – | Cable curl |
 | C2 | Triceps pushdown | Cable, high pulley | 3 | 10-15 | 60 s | Overhead cable triceps extension |
-| Abs 1 | Plank | Floor | 3 | 20-40 s | 30 s | Dead bug |
-| Abs 2 | Dead bug | Floor | 2 | 8 each side | 30 s | Plank |
+| Abs 1 (changed 2026-11-18) | Plank | Floor | 2 | 20-40 s | 30 s | Dead bug |
+| D (on its own, in the abs slot; changed 2026-11-18, was Abs 2 dead bug) | Calf raise on the leg press | Leg press machine | 3 | 12-15 | 60 s between sets | Calf raise machine (Q17); standing calf raise on the Smith machine; one-leg dumbbell calf raise on a step |
 
 ### Tuesday: Lower body A (easier walk)
 
@@ -150,8 +150,8 @@ No calf raises on Tuesday: the uphill walk already works the calves.
 | B2 | Lateral raise | Dumbbells | 2 | 12-15 | 75 s | Cable lateral raise |
 | C1 | Hammer curl | Dumbbells | 2 | 10-15 | – | Dumbbell curl |
 | C2 | Overhead triceps extension | Cable, low pulley, rope | 2 | 10-15 | 60 s | Triceps pushdown |
-| Abs 1 | Side plank | Floor | 3 | 15-30 s each side | 30 s | Plank |
-| Abs 2 | Dead bug | Floor | 2 | 8 each side | 30 s | Plank |
+| Abs 1 (changed 2026-11-18) | Side plank | Floor | 2 | 15-30 s each side | 30 s | Plank |
+| D (on its own, in the abs slot; changed 2026-11-18, was Abs 2 dead bug) | Calf raise on the leg press | Leg press machine | 3 | 12-15 | 60 s between sets (RIR 3, like the whole day) | Calf raise machine (Q17); standing calf raise on the Smith machine; one-leg dumbbell calf raise on a step |
 
 ### Thursday: Upper body B
 
@@ -163,8 +163,8 @@ No calf raises on Tuesday: the uphill walk already works the calves.
 | B2 | Face pull | Cable, high pulley | 3 | 12-15 | 75 s | Dumbbell rear-delt raise |
 | C1 | Lateral raise | Dumbbells | 3 | 12-15 | – | Cable lateral raise |
 | C2 | Triceps pushdown | Cable, high pulley | 3 | 10-15 | 60 s | Overhead cable triceps extension |
-| Abs 1 | Plank | Floor | 3 | 20-40 s | 30 s | Dead bug |
-| Abs 2 | Cable crunch | Cable, high pulley | 3 | 10-15 | 45 s | Reverse crunch |
+| Abs 1 (changed 2026-11-18) | Plank | Floor | 2 | 20-40 s | 30 s | Dead bug |
+| D (on its own, in the abs slot; changed 2026-11-18, was Abs 2 cable crunch) | Dumbbell lying leg curl | Dumbbell + flat bench, lying face down | 3 | 10-15 | 60 s between sets | Leg curl machine (Q17); standing cable leg curl with an ankle strap; Romanian deadlift (dumbbells) |
 
 ### Friday: Lower body B (easier walk)
 
@@ -178,7 +178,7 @@ No calf raises on Tuesday: the uphill walk already works the calves.
 | C2 | Side plank | Floor | 2 | 15-30 s each side | 60 s | Plank |
 | D (on its own, in the abs slot) | Standing calf raise | Smith machine, step or plate under the toes | 3 | 12-15 | 60 s between sets | Calf raise on the leg press; calf raise machine (Q17) |
 
-**If the first visit finds a leg curl machine (Q17):** add 2 sets of 10-15 leg curls on Friday after D. Hamstrings then get 8 sets a week.
+**Leg curls:** the old note "add 2 sets of leg curls on Friday if a machine is found" is replaced from 2026-11-18 by Thursday's leg curl (D). See Thursday and section 17.
 
 ## 7. Form cues
 
@@ -323,3 +323,45 @@ In week 12 (the easier week), Rosario and the Training Agent chat (the app does 
 | E progression, rhythm, missed sessions | Sections 9, 10, 11 |
 | F check-ins | Section 12 |
 | G review | Section 14 |
+
+## 17. Change 2026-11-18: fewer abs sets, calves and back of the thighs get more
+
+Source: [plan review proposal](2026-11-17-plan-review-proposal.md) (sections 4, 5, 6, 8). Data: `app/js/plan/plan-v2.js`. The plan keeps its id `plan-v2`.
+
+**What changed.** Only the abs slot at the end of Monday, Wednesday and Thursday. The first abs exercise (plank, side plank, plank) drops from 3 sets to 2. The second abs exercise (dead bug, dead bug, cable crunch) goes. In its place, on its own at the end (the D place, so the D week rules apply): **calf raise on the leg press** on Monday and Wednesday, **dumbbell lying leg curl** on Thursday, each 3 sets, 60 s between sets. Tuesday, Friday, the walk, the pairs, the 12 weeks and the short day rule do not change.
+
+**Why.** Calves had 3 sets a week (Friday only) and the back of the thighs 3 direct sets with no knee-bend move; both are under every guideline read for the proposal. Abs had 27 sets, far more than needed.
+
+**Rosario's answers (2026-11-18).** 80 a: do all of it. 81 a: accept the extra 1 to 2 minutes on Monday and Wednesday; plank and side plank keep 2 sets. 82 a: Thursday's fallback order (below). 83 a: start as soon as the app is updated, even in the middle of the 12 weeks.
+
+**New moves start like week 1.** Calf raise on the leg press and the leg curl begin with 2 sets, a light weight and about 3 reps left, to find the weight. After that the normal week rules apply.
+
+**Weekly sets before to after** (hard sets; "direct" = the muscle is a main muscle of the exercise):
+
+| Muscle | Week 1 | Weeks 2-5 | Weeks 6 and 12 | Weeks 7-11 | Days a week |
+|---|---|---|---|---|---|
+| Calves | 2 to 6 | 3 to 9 | 2 to 6 | 2 to 6 | Fri to Mon, Wed, Fri |
+| Back of the thighs, direct (Romanian deadlift + leg curl) | 2 to 4 | 3 to 6 | 2 to 4 | 3 to 5 | Tue to Tue, Thu |
+| Abs | 20 to 14 | 27 to 17 | 17 to 10 | 29 to 19 | all 5 days |
+
+(Checked by `tests/plan-change-2026-11-18.test.mjs`: the counts from the plan data match the proposal's "after" columns.)
+
+**Time check per day** (weeks 2-5, abs slot, same simple model before and after; the app's "About N minutes" keeps its rounded numbers, 90 and 91 in weeks 7-11):
+
+| Day | Abs slot before | Abs slot after | Change | Session weeks 2-5 | Session weeks 7-11 |
+|---|---|---|---|---|---|
+| Monday | about 6.5 min | about 8 min | +1.5 | 90 to about 91.5 | 91 to about 93 |
+| Tuesday | – | – | 0 | 90 | 91 |
+| Wednesday | about 7.5 min | about 8.75 min | +1.25 | 90 to about 91 | 91 to about 92.5 |
+| Thursday | about 8.5 min | about 7.75 min | -0.75 | about 90 | about 91 |
+| Friday | – | – | 0 | 90 | 91 |
+
+In weeks 7 to 11 the D move drops to 2 sets, but section 4's trick ("abs back to back, 2 minutes less") no longer works with a machine in the slot, so Monday and Wednesday stay about 1.5 to 2 minutes over. That is inside the plan's own rounding (answer 81 a).
+
+**Short day.** Unchanged: pairs A and B, then the first abs exercise only. On Monday, Wednesday and Thursday that is now 2 plank sets and no D move, as leg days already skip D.
+
+**Thursday's leg curl, fallback order (answer 82 a).** The planned move is the dumbbell lying leg curl (needs only gym kit that exists: face down on a flat bench, a light dumbbell between the feet; ask staff to hand you the dumbbell the first time). Swaps, in this order: 1. leg curl machine (Q17, shown only when Settings says the gym has it; best if it is a seated one); 2. standing cable leg curl with an ankle strap on the low pulley (only if the gym has a strap; first visit check); 3. Romanian deadlift, 3 sets of 8-12 with 3 reps left (a hip hinge, so no knee-bend benefit). Once a leg curl machine is found, Rosario can make it permanent with Plan edit.
+
+**Calf raise swaps.** Calf raise machine (Q17); standing calf raise on the Smith machine; one-leg dumbbell calf raise on a step (new: one dumbbell in one hand, a rail for balance).
+
+**Watch.** Calves now work 3 days a week and the uphill walk every day. If the calves are still sore on walk days after week 2, drop Monday and Wednesday calf raises to 2 sets for a week. Stop for sharp pain at the back of the heel. If the hamstrings are very sore on Friday, keep Thursday's leg curl at 3 reps left for a week.

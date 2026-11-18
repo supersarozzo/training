@@ -11,6 +11,8 @@ Date: 2026-11-17. Written by task chat 8.24 (redesign merge). Data source: `app/
 - **hip_hinge** has no library photo: the app draws its own two-frame line drawing (`app/js/ui/drawings.js`, original work).
 - **Machine cards** reuse the photo of an exercise done on that machine.
 
+**Added 2026-11-18 (plan change, helper 2 of wave 1):** 3 moves, 6 photos (850 x 567, unchanged, from free-exercise-db commit f00c92c). No exact library entry exists for these, so each is a close match with a note: `db_lying_leg_curl` from [Lying_Leg_Curls](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Lying_Leg_Curls) (machine version of the same move); `one_leg_db_calf_raise` from [Standing_Dumbbell_Calf_Raise](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Standing_Dumbbell_Calf_Raise) (two legs in the photo); `cable_leg_curl` from [Standing_Leg_Curl](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Standing_Leg_Curl) (machine, one leg). Their muscles equal the entries' muscles. Videos (YouTube oEmbed 200 on 2026-11-18, title and channel as recorded): db_lying_leg_curl "Dumbbell Lying Leg Curl | How To | Proper Form & Technique" (FITTR, aPUtiouhcQQ); one_leg_db_calf_raise "Standing single leg dumbbell calf raises" (FITTR, PTn6icEeH3Y); cable_leg_curl "Standing Cable Leg Curls" (WABBA, QerRbPE55D8). Checked for a working link and a matching title only; nobody has watched them for the teaching. `calf_raise_leg_press` (now planned on Monday and Wednesday) already had both photos and its video.
+
 | Plan id | Library entry | Match |
 |---|---|---|
 | chest_press | [Leverage_Chest_Press](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Leverage_Chest_Press) | close |
