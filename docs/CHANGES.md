@@ -18,8 +18,20 @@ The lowest weight (trainer decision D19), safer old versions, and small fixes, b
   it is). This works from 0.7.6 on: phones still on 0.7.5 or older must update first, as before.
 - **"Try 20 kg" everywhere.** The Today list and the exercise sheet now use the same words as the Plan card for a
   first-try weight.
-- **The Undo after "Stop this exercise here" shows at the top** of the workout screen, away from "Undo last set".
+- **The Undo after "Stop this exercise here" shows near the top** of the workout screen, under the top bar: away from
+  "Undo last set", and it never covers "End".
+- **Week 1 at the lightest weight:** when set 1 is too heavy but the weight is already the lightest, the app says
+  "Lightest weight already. Stop with 3 reps left today." instead of "Remove 2 steps".
 - **Food that did not sync shows on Today.** If the food file could not sync, Today says "Food did not sync. See Diet."
+  It stays quiet when the food will sync by itself (no signal, or GitHub asked to wait).
+- **Pieces for foods that only say grams.** A food whose pack serving says only "30 g" no longer counts the whole
+  30 g as 1 piece. Pieces now asks "How much does 1 piece weigh? (g)" once. Foods like "4 bites" or "2 eggs" work as
+  before.
+- **Online food search works again.** Searching a food name (Diet, Search) now uses Open Food Facts' newer search, UK
+  products only, and still sends only the words you type. If it is down, the app tries the old search once, then says
+  "Online search is not working right now. Try again later, or make a new food."
+- **Today's practice week label fits one line:** "Practice week".
+- **Protein numbers:** totals in whole grams everywhere; a single food under 10 g keeps one decimal ("4.3 g").
 
 ## 0.7.5 · 2026-11-18
 
