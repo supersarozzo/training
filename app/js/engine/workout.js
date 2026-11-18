@@ -91,7 +91,7 @@ export function nextPosition(session, seq) {
     const e = seq[i];
     const rec = slotRecord(session, e.slot);
     // "Stop this exercise here" (0.6.0): the sets after `stopped_after` are not asked any more.
-    if (rec && Number.isInteger(rec.stopped_after) && e.setNumber > rec.stopped_after) continue;
+    if (rec && Number.isInteger(rec.stopped_after) && rec.stopped_after >= 0 && e.setNumber > rec.stopped_after) continue;
     if (workSets(rec).length < e.setNumber) return { index: i, entry: e };
   }
   return null;
@@ -126,6 +126,8 @@ export function performances(sessions, exerciseId) {
         sets: work.map((w) => ({ reps: w.reps ?? 0, seconds: w.seconds ?? null, rir: w.rir ?? null })),
         date: s.date, week: s.week,
         pain: rec.swap_reason === "hurts" ? true : undefined,
+        // "Stop this exercise here" (0.6.0): fewer sets than planned; the next suggestion holds the weight (audit M1).
+        stopped: Number.isInteger(rec.stopped_after) && rec.stopped_after >= 0 ? true : undefined,
       });
     }
   }

@@ -13,7 +13,7 @@ import { icon } from "./icons.js";
 import { miniMap } from "./bodymap.js";
 import { viewDay, swapSheet, addSheet, exName, dayChanges, changedOn, rangeFor, rangeText, weightLine } from "../planview.js";
 import { withSets, setsForSlot, MIN_SETS, MAX_SETS } from "../engine/planedits.js";
-import { weightStepFor } from "../engine/workout.js";
+import { weightStepFor, validRange } from "../engine/workout.js";
 
 const dayName = (day) => days[day].name;
 const clone = (x) => JSON.parse(JSON.stringify(x));
@@ -252,24 +252,33 @@ export function openDoseSheet(day, week, slotName) {
   showRange();
 
   const saveIt = () => {
-    if (draft.lo > draft.hi) { toast("The low number must not be above the high number."); return; }
-    let beforeSlots;
+    // Audit m1-m3 (2026-11-18): check every value before anything is written, write only what changed, and keep the
+    // old values as they are at Save (a sync may have landed while the sheet was open), so Undo restores exactly that.
+    const range = validRange([draft.lo, draft.hi]);
+    if (!range) { toast(draft.lo > draft.hi ? "The low number must not be above the high number." : `${hold ? "Seconds" : "Reps"} must be whole numbers from 1 to 100.`); return; }
+    const weightOk = !weighted || !draft.kgTouched || (Number.isFinite(draft.kg) && draft.kg >= 0 && draft.kg <= 1000);
+    if (!weightOk) { toast("The weight must be 0 to 1000 kg."); return; }
+    const stNow = clone(model.doc().exercise_state.find((x) => x.id === `x-${slot.ex}` && !x.deleted) ?? null);
+    let beforeSlots, didSets = false, didPrefs = false;
     try {
       const now = dayState(model.doc(), day, week);
       if (!now.canEdit) throw new Error(lockedText(now));
       beforeSlots = savedSlots(day);
-      if (draft.sets !== slot.sets) model.savePlanDay(day, withSets(beforeSlots, slotName, draft.sets));
-      const ownRange = draft.lo === planRange[0] && draft.hi === planRange[1] ? null : [draft.lo, draft.hi];
+      const curSets = beforeSlots.find((x) => x.slot === slotName)?.sets;
+      const nextSlots = draft.sets !== curSets ? withSets(beforeSlots, slotName, draft.sets) : null; // throws on a bad number, before any write
+      const ownRange = range[0] === planRange[0] && range[1] === planRange[1] ? null : range;
       const prefs = {};
-      if (JSON.stringify(ownRange) !== JSON.stringify(stOld?.my_range ?? null)) prefs.range = ownRange;
-      if (weighted && draft.kgTouched) prefs.weightKg = draft.kg;
-      if (Object.keys(prefs).length) model.setExercisePrefs(slot.ex, prefs);
+      if (JSON.stringify(ownRange) !== JSON.stringify(stNow?.my_range ?? null)) prefs.range = ownRange;
+      if (weighted && draft.kgTouched && draft.kg !== (stNow?.my_weight_kg ?? w.kg ?? 0)) prefs.weightKg = draft.kg;
+      if (nextSlots) { model.savePlanDay(day, nextSlots); didSets = true; }
+      if (Object.keys(prefs).length) { model.setExercisePrefs(slot.ex, prefs); didPrefs = true; }
     } catch (e) { toast(e.message); return; }
     closeSheets();
+    if (!didSets && !didPrefs) return; // nothing changed: no write, no Undo
     rerender();
     undoToast(`${ex.name} changed.`, () => {
-      model.savePlanDay(day, beforeSlots);
-      model.setExerciseState(slot.ex, { my_range: stOld?.my_range ?? null, my_weight_kg: stOld?.my_weight_kg ?? null, my_weight_at: stOld?.my_weight_at ?? null });
+      if (didSets) model.savePlanDay(day, beforeSlots);
+      if (didPrefs) model.setExerciseState(slot.ex, { my_range: stNow?.my_range ?? null, my_weight_kg: stNow?.my_weight_kg ?? null, my_weight_at: stNow?.my_weight_at ?? null });
     });
   };
 

@@ -135,6 +135,12 @@ export function nextSuggestion(last, previous, opts) {
     return { ...base, action: "hold", note: "No increase this week. Same weight." };
   }
 
+  // Stopped early last time ("Stop this exercise here", 0.6.0): fewer sets than planned never count as a full
+  // workout at the top, so the weight stays (audit M1; a safe default, the trainer may refine it).
+  if (last.stopped) {
+    return { ...base, action: "hold", note: "You stopped this exercise early last time. Same weight." };
+  }
+
   const allTop = done.every((r) => r >= top);
   const minLeft = Math.min(...last.sets.map((s) => s.rir ?? 0));
   const allFour = last.sets.every((s) => (s.rir ?? 0) >= 4);

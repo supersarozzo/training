@@ -262,6 +262,8 @@ ${note}` : note);
       if (!Object.prototype.hasOwnProperty.call(exercises, exerciseId)) throw new Error("Unknown exercise.");
       if (range !== undefined && range !== null && !validRange(range)) throw new Error("Reps must be two whole numbers from 1 to 100, low first.");
       if (weightKg !== undefined && weightKg !== null && !(typeof weightKg === "number" && weightKg >= 0 && weightKg <= 1000)) throw new Error("The weight must be 0 to 1000 kg.");
+      // 0 kg on a weighted exercise means "let the app choose" (audit m7: one tap on the stepper must not save 0 kg).
+      if (weightKg === 0) weightKg = null;
       const patch = {};
       if (range !== undefined) patch.my_range = range ? [range[0], range[1]] : null;
       if (weightKg !== undefined) { patch.my_weight_kg = weightKg; patch.my_weight_at = weightKg === null ? null : localDate(clock()); }

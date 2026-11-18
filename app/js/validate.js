@@ -205,6 +205,8 @@ function checkSession(s, where) {
     text(e.plan_exercise, `${w} plan exercise`, { max: 60 });
     text(e.done_exercise, `${w} done exercise`, { max: 60 });
     text(e.note ?? "", `${w} note`);
+    // 0.6.0 "Stop this exercise here": the number of work sets done when stopped (audit m6).
+    if (e.stopped_after !== undefined && e.stopped_after !== null && !(Number.isInteger(e.stopped_after) && e.stopped_after >= 0 && e.stopped_after <= 30)) fail(`${w} stopped after must be a whole number from 0 to 30`);
     if (!Array.isArray(e.sets) || e.sets.length > 30) fail(`${w} sets must be a list`);
     e.sets.forEach((st, k) => checkSet(st, `${w} set ${k + 1}`));
   });
