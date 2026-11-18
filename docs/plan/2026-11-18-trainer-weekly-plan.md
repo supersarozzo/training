@@ -422,6 +422,83 @@ Sources (read 2026-11-18): McGill 2010, Strength Cond J 32(3):33-46, core traini
 
 **Tests:** none. No plan data or app change. Test `trainer 3` already locks the days.
 
+### D18. Machines instead of awkward moves — **4 swaps in the plan, 5 machine offers after the first visit**
+
+Asked by the Training Agent on 2026-11-18, for you: "Can we use exercises with the gym's machines, without weird movements like the hip thrust, the dead bug or the cable crunch? I'm pretty sure the gym has machines for those muscles too."
+
+**The main fact:** for building muscle, machines work as well as free weights (Haugen 2023: 13 studies, 1,016 people, no difference in muscle growth). So a simpler machine costs nothing. It is easier to learn, easier to set up and safer when you are tired. The rule I used: if a machine **the gym's website confirms** does the same job, the plan uses it. If the machine is not confirmed, the plan keeps a move with confirmed equipment, and the app offers the machine once the first visit finds it.
+
+#### What changes in the plan (all with confirmed equipment)
+
+| # | Day and slot | Old | New | Why it is simpler |
+|---|---|---|---|---|
+| C1 | Tue C1, Fri B1 | Hip thrust (bar or pad on the hips, back on a bench) | **Hip thrust machine (Booty Builder)**, confirmed machine | Pin-loaded: sit in, belt over the hips, push. No bar, no plates, no bench to set up. |
+| C2 | Tue A2 | Cable crunch (kneeling at a cable) | **Crunch, holding a dumbbell on the chest** (mat or flat bench), confirmed equipment | The crunch everyone knows; the dumbbell adds weight step by step. |
+| C3 | Tue C2 | Dead bug (lying, moving opposite arm and leg) | **Plank**, 3 sets, confirmed (floor) | The same job (keep the trunk still) with no arm-leg coordination. You already know it from Monday. |
+| C4 | Fri D | Standing calf raise in the Smith machine (balance on a plate) | **Calf raise on the leg press**, confirmed machine | Seated and stable, no balance needed; the same move as on Monday and Wednesday. |
+
+**What stays, and why:** chest press, shoulder press, leg press and leg extension are already machines. The Smith squat, goblet squat, dumbbell presses, rows, curls, lateral raise, Romanian deadlift (a natural "pick it up" move), the face pull and the planks are standard beginner moves. The **reverse crunch** stays: an EMG study ranked it among the best abs moves (Escamilla 2006). The **cable pull-through** stays: the cable pulls your hips back, so it teaches the same hip hinge as the Romanian deadlift. If it feels awkward, swap in the Romanian deadlift.
+
+#### Machines the gym's website does NOT confirm: the app offers them after the first visit
+
+The first-visit check already asks about these machines (lat pulldown, seated row, leg curl, pec deck, calf raise). One new check: **ab crunch machine**. When a check answer is "yes", the app offers the machine once, as a one-tap Plan edit: "The gym has a <machine>. Use it instead of <exercise>?" The buttons are **Use it** and **Keep**. Nothing changes without that tap.
+
+| Slot | Exercise now (confirmed fallback) | Machine, only if the gym has it |
+|---|---|---|
+| Thu D | Dumbbell lying leg curl | Leg curl machine (seated if there is a choice: more hamstring growth, Maeo 2021) |
+| Mon A2, Wed B1 | Pulldown at a cable (kneel or sit) | Lat pulldown machine |
+| Thu A2 | Seated cable row | Seated row machine |
+| Tue A2 | Crunch with a dumbbell (C2) | Ab crunch machine (new check) |
+| Tue B2, Thu B2 | Face pull | Reverse pec deck (rear-delt fly on the pec deck) |
+
+**Weekly sets per muscle, days and minutes: unchanged.** Each new exercise has the same muscle data as the one it replaces, and the sets and rest stay the same. The plank takes a little less time than the dead bug. D17 still holds: the hard abs days are Tuesday (crunch) and Friday (reverse crunch), and the other days have holds.
+
+#### Exact data for the build worker (after 0.7.4)
+
+New exercises (the `muscles.js` lines use the same format as today):
+
+| id | name | equipment | kind, range | step | muscles (main; helpers; equip) | first try (D12) | swaps |
+|---|---|---|---|---|---|---|---|
+| `booty_builder_hip_thrust` | Hip thrust machine | Booty Builder (glutes area) | reps 8-12 | stack | glutes; hamstrings; machine | 20 | `hip_thrust`, `db_glute_bridge` |
+| `weighted_crunch` | Crunch with a dumbbell | Mat or flat bench, 1 dumbbell on the chest | reps 10-15 | dumbbell | abs; none; dumbbell | 2 | `ab_crunch_machine` (needsMachine `ab_crunch`), `cable_crunch`, `reverse_crunch` |
+| `ab_crunch_machine` (swap only) | Ab crunch machine | Ab crunch machine (first visit check) | reps 10-15 | stack | abs; none; machine | 15 | none |
+| `reverse_pec_deck` (swap only) | Reverse pec deck | Pec deck, facing the pad (first visit check) | reps 12-15 | stack | rear_delts; mid_back; machine | 10 | none |
+
+Cues (`cues.js`):
+- `booty_builder_hip_thrust`: "Upper back on the pad, belt over your hips, feet flat on the plate. Push through your heels until your hips are straight, squeeze your glutes, ribs down. Lower slowly."
+- `weighted_crunch`: "Lie on your back, knees bent, a dumbbell held on your chest. Breathe out and curl your shoulders off the mat, pause, lower slowly. Lower back stays down."
+- `ab_crunch_machine`: "Feet hooked, hold the handles. Breathe out and curl your chest toward your hips, return slowly. Do not pull with your arms."
+- `reverse_pec_deck`: "Face the pad, handles at shoulder height, arms almost straight. Open your arms out and back, squeeze your shoulder blades, return slowly."
+
+Day changes (sets and rest unchanged): `tue` A2 `cable_crunch` → `weighted_crunch`; `tue` C1 `hip_thrust` → `booty_builder_hip_thrust`; `tue` C2 `dead_bug` → `plank` (3 sets, rest 75); `fri` B1 `hip_thrust` → `booty_builder_hip_thrust`; `fri` D `calf_raise_standing` → `calf_raise_leg_press` (3 sets, rest 60).
+
+Swap additions on old exercises: `hip_thrust` gets `booty_builder_hip_thrust` first; `cable_crunch` gets `weighted_crunch` first; `face_pull` gets `reverse_pec_deck` (needsMachine `pec_deck`). New machine check: `ab_crunch`, appended to `extraMachines`, the `extra_machines` defaults and the settings names. New gym-spot ids, appended to `MACHINE_IDS` (never renamed): `booty_builder`, `ab_crunch`. Photos and videos for the new exercises: the builder's choice (free-exercise-db as today).
+
+**Saved data (the builder's checklist):**
+- Every old id stays in `exercises` with its muscles, first try and cue: `hip_thrust`, `cable_crunch`, `dead_bug`, `calf_raise_standing`. They leave the days but stay as swaps. Old logs, `exercise_state` and history stay readable.
+- A saved Plan edit that names an old exercise keeps it: your own choice wins over the plan.
+- **The first weight of a new exercise:** if it has no log of its own, and the old exercise in that slot has a log, start from the old weight × (new first try ÷ old first try), rounded down (the D15 conversion, **without** the 30 % cut, because nothing hurts). Otherwise use the D12 first try. `dead_bug` → `plank` and `calf_raise_standing` → `calf_raise_leg_press` keep their own history if there is any.
+- The muscle check must give the same weekly sets per muscle, before and after, in every week.
+
+**Tests for the build worker to write first (they fail until the build):**
+1. The five day changes above; sets and rest unchanged on every slot.
+2. For every muscle and every week 1-12, the fractional sets per muscle are equal before and after.
+3. Every new exercise has muscles, a cue, swaps that exist, and a first try (the D12 test "every weighted id has a table value" passes).
+4. The old ids still exist and still open: a saved Tuesday with `hip_thrust`, `cable_crunch` and `dead_bug` logs shows its history; a Plan edit naming `hip_thrust` still uses it.
+5. `ab_crunch_machine` and `reverse_pec_deck` are hidden unless the first-visit check says yes. With "yes", the one-tap offer appears once and makes a Plan edit only after **Use it**.
+6. First weight: with a made-up `hip_thrust` log of 30 and no own log, `booty_builder_hip_thrust` starts at 30 × 20/20 = 30, rounded down to the stack; with no logs at all, it starts at its first try.
+7. My test `trainer 3` (`tests/trainer-plan.test.mjs`) locks the old days. The builder may change its KEPT_DAYS to the new days in the tests-first commit, and add the four new ids to `trainer 1`. I agree to that change now.
+
+**Why (sources, read 2026-11-18):**
+- *Machines build muscle as well as free weights:* Haugen et al. 2023, BMC Sports Sci Med Rehabil, 13 studies ([DOAJ record](https://doaj.org/article/a7282dba5e674176bde2a8239832d2f7)); ACSM 2026: pick exercises you can do well, any equipment works (D1); Schoenfeld and the other D2 sources: growth follows weekly sets, which stay the same.
+- *C1 hip thrust machine:* Booty Builder V8, a pin-loaded hip thrust machine ([maker's page](https://bootybuilder.com/?p=3579)); hip thrusts grow the glutes as much as squats (Plotkin et al. 2023, Front Physiol, [PubMed 37877099](https://pubmed.ncbi.nlm.nih.gov/37877099/)); high glute work in the hip thrust (Contreras 2015 EMG, [Europe PMC 26214739](https://europepmc.org/article/MED/26214739)); Haugen 2023 (machine = free weight).
+- *C2 crunch:* the crunch is the standard reference move for the abs in EMG studies (Escamilla et al. 2006, Phys Ther, [PubMed 16649890](https://pubmed.ncbi.nlm.nih.gov/16649890/); Escamilla et al. 2006, JOSPT, commercial ab machines vs the crunch, [PubMed 16494072](https://pubmed.ncbi.nlm.nih.gov/16494072/)); Haugen 2023 and ACSM 2026 (any equipment that loads the muscle works).
+- *C3 plank:* the plank and the dead bug both train the trunk to stay still. The dead bug only adds the opposite arm-and-leg coordination, and full arm-and-leg moves gave the most abs activity ([Korean dead bug EMG study, 2017](https://koreascience.or.kr/article/JAKO201718155358635.pdf)). It reaches only moderate activity (the [JoVE core endurance protocol](https://www.jove.com/v/64335/muscle-function-obtained-with-motion-mode-ultrasound-surface)). Stability holds are core experts' standard (McGill 2010, D17). I found no head-to-head study of plank vs dead bug.
+- *C4 calf raise on the leg press:* calves grow most with the knee straight (Kinoshita et al. 2023, Front Physiol, standing vs seated, [Frontiers](https://www.frontiersin.org/articles/10.3389/fphys.2023.1272106/full)). The leg press calf raise keeps the knee straight, like the standing one. Machine = free weight (Haugen 2023). Calves still train 3 days a week (D7).
+- *Machine offers:* Haugen 2023; seated leg curl grew the hamstrings more than lying (Maeo et al. 2021, Med Sci Sports Exerc, [PubMed 33009197](https://pubmed.ncbi.nlm.nih.gov/33009197/)); the first-visit check (plan v2, question 17).
+
+**Not verified:** the gym's real machines (the website lists the Booty Builder V8 and the Glute Drive, but not how they are set up); the exact Booty Builder V8 stack numbers (so the first try of 20 is a guess, aimed low); whether the gym's benches go flat for the crunch.
+
 ## 5. Changes to your earlier choices
 
 **None.** I kept 74 b and 80-83 exactly:
