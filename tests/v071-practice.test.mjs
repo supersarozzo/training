@@ -84,8 +84,10 @@ test("D11-2 a practice workout is saved with week 0 and uses the week-1 rules", 
   const s = model.startSession({ planDay: "wed", week: 0, kind: "full" });
   assert.equal(s.week, 0);
   assert.ok(s.exercises.every((r) => r.planned_sets <= 2), "2 sets each");
-  assert.doesNotThrow(() => validateDocument(store.load()), "week 0 passes the file check");
-  assert.throws(() => validateDocument({ ...store.load(), sessions: [{ ...store.load().sessions[0], week: -1 }] }), /week/);
+  assert.equal(validateDocument(store.load()).ok, true, "week 0 passes the file check");
+  const bad = validateDocument({ ...store.load(), sessions: [{ ...store.load().sessions[0], week: -1 }] });
+  assert.equal(bad.ok, false);
+  assert.match(bad.error, /week/);
   // flow.js starts a workout on a practice day, saved as week 0
   const f = src("ui/flow.js");
   assert.match(f, /if \(!canTrain\(pos\)\) return \{ ok: false/);
