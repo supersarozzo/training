@@ -1,6 +1,6 @@
 // Schedule: which week and day it is, how a session is laid out, the short day, missed-time rules,
 // swapping a day. Pure. Source: plan v2 sections 2, 4, 10, 11.
-import { days, weeks, weekInfo, setsFor, rirFor, sessionMinutes, warmupMoves, upperDayWarmupExtra, DAY_IDS } from "../plan/plan-v2.js";
+import { days, weeks, weekInfo, setsFor, rirFor, sessionMinutes, warmupMoves, upperDayWarmupExtra, DAY_IDS, knownExercise } from "../plan/plan-v2.js";
 import { effectiveDay, setsForSlot } from "./planedits.js";
 
 const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
@@ -133,14 +133,18 @@ const BEFORE_2026_11_18 = Object.freeze({
 // made later never changes it. A workout saved before planned_sets existed reads the sets and rest of its place in
 // the plan, except Monday, Wednesday and Thursday's abs places, which keep their numbers from before the plan change of
 // 2026-11-18 (BEFORE_2026_11_18); a place nobody knows gets the larger of 2 and the sets already saved.
-// Never throws on a place or exercise the plan does not know. Same shape as planForDay.
+// Never throws on a place or exercise the plan does not know; an exercise this app does not know is skipped (0.7.6).
+// Same shape as planForDay.
 export function planForSession(session) {
   const dayId = session.plan_day;
   const day = days[dayId];
   const week = session.week;
   const planSlots = new Map((day?.slots ?? []).map((s) => [s.slot, s]));
   const seen = new Set();
-  const records = (Array.isArray(session.exercises) ? session.exercises : []).filter((e) => e && typeof e.slot === "string" && (seen.has(e.slot) ? false : (seen.add(e.slot), true)));
+  // 0.7.6: a place whose current exercise this app does not know (a workout from a newer app) is left out; the record
+  // stays in the workout, unchanged.
+  const records = (Array.isArray(session.exercises) ? session.exercises : []).filter((e) => e && typeof e.slot === "string" && (seen.has(e.slot) ? false : (seen.add(e.slot), true)))
+    .filter(knownRecord);
   const okSets = (n) => Number.isInteger(n) && n >= 1 && n <= 10;
   const okRest = (r) => r === null || (typeof r === "number" && Number.isFinite(r) && r >= 0 && r <= 600);
   const slots = records.map((rec) => {
@@ -154,6 +158,12 @@ export function planForSession(session) {
     return { slot: rec.slot, ex: rec.plan_exercise, sets, rest };
   });
   return { dayId, kind: session.kind, week, focus: day?.focus ?? "", walk: day?.walk ?? "normal", rir: rirFor(week, dayId), slots };
+}
+
+// Does a workout record name only exercises this app knows? (0.7.6.) A record from a newer app with a new exercise id
+// (as planned or as done) is skipped by the screens and kept in the file. A field that is missing is not a name.
+export function knownRecord(e) {
+  return !!e && [e.plan_exercise, e.done_exercise].every((id) => id === undefined || knownExercise(id));
 }
 
 // The 4-minute lift warm-up: all six moves (the short day uses the short list); upper days add push-ups.

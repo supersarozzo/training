@@ -1,7 +1,7 @@
 // Weigh-in trend, the target band, the food-change suggestion and the weekly summary. Pure.
 // Source: plan v2 section 12, WORKFLOW F1 to F3, PRD F14 to F16.
 import { performances, isNewBest } from "./workout.js";
-import { exercises } from "../plan/plan-v2.js";
+import { exercises, knownExercise } from "../plan/plan-v2.js";
 import { daysBetween, weekNumber } from "./schedule.js";
 
 const MS_DAY = 86400000;
@@ -105,7 +105,7 @@ export function weeklySummary(doc, { startMonday, today }) {
     for (const rec of s.exercises) {
       const work = rec.sets.filter((x) => x.type === "work");
       sets += work.length;
-      if (!work.length || seen.has(rec.done_exercise)) continue;
+      if (!work.length || seen.has(rec.done_exercise) || !knownExercise(rec.done_exercise)) continue; // 0.7.6: skip ids from a newer app
       seen.add(rec.done_exercise);
       const now = performances(inWeek, rec.done_exercise).sort((a, b) => b.weight_kg - a.weight_kg)[0];
       const earlier = performances(before, rec.done_exercise);

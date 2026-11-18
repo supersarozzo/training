@@ -8,7 +8,7 @@ import { exercises, MOVE_SECONDS, weekInfo, walkRules, BIG_LIFTS, firstTryKg } f
 import { nSets, repWord } from "../words.js";
 import { exerciseMuscles } from "../plan/muscles.js";
 import { localDate } from "../ids.js";
-import { planForDay, missedRule } from "./schedule.js";
+import { planForDay, missedRule, knownRecord } from "./schedule.js";
 import { nextSuggestion, warmupSets, stepSize, weightAfterBreak, stepDown, lowerBy, firstTryWeight, gymFloor, lowerHitFloor, FLOOR_NOTE } from "./progression.js";
 import { startWalk, nextWalkBase, walkForDay, walkAfterBreak } from "./walk.js";
 
@@ -80,9 +80,12 @@ export function slotRecord(session, slot) {
 // The current record of each slot, in order (the one slotRecord finds). A swap in the middle of an exercise keeps the
 // old record, with its saved sets, behind the new one (model.swapExercise); screens that step through the exercises
 // (week 1) use this list so they never go back to an exercise that was swapped away. Review 8.25 R1.
+// 0.7.6: a place whose current exercise this app does not know (a workout from a newer app) is left out, as in
+// planForSession; the record stays in the workout.
 export function currentRecords(session) {
   const seen = new Set();
-  return session.exercises.filter((e) => (seen.has(e.slot) ? false : (seen.add(e.slot), true)));
+  return session.exercises.filter((e) => (seen.has(e.slot) ? false : (seen.add(e.slot), true)))
+    .filter(knownRecord);
 }
 export const workSets = (rec) => (rec ? rec.sets.filter((s) => s.type === "work") : []);
 export const warmupDone = (rec) => (rec ? rec.sets.filter((s) => s.type === "warmup").length : 0);

@@ -4,7 +4,7 @@ import { MAX_TEXT } from "../validate.js";
 import { h } from "../h.js";
 import { workoutScreen, topBar, actionBar, mainButton, choiceRow } from "./parts.js";
 import { model, go, rerender } from "./app.js";
-import { exercises } from "../plan/plan-v2.js";
+import { exercises, knownExercise } from "../plan/plan-v2.js";
 import { nReps } from "../words.js";
 import { leaveWorkout } from "./flow.js";
 import { performances, suggestFor, workSets, isNewBest } from "../engine/workout.js";
@@ -40,7 +40,7 @@ export function summarize(doc, session) {
   for (const rec of session.exercises) {
     const work = workSets(rec);
     sets += work.length;
-    if (!work.length) continue;
+    if (!work.length || !knownExercise(rec.done_exercise)) continue; // 0.7.6: an exercise from a newer app is not summed up here
     const ex = exercises[rec.done_exercise];
     const now = performances([{ ...session, status: "finished", finished_at: "9999" }], rec.done_exercise)[0];
     const earlier = performances(others, rec.done_exercise);

@@ -62,6 +62,13 @@ export const exercises = {
   reverse_pec_deck: { name: "Reverse pec deck", equipment: "Pec deck, facing the pad (first visit check)", kind: "reps", range: [12, 15], step: "stack", muscle: "back", swaps: [] },
 };
 
+// Is this an exercise id this app knows? (0.7.6, worker 8.43.) A workout synced from a newer app can hold an id this
+// version has never heard of; screens skip such an exercise and the file keeps it exactly as it is. Own keys only:
+// "toString" or "constructor" are not exercises.
+export function knownExercise(id) {
+  return typeof id === "string" && Object.prototype.hasOwnProperty.call(exercises, id);
+}
+
 // The extra machines the first visit checks (question 17).
 // "ab_crunch" added by trainer D18 (0.7.5), at the end (the order is the order of the Settings fields).
 export const extraMachines = ["lat_pulldown", "seated_row", "leg_curl", "pec_deck", "calf_raise", "ab_crunch"];
