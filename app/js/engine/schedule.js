@@ -36,6 +36,7 @@ export function blockPosition(startMonday, dateStr) {
 // week-1 rules (weekInfo clamps any week below 1 to week 1); it is saved with week 0, which is never shown as a number;
 // the start date never moves.
 export const PRACTICE_LABEL = "Practice week · Learn, find weights";
+export const PRACTICE_SHORT = "Practice week"; // Today's eyebrow: one line at 375 px (master pick under Rosario's 94 a)
 export const canTrain = (pos) => pos.state === "running" || pos.state === "before";
 export const sessionWeek = (pos) => (pos.state === "before" ? 0 : pos.week);
 const longDate = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long" });

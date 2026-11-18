@@ -120,8 +120,9 @@ export function renderPair(ctx, pos) {
   const bodyweight = ex.step === "bodyweight";
   const done = workSets(rec);
   const startKg = rec.swap_reason === "hurts" && rec.swap_weight_kg != null ? rec.swap_weight_kg : sg.weight_kg;
-  // Trainer D19, answer 1 to 8.43: a pain swap that starts at the floor (the lightest step) stops with 3 reps left.
-  const painFloor = rec.swap_reason === "hurts" && typeof rec.swap_weight_kg === "number" && rec.swap_weight_kg > 0 && rec.swap_weight_kg <= minWeight(exId, ctx.settings);
+  // Trainer D19, answer 1 to 8.43: a pain swap that starts at the floor (the lightest step) stops with 3 reps left. The
+  // start is the saved swap weight, or the new exercise's own suggestion (review round 1: D15 saves none then).
+  const painFloor = rec.swap_reason === "hurts" && typeof startKg === "number" && startKg > 0 && startKg <= minWeight(exId, ctx.settings);
   const atFloor = sg.atFloor === true || painFloor;
 
   // Warm-up sets: first exercise of a pair, from the suggested working weight. How many (0, 1 or 2) follows the
@@ -245,7 +246,7 @@ export function renderPair(ctx, pos) {
       h("div", { class: "target" }, targetText(exId, entry.sets, atFloor ? floorRir(ctx.plan.rir) : ctx.plan.rir, rangeFor(ctx.doc, exId))), // trainer D19: at the floor, 3 or more left
       h("div", { class: "info-lines" },
         sg.lastText && !prevBtn ? h("div", {}, sg.lastText) : null,
-        sg.note && !(sg.action === "unknown") ? h("div", {}, sg.note) : null,
+        sg.note && !(sg.action === "unknown") && !(painFloor && sg.atFloor) ? h("div", {}, sg.note) : null, // one floor note
         ctx.state(exId)?.machine_note ? h("div", {}, `Machine: ${ctx.state(exId).machine_note}`) : null,
         whereLine(ctx, exId),
         soreNote(ctx.session.plan_day, ctx.session.week, entry.slot) ? h("div", { class: "sore-note" }, soreNote(ctx.session.plan_day, ctx.session.week, entry.slot)) : null, // trainer D13

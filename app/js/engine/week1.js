@@ -1,6 +1,6 @@
 // Week 1: learn the moves and find your weights (plan v2 section 8, WORKFLOW C). Pure.
 import { exercises } from "../plan/plan-v2.js";
-import { stepUp, stepDown } from "./progression.js";
+import { stepUp, stepDown, lowerHitFloor, FLOOR_NOTE } from "./progression.js";
 
 export const LEFT_CHOICES = ["0-1", "2-3", "4-6", "7+"]; // "how many more could you do?"
 
@@ -35,7 +35,10 @@ export function week1NextSet(set1, exerciseId, settings) {
   let weight = set1.weight_kg;
   if (steps > 0) weight = stepUp(weight, exerciseId, settings, steps);
   if (steps < 0) weight = stepDown(weight, exerciseId, settings, -steps);
-  return { stepsChange: steps, weight_kg: weight, keep: steps === 0, note };
+  // Trainer D19 (rule 2, answer 3): a step down that did not go down is the lightest weight already; week 1 already
+  // stops with 3 reps left.
+  const atFloor = steps < 0 && lowerHitFloor(set1.weight_kg, weight, exerciseId);
+  return { stepsChange: steps, weight_kg: weight, keep: steps === 0, note: atFloor ? FLOOR_NOTE : note, atFloor };
 }
 
 // The starting weight saved for week 2. The weight that fits after set 2 is the start.

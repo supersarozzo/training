@@ -8,7 +8,7 @@ import { tabActionBar, mainButton, secondaryButton } from "./parts.js";
 import { model, go, rerender } from "./app.js";
 import { today } from "../clock.js";
 import { getActive, setActive } from "../active.js";
-import { dayLabel, canStartWorkout, missedRule, PRACTICE_LABEL, practiceLine, sessionWeek } from "../engine/schedule.js";
+import { dayLabel, canStartWorkout, missedRule, PRACTICE_SHORT, practiceLine, sessionWeek } from "../engine/schedule.js";
 import { finishedSessions, suggestFor, buildUnits } from "../engine/workout.js";
 import { days, exercises } from "../plan/plan-v2.js";
 import { dayLayout, sessionWalk } from "../dayplan.js";
@@ -169,7 +169,7 @@ export function renderToday() {
   const children = [
     h("div", { class: "today-head" },
       h("div", {},
-        h("span", { class: "eyebrow accent" }, running ? `Week ${label.week} of ${weeks.length} · ${weekInfo(label.week).phase}` : practice ? PRACTICE_LABEL : "Today"),
+        h("span", { class: "eyebrow accent" }, running ? `Week ${label.week} of ${weeks.length} · ${weekInfo(label.week).phase}` : practice ? PRACTICE_SHORT : "Today"),
         h("h1", { class: shown && !open ? "focus" : "" }, heading))),
     running ? blockBar(label.week) : null,
     practice ? h("p", { class: "small muted" }, practiceLine(doc.block.start_monday)) : null,

@@ -53,12 +53,14 @@ export function createFoodSyncer({ store, foodStore, getFetch, nowIso = () => ne
 }
 
 // Today's food hint (0.7.6): the workout sync line can say "Synced" while food is stuck. Only when GitHub is set up and
-// the last food sync had a problem; the Diet tab and Settings say which problem.
+// the last food sync had a problem; the Diet tab and Settings say which problem. Not for "offline", "rate" and "error":
+// their own words say the food will sync by itself (review round 1, auditor).
 export const FOOD_HINT = Object.freeze({ text: "Food did not sync.", link: "See Diet." });
+const SYNCS_BY_ITSELF = new Set(["ok", "offline", "rate", "error"]);
 export function foodHint(device) {
   if (!connectionOf(device)) return null;
   const r = device[RESULT];
-  return r && r !== "ok" ? `${FOOD_HINT.text} ${FOOD_HINT.link}` : null;
+  return r && !SYNCS_BY_ITSELF.has(r) ? `${FOOD_HINT.text} ${FOOD_HINT.link}` : null;
 }
 
 // A short line for the Diet tab. `unsynced` = food changed after the last good food sync.

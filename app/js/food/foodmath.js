@@ -41,6 +41,14 @@ export function totals(entries) {
   return { kcal: Math.round(entries.reduce((n, r) => n + (fin(r.kcal) ? r.kcal : 0), 0)), protein_g: sum("protein_g"), carbs_g: sum("carbs_g"), fat_g: sum("fat_g"), count: entries.length };
 }
 
+// Protein words (master pick 2 a under Rosario's 94 a): whole grams, except one food row under 10 g, which keeps 1
+// decimal ("4.3"). Totals (rings, meals, averages) always round to whole grams.
+export function proteinText(g) {
+  const v = fin(g) ? g : 0;
+  const one = r1(v);
+  return one < 10 ? String(one) : String(Math.round(v));
+}
+
 // The 4 meals in order, always all 4. An entry with no meal shows under Snacks.
 export function byMeal(entries) {
   return MEALS.map((meal) => {

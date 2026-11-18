@@ -9,7 +9,7 @@ import { today, now } from "../clock.js";
 import { food as fm, foodStore } from "./foodapp.js";
 import { makeFoodBackup } from "../food/foodbackup.js";
 import { downloadText } from "../backup.js";
-import { entriesOn, totals, byMeal, MEAL_WORDS, mealAt, recentFoods, averageLast7, againAmount, numbersFor, dayBefore } from "../food/foodmath.js";
+import { entriesOn, totals, byMeal, MEAL_WORDS, mealAt, recentFoods, averageLast7, againAmount, numbersFor, dayBefore, proteinText } from "../food/foodmath.js";
 import { foodStatusText } from "../sync/foodsync.js";
 import { syncer } from "../syncer.js";
 import { openSearch, openDigits, openQuickAdd, openEntry, creditLine, undoToast, messageToast, setListRedraw } from "./sheets.js";
@@ -67,7 +67,7 @@ export function entryParts(e) {
   const d = new Date(e.updated_at);
   const time = typeof e.updated_at === "string" && !Number.isNaN(d.getTime()) ? `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}` : "";
   const amount = typeof e.amount_g === "number" ? `${Math.round(e.amount_g * 10) / 10} g` : "Quick add";
-  return { sub: time ? `${time} · ${amount}` : amount, big: `${Math.round(e.protein_g * 10) / 10} g`, small: `${e.kcal} kcal` };
+  return { sub: time ? `${time} · ${amount}` : amount, big: `${proteinText(e.protein_g)} g`, small: `${e.kcal} kcal` };
 }
 
 // Today's foods by meal. Read fresh each time, so Undo can redraw just this part behind an open sheet.

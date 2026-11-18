@@ -8,7 +8,7 @@ import { rerender, store } from "../ui/app.js";
 import { food as fm, off } from "./foodapp.js";
 import { OFF_CREDIT_LINKS } from "../food/off.js";
 import { MEALS } from "../food/foodvalidate.js";
-import { MEAL_WORDS, mealAt, savedFoods, checkFood, startAmount, cleanText, gramsForCount, stepCount, maxCount, pieceOf, checkPieceWeight, piecesLine, withPieceWeight, pieceWords, piecesStart } from "../food/foodmath.js";
+import { MEAL_WORDS, mealAt, savedFoods, checkFood, startAmount, cleanText, gramsForCount, stepCount, maxCount, pieceOf, checkPieceWeight, piecesLine, withPieceWeight, pieceWords, piecesStart, proteinText } from "../food/foodmath.js";
 import { readMode, withMode, startMode } from "../food/foodmodes.js";
 import { normalizeBarcode, BARCODE_WORDS, foodIdFor } from "../food/barcode.js";
 import { now, today } from "../clock.js";
@@ -361,7 +361,7 @@ export function openEntry(entry) {
   const error = h("p", { class: "error-text", role: "alert" });
   const close = openSheet(
     h("h2", {}, entry.name),
-    h("p", { class: "muted" }, `${entry.kcal} kcal · ${show(entry.protein_g)} g protein`),
+    h("p", { class: "muted" }, `${entry.kcal} kcal · ${proteinText(entry.protein_g)} g protein`),
     typeof amount === "number"
       ? stepper({ label: "Amount", unit: "g", value: amount, step: 10, min: 1, max: 5000, decimals: 1, onChange: (n) => { amount = n; } })
       : h("p", { class: "muted small" }, "A quick add has no amount to change."),
