@@ -4,7 +4,7 @@ What is new in each app version, in plain words. Newest first. Older versions: s
 
 ## 0.7.5 · 2026-11-18
 
-Machines instead of awkward moves (trainer decision D18) and "1 set", built by chat 8.42. Not live yet (waits for "push").
+Machines instead of awkward moves (trainer decision D18) and "1 set", built by chat 8.42. Live since 2026-11-18.
 
 - **Tuesday and Friday use simpler moves.** Your trainer swapped four moves for ones with the gym's own machines
   (the gym's website lists them):
