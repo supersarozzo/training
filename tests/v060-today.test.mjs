@@ -8,6 +8,10 @@
 //  T8-T10 the workout: "Stop this exercise here" with a small question and an 8 s Undo; the target line uses the reps set
 //         in the Plan; a set below the range is saved as it is.
 //  T11    safe page rules: no innerHTML, no style attributes, colours only through the tokens of app.css.
+//  T12-T15 auditor M2 (2026-11-18): after "Stop this exercise here" the rest, the "Next" line and the progress bar skip
+//         the stopped sets (flow.js nextDue, restBetween, progressOf). Stopped A2: A1's rest is the pair rest, not the
+//         30 s move. Nothing left after a stop: no rest before Finish. M3 (Undo after the last stop) is in
+//         tests/v060-today-undo.test.mjs.
 // All values are made up. No body data.
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -17,6 +21,7 @@ import { createModel } from "../app/js/model.js";
 import * as workout from "../app/js/engine/workout.js";
 import { validDoc, fakeStorage } from "./fixtures/profiles.mjs";
 import * as today from "../app/js/ui/today.js";
+import * as flow from "../app/js/ui/flow.js";
 const defaultShown = (doc, date) => today.defaultShown(doc, date);
 
 const src = (p) => readFileSync(new URL(`../app/${p}`, import.meta.url), "utf8");
@@ -140,4 +145,83 @@ test("T11 no innerHTML, no style attributes; the Today styles use only the token
   const css = src("css/v060-today.css");
   assert.match(css, /\.day-picker/);
   assert.doesNotMatch(css, /#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/, "colours only through var(--…)");
+});
+
+// ---------- auditor M2: the stopped sets are skipped by the rest, "Next" and the progress bar ----------
+
+// Tuesday, week 3: A1/A2, B1/B2, C1/C2 pairs of 3 sets (30 s move inside a pair, then the pair rest), D on its own.
+function tuesday() {
+  const store = createStore(fakeStorage());
+  let ms = Date.parse(T);
+  store.save(validDoc());
+  const model = createModel(store, () => new Date((ms += 1000)));
+  const s0 = model.startSession({ planDay: "tue", week: 3, kind: "full" });
+  const plan = { slots: s0.exercises.map((e) => ({ slot: e.slot, ex: e.plan_exercise, sets: e.planned_sets, rest: e.planned_rest })) };
+  const { seq } = workout.buildSequence(plan.slots);
+  const get = () => model.doc().sessions.find((x) => x.id === s0.id);
+  const at = (slot, n) => seq.findIndex((e) => e.slot === slot && e.setNumber === n);
+  return { model, id: s0.id, seq, get, at };
+}
+const call = (name, ...args) => {
+  assert.equal(typeof flow[name], "function", `flow.js exports ${name}`);
+  return flow[name](...args);
+};
+
+test("T12 stopped A2: after A1 set 2 the next set is A1 set 3 and the rest is the pair rest, not the 30 s move", () => {
+  const { model, id, seq, get, at } = tuesday();
+  model.logSet(id, "A1", { type: "work", weight_kg: 40, reps: 10 });
+  model.logSet(id, "A2", { type: "work", weight_kg: 30, reps: 10 });
+  model.stopExercise(id, "A2", true);
+  model.logSet(id, "A1", { type: "work", weight_kg: 40, reps: 10 }); // A1 set 2 just saved
+  const from = at("A1", 2);
+  assert.equal(seq[from].restKind, "move", "in the full plan a move follows A1 set 2");
+  const next = call("nextDue", get(), seq, from);
+  assert.equal(next.entry.slot, "A1");
+  assert.equal(next.entry.setNumber, 3);
+  const rest = call("restBetween", seq, from, next.index);
+  assert.equal(rest.seconds, seq[at("A2", 2)].restAfter, "the pair rest");
+  assert.ok(rest.seconds > 30);
+  assert.equal(rest.kind, "rest");
+});
+
+test("T13 stopped A1: after A2 set 2 the next set is A2 set 3, still after the pair rest", () => {
+  const { model, id, seq, get, at } = tuesday();
+  model.logSet(id, "A1", { type: "work", weight_kg: 40, reps: 10 });
+  model.stopExercise(id, "A1", true);
+  model.logSet(id, "A2", { type: "work", weight_kg: 30, reps: 10 });
+  model.logSet(id, "A2", { type: "work", weight_kg: 30, reps: 10 });
+  const from = at("A2", 2);
+  const next = call("nextDue", get(), seq, from);
+  assert.equal(next.entry.slot, "A2");
+  assert.equal(next.entry.setNumber, 3);
+  assert.equal(call("restBetween", seq, from, next.index).seconds, seq[from].restAfter);
+});
+
+test("T14 nothing left after a stop: no next set, so no rest before Finish; the Next line never names a skipped set", () => {
+  const { model, id, seq, get, at } = tuesday();
+  model.logSet(id, "D", { type: "work", weight_kg: 0, reps: 10 });
+  model.stopExercise(id, "D", true); // the last exercise ends after 1 set
+  const from = at("C2", 3); // the last set still due
+  assert.equal(call("nextDue", get(), seq, from), null, "D set 1 is done and D sets 2 and 3 are skipped");
+  model.logSet(id, "A1", { type: "work", weight_kg: 40, reps: 10 });
+  model.logSet(id, "A2", { type: "work", weight_kg: 30, reps: 10 });
+  model.stopExercise(id, "A2", true);
+  const next = call("nextDue", get(), seq, at("A1", 2));
+  assert.notEqual(next.entry.slot, "A2");
+  const p = src("js/ui/pair.js");
+  assert.doesNotMatch(p, /seq\[pos\.index \+ 1\]/, "pair.js no longer takes the next entry of the full sequence");
+  assert.match(p, /nextDue\(/);
+  assert.match(p, /restBetween\(/);
+});
+
+test("T15 the progress bar counts only the sets still planned, so it fills after a stop", () => {
+  const { model, id, seq, get } = tuesday();
+  assert.deepEqual(call("progressOf", get(), seq), { done: 0, total: seq.length });
+  model.logSet(id, "A1", { type: "work", weight_kg: 40, reps: 10 });
+  model.stopExercise(id, "A1", true);
+  assert.deepEqual(call("progressOf", get(), seq), { done: 1, total: seq.length - 2 });
+  for (const f of ["js/ui/pair.js", "js/ui/rest.js"]) {
+    assert.doesNotMatch(src(f), /total: (ctx\.)?seq\.length/, `${f} uses progressOf`);
+    assert.match(src(f), /progressOf\(/, f);
+  }
 });
