@@ -106,3 +106,16 @@ test("R7-2 a stop with 0 work sets is skipped: two stops below the range around 
   assert.deepEqual(perfs.map((p) => p.date), ["2026-01-09", "2026-01-05"], "the empty stop is not a performance");
   assert.equal(nextSuggestion(perfs[0], perfs[1], { settings: { stack_step_kg: { default: 5 } }, week: 3, exerciseId: "chest_press" }).action, "lower");
 });
+
+test("D12-W3 once an exercise has a log, no first-try note shows (trainer 8.37, test 3)", () => {
+  const logged = { id: "s-20260105", date: "2026-01-05", status: "finished", plan_day: "mon", week: 2,
+    started_at: "2026-01-05T08:00:00.000Z", finished_at: "2026-01-05T10:00:00.000Z",
+    exercises: [{ slot: "A1", done_exercise: "chest_press", sets: [10, 10].map((r) => ({ type: "work", weight_kg: 30, reps: r, rir: 2 })) }] };
+  const doc = { ...validDoc(), sessions: [logged], exercise_state: [] };
+  for (const week of [1, 2, 5]) {
+    const sg = suggestFor(doc, "chest_press", { week, missed: null, exerciseState: undefined });
+    assert.notEqual(sg.action, "first_try", `week ${week}`);
+    assert.ok(!String(sg.note ?? "").startsWith("First try"), `week ${week}: ${sg.note}`);
+    assert.ok(!weightLine(doc, "chest_press", week).text.startsWith("Try "), `week ${week}`);
+  }
+});
