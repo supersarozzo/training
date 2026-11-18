@@ -190,6 +190,19 @@ test("the app listens for the phone turning light or dark (Auto keeps everything
   assert.match(read("app/js/main.js"), /applyTheme\(\)/, "main.js applies the look at start");
 });
 
+test("the phone turning light or dark (Look = Auto) has no fade either (auditor m8)", () => {
+  const ui = read("app/js/ui/theme.js");
+  const watch = ui.slice(ui.indexOf("function watchPhone"), ui.indexOf("export function applyTheme"));
+  const handler = watch.slice(watch.indexOf('addEventListener("change"'));
+  assert.ok(handler.length > 0, "watchPhone has a change handler");
+  assert.match(handler.slice(0, handler.indexOf("\n")), /withoutFade\(/, "the change handler applies the look through withoutFade");
+  const setTheme = ui.slice(ui.indexOf("export function setTheme"), ui.indexOf("export function setMotionOff"));
+  assert.match(setTheme, /withoutFade\(/, "a Settings switch uses the same no-fade helper");
+  const helper = ui.slice(ui.indexOf("function withoutFade"));
+  assert.match(helper, /classList\.add\("theme-switching"\)/);
+  assert.match(helper, /requestAnimationFrame\(\(\) => requestAnimationFrame\(\(\) => root\.classList\.remove\("theme-switching"\)\)\)/);
+});
+
 test("picking Auto / Light / Dark in Settings does not redraw the screen (no jump to the top)", () => {
   const settings = read("app/js/ui/settings.js");
   const look = settings.slice(settings.indexOf("function lookCard"), settings.indexOf("export function renderSettings"));
