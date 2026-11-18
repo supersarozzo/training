@@ -127,3 +127,14 @@ test("P8 the sheet: Grams | Pieces in the existing two-part switch, the one ques
   assert.doesNotMatch(code, /\bstyle\s*[:=]/);
   assert.match(src("sw.js"), /"js\/food\/foodmodes\.js",/, "in the offline list");
 });
+
+// ---------- Browser check findings (worker 8.41, 2026-11-18) ----------
+test("P9 the piece words read well; the weight box takes a comma (text box with the decimal keypad)", () => {
+  assert.equal(fmath.pieceWords({ g: 62.5, label: "piece" }), "1 piece = 62.5 g");
+  assert.equal(fmath.pieceWords({ g: 62.5, label: "egg" }), "1 egg = 62.5 g");
+  assert.equal(fmath.pieceWords({ g: 30, label: "1 bar (30 g)" }), "1 bar (30 g)", "the pack's words already say one piece");
+  assert.equal(fmath.pieceWords({ g: 25, label: "2 biscuits (25 g)" }), "1 piece = 25 g (2 biscuits (25 g))");
+  const t = src("js/diet/sheets.js");
+  assert.match(t, /pieceWords\(piece\)/);
+  assert.match(t, /type: "text", inputmode: "decimal"[^\n]*"aria-label": "Weight of 1 piece"/, "a number box drops a typed comma");
+});
