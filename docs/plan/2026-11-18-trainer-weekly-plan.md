@@ -186,6 +186,92 @@ Sources (read 2026-11-18): Hickmott et al. 2022, Sports Med Open, adjusting load
 
 **For 8.35 (next version, not 0.6.0):** in `engine/progression.js` `nextSuggestion`, right after the easier-week / week-1 hold and before the `last.stopped` hold (corrected 2026-11-18, answer T1 to 8.39; first written as "before the easier-week check"): if `last.stopped && previous?.stopped`, the exercise is not bodyweight, and both sessions have a set below `low`, then return `action: "lower"`, `weight_kg: stepDown(w, exerciseId, settings)`, `range: [low, top]`, note "You stopped early twice and missed the range. One step lighter." The existing `last.stopped` hold stays as it is. A test comes first: stopped twice + below range → lower; stopped twice in range → hold; stopped once → hold; bodyweight → hold. Optional words on the Stop confirm: "Does it hurt? Use Swap › It hurts instead."
 
+### D11. Training before the plan's start date: a practice week — **new**
+
+Asked by the Training Agent on 2026-11-18. The plan starts on a Monday (`block.start_monday`). You want to train before that date.
+
+**My rule:**
+1. **Every day before `start_monday` is a practice day.** Today shows the day's workout with a **Start** button and the day picker, exactly as in week 1. The default day is the calendar day (Wednesday → Wednesday's workout). Saturday and Sunday show the rest card, and the picker can still start any day.
+2. **Practice days use the week-1 rules:** 2 sets per exercise, stop with about 3 reps left, the find-your-weight steps (D5 and plan v2 section 8), no weight increases, the walk at your starting row with no walk increase. The app already does most of this: `weekInfo()` treats any week below 1 as week 1. A practice session is saved with `week: 0`.
+3. **Practice does not move the plan.** `start_monday` stays. Week 1 still starts on that Monday, and the 12 weeks end on the same date. The Monday measurements and photos stay on Monday of week 1.
+4. **What practice carries over:** the weights you found. In week 1, an exercise you already practised starts at the found weight. Week 1 is still a learn week (2 sets, about 3 reps left) and may adjust once more with the same table. Week 2 then starts the normal progression.
+5. **Words:** the label reads **"Practice week · Learn, find weights"**, never "Week 0". Under it: "Your plan starts on Monday <date>. Practice now: find your weights and learn the moves."
+6. **Weekly check-in:** the Monday check-in of week 1 may list the practice workouts, but it never judges food or weight targets for them (weeks 1 and 2 change nothing anyway). Practice workouts do not count toward "workouts done out of 5".
+7. **Missed-time rules** count a practice session as a session, so a long gap before week 1 still lowers the weights as plan v2 section 11 says.
+
+"Week 0" therefore means only "before the plan": practice days, saved with `week: 0`, never shown as a number.
+
+**Why:**
+- *Not "move the start to this Monday":* Monday and Tuesday are already gone, so week 1 would lose two learn days (half the exercises would reach the build weeks without a found weight), and the Monday measurement day would be missed.
+- *Not "start week 1 today":* the plan's weeks follow the calendar from a Monday. A Wednesday start breaks the Monday check-in and the rule "a missed Monday does not move the week".
+- *A practice week is a bonus for a beginner.* Early strength gains in a beginner come largely from learning the movement, so an extra low-effort exposure helps form and confidence. The first sessions also bring the worst muscle soreness, and one bout protects the muscle from the next (the "repeated bout effect"): better that this soreness lands in practice than in week 1. With 2 sets and about 3 reps left, three practice days before a 5-day week 1 are a light load.
+
+Sources (read 2026-11-18): ACSM progression models for novices (start at an 8-12 RM load, 1 to 3 sets; early gains are mainly motor learning), as summarised in the [Journal of Clinical Exercise Physiology review](https://jcep.kglmeridian.com/view/journals/ceph/2/1/article-p8.xml) and the [2002 position stand abstract](https://pubmed.ncbi.nlm.nih.gov/11828249/); repeated bout effect: Hyldahl, Chen and Nosaka 2017, Exerc Sport Sci Rev 45(1):24-33 ([ECU repository](https://ro.ecu.edu.au/ecuworkspost2013/2605)); plan v2 sections 8, 10 and 11 (week 1, Monday-based weeks, missed sessions).
+
+**Tests for 8.39 to write first (they fail until the build):**
+1. A date before `start_monday` (made-up start): Today shows a Start button and the day picker; the default day is the calendar day; Saturday shows the rest card with the picker.
+2. A practice session is saved with `week: 0`; `setsFor(0, day, slot)` equals week 1's sets; `rirFor(0, day)` is 3; `weekInfo(0).progression` and `walkProgress` are false.
+3. The Today label is "Practice week · Learn, find weights"; the text "Week 0" appears nowhere.
+4. After a practice workout, `block.start_monday` is unchanged and `weekNumber(start, start)` is still 1.
+5. In week 1, an exercise found in practice starts at the found weight; week 1 still shows 2 sets and about 3 reps left.
+6. The week-1 Monday check-in does not count practice workouts in "done out of 5" and does not judge targets.
+
+### D12. First-try weights in the learn week — **new**
+
+Asked by the Training Agent on 2026-11-18. In the learn week the cards say "Find it" and show no number. You expect a number.
+
+**My rule:** before an exercise has any weight (none set in the Plan, none logged, none found), the card shows **"Try <kg>"**, with the note "First try. Set 1 tells us if it is right." The find-your-weight steps (D5, plan v2 section 8) then correct it from set 1: up to 2 steps up or down.
+
+**Order (the first one that exists wins):** your own weight set in the Plan → the suggestion from your logs (progression) → the weight found in week 1 or practice → **the first-try table below**.
+
+**First-try table (adult man, beginner).** Dumbbell numbers are **per dumbbell**. Stack numbers are the number on the machine's weight stack. Smith machine and hip thrust numbers are **the plates added in total (both sides), the bar not counted**.
+
+| Exercise | First try (kg) | Exercise | First try (kg) |
+|---|---|---|---|
+| Chest press (machine) | 20 | Leg press | 40 |
+| Dumbbell bench press | 10 | Leg extension | 20 |
+| Incline dumbbell press | 8 | Goblet squat (1 dumbbell) | 12 |
+| Shoulder press (machine) | 15 | Smith machine squat (plates) | 10 |
+| Seated dumbbell shoulder press | 8 | Hip thrust (plates) | 20 |
+| Pulldown (cable) | 30 | Dumbbell glute bridge (1 dumbbell) | 12 |
+| Lat pulldown machine | 30 | Romanian deadlift (dumbbells) | 12 |
+| One-arm dumbbell row | 12 | Cable pull-through | 15 |
+| Seated cable row | 30 | Calf raise on the leg press | 40 |
+| Seated row machine | 30 | Standing calf raise, Smith (plates) | 10 |
+| Dumbbell curl | 6 | Calf raise machine | 30 |
+| Hammer curl | 6 | One-leg dumbbell calf raise | 6 |
+| Cable curl | 10 | Dumbbell lying leg curl (1 dumbbell) | 6 |
+| Triceps pushdown | 15 | Leg curl machine | 15 |
+| Overhead triceps extension (cable) | 10 | Standing cable leg curl | 5 |
+| Lateral raise | 4 | Cable crunch | 20 |
+| Cable lateral raise | 5 | Face pull | 15 |
+| Dumbbell rear-delt raise | 4 | | |
+
+Exercise ids for the build: `chest_press` 20, `db_bench_press` 10, `incline_db_press` 8, `shoulder_press_machine` 15, `seated_db_shoulder_press` 8, `pulldown` 30, `lat_pulldown_machine` 30, `one_arm_db_row` 12, `seated_cable_row` 30, `seated_row_machine` 30, `db_curl` 6, `hammer_curl` 6, `cable_curl` 10, `triceps_pushdown` 15, `overhead_triceps_ext` 10, `lateral_raise` 4, `cable_lateral_raise` 5, `rear_delt_raise` 4, `face_pull` 15, `leg_press` 40, `leg_extension` 20, `goblet_squat` 12, `smith_squat` 10, `hip_thrust` 20, `db_glute_bridge` 12, `romanian_deadlift` 12, `cable_pull_through` 15, `calf_raise_leg_press` 40, `calf_raise_standing` 10, `calf_raise_machine` 30, `one_leg_db_calf_raise` 6, `db_lying_leg_curl` 6, `leg_curl_machine` 15, `cable_leg_curl` 5, `cable_crunch` 20.
+
+Bodyweight and timed exercises (plank, side plank, dead bug, reverse crunch): no weight, as today.
+A profile other than "man": multiply by 0.6, then round. This factor is my estimate, not from a source; the week-1 steps correct it after one set.
+
+**Rounding to the gym (always down, never above the table value):**
+- Dumbbells: the heaviest dumbbell in Settings › Gym weights that is **at or below** the table value; if none is that light, the lightest one listed; with no list, round down to a multiple of 2 kg (at least 2 kg).
+- Stacks (machines and cables): round down to a multiple of the stack step from Settings (`stackStep`, fallback 5 kg), at least one step.
+- Smith machine and hip thrust: round down to a multiple of 5 kg (2.5 kg each side), at least 5 kg.
+
+**Why:**
+- The guidelines say a beginner starts at a load that allows about 8 to 12 good reps, roughly 50 to 70 % of a one-rep maximum. Nobody tests a maximum in week 1, so the table aims **low**, at about half of a typical beginner man's maximum. Most people will find set 1 easy, and the week-1 table adds 1 or 2 steps. That is on purpose: a weight that is too light costs one set; one that is too heavy costs form and risks injury.
+- **No body weight in the rule.** A fixed table keeps body data out of the rule and the repo, and the find-your-weight steps fix any error after one set. Typical beginner standards (Strength Level) were used only as a rough upper check, because they come from people who already log their lifts.
+- Machines differ between brands (stack numbers are not true kilograms), so the machine values are only a first try.
+
+Sources (read 2026-11-18): ACSM novice loading (8-12 RM, about 50 to 70 % of 1RM) via the [JCEP review](https://jcep.kglmeridian.com/view/journals/ceph/2/1/article-p8.xml) and the [2002 position stand abstract](https://pubmed.ncbi.nlm.nih.gov/11828249/); [Strength Level male standards](https://strengthlevel.com/strength-standards/male/kg) (beginner bench press, shoulder press, curl and row by body weight, an upper check only); plan v2 section 8 (week 1: start light, nobody tests a maximum) and D5.
+
+**Tests for 8.39 to write first:**
+1. With no Plan weight, no log and no found weight, the card shows "Try <kg>" (never "Find it" or "Pick a light weight") for every weighted exercise, using the table and made-up gym settings.
+2. Rounding: with dumbbells [2, 4, 6, 8, 10, 12.5], a table value of 10 gives 10 and a table value of 12 gives 10 (never above); no list gives multiples of 2; a stack step of 7 gives 14 for a table value of 15; Smith values are multiples of 5; the result is never 0.
+3. Order: a Plan weight beats a log, a log beats a found weight, a found weight beats the table.
+4. Bodyweight and timed exercises show no weight.
+5. Two profiles with different made-up body weights get the same first-try weights (the rule does not read body weight); a profile other than "man" gets 0.6 × the table, rounded down.
+6. Every weighted exercise id in `plan-v2.js` has a table value.
+
 ## 5. Changes to your earlier choices
 
 **None.** I kept 74 b and 80-83 exactly:
