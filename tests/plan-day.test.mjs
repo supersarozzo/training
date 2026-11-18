@@ -52,22 +52,22 @@ test("daySoFar: Tuesday week 3, Romanian deadlift = 3 of 7, the mock-up's number
   const r = daySoFar("tue", 3, "B1");
   assert.equal(r.position, 3);
   assert.equal(r.total, 7);
-  assert.deepEqual(r.weighted, { quads: 3, calves: 1.5, glutes: 3, hamstrings: 4.5, abs: 3, lower_back: 1.5 });
+  assert.deepEqual(r.weighted, { quads: 3, glutes: 3, adductors: 1.5, abs: 3, hamstrings: 3, lower_back: 1.5 }); // trainer M1/M2: leg press helpers glutes, inner thighs
   assert.deepEqual(r.direct, { quads: 3, abs: 3, hamstrings: 3 });
-  assert.equal(r.text, "back thighs 4.5, front thighs 3, glutes 3, abs 3, calves 1.5, lower back 1.5");
-  assert.deepEqual(r.levels, { quads: 2, calves: 1, glutes: 2, hamstrings: 2, abs: 2, lower_back: 1 });
+  assert.equal(r.text, "front thighs 3, glutes 3, abs 3, back thighs 3, inner thighs 1.5, lower back 1.5");
+  assert.deepEqual(r.levels, { quads: 2, glutes: 2, adductors: 1, abs: 2, hamstrings: 2, lower_back: 1 });
 });
 
 test("daySoFar follows the week's real sets (week 1 = 2 sets each)", () => {
   const r = daySoFar("tue", 1, "B1");
-  assert.deepEqual(r.weighted, { quads: 2, calves: 1, glutes: 2, hamstrings: 3, abs: 2, lower_back: 1 });
-  assert.equal(r.text, "back thighs 3, front thighs 2, glutes 2, abs 2, calves 1, lower back 1");
+  assert.deepEqual(r.weighted, { quads: 2, glutes: 2, adductors: 1, abs: 2, hamstrings: 2, lower_back: 1 });
+  assert.equal(r.text, "front thighs 2, glutes 2, abs 2, back thighs 2, inner thighs 1, lower back 1");
 });
 
 test("daySoFar at the first card counts only that card; at the last card it is the whole day", () => {
   const first = daySoFar("tue", 3, "A1");
   assert.equal(first.position, 1);
-  assert.deepEqual(first.weighted, { quads: 3, calves: 1.5, glutes: 1.5, hamstrings: 1.5 });
+  assert.deepEqual(first.weighted, { quads: 3, glutes: 1.5, adductors: 1.5 });
   const last = daySoFar("tue", 3, "D");
   assert.equal(last.position, 7);
   assert.deepEqual(last.weighted, setsByMuscle(daySets("tue", 3)).weighted);
@@ -110,12 +110,12 @@ test("soFarText lists every muscle with sets, most first, ties in the order they
 
 // ---------- words ----------
 test("exerciseLevels: main muscles 3, helpers 1", () => {
-  assert.deepEqual(exerciseLevels("leg_press"), { calves: 1, glutes: 1, hamstrings: 1, quads: 3 });
+  assert.deepEqual(exerciseLevels("leg_press"), { glutes: 1, adductors: 1, quads: 3 });
   assert.deepEqual(exerciseLevels("cable_crunch"), { abs: 3 });
 });
 
 test("muscleWords: plain words for the card and the sheet", () => {
-  assert.deepEqual(muscleWords("leg_press"), { main: "front thighs", helpers: "calves, glutes, back thighs", card: "Front thighs · helps calves, glutes, back thighs" });
+  assert.deepEqual(muscleWords("leg_press"), { main: "front thighs", helpers: "glutes, inner thighs", card: "Front thighs · helps glutes, inner thighs" });
   assert.deepEqual(muscleWords("romanian_deadlift"), { main: "back thighs", helpers: "glutes, lower back", card: "Back thighs · helps glutes, lower back" });
   assert.deepEqual(muscleWords("leg_extension"), { main: "front thighs", helpers: "", card: "Front thighs" });
 });

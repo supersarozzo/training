@@ -206,9 +206,7 @@ const TRAINER_FIXES_2026_11_18 = {
   smith_squat: { main: ["quads"], helpers: ["glutes", "adductors", "calves", "lower_back"] },
   hip_thrust: { main: ["glutes"], helpers: ["hamstrings"] },
   db_glute_bridge: { main: ["glutes"], helpers: ["hamstrings"] },
-  one_arm_db_row: { main: ["lats", "mid_back"], helpers: ["biceps", "rear_delts"] },
-  seated_cable_row: { main: ["lats", "mid_back"], helpers: ["biceps", "rear_delts"] },
-  seated_row_machine: { main: ["lats", "mid_back"], helpers: ["biceps", "rear_delts"] },
+  seated_row_machine: { main: ["lats"], helpers: ["biceps", "mid_back", "rear_delts"] },
   hammer_curl: { main: ["biceps"], helpers: ["forearms"] },
   cable_curl: { main: ["biceps"], helpers: ["forearms"] },
   side_plank: { main: ["abs"], helpers: ["glutes"] },
@@ -218,7 +216,7 @@ const TRAINER_FIXES_2026_11_18 = {
   seated_db_shoulder_press: { main: ["front_delts"], helpers: ["triceps", "side_delts"] },
 };
 
-test("trainer muscle fixes 2026-11-18: the 15 exercises have the decided main muscles and helpers, each with a reason", () => {
+test("trainer muscle fixes 2026-11-18: the 13 exercises have the decided main muscles and helpers, each with a reason", () => {
   const { exerciseMuscles } = mod();
   for (const [id, want] of Object.entries(TRAINER_FIXES_2026_11_18)) {
     assert.deepEqual(exerciseMuscles[id].main, want.main, `${id} main`);
@@ -228,4 +226,11 @@ test("trainer muscle fixes 2026-11-18: the 15 exercises have the decided main mu
   // No calves where the ankle does not move; no hamstrings as helpers of squats or the leg press.
   for (const id of ["leg_press", "hip_thrust", "db_glute_bridge"]) assert.ok(!exerciseMuscles[id].helpers.includes("calves"), id);
   for (const id of ["leg_press", "goblet_squat", "smith_squat"]) assert.ok(!exerciseMuscles[id].helpers.includes("hamstrings"), id);
+  // Decision M4: one main muscle per exercise, because the muscle check adds lats and mid back into one "Back" row
+  // (two main muscles in a row would count its sets twice). Rows keep mid back main and lats as a helper for now.
+  for (const id of Object.keys(exerciseMuscles)) assert.equal(exerciseMuscles[id].main.length, 1, `${id}: one main muscle`);
+  for (const id of ["one_arm_db_row", "seated_cable_row"]) {
+    assert.deepEqual(exerciseMuscles[id].main, ["mid_back"], id);
+    assert.ok(exerciseMuscles[id].helpers.includes("lats"), id);
+  }
 });

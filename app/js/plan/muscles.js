@@ -5,11 +5,13 @@
 // uses for its photo (media.js `lib`): its primaryMuscles become `main`, its secondaryMuscles become `helpers`.
 // Read from dist/exercises.json, commit f00c92c, on 2026-11-17 (copy: tests/fixtures/free-exercise-db-muscles.json).
 // Our one change everywhere: free-exercise-db has one "shoulders"; we name the part (research 4.2): presses = front,
-// lateral raises = side, face pull and rear-delt raise = rear, rows and pulldowns as helpers = rear, a weight held at the
-// chest (goblet squat) = front, the side plank's held-out shoulder = side.
+// lateral raises = side, face pull and rear-delt raise = rear, rows and pulldowns as helpers = rear.
 // Anything else that differs from free-exercise-db must carry `own: { reason }` (tests/muscles.test.mjs checks this).
-// Known generosity kept as the database has it (research 5.2): calves, glutes and hamstrings as helpers of squats and
-// the leg press; calves as helpers of the hip thrust and glute bridge.
+// Trainer fixes 2026-11-18 (docs/plan/2026-11-18-trainer-decisions.md, M1 to M9; evidence in
+// docs/research/2026-11-18-muscle-map-check.md): 15 exercises read differently from free-exercise-db, each with 2+ sources.
+// Kept generosity: calves as helpers of squats (2 sources name them; they do little work there).
+// One main muscle per exercise for now: the muscle check adds lats and mid back into one "Back" row and counts every
+// main muscle, so two main muscles in a row would count its sets twice. Rows keep mid back as main (decision M4).
 
 // Our muscle groups. `name`: plain words for the screen (DESIGN.md 15.4). `fedb`: the free-exercise-db name it comes from.
 // `view`: where the group is drawn best on the body map.
@@ -48,28 +50,28 @@ export const exerciseMuscles = {
   // In the plan's days
   chest_press: { main: ["chest"], helpers: ["front_delts", "triceps"], equip: "machine" },
   pulldown: { main: ["lats"], helpers: ["biceps", "mid_back", "rear_delts"], equip: "cable" },
-  shoulder_press_machine: { main: ["front_delts"], helpers: ["triceps"], equip: "machine" },
-  one_arm_db_row: { main: ["mid_back"], helpers: ["biceps", "lats", "rear_delts"], equip: "dumbbell" },
+  shoulder_press_machine: { main: ["front_delts"], helpers: ["triceps", "side_delts"], equip: "machine", own: { reason: "Trainer M9: the side shoulders help in presses (StrengthLog lateral delt; Saeterbakken 2013 EMG)" } },
+  one_arm_db_row: { main: ["mid_back"], helpers: ["biceps", "lats", "rear_delts"], equip: "dumbbell" }, // M4: lats should be main too; waits for the check to count a set once (see decisions file)
   db_curl: { main: ["biceps"], helpers: ["forearms"], equip: "dumbbell" },
   triceps_pushdown: { main: ["triceps"], helpers: [], equip: "cable" },
   plank: { main: ["abs"], helpers: [], equip: "bodyweight" },
   dead_bug: { main: ["abs"], helpers: [], equip: "bodyweight" },
-  leg_press: { main: ["quads"], helpers: ["calves", "glutes", "hamstrings"], equip: "machine" },
+  leg_press: { main: ["quads"], helpers: ["glutes", "adductors"], equip: "machine", own: { reason: "Trainer M1/M2: inner thighs work hard (StrengthLog; Kubo 2019); the ankle does not move, so no calves; hamstrings only steady the leg (Escamilla 2001; Kubo 2019)" } },
   cable_crunch: { main: ["abs"], helpers: [], equip: "cable" },
   romanian_deadlift: { main: ["hamstrings"], helpers: ["glutes", "lower_back"], equip: "dumbbell" },
   face_pull: { main: ["rear_delts"], helpers: ["mid_back"], equip: "cable" },
-  hip_thrust: { main: ["glutes"], helpers: ["calves", "hamstrings"], equip: "machine" },
+  hip_thrust: { main: ["glutes"], helpers: ["hamstrings"], equip: "machine", own: { reason: "Trainer M1: the ankle does not move, so no calves (StrengthLog; Contreras 2015 EMG)" } },
   leg_extension: { main: ["quads"], helpers: [], equip: "machine" },
-  goblet_squat: { main: ["quads"], helpers: ["calves", "glutes", "hamstrings", "front_delts"], equip: "dumbbell" },
+  goblet_squat: { main: ["quads"], helpers: ["glutes", "adductors", "calves"], equip: "dumbbell", own: { reason: "Trainer M2/M3: inner thighs work hard, hamstrings only steady (StrengthLog; Wikipedia Squat; Kubo 2019); the shoulders only hold the dumbbell still" } },
   db_bench_press: { main: ["chest"], helpers: ["front_delts", "triceps"], equip: "dumbbell" },
   lateral_raise: { main: ["side_delts"], helpers: [], equip: "dumbbell" },
-  hammer_curl: { main: ["biceps"], helpers: [], equip: "dumbbell" },
+  hammer_curl: { main: ["biceps"], helpers: ["forearms"], equip: "dumbbell", own: { reason: "Trainer M5: the thumb-up grip works the forearm (brachioradialis) (StrengthLog; Catalyst Athletics)" } },
   overhead_triceps_ext: { main: ["triceps"], helpers: [], equip: "cable" },
-  side_plank: { main: ["abs"], helpers: ["side_delts"], equip: "bodyweight" },
+  side_plank: { main: ["abs"], helpers: ["glutes"], equip: "bodyweight", own: { reason: "Trainer M6: the shoulder only holds still; the side glute (gluteus medius) works hard (Wikipedia Plank; Youdas 2014 EMG)" } },
   incline_db_press: { main: ["chest"], helpers: ["front_delts", "triceps"], equip: "dumbbell" },
-  seated_cable_row: { main: ["mid_back"], helpers: ["biceps", "lats", "rear_delts"], equip: "cable" },
-  seated_db_shoulder_press: { main: ["front_delts"], helpers: ["triceps"], equip: "dumbbell" },
-  smith_squat: { main: ["quads"], helpers: ["calves", "glutes", "hamstrings", "lower_back"], equip: "smith" },
+  seated_cable_row: { main: ["mid_back"], helpers: ["biceps", "lats", "rear_delts"], equip: "cable" }, // M4: as the one-arm row
+  seated_db_shoulder_press: { main: ["front_delts"], helpers: ["triceps", "side_delts"], equip: "dumbbell", own: { reason: "Trainer M9: the side shoulders help in presses (StrengthLog lateral delt; Saeterbakken 2013 EMG)" } },
+  smith_squat: { main: ["quads"], helpers: ["glutes", "adductors", "calves", "lower_back"], equip: "smith", own: { reason: "Trainer M2: inner thighs work hard, hamstrings only steady the leg (StrengthLog; Wikipedia Squat; Kubo 2019)" } },
   reverse_crunch: { main: ["abs"], helpers: [], equip: "bodyweight" },
   cable_pull_through: { main: ["glutes"], helpers: ["hamstrings", "lower_back"], equip: "cable" },
   calf_raise_standing: { main: ["calves"], helpers: [], equip: "smith" },
@@ -79,12 +81,12 @@ export const exerciseMuscles = {
   calf_raise_leg_press: { main: ["calves"], helpers: [], equip: "machine" },
 
   // Swap-only exercises
-  cable_curl: { main: ["biceps"], helpers: [], equip: "cable" },
-  cable_lateral_raise: { main: ["side_delts"], helpers: ["mid_back", "traps"], equip: "cable" },
-  rear_delt_raise: { main: ["rear_delts"], helpers: [], equip: "dumbbell" },
-  db_glute_bridge: { main: ["glutes"], helpers: ["calves", "hamstrings"], equip: "dumbbell" },
+  cable_curl: { main: ["biceps"], helpers: ["forearms"], equip: "cable", own: { reason: "Trainer M5: forearms help, as in the dumbbell curl (StrengthLog; Wikipedia Biceps curl)" } },
+  cable_lateral_raise: { main: ["side_delts"], helpers: [], equip: "cable", own: { reason: "Trainer M7: no source names mid back or traps for a smooth lateral raise; same as the dumbbell lateral raise (StrengthLog; Wikipedia Lateral raise)" } },
+  rear_delt_raise: { main: ["rear_delts"], helpers: ["mid_back"], equip: "dumbbell", own: { reason: "Trainer M8: the muscles between the shoulder blades help (StrengthLog trapezius; Ekstrom 2003 EMG: middle trapezius)" } },
+  db_glute_bridge: { main: ["glutes"], helpers: ["hamstrings"], equip: "dumbbell", own: { reason: "Trainer M1: the ankle does not move, so no calves (StrengthLog; NASM floor bridge)" } },
   lat_pulldown_machine: { main: ["lats"], helpers: ["biceps", "mid_back", "rear_delts"], equip: "machine" },
-  seated_row_machine: { main: ["lats"], helpers: ["biceps", "mid_back"], equip: "machine" },
+  seated_row_machine: { main: ["lats"], helpers: ["biceps", "mid_back", "rear_delts"], equip: "machine", own: { reason: "Trainer M4: rear shoulders help, as in the other rows (StrengthLog: rear delts; Lehman 2004 EMG: high mid-back work in the seated row)" } },
   leg_curl_machine: { main: ["hamstrings"], helpers: [], equip: "machine" },
   calf_raise_machine: { main: ["calves"], helpers: [], equip: "machine" },
   // Added 2026-11-18 (plan change); muscles copied from the free-exercise-db entry used for the photo (no own reading needed).
