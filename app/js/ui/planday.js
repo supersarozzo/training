@@ -149,7 +149,7 @@ export function renderPlan() {
     h("div", { class: "plan-flow" },
       h("div", { class: "plan-top" },
         h("button", { class: "week-chip", type: "button", onclick: () => openWeeks(page.week, week), "aria-label": `Week ${week} of ${weeks.length}, ${wi.phase}. Open the 12 weeks.` },
-          `Week ${week} · ${wi.phase}`, icon("chevron", 16, { strokeWidth: 2.6 })),
+          h("span", { class: "wk-text" }, `Week ${week} · ${wi.phase}`), icon("chevron", 16, { strokeWidth: 2.6 })),
         editChip),
       h("div", { class: "plan-day" }, h("h1", {}, days[day].name), isToday ? h("span", { class: "today-tag" }, "Today") : null),
       edit ? null : dayStrip(doc, day, week === page.week ? page.todayDay : null, week), // Edit mode: as the mock-up, the first exercise in view

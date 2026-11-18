@@ -188,7 +188,7 @@ function checkSession(s, where) {
   if (s.deleted) return s; // a tombstone needs nothing else
   if (!isDate(s.date)) fail(`${where} date must be a date`);
   oneOf(s.plan_day, ["mon", "tue", "wed", "thu", "fri"], `${where} day`);
-  num(s.week, `${where} week`, 1, 1000);
+  num(s.week, `${where} week`, 0, 1000); // 0 = a practice day before the block (trainer D11, 0.7.1)
   oneOf(s.kind, ["full", "short"], `${where} kind`);
   oneOf(s.status, ["in_progress", "finished", "abandoned"], `${where} status`);
   if (s.walk !== undefined && s.walk !== null) {

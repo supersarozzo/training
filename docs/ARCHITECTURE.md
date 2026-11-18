@@ -207,7 +207,7 @@ One JSON document holds everything that syncs. It has the same shape on the phon
              "number": 1, "start_monday": "2026-11-23" },
   "sessions": [ {
     "id": "s-…", "updated_at": "…",
-    "date": "2026-11-23", "plan_day": "mon", "week": 1,
+    "date": "2026-11-23", "plan_day": "mon", "week": 1,   // 0 = a practice day before the block (0.7.1, D11)
     "kind": "full | short", "swapped_from": null,
     "status": "in_progress | finished | abandoned",
     "started_at": "…", "finished_at": "…",
@@ -228,11 +228,18 @@ One JSON document holds everything that syncs. It has the same shape on the phon
                       "thigh_cm": 0 } ],
   "exercise_state": [ { "id": "x-chest_press", "updated_at": "…",
                         "start_weight_kg": 0, "machine_note": "",
-                        "fail_streak": 0 } ],
+                        "fail_streak": 0,
+                        "my_range": [8, 12], "my_weight_kg": 0,
+                        "my_weight_at": "yyyy-mm-dd",
+                        "my_weight_time": "…" } ],
   "gym_spots": [ { "id": "g-leg_press", "updated_at": "…",
                    "machine": "leg_press", "where": "…" } ]
 }
 ```
+
+**`exercise_state` Plan fields** (0.6.0, 0.7.1): `my_range`, `my_weight_kg`, `my_weight_at` (a date) and, since 0.7.1, `my_weight_time` (the full time it was set, or null). The workout uses the Plan weight until a workout newer than it exists (`engine/workout.js planWeightNewer`): with a time, newer = finished after that time; the time counts only when it falls on `my_weight_at` (an older app changes the weight and the date but keeps the old time, and then the date rule of 0.6.0 decides). Optional: old files without it validate unchanged; older apps keep the field (unknown fields are kept).
+
+**The muscle check counts a set once per row** (0.7.1, `planview.js rowSets`): 1 when one of the exercise's main muscles is in the row, else 0.5 when one of its helpers is. So the rows can have two main muscles (lats and mid back, trainer T5) without counting their sets twice in "Back". The map and "Day so far" still count per muscle.
 
 **`gym_spots`** (added 2026-11-17, app 0.4.0, same format 1): the "Where it is in my gym" note, one record per machine or station. `id` is `g-<machine>` (`ids.js gymSpotId`); `machine` is an id from the ONE frozen list in `plan/machine-ids.js` (15 ids, the last five equal the `extra_machines` keys); `where` is optional text up to `MAX_TEXT`; a tombstone has `deleted` / `deleted_at`; unknown fields are kept. `model.setGymSpot(machineId, where)` refuses an id that is not in the list or not `^[a-z0-9_]{1,50}$`, trims and clips the text, keeps the old record's unknown fields and clears a tombstone. The list is optional: a file without it validates and comes back unchanged (`OPTIONAL_LISTS` in `validate.js`); the first saved note adds it. It is merged like every list, counted by `hasData`, and backed up and synced with no other change. Not the same as `exercise_state.machine_note` (seat and pin settings of one exercise). A machine id must never be renamed once a note exists (tests/gym-spots.test.mjs test 17).
 
@@ -288,6 +295,8 @@ Food lives in its **own document**: on the phone in its own box `trn.food.v1` (s
 - `exercises`: id, name, equipment, kind (`reps` or `hold`), rep range (or seconds range), per side or not, step type (`dumbbell`, `stack`, `smith_2x2.5`, `bodyweight`), swaps (ids, with `needs_machine` for the Q17 machines), cue id.
 - `days`: mon to fri, each a list of slots (`A1`, `A2`, …, `Abs1`, `D`) with exercise id, sets, rest after, and RIR rule (Wednesday RIR 3).
 - `weeks`: 1 to 12 with phase name, set changes (week 1: 2 sets; weeks 6 and 12: one set less; weeks 7 to 11: pair A gets a 4th set, and exercise D (the leg exercise done on its own, on both leg days: Tuesday's leg extension and Friday's calf raise) drops to 2 sets, as plan v2 section 4 says), RIR, progression on or off, walk progress on or off.
+- `firstTryKg` (0.7.1, trainer D12): the first-try weight of each of the 35 weighted exercises; `engine/progression.js firstTryWeight` rounds it down to the gym (only the profile's sex answer is read, never a body number). `suggestFor` uses it last: Plan weight, then the logs, then the found weight, then this table (action `first_try`).
+- Practice days (0.7.1, trainer D11): before `block.start_monday` `engine/schedule.js canTrain` lets Today start a workout; `sessionWeek` saves it with week 0 and `weekInfo` treats week 0 as week 1. Week 0 is never shown as a number (`PRACTICE_LABEL`). `validate.js` accepts week 0 from 0.7.1 on: **an older app (0.7.0 or before) rejects a file with a week-0 workout**, so a phone that syncs must have 0.7.1 first.
 - `session_order`: `["walk", "changeover", "lift_warmup", "pairs", "abs"]` (Rosario's walk-first choice), and the short-day version.
 - `walk_rules`, `warmup_moves`.
 

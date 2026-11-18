@@ -39,7 +39,7 @@ export function renderRest(ctx, pos) {
   const last = rec ? workSets(rec).slice(-1)[0] : null;
   const ex = rec ? exercises[rec.done_exercise] : null;
   const hold = ex?.kind === "hold";
-  const askHere = Boolean(last && ex && ctx.session.week !== 1);
+  const askHere = Boolean(last && ex && ctx.session.week > 1); // not in week 1 nor on practice days (week 0)
   const pick = (v) => { model.setLastRir(ctx.session.id, rest.slot, v); rerender(); };
   const rirBox = askHere
     ? h("div", { class: "rir-box" },

@@ -9,7 +9,7 @@
 // - The whole-plan muscle check rows.
 // All muscle numbers come from engine/planpage.js setsByMuscle, the same function as "Day so far", so the opened
 // exercise and the muscle check never disagree.
-import { daySlots, blockPosition } from "./engine/schedule.js";
+import { daySlots, blockPosition, canTrain, inWeekOf } from "./engine/schedule.js";
 import { validRange, suggestFor } from "./engine/workout.js";
 import { findPlanDay, effectiveDay, planDaySlots, planSwapChoices, setsForSlot, ADDED_SLOTS, ADDED_SETS, ADDED_REST, MAX_ADDED } from "./engine/planedits.js";
 import { setsByMuscle, levelFor, soFarText, unitsOf, unitHeader, slotRole, GYM_GROUPS, gymGroupOf, fmtSets } from "./engine/planpage.js";
@@ -336,24 +336,25 @@ export const rangeText = (r) => (r[0] === r[1] ? String(r[0]) : `${r[0]}–${r[1
 // this week. today: the plan day of this date (none on Saturday and Sunday). Empty when the plan is not running.
 export function dayChoices(doc, date) {
   const pos = blockPosition(doc.block.start_monday, date);
-  if (pos.state !== "running") return [];
+  if (!canTrain(pos)) return []; // practice days before the block too (trainer D11)
   const sessions = Array.isArray(doc.sessions) ? doc.sessions : [];
   return DAY_IDS.map((day) => ({
     day,
-    done: sessions.some((s) => !s.deleted && s.week === pos.week && s.plan_day === day && (s.status === "finished" || s.status === "in_progress")),
+    done: sessions.some((s) => s && !s.deleted && inWeekOf(pos, doc.block.start_monday, s) && s.plan_day === day && (s.status === "finished" || s.status === "in_progress")),
     today: pos.planDay === day,
   }));
 }
 
 // The weight to use, in words, for the Plan's cards and the opened exercise (0.6.0: "the plan never shows weights").
 // Same numbers as the workout (suggestFor), without the break rules of a running workout.
-// Returns { text, note, kg }: text "40 kg" | "Your body weight" | "Pick a light weight";
+// Returns { text, note, kg }: text "40 kg" | "Try 20 kg" (first try, trainer D12) | "Your body weight" | "Pick a light weight";
 // note: why ("Your weight, set in the Plan.", "Last time: 40 kg x 10, 10, 9" ...).
 export function weightLine(doc, exId, week) {
   const ex = exercises[exId];
   if (ex.step === "bodyweight" || ex.kind === "hold") return { text: ex.kind === "hold" ? "No weight: a hold" : "Your body weight", note: "", kg: null };
   const st = (doc?.exercise_state ?? []).find((x) => x && x.id === `x-${exId}` && !x.deleted);
   const sg = suggestFor(doc, exId, { week, missed: null, exerciseState: st });
+  if (sg.action === "first_try") return { text: `Try ${sg.weight_kg} kg`, note: sg.note, kg: sg.weight_kg };
   if (typeof sg.weight_kg === "number" && sg.weight_kg > 0) return { text: `${sg.weight_kg} kg`, note: sg.action === "mine" ? sg.note : sg.lastText ?? sg.note ?? "", kg: sg.weight_kg };
   return { text: "Pick a light weight", note: "Start light with good form; the app counts up from what you log.", kg: null };
 }

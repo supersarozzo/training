@@ -37,7 +37,7 @@ export function renderWorkout() {
     case "warmup": return renderLiftWarmup(ctx);
     case "finish": return renderFinish(ctx);
     default: {
-      if (session.week === 1) {
+      if (session.week <= 1) { // week 1, and practice days (week 0, trainer D11)
         const screen = renderWeek1(ctx);
         if (screen) return screen;
         act = patchActive({ phase: "finish", rest: null });

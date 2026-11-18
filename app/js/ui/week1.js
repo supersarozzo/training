@@ -8,6 +8,7 @@ import { workoutScreen, topBar, actionBar, mainButton, stepper, choiceRow } from
 import { model, rerender } from "./app.js";
 import { patchActive } from "../active.js";
 import { exercises } from "../plan/plan-v2.js";
+import { warmupSets } from "../engine/progression.js";
 import { cues } from "../plan/cues.js";
 import { stepUp, stepDown } from "../engine/progression.js";
 import { week1NextSet, week1Stage, week1Result, LEFT_CHOICES, LEFT_TO_RIR } from "../engine/week1.js";
@@ -95,9 +96,14 @@ export function renderWeek1(ctx) {
     ];
   }
 
-  // 2. Warm-up: light weight, 10 reps
+  // The weight to try (0.7.1): a Plan weight, a weight found in practice, else the first-try table (trainer D12).
+  // The two sets below still find the real weight. A swap after pain keeps its own lighter weight.
+  const sg = weighted ? ctx.sugg(exId) : null;
+  const tryKg = rec.swap_reason === "hurts" && rec.swap_weight_kg != null ? rec.swap_weight_kg : sg && sg.weight_kg > 0 ? sg.weight_kg : 0;
+
+  // 2. Warm-up: light weight, 10 reps (about half the weight to try)
   if (stage === "warmup") {
-    const d = fresh(`${session.id}:${rec.slot}:warmup:${exId}`, { weight: 0, reps: 10 });
+    const d = fresh(`${session.id}:${rec.slot}:warmup:${exId}`, { weight: tryKg ? warmupSets(tryKg, exId, settings, 1)[0]?.weight_kg ?? 0 : 0, reps: 10 });
     return [
       workoutScreen(...header(h("p", {}, "Warm-up: a light weight, 10 reps. It should feel very easy.")),
         weightStepper(d),
@@ -118,7 +124,7 @@ export function renderWeek1(ctx) {
       suggestion = week1NextSet({ weight_kg: s1.weight_kg, reps: s1.reps, left: s1.left }, exId, settings);
     }
     const warmups = rec.sets.filter((s) => s.type === "warmup");
-    const startWeight = n === 1 ? (warmups.length ? warmups[warmups.length - 1].weight_kg : 0) : suggestion ? suggestion.weight_kg : 0;
+    const startWeight = n === 1 ? (tryKg || (warmups.length ? warmups[warmups.length - 1].weight_kg : 0)) : suggestion ? suggestion.weight_kg : 0;
     const d = fresh(`${session.id}:${rec.slot}:set${n}:${exId}`, { weight: startWeight, reps: n === 2 && work[0] ? work[0].reps ?? ex.range[0] : ex.range[0] });
     const save = () => {
       model.logSet(session.id, rec.slot, hold
@@ -131,7 +137,7 @@ export function renderWeek1(ctx) {
     return [
       workoutScreen(...header(h("div", {},
         h("div", { class: "target" }, `Set ${n} of ${sets} · stop with about 3 reps left`),
-        n === 1 && weighted ? h("p", { class: "small muted" }, "Pick a weight that feels easy. You find the right one in these two sets.") : null,
+        n === 1 && weighted ? h("p", { class: "small muted" }, tryKg ? `Try ${tryKg} kg. ${sg?.action === "first_try" ? "First try. Set 1 tells us if it is right." : sg?.note ?? ""}`.trim() : "Pick a weight that feels easy. You find the right one in these two sets.") : null,
         n === 2 && first ? h("p", { class: "small muted" }, `Set 1: ${hold ? `${first.seconds} s` : weighted ? `${first.weight_kg} kg × ${first.reps}, ${first.left} left` : `${first.reps} reps`}.`) : null,
         suggestion ? h("p", { class: "small" }, `${suggestion.note} Suggested: ${suggestion.weight_kg} kg.`) : null)),
       weighted ? weightStepper(d) : null,

@@ -2,7 +2,7 @@
 import { model, go, rerender } from "./app.js";
 import { getActive, setActive, patchActive, clearActive } from "../active.js";
 import { exercises, days } from "../plan/plan-v2.js";
-import { planForSession, missedRule, canStartWorkout, blockPosition, sessionLayout } from "../engine/schedule.js";
+import { planForSession, missedRule, canStartWorkout, blockPosition, sessionLayout, canTrain, sessionWeek } from "../engine/schedule.js";
 import { buildSequence, nextPosition, walkSuggestion, finishedSessions, suggestFor, slotRecord, workSets } from "../engine/workout.js";
 import { startTimer } from "../timer.js";
 import { today } from "../clock.js";
@@ -92,11 +92,11 @@ export function startWorkout({ kind = "full", planDay, swappedFrom = null }) {
   const check = canStartWorkout(doc.sessions, t);
   if (!check.ok) return check;
   const pos = blockPosition(doc.block.start_monday, t);
-  if (pos.state !== "running") return { ok: false, reason: "The plan is not running today." };
+  if (!canTrain(pos)) return { ok: false, reason: "The plan is not running today." }; // before the block: a practice day (D11)
   const lastFinished = finishedSessions(doc.sessions).find((s) => s.date < t);
   const missed = missedRule(lastFinished ? lastFinished.date : null, t);
   // No slots passed: the model reads the day to train (the saved Plan edit of that day, else the plan's day).
-  const session = model.startSession({ planDay, week: pos.week, kind, swappedFrom, setsOverride: missed.setsOverride });
+  const session = model.startSession({ planDay, week: sessionWeek(pos), kind, swappedFrom, setsOverride: missed.setsOverride });
   prime();
   keepScreenOn();
   setActive({ session_id: session.id, phase: "walk", timer_end: null, timer_total: null, rest: null, hold: null });

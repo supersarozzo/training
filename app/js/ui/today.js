@@ -8,7 +8,7 @@ import { tabActionBar, mainButton, secondaryButton } from "./parts.js";
 import { model, go, rerender } from "./app.js";
 import { today } from "../clock.js";
 import { getActive, setActive } from "../active.js";
-import { dayLabel, canStartWorkout, missedRule } from "../engine/schedule.js";
+import { dayLabel, canStartWorkout, missedRule, PRACTICE_LABEL, practiceLine, sessionWeek } from "../engine/schedule.js";
 import { finishedSessions, suggestFor, buildUnits } from "../engine/workout.js";
 import { days, exercises } from "../plan/plan-v2.js";
 import { dayLayout } from "../dayplan.js";
@@ -105,7 +105,7 @@ function exerciseList(doc, planDay, week, missed) {
       // The reps set in the Plan for this exercise count on every day (0.6.0), else the plan's range.
       const reps = `${rangeText(rangeFor(doc, exId))}${ex.kind === "hold" ? " s" : ""}`;
       const end = ex.kind === "hold" ? `${sg.range[0]} s` : ex.step === "bodyweight" ? `${sg.reps}` : sg.weight_kg ? `${fmtKg(sg.weight_kg)} kg` : "–";
-      const what = ex.kind === "hold" ? "hold" : ex.step === "bodyweight" ? "reps" : sg.weight_kg ? (sg.action === "mine" ? "your weight" : "suggested") : "pick light";
+      const what = ex.kind === "hold" ? "hold" : ex.step === "bodyweight" ? "reps" : sg.weight_kg ? (sg.action === "mine" ? "your weight" : sg.action === "first_try" ? "first try" : "suggested") : "start light";
       return h("button", { class: "ex-row", type: "button", "aria-label": `${slot.slot} ${ex.name}: ${slot.sets} sets of ${reps}${ex.perSide ? " each side" : ""}, ${end} ${what}. Open tips.`, onclick: () => openExerciseInfo(exId, { settingsNote: false }) },
         thumb(exId, { small: true }),
         h("span", { class: "grow" },
@@ -142,12 +142,18 @@ export function renderToday() {
   const open = doc.sessions.find((s) => !s.deleted && s.status === "in_progress");
   const dayName = label.planDay ? days[label.planDay].name : new Date(`${t}T12:00:00`).toLocaleDateString("en-GB", { weekday: "long" });
   const running = label.state === "running";
+  // Before the block's first Monday every day is a practice day (trainer D11, 0.7.1): the same Start and day picker,
+  // the week-1 rules, saved as week 0. The start date never moves.
+  const practice = label.state === "before";
+  const active = running || practice;
+  const week = sessionWeek(label); // the week the day is planned and saved with: 0 on a practice day
   // The plan day Today shows: the one picked today, else defaultShown. Start and Short day train this day.
-  const choices = running ? dayChoices(doc, t) : [];
+  const choices = active ? dayChoices(doc, t) : [];
   const shown = picked.date === t && choices.some((c) => c.day === picked.day) ? picked.day : defaultShown(doc, t);
   const swapFrom = shown !== label.planDay ? label.planDay : null; // saved on the workout: done in place of that day
-  const heading = open ? dayName : shown ? days[shown].focus : running ? "Rest day" : dayName;
-  const sub = !running || open ? label.text
+  const heading = open ? dayName : shown ? days[shown].focus : active ? "Rest day" : dayName;
+  const sub = !active || (open && running) ? label.text
+    : open ? null
     : !shown ? `${dayName} · no workout planned`
     : shown === label.planDay ? null // the hero card already says "Wednesday's workout"
     : label.planDay ? `${days[shown].name}'s workout, today in place of ${days[label.planDay].name}'s`
@@ -155,11 +161,12 @@ export function renderToday() {
   const children = [
     h("div", { class: "today-head" },
       h("div", {},
-        h("span", { class: "eyebrow accent" }, running ? `Week ${label.week} of ${weeks.length} · ${weekInfo(label.week).phase}` : "Today"),
+        h("span", { class: "eyebrow accent" }, running ? `Week ${label.week} of ${weeks.length} · ${weekInfo(label.week).phase}` : practice ? PRACTICE_LABEL : "Today"),
         h("h1", { class: shown && !open ? "focus" : "" }, heading))),
     running ? blockBar(label.week) : null,
+    practice ? h("p", { class: "small muted" }, practiceLine(doc.block.start_monday)) : null,
     sub ? h("p", { class: "small muted" }, sub) : null,
-    running && !open ? dayPicker(choices, shown, t) : null,
+    active && !open ? dayPicker(choices, shown, t) : null,
   ];
   let bar = null;
 
@@ -174,8 +181,6 @@ export function renderToday() {
     const r = resumeCard(doc, open);
     children.push(r.card);
     bar = r.button;
-  } else if (label.state === "before") {
-    children.push(h("div", { class: "card" }, h("h2", {}, "Your plan has not started"), h("p", { class: "muted" }, `It starts on Monday ${doc.block.start_monday}.`)));
   } else if (label.state === "after") {
     children.push(h("div", { class: "card" }, h("h2", {}, "The 12 weeks are done"), h("p", { class: "muted" }, "Time for the review. Talk to the Training chat about the next block.")));
   } else if (!shown) {
@@ -188,15 +193,15 @@ export function renderToday() {
     const check = canStartWorkout(doc.sessions, t);
     const lastFinished = finishedSessions(doc.sessions)[0];
     const missed = missedRule(lastFinished ? lastFinished.date : null, t);
-    const day = dayLayout(doc, { planDay: shown, week: label.week, today: t, kind });
+    const day = dayLayout(doc, { planDay: shown, week, today: t, kind });
     // A saved Plan edit with more or fewer sets changes the time (about 8 minutes for an added exercise).
-    const total = editedMinutes(day.minutes, shown, label.week, editOf(doc, shown));
+    const total = editedMinutes(day.minutes, shown, week, editOf(doc, shown));
     const blocks = total === day.minutes ? day.layout : [...day.layout.slice(0, -1), { id: "edits", minutes: total - day.minutes }, day.layout[day.layout.length - 1]];
-    children.push(dayHero(shown, label.week, blocks, total, doc));
+    children.push(dayHero(shown, week, blocks, total, doc));
     if (check.ok && choices.find((c) => c.day === shown)?.done) children.push(h("div", { class: "card" }, h("p", {}, `You did ${days[shown].name}'s workout this week already. You can do it again.`)));
-    if (label.week === 1) children.push(h("div", { class: "card" }, h("p", {}, "Week 1: learn the moves and find your weights. Two sets of each exercise. It will feel easy on purpose."), h("p", { class: "small muted" }, "In Settings, fill in the gym's dumbbell sizes and weight steps when you know them.")));
+    if (week <= 1) children.push(h("div", { class: "card" }, h("p", {}, `${practice ? "Practice" : "Week 1"}: learn the moves and find your weights. Two sets of each exercise. It will feel easy on purpose.`), h("p", { class: "small muted" }, "In Settings, fill in the gym's dumbbell sizes and weight steps when you know them.")));
     if (lastFinished && missed.kind !== "carry_on") children.push(h("div", { class: "card warn" }, h("p", {}, missed.message)));
-    children.push(exerciseList(doc, shown, label.week, missed));
+    children.push(exerciseList(doc, shown, week, missed));
     if (!check.ok) {
       children.push(h("div", { class: "card" }, h("p", { class: "status-success" }, "Done for today."), h("p", { class: "muted" }, check.reason)));
     } else {

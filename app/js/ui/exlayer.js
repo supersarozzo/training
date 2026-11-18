@@ -47,9 +47,10 @@ export function inPlanText(exId) {
 
 const tile = (label, value, note) => h("div", { class: "ex-tile" }, h("span", { class: "eyebrow" }, label), h("b", {}, value), note ? h("small", {}, note) : null);
 
-// The Weight tile: "40 kg" (with "yours" when set in the Plan), "Body" for body-weight work, "Find it" before any log.
-const weightTile = (wl) => (wl.kg ? tile("Weight", wl.text, wl.note === "Your weight, set in the Plan." ? "yours" : null)
-  : wl.text === "Your body weight" ? tile("Weight", "Body", "weight") : wl.text.startsWith("No weight") ? tile("Weight", "–", "a hold") : tile("Weight", "Find it", "start light"));
+// The Weight tile: "40 kg" (with "yours" when set in the Plan, "first try" before any weight: trainer D12, 0.7.1),
+// "Body" for body-weight work.
+const weightTile = (wl) => (wl.kg ? tile("Weight", `${wl.kg} kg`, wl.text.startsWith("Try ") ? "first try" : wl.note === "Your weight, set in the Plan." ? "yours" : null)
+  : wl.text === "Your body weight" ? tile("Weight", "Body", "weight") : wl.text.startsWith("No weight") ? tile("Weight", "–", "a hold") : tile("Weight", "–", "start light"));
 
 export function openExerciseLayer(exId, ctx = null) {
   const ex = exercises[exId];

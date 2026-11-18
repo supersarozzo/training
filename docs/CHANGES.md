@@ -2,6 +2,51 @@
 
 What is new in each app version, in plain words. Newest first. Older versions: see `docs/HANDOVER.md` and the git log.
 
+## 0.7.1 · 2026-11-18
+
+Leftovers wave, built by chat 8.39 on top of 0.7.0. The trainer (8.37) decided every training rule. Not pushed yet.
+
+**What you found on the iPhone**
+- The top of the app is sharp again. The soft blur under the clock is drawn by iOS itself and a web app can not turn it
+  off. The app no longer puts a green glow there, and each screen starts a little lower, below that blur.
+- You can start a workout before the plan's first Monday. Those days are practice days: "Practice week · Learn, find
+  weights", with the same Start button and day picker as week 1, 2 sets, about 3 reps left. The plan's start date does
+  not move. In week 1 an exercise you practised starts at the weight you found.
+- Every exercise shows a weight to try, for example "Try 20 kg", with "First try. Set 1 tells us if it is right." The
+  find-your-weight steps then correct it. The numbers come from the trainer's table and never from your body weight.
+- A double tap no longer zooms the page. Pinch to zoom still works.
+
+**Workouts**
+- Warm-up sets are shorter: a big lift gets two warm-up sets only when its muscle is the first of the day; a small
+  exercise (curls, raises, pushdowns) gets one light set; an exercise whose muscle you already worked that day gets
+  none. Saves about 2 minutes a day.
+- Stopped an exercise early twice in a row, and missed the reps both times? Next time it is one small step lighter.
+  This never happens in week 1 or the easier weeks, and never for planks, crunches or other bodyweight moves.
+- The Stop question now says: "Does it hurt? Use Swap › It hurts instead."
+- Weeks 7 to 11: on Monday, Wednesday and Thursday the last exercise (calf raise, leg curl) keeps 3 sets, and the
+  plank or side plank has 1 set. Leg days do not change. (Workouts already started keep their sets.)
+- A weight you set in the Plan on the morning of a workout no longer wins after that workout. The app now saves the
+  time, not only the day.
+- "Last time" and the Progress rows show all your sets when you did the same exercise twice in one workout.
+
+**Plan and Gym**
+- The cable pull-through is listed under Glutes, as its muscle data says.
+- The Muscles screen counts each set once per row: rows now count for the lats and the middle back, and "Back" does
+  not count them twice.
+- The Add sheet and the Change sheet say "in week 8" when you look at another week, not "this week".
+- The Change sheet's weight box is empty when the app has no weight yet (no more "0 kg"). The Plan says "Pick a light
+  weight" in one way only.
+
+**Settings, Today and Diet**
+- Settings shows a food line ("Food synced …" or what went wrong). "Send to GitHub" says "Workouts synced. Food did
+  not sync: …" when only the food failed.
+- "Set up GitHub" now says where: "in Progress › Settings" outside Settings, "below" inside Settings.
+- Today: the Start workout button no longer covers the last line.
+- Diet: each food shows its protein in bold, then the calories, and the time it was added (or last changed).
+  After Undo, the list behind an open sheet updates at once.
+- Small fixes: the week chip stays on one line; the small "Settings" link on Today is easier to tap; the walk shows
+  "5" in both places; the body map outline is easier to see in dark mode.
+
 ## 0.7.0 · 2026-11-18
 
 The Diet part of the Plan, Gym and Diet redesign (build steps 6, 7 and 8 of `redesign/plan-diet/judge/JUDGING.md`

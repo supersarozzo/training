@@ -8,7 +8,7 @@ import { exercises, MOVE_SECONDS, weekInfo, walkRules, BIG_LIFTS } from "../plan
 import { exerciseMuscles } from "../plan/muscles.js";
 import { localDate } from "../ids.js";
 import { planForDay, missedRule } from "./schedule.js";
-import { nextSuggestion, warmupSets, stepSize, weightAfterBreak, stepDown, lowerBy } from "./progression.js";
+import { nextSuggestion, warmupSets, stepSize, weightAfterBreak, stepDown, lowerBy, firstTryWeight } from "./progression.js";
 import { startWalk, nextWalkBase, walkForDay, walkAfterBreak } from "./walk.js";
 
 const isPairSlot = (slot) => /^[A-C][12]$/.test(slot);
@@ -174,6 +174,8 @@ export function planWeightNewer(state, last) {
   return state.my_weight_at >= last.date;
 }
 
+export const FIRST_TRY_NOTE = "First try. Set 1 tells us if it is right.";
+
 // What to show for one exercise today.
 // doc: the data document. ctx: { week, missed (result of missedRule), exerciseState (record or undefined) }
 // Returns { weight_kg (or null when nothing is known), reps, range, note, last, lastText, action }
@@ -195,14 +197,19 @@ export function suggestFor(doc, exerciseId, ctx) {
     if (state && state.start_weight_kg) {
       return { ...base, weight_kg: state.start_weight_kg, action: "start", note: "Your starting weight from week 1." };
     }
-    return { ...base, weight_kg: ex.step === "bodyweight" ? 0 : null, action: "unknown", note: ex.step === "bodyweight" ? "" : "Pick a light weight you can lift with good form." };
+    if (ex.step === "bodyweight") return { ...base, weight_kg: 0, action: "unknown", note: "" };
+    // Nothing known yet: the first-try weight (trainer D12, 0.7.1); the week-1 steps correct it from set 1.
+    const first = firstTryWeight(exerciseId, settings, doc.profile);
+    if (first > 0) return { ...base, weight_kg: first, action: "first_try", note: FIRST_TRY_NOTE };
+    return { ...base, weight_kg: null, action: "unknown", note: "Pick a light weight you can lift with good form." };
   }
 
-  // The weight found in week 1 is the start of week 2 (plan v2 section 8): no progression on top of it.
-  if (last.week === 1 && state && state.start_weight_kg) {
+  // The weight found in week 1 is the start of week 2 (plan v2 section 8): no progression on top of it. A weight found
+  // on a practice day (week 0, trainer D11) is the start of week 1, which may adjust it once more.
+  if (last.week <= 1 && state && state.start_weight_kg) {
     let w = state.start_weight_kg;
     if (ctx.missed?.weightFactor < 1) w = weightAfterBreak(w, ctx.missed.weightFactor, exerciseId, settings);
-    return { ...base, weight_kg: w, action: "start", note: "Your starting weight from week 1." };
+    return { ...base, weight_kg: w, action: "start", note: last.week === 0 ? "The weight you found in practice." : "Your starting weight from week 1." };
   }
 
   const s = nextSuggestion(last, perfs[1], { exerciseId, week: ctx.week, settings, planRange: own });

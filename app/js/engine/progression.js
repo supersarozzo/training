@@ -1,6 +1,6 @@
 // Progression: double progression (plan v2 section 9), warm-up sets, easier-week and effort rules (sections 5, 10).
 // Pure. Suggestions only: Rosario can always change the weight.
-import { exercises, weekInfo } from "../plan/plan-v2.js";
+import { exercises, weekInfo, firstTryKg } from "../plan/plan-v2.js";
 
 const round1 = (n) => Math.round(n * 10) / 10;
 
@@ -55,6 +55,28 @@ export function stepDown(w, exerciseId, settings, n = 1) {
 // The size of the next step up from `w` in kg (for the big-jump rule).
 export function stepSize(w, exerciseId, settings) {
   return round1(stepUp(w, exerciseId, settings) - w);
+}
+
+// The first-try weight (trainer D12, 0.7.1). profile: doc.profile (only intake.q22_sex is read, never a body number).
+// A profile that is not "male" (or none) gets 0.6 x the table. Always rounded DOWN to what the gym has, never 0:
+// dumbbells: the heaviest listed at or below the value, else the lightest listed, else a multiple of 2 kg (at least 2);
+// stacks: a multiple of the stack step (at least one step); Smith and hip thrust: a multiple of 5 kg (at least 5).
+// 0 for bodyweight and timed exercises (0 means "let the app choose").
+export function firstTryWeight(exerciseId, settings, profile) {
+  const ex = exercises[exerciseId];
+  const table = firstTryKg[exerciseId];
+  if (!ex || ex.step === "bodyweight" || ex.kind === "hold" || !table) return 0;
+  const value = profile?.intake?.q22_sex === "male" ? table : table * 0.6;
+  let out;
+  if (ex.step === "dumbbell") {
+    const list = dumbbells(settings);
+    const fit = [...list].reverse().find((x) => x <= value + 1e-9);
+    out = fit ?? list[0] ?? Math.max(FALLBACK_DUMBBELL_STEP_KG, Math.floor(value / FALLBACK_DUMBBELL_STEP_KG + 1e-9) * FALLBACK_DUMBBELL_STEP_KG);
+  } else {
+    const step = ex.step === "smith_2x2.5" ? SMITH_STEP_KG : stackStep(exerciseId, settings);
+    out = Math.max(step, Math.floor(value / step + 1e-9) * step);
+  }
+  return round1(out);
 }
 
 // Lower a weight by about `fraction` (0.1 = 10 %) and round DOWN to a size the gym has.

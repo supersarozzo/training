@@ -129,6 +129,22 @@ export const days = {
 
 // The cable pull-through is labelled glutes, as its muscle data (trainer L4, answer T4 to 8.39, 0.7.1).
 
+// First-try weights (trainer D12, 0.7.1): the weight shown before an exercise has any weight (none set in the Plan,
+// none logged, none found). An adult man, beginner, aimed low (about half a typical beginner's maximum); the week-1
+// steps correct it from set 1. Dumbbells: kg per dumbbell. Stacks: the number on the stack. smith_squat, hip_thrust
+// and calf_raise_standing: the plates added in total, the bar not counted. Rounded down to the gym in
+// engine/progression.js firstTryWeight. Bodyweight and timed exercises have none.
+export const firstTryKg = Object.freeze({
+  chest_press: 20, db_bench_press: 10, incline_db_press: 8, shoulder_press_machine: 15, seated_db_shoulder_press: 8,
+  pulldown: 30, lat_pulldown_machine: 30, one_arm_db_row: 12, seated_cable_row: 30, seated_row_machine: 30,
+  db_curl: 6, hammer_curl: 6, cable_curl: 10, triceps_pushdown: 15, overhead_triceps_ext: 10,
+  lateral_raise: 4, cable_lateral_raise: 5, rear_delt_raise: 4, face_pull: 15,
+  leg_press: 40, leg_extension: 20, goblet_squat: 12, smith_squat: 10, hip_thrust: 20, db_glute_bridge: 12,
+  romanian_deadlift: 12, cable_pull_through: 15, calf_raise_leg_press: 40, calf_raise_standing: 10,
+  calf_raise_machine: 30, one_leg_db_calf_raise: 6, db_lying_leg_curl: 6, leg_curl_machine: 15, cable_leg_curl: 5,
+  cable_crunch: 20,
+});
+
 // Big lifts (plan v2 section 5; trainer L1, answer T2 to 8.39): the first exercise of a pair gets both warm-up sets
 // only when it is a big lift whose main muscle was not worked earlier that day; a small one gets one light set.
 export const BIG_LIFTS = Object.freeze([

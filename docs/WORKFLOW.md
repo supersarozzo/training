@@ -263,6 +263,10 @@ Why:
 
 Week 1 teaches each exercise and finds a good weight. Nobody tests a maximum lift. Good apps either guess a careful weight from your answers (Fitbod, StrongLifts), fill in what you did last time (JEFIT, Hevy, Strong), or let you find it with light test sets (Alpha Progression). Nobody has a "last time" yet, and the gym's machines differ, so finding it with light test sets is safer and more accurate.
 
+**Practice days before the plan's start (0.7.1, trainer D11):** every day before the block's first Monday is a practice day. Today shows the day's workout with Start and the day picker, as in week 1 (Saturday and Sunday: the rest card, the picker can still start any day). The label is "Practice week · Learn, find weights", never "Week 0", with the line "Your plan starts on Monday <date>. Practice now: find your weights and learn the moves." Practice uses the week-1 rules below and is saved with week 0. The start date never moves. Week 1 starts a practised exercise at the weight found in practice and may adjust it once more. Practice workouts are not in the week-1 check-in; the missed-time rules count them.
+
+**First-try weights (0.7.1, trainer D12):** before an exercise has any weight (none set in the Plan, none logged, none found), the app shows "Try <kg>" with "First try. Set 1 tells us if it is right." on Today, the Plan cards, the opened exercise and the set screen. The weights come from the trainer's table (`plan-v2.js firstTryKg`), times 0.6 for a profile that is not "male", always rounded down to the gym's dumbbells, stack step or 5 kg plates, never 0. No body weight is read. In week 1 and practice the warm-up starts at about half of it and set 1 at it; the find-your-weight steps below then correct it.
+
 **Rules for week 1:**
 - 2 working sets per exercise, not 3.
 - Stop every set with about 3 reps left. It will feel easy. That is on purpose.
@@ -321,7 +325,7 @@ The app must work offline, keep the screen on, and save after every set (so a cl
 - Shows sync status ("Saved to GitHub at 18:42" or "3 workouts not synced yet").
 - A Monday to Friday day picker (0.6.0): any day of this week can be picked (done days have a tick); the screen shows the picked day.
 - Buttons: **Start** and **Short day (60 min)** train the picked day. A day that is not the calendar's day is saved as a swap.
-- In a set: **Stop this exercise here** moves on with the sets done so far (asks first, Undo for 8 s).
+- In a set: **Stop this exercise here** moves on with the sets done so far (asks first, Undo for 8 s). The question also says "Does it hurt? Use Swap › It hurts instead." (0.7.1, trainer D10: pain goes through Swap). Stopped twice in a row on an exercise, with a set below the range both times: next time it is one smallest step lighter (weeks 2-5 and 7-11 only; never for bodyweight or timed exercises).
 - Reminder text: "Start a Strength workout on your Apple Watch now" (the free Watch option from the research).
 - If you missed days, the app says so in plain words and applies the rule in E3.
 
@@ -331,7 +335,7 @@ The app must work offline, keep the screen on, and save after every set (so a cl
 **3. Exercise screen (one pair at a time)**
 - Name, equipment, the target (for example "3 sets · 8 to 12 reps · stop with 2 left"), and the **suggested weight**.
 - "Last time" next to each set: the weight and reps from your last session. Strong and Hevy show this; it is the most useful number on the screen.
-- **Warm-up sets** for the first exercise of each pair: the app shows them (about 50 % x 10 reps, then about 75 % x 5 reps), rounded to the gym's weights.
+- **Warm-up sets** for the first exercise of a pair (0.7.1, trainer L1): a big lift whose muscle is the first of the day gets two (about 50 % x 10 reps, then about 75 % x 5 reps); a small exercise gets one light set (about 50 % x 10); an exercise whose main muscle was already worked earlier that day gets none. Rounded to the gym's weights.
 - **Form tips** behind a tap.
 - **Machine note** (seat height, pin) from week 1.
 - **Each set row:** weight (filled in), reps (filled in with the target), a big **Done** button.

@@ -32,9 +32,25 @@ export function blockPosition(startMonday, dateStr) {
   return { state, week, day: dayOfWeek(dateStr), planDay: DAY_IDS.includes(dayOfWeek(dateStr)) ? dayOfWeek(dateStr) : null };
 }
 
-// The label shown on Today: "Monday · Week 3 · Build 1".
+// Practice days (trainer D11, 0.7.1): every day before the block's first Monday. Today offers a workout with the
+// week-1 rules (weekInfo clamps any week below 1 to week 1); it is saved with week 0, which is never shown as a number;
+// the start date never moves.
+export const PRACTICE_LABEL = "Practice week · Learn, find weights";
+export const canTrain = (pos) => pos.state === "running" || pos.state === "before";
+export const sessionWeek = (pos) => (pos.state === "before" ? 0 : pos.week);
+const longDate = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long" });
+export const practiceLine = (startMonday) => `Your plan starts on Monday ${longDate(startMonday)}. Practice now: find your weights and learn the moves.`;
+// Was a saved workout in the same plan week as `pos`? Practice workouts all carry week 0, so for them the calendar
+// week decides.
+export function inWeekOf(pos, startMonday, s) {
+  if (pos.state !== "before") return s.week === pos.week;
+  return s.week === 0 && typeof s.date === "string" && weekNumber(startMonday, s.date) === pos.week;
+}
+
+// The label shown on Today: "Monday · Week 3 · Build 1"; before the block "Practice week · Learn, find weights".
 export function dayLabel(startMonday, dateStr) {
   const pos = blockPosition(startMonday, dateStr);
+  if (pos.state === "before") return { ...pos, text: PRACTICE_LABEL };
   if (!pos.planDay) return { ...pos, text: "Rest day" };
   const w = weekInfo(pos.week);
   return { ...pos, text: `${days[pos.planDay].name} · Week ${pos.week} · ${w.phase}` };
