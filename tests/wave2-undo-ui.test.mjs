@@ -64,3 +64,40 @@ test("U3 a refused edit (the last exercise) shows the message and saves nothing"
   assert.ok(!body.childNodes.some((n) => n.className && n.className.includes("undo-toast")), "no Undo toast for a refused edit");
   assert.ok(body.childNodes.some((n) => /at least one exercise/.test(text(n))), "the plain-words message is shown");
 });
+
+const sheetButton = (label) => all(body).find((n) => n.tagName === "BUTTON" && text(n) === label);
+
+test("U4 Back to the plan's day is refused for a day saved by a newer app (auditor round 1 m1): the record stays", () => {
+  fresh();
+  const doc = validDoc();
+  doc.plan_days = [{ id: "p-plan-v2-tue", updated_at: "2026-03-02T09:00:00.000Z", plan_id: "plan-v2", day: "tue", slots: [{ slot: "Z9", ex: "leg_press", sets: 3, rest: 60 }] }];
+  store.save(doc);
+  pe.openBackToPlan("tue");
+  sheetButton("Back to the plan's Tuesday").click();
+  const rec = store.load().plan_days[0];
+  assert.notEqual(rec.deleted, true, "never tombstoned");
+  assert.equal(rec.slots[0].slot, "Z9");
+  assert.ok(body.childNodes.some((n) => /newer app version/.test(text(n))));
+});
+
+test("U5 Back to the plan's day is refused while that day's workout runs (auditor round 1 m2)", () => {
+  fresh();
+  model.swapPlanSlot("tue", "A1", "goblet_squat");
+  const s = model.startSession({ planDay: "tue", week: 3, kind: "full" });
+  const id = (s.sessions ?? store.load().sessions).find((x) => x.plan_day === "tue").id;
+  store.saveDevice({ ...store.loadDevice(), active: { session_id: id, phase: "walk" } });
+  pe.openBackToPlan("tue");
+  sheetButton("Back to the plan's Tuesday").click();
+  assert.equal(model.effectivePlanDay("tue").edited, true, "the edited day stays");
+  assert.ok(body.childNodes.some((n) => /Workout running/.test(text(n))));
+  store.saveDevice({ ...store.loadDevice(), active: undefined });
+});
+
+test("U6 Undo stores the day exactly as it was saved (a lone pair exercise keeps its empty rest) (auditor N1)", () => {
+  fresh();
+  model.removePlanSlot("tue", "A2"); // A1 is left alone: stored rest null, shown with the pair's rest
+  const stored = JSON.parse(JSON.stringify(pe && store.load().plan_days[0].slots));
+  pe.removeSlot("tue", "B1");
+  undoButton().button.click();
+  assert.deepEqual(store.load().plan_days[0].slots, stored);
+});
