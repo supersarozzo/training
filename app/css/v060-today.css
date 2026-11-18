@@ -1,2 +1,28 @@
 /* 0.6.0 Today as the gym day (Today worker, 2026-11-18): day picker, Start, "Stop this exercise here". Colours only
    through the tokens in app.css. */
+
+/* The heading is the focus of the shown day ("Upper body A"): smaller than the old day name, so 2 lines fit. */
+.today-head h1.focus { font-size: 32px; line-height: 1.08; letter-spacing: -.02em; }
+
+/* Monday to Friday of this week. The picked day is filled with the soft accent; "Today" marks the calendar's day;
+   a tick marks a day done this week. Each chip is at least 56 px tall (DESIGN.md: nothing under 44 px). */
+.day-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--s2); margin: var(--s2) 0 var(--s4); }
+.day-chip {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-height: 56px; min-width: 0; padding: var(--s2) 2px; border-radius: var(--r-input);
+  border: 1px solid var(--border-default); background: var(--bg-raised); color: var(--text-primary);
+  font: inherit; cursor: pointer; transition: transform var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+.day-chip:active { transform: scale(.95); }
+.day-chip .d { display: inline-flex; align-items: center; gap: 3px; font-size: 16px; font-weight: 800; }
+.day-chip .s { min-height: 15px; font-size: 12px; font-weight: 700; line-height: 15px; color: var(--text-muted); }
+.day-chip.done .d { color: var(--text-muted); }
+.day-chip.done .d svg { color: var(--accent); }
+.day-chip.today .s { color: var(--accent-text); }
+.day-chip[aria-pressed="true"] { background: var(--accent-soft); border: 2px solid var(--accent); }
+.day-chip[aria-pressed="true"] .d { color: var(--text-primary); }
+.day-chip[aria-pressed="true"] .s { color: var(--accent-on-soft); }
+
+/* "Stop this exercise here" on the set screen: a plain text button under "Undo last set", 44 px tall. */
+.stop-row { margin-top: 0; }
+.text-button.stop-ex { min-height: var(--tap-min); padding: 0 var(--s3); }

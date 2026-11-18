@@ -1,12 +1,14 @@
-// Today: the day, the blocks, today's exercises with suggested weights, the buttons (Start, Short day, Swap day), the
-// missed-days message, your numbers. Base: redesign A. From builder C: the list of today's exercises. The walk minutes
+// Today: the gym day. A day picker (Monday to Friday of this week) picks the plan day to train; the heading, the
+// blocks, the exercises with reps and suggested weights and the buttons (Start, Short day) follow the picked day. Also
+// the missed-days message and your numbers. 0.6.0 (Rosario, 2026-11-18): "so I can start any day of the week"; the
+// day picker replaces the old Swap day sheet. Base: redesign A. From builder C: the list of today's exercises. The walk minutes
 // come from dayLayout() (dayplan.js), the same engine call as the walk screen (Rosario's answer 60 a: display only).
 import { h } from "../h.js";
-import { tabActionBar, mainButton, secondaryButton, openSheet } from "./parts.js";
+import { tabActionBar, mainButton, secondaryButton } from "./parts.js";
 import { model, go, rerender } from "./app.js";
 import { today } from "../clock.js";
 import { getActive, setActive } from "../active.js";
-import { dayLabel, canStartWorkout, swapOptions, missedRule } from "../engine/schedule.js";
+import { dayLabel, canStartWorkout, missedRule } from "../engine/schedule.js";
 import { finishedSessions, suggestFor, buildUnits } from "../engine/workout.js";
 import { days, exercises } from "../plan/plan-v2.js";
 import { dayLayout } from "../dayplan.js";
@@ -21,15 +23,17 @@ import { installHintShown, dismissInstallHint } from "./update.js";
 import { store } from "./app.js";
 import { syncer } from "../syncer.js";
 import { statusText, keyEndsSoon, connectionOf } from "../sync/sync.js";
-import { weekInfo, DAY_IDS, weeks } from "../plan/plan-v2.js";
+import { weekInfo, weeks } from "../plan/plan-v2.js";
 import { planForDay } from "../engine/schedule.js";
 import { photosFor } from "../plan/media.js";
 import { icon } from "./icons.js";
-import { editOf, editedMinutes } from "../planview.js";
+import { editOf, editedMinutes, dayChoices, rangeFor, rangeText } from "../planview.js";
 import { onMount, stagger } from "./motion.js";
 
 let savedMessage = null; // shown once, after a workout was saved
 let savedLink = null; // the Log to Health link, only when that button is on
+let picked = { date: null, day: null }; // the day picked on Today; it counts only on the date it was picked
+let calm = false; // true for the redraw after a day pick: no fade-in of the whole screen
 export function setSavedMessage(text, link = null) { savedMessage = text; savedLink = link; }
 
 const BLOCK_NAMES = {
@@ -52,16 +56,6 @@ function resumeCard(doc, session) {
   return { card: h("div", { class: "card accent" }, h("span", { class: "eyebrow accent" }, "Workout in progress"), h("h2", {}, `Continue ${when} workout?`), h("p", { class: "muted" }, `Every set you did is saved${done ? ` (${done} so far)` : ""}.`)), button: mainButton("Continue workout", resume) };
 }
 
-function openSwapDay(doc, t, pos) {
-  const options = swapOptions({ startMonday: doc.block.start_monday, today: t, sessions: doc.sessions });
-  const close = openSheet(
-    h("h2", {}, "Swap day"),
-    h("p", { class: "muted" }, "Do the workout of an earlier day that you missed this week, in place of today's."),
-    options.length
-      ? options.map((d) => h("button", { class: "button secondary", type: "button", onclick: () => { close(); const r = startWorkout({ planDay: d, swappedFrom: pos.planDay }); if (!r.ok) rerender(); } }, `${days[d].name}: ${days[d].focus}`))
-      : h("p", {}, "No missed day this week to swap in."));
-}
-
 // The 12 weeks as a row of small bars: done weeks dim, this week glowing (redesign A).
 function blockBar(week) {
   const bar = h("div", { class: "block-bar grow", role: "img", "aria-label": `Week ${week} of ${weeks.length}` },
@@ -70,12 +64,32 @@ function blockBar(week) {
   return bar;
 }
 
-// Monday to Friday of this week: a filled circle for each day with a finished workout.
-function weekStrip(doc, label) {
-  if (label.state !== "running") return null;
-  const doneDays = new Set(doc.sessions.filter((s) => !s.deleted && s.week === label.week && s.status === "finished").map((s) => s.plan_day));
-  return h("div", { class: "week-strip", role: "img", "aria-label": `This week: ${doneDays.size} of 5 workouts done` },
-    DAY_IDS.map((d) => h("div", { class: `${doneDays.has(d) ? "done" : ""} ${label.planDay === d ? "today" : ""}` }, days[d].name.slice(0, 3), h("i", {}))));
+// The plan day Today shows when nothing is picked: the calendar's day; after a done day (done earlier this week,
+// for example in place of another day) the first day not done yet; a workout finished today keeps its day, so
+// "Done for today" shows what was trained. Saturday, Sunday and dates outside the 12 weeks: null (rest day).
+export function defaultShown(doc, date) {
+  const choices = dayChoices(doc, date);
+  if (!choices.length) return null;
+  const doneToday = (doc.sessions ?? []).find((s) => !s.deleted && s.date === date && s.status === "finished");
+  if (doneToday && choices.some((c) => c.day === doneToday.plan_day)) return doneToday.plan_day;
+  const cal = choices.find((c) => c.today);
+  if (!cal) return null;
+  if (!cal.done) return cal.day;
+  return choices.find((c) => !c.done)?.day ?? cal.day;
+}
+
+// Monday to Friday of this week as chips: a tick on each day done, "Today" under the calendar's day, the picked day
+// filled. A tap shows that day on Today; Start then trains it.
+function dayPicker(choices, shown, t) {
+  return h("div", { class: "day-picker", role: "group", "aria-label": "Pick the day to train" },
+    choices.map((c) => h("button", {
+      class: `day-chip${c.done ? " done" : ""}${c.today ? " today" : ""}`, type: "button",
+      "aria-pressed": c.day === shown ? "true" : "false",
+      "aria-label": `${days[c.day].name}${c.today ? ", today" : ""}${c.done ? ", done" : ""}: ${days[c.day].focus}`,
+      onclick: () => { picked = { date: t, day: c.day }; calm = true; rerender(); },
+    },
+    h("span", { class: "d" }, c.done ? icon("check", 13, { strokeWidth: 3.2 }) : null, days[c.day].name.slice(0, 3)),
+    h("span", { class: "s" }, c.today ? "Today" : c.done ? "Done" : ""))));
 }
 
 // Today's exercises (builder C): picture, slot, sets × reps and the suggested weight. A tap opens the exercise sheet.
@@ -88,10 +102,10 @@ function exerciseList(doc, planDay, week, missed) {
       const ex = exercises[exId];
       const st = doc.exercise_state.find((x) => x.id === exerciseStateId(exId) && !x.deleted);
       const sg = suggestFor(doc, exId, { week, missed, exerciseState: st });
-      const [lo, hi] = ex.range;
-      const reps = `${lo === hi ? lo : `${lo}–${hi}`}${ex.kind === "hold" ? " s" : ""}`;
+      // The reps set in the Plan for this exercise count on every day (0.6.0), else the plan's range.
+      const reps = `${rangeText(rangeFor(doc, exId))}${ex.kind === "hold" ? " s" : ""}`;
       const end = ex.kind === "hold" ? `${sg.range[0]} s` : ex.step === "bodyweight" ? `${sg.reps}` : sg.weight_kg ? `${fmtKg(sg.weight_kg)} kg` : "–";
-      const what = ex.kind === "hold" ? "hold" : ex.step === "bodyweight" ? "reps" : sg.weight_kg ? "suggested" : "pick light";
+      const what = ex.kind === "hold" ? "hold" : ex.step === "bodyweight" ? "reps" : sg.weight_kg ? (sg.action === "mine" ? "your weight" : "suggested") : "pick light";
       return h("button", { class: "ex-row", type: "button", "aria-label": `${slot.slot} ${ex.name}: ${slot.sets} sets of ${reps}${ex.perSide ? " each side" : ""}, ${end} ${what}. Open tips.`, onclick: () => openExerciseInfo(exId, { settingsNote: false }) },
         thumb(exId, { small: true }),
         h("span", { class: "grow" },
@@ -101,24 +115,23 @@ function exerciseList(doc, planDay, week, missed) {
     }))));
 }
 
-// Today's workout as a hero card: photos of the pairs' first exercises, the focus, time, and the blocks.
-function dayHero(label, layout, minutes, doc) {
-  const plan = planForDay(label.planDay, label.week, "full", editOf(doc, label.planDay));
+// The shown day's workout as a hero card: photos of the pairs' first exercises, time, and the blocks. The focus is the
+// screen's heading.
+function dayHero(planDay, week, layout, minutes, doc) {
+  const plan = planForDay(planDay, week, "full", editOf(doc, planDay));
   const leads = plan.slots.filter((s) => /^[A-D]1$/.test(s.slot) || s.slot === "D").map((s) => s.ex);
   const strip = leads.map((id) => photosFor(id)).filter(Boolean).slice(0, 3);
   const rir = Array.isArray(plan.rir) ? plan.rir.join("-") : plan.rir;
   return h("div", { class: "hero" },
     strip.length ? h("div", { class: "hero-strip", "aria-hidden": "true" }, strip.map((ph) => h("img", { src: ph[0], alt: "", decoding: "async" }))) : null,
     h("div", { class: "hero-body" },
-      h("span", { class: "eyebrow" }, "Today's workout"),
-      h("div", { class: "hero-title" }, days[label.planDay].focus),
+      h("span", { class: "eyebrow" }, `${days[planDay].name}'s workout`),
       h("div", { class: "hero-meta" },
         h("span", {}, h("b", {}, String(minutes)), " min"),
         h("span", {}, h("b", {}, String(plan.slots.length)), " exercises"),
         rir !== undefined ? h("span", {}, "Stop with ", h("b", {}, String(rir)), " left") : null),
       h("ul", { class: "timeline" }, layout.map((b) => h("li", {}, h("span", {}, BLOCK_NAMES[b.id] ?? b.id), h("span", { class: "min" }, b.id === "edits" ? `${b.minutes > 0 ? "+" : "−"}${Math.abs(b.minutes)} min` : `${b.minutes} min`)))),
-      h("p", { class: "small muted" }, `About ${minutes} minutes. Start a Strength workout on your Apple Watch at minute 0.`),
-      weekStrip(doc, label)));
+      h("p", { class: "small muted" }, `About ${minutes} minutes. Start a Strength workout on your Apple Watch at minute 0.`)));
 }
 
 export function renderToday() {
@@ -129,13 +142,24 @@ export function renderToday() {
   const open = doc.sessions.find((s) => !s.deleted && s.status === "in_progress");
   const dayName = label.planDay ? days[label.planDay].name : new Date(`${t}T12:00:00`).toLocaleDateString("en-GB", { weekday: "long" });
   const running = label.state === "running";
+  // The plan day Today shows: the one picked today, else defaultShown. Start and Short day train this day.
+  const choices = running ? dayChoices(doc, t) : [];
+  const shown = picked.date === t && choices.some((c) => c.day === picked.day) ? picked.day : defaultShown(doc, t);
+  const swapFrom = shown !== label.planDay ? label.planDay : null; // saved on the workout: done in place of that day
+  const heading = open ? dayName : shown ? days[shown].focus : running ? "Rest day" : dayName;
+  const sub = !running || open ? label.text
+    : !shown ? `${dayName} · no workout planned`
+    : shown === label.planDay ? null // the hero card already says "Wednesday's workout"
+    : label.planDay ? `${days[shown].name}'s workout, today in place of ${days[label.planDay].name}'s`
+    : `${days[shown].name}'s workout, on ${dayName}`;
   const children = [
     h("div", { class: "today-head" },
       h("div", {},
         h("span", { class: "eyebrow accent" }, running ? `Week ${label.week} of ${weeks.length} · ${weekInfo(label.week).phase}` : "Today"),
-        h("h1", {}, dayName))),
+        h("h1", { class: shown && !open ? "focus" : "" }, heading))),
     running ? blockBar(label.week) : null,
-    h("p", { class: "small muted" }, label.text),
+    sub ? h("p", { class: "small muted" }, sub) : null,
+    running && !open ? dayPicker(choices, shown, t) : null,
   ];
   let bar = null;
 
@@ -154,29 +178,31 @@ export function renderToday() {
     children.push(h("div", { class: "card" }, h("h2", {}, "Your plan has not started"), h("p", { class: "muted" }, `It starts on Monday ${doc.block.start_monday}.`)));
   } else if (label.state === "after") {
     children.push(h("div", { class: "card" }, h("h2", {}, "The 12 weeks are done"), h("p", { class: "muted" }, "Time for the review. Talk to the Training chat about the next block.")));
-  } else if (!label.planDay) {
-    children.push(h("div", { class: "hero" }, h("div", { class: "hero-body" }, h("span", { class: "eyebrow" }, "Recover"), h("div", { class: "hero-title" }, "Rest day"), h("p", { class: "muted" }, "A relaxed walk outside is fine. Weigh in in the morning."), weekStrip(doc, label))));
+  } else if (!shown) {
+    // Saturday or Sunday with no day picked: the rest day. The picker above can still start any day.
+    children.push(h("div", { class: "hero" }, h("div", { class: "hero-body" }, h("span", { class: "eyebrow" }, "Recover"),
+      h("p", { class: "muted" }, "A relaxed walk outside is fine. Weigh in in the morning."),
+      h("p", { class: "small muted" }, "Missed a day this week? Pick it above to train it today."))));
   } else {
     const kind = "full";
     const check = canStartWorkout(doc.sessions, t);
     const lastFinished = finishedSessions(doc.sessions)[0];
     const missed = missedRule(lastFinished ? lastFinished.date : null, t);
-    const day = dayLayout(doc, { planDay: label.planDay, week: label.week, today: t, kind });
+    const day = dayLayout(doc, { planDay: shown, week: label.week, today: t, kind });
     // A saved Plan edit with more or fewer sets changes the time (about 8 minutes for an added exercise).
-    const total = editedMinutes(day.minutes, label.planDay, label.week, editOf(doc, label.planDay));
+    const total = editedMinutes(day.minutes, shown, label.week, editOf(doc, shown));
     const blocks = total === day.minutes ? day.layout : [...day.layout.slice(0, -1), { id: "edits", minutes: total - day.minutes }, day.layout[day.layout.length - 1]];
-    children.push(dayHero(label, blocks, total, doc));
+    children.push(dayHero(shown, label.week, blocks, total, doc));
+    if (check.ok && choices.find((c) => c.day === shown)?.done) children.push(h("div", { class: "card" }, h("p", {}, `You did ${days[shown].name}'s workout this week already. You can do it again.`)));
     if (label.week === 1) children.push(h("div", { class: "card" }, h("p", {}, "Week 1: learn the moves and find your weights. Two sets of each exercise. It will feel easy on purpose."), h("p", { class: "small muted" }, "In Settings, fill in the gym's dumbbell sizes and weight steps when you know them.")));
     if (lastFinished && missed.kind !== "carry_on") children.push(h("div", { class: "card warn" }, h("p", {}, missed.message)));
-    children.push(exerciseList(doc, label.planDay, label.week, missed));
+    children.push(exerciseList(doc, shown, label.week, missed));
     if (!check.ok) {
       children.push(h("div", { class: "card" }, h("p", { class: "status-success" }, "Done for today."), h("p", { class: "muted" }, check.reason)));
     } else {
-      bar = mainButton(["Start workout", icon("chevron", 20, { strokeWidth: 2.6 })], () => { const r = startWorkout({ kind: "full", planDay: label.planDay }); if (!r.ok) rerender(); });
-      const swaps = swapOptions({ startMonday: doc.block.start_monday, today: t, sessions: doc.sessions });
+      bar = mainButton(["Start workout", icon("chevron", 20, { strokeWidth: 2.6 })], () => { const r = startWorkout({ kind: "full", planDay: shown, swappedFrom: swapFrom }); if (!r.ok) rerender(); });
       children.push(h("div", { class: "day-actions" },
-        secondaryButton("Short day (60 min)", () => { const r = startWorkout({ kind: "short", planDay: label.planDay }); if (!r.ok) rerender(); }),
-        swaps.length ? secondaryButton("Swap day", () => openSwapDay(doc, t, label)) : null));
+        secondaryButton("Short day (60 min)", () => { const r = startWorkout({ kind: "short", planDay: shown, swappedFrom: swapFrom }); if (!r.ok) rerender(); })));
     }
   }
 
@@ -219,7 +245,8 @@ export function renderToday() {
     h("span", { class: `dot ${configured && !bad && !unsynced ? "ok" : ""}` }),
     statusText(device, unsynced), " ", configured ? null : h("a", { href: "#/settings" }, "Settings"), bad ? h("a", { href: "#/settings" }, "Settings") : null));
 
-  onMount(() => stagger(document.querySelectorAll(".screen > .hero, .screen > .card, .screen > .tiles, .screen > .day-actions")));
+  if (!calm) onMount(() => stagger(document.querySelectorAll(".screen > .hero, .screen > .card, .screen > .tiles, .screen > .day-actions")));
+  calm = false;
   const main = h("main", { class: "screen has-bar" }, ...children);
   return bar ? [main, tabActionBar(bar)] : [h("main", { class: "screen has-tabs" }, ...children)];
 }

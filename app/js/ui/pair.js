@@ -4,6 +4,10 @@
 //   "How many more?" asked inline on the rest screen (the sheet here only when there is no rest after the set);
 // - builder D: the 170 ms Done lock, so a double tap cannot also skip the rest;
 // - builder B: the "Where is it?" chip; the photo shows the whole move and no text sits on it.
+// 0.6.0 (Rosario, 2026-11-18: "keep track ... if I've done the whole set or only 1 set or partial repetitions"):
+// "Stop this exercise here" moves on with the sets done so far (model.stopExercise, 8 s Undo); a set with fewer reps
+// than the target is saved as it is (the reps stepper, shown on the Done button); the target line uses the reps set
+// in the Plan (rangeFor).
 import { MAX_TEXT } from "../validate.js";
 import { h } from "../h.js";
 import { workoutScreen, topBar, actionBar, lockedButton, stepper, openSheet, timerView, choiceRow } from "./parts.js";
@@ -23,6 +27,8 @@ import { openExerciseInfo, videoButton } from "./exinfo.js";
 import { openMachineCard, whereOf, machineFor } from "./machines.js";
 import { machines } from "../plan/media.js";
 import { previousSets, setText, fmtKg } from "./stats.js";
+import { rangeFor } from "../planview.js";
+import { undoToast } from "./planedit.js";
 
 let justDone = null; // the set that was just saved: its row plays the "done" animation once (redesign A)
 
@@ -37,6 +43,20 @@ export function askRir(sessionId, slot, ex) {
       ? choiceRow([[0, "No"], [1, "A bit"], [3, "Yes, easily"]], null, (v) => { model.setLastRir(sessionId, slot, v); close(); })
       : choiceRow([[0, "0"], [1, "1"], [2, "2"], [3, "3"], [4, "4+"]], null, (v) => { model.setLastRir(sessionId, slot, v); close(); }, { columns: 5 }),
     h("button", { class: "text-button", type: "button", onclick: () => close() }, "Skip"));
+}
+
+// "Stop this exercise here": asks first, then moves on with the sets done; Undo (8 s) asks the rest again.
+function askStop(session, entry, ex, doneCount) {
+  const close = openSheet(
+    h("h2", {}, `Move on with ${doneCount} of ${entry.sets} sets?`),
+    h("p", { class: "muted" }, `The sets you did are saved. ${ex.name} ends here and the workout goes on.`),
+    h("button", { class: "button", type: "button", onclick: () => {
+      close();
+      model.stopExercise(session.id, entry.slot, true);
+      rerender();
+      undoToast(`${ex.name}: stopped after ${doneCount} of ${entry.sets} sets.`, () => model.stopExercise(session.id, entry.slot, false));
+    } }, "Yes, move on"),
+    h("button", { class: "button secondary", type: "button", onclick: () => close() }, "No, keep going"));
 }
 
 // Tips: the info sheet (picture, form tips, video, machine card and the machine settings note).
@@ -196,6 +216,7 @@ export function renderPair(ctx, pos) {
   const unknown = !hold && !bodyweight && !startKg && !done.length;
 
   const nextRec = nextEntry ? slotRecord(session, nextEntry.slot) : null;
+  const canStop = !warmupPending && done.length >= 1 && done.length < entry.sets;
   const lockKey = `${session.id}:${entry.slot}:${entry.setNumber}:${wDone}:${done.length}`;
   doneBtn = warmupPending
     ? lockedButton(`Done · warm-up set ${wDone + 1}`, { key: lockKey, sub: doneSub(), doneText: "Saved", work: saveWarmup, after: rerender })
@@ -204,7 +225,7 @@ export function renderPair(ctx, pos) {
     workoutScreen(
       topBar(title, () => askEnd(ctx), { done: pos.index, total: seq.length }),
       exerciseHeader(ctx, rec),
-      h("div", { class: "target" }, targetText(exId, entry.sets, ctx.plan.rir)),
+      h("div", { class: "target" }, targetText(exId, entry.sets, ctx.plan.rir, rangeFor(ctx.doc, exId))),
       h("div", { class: "info-lines" },
         sg.lastText && !prevBtn ? h("div", {}, sg.lastText) : null,
         sg.note && !(sg.action === "unknown") ? h("div", {}, sg.note) : null,
@@ -223,7 +244,9 @@ export function renderPair(ctx, pos) {
       nextLine ? h("div", { class: "next-card" }, nextRec ? thumb(nextRec.done_exercise, { small: true }) : null,
         h("div", { class: "what" }, h("span", { class: "eyebrow" }, "Next"), h("b", {}, nextLine))) : null,
       warmupPending ? h("div", { class: "text-link-row" }, h("button", { class: "text-button", type: "button", onclick: () => { model.skipWarmup(session.id, entry.slot); rerender(); } }, "Skip warm-up sets")) : null,
-      done.length ? h("div", { class: "text-link-row" }, h("button", { class: "text-button", type: "button", onclick: () => { model.undoLastSet(session.id, entry.slot); rerender(); } }, "Undo last set")) : null),
+      done.length ? h("div", { class: "text-link-row" }, h("button", { class: "text-button", type: "button", onclick: () => { model.undoLastSet(session.id, entry.slot); rerender(); } }, "Undo last set")) : null,
+      // Only with at least 1 set done and at least 1 set still to do; never while warm-up sets are due.
+      canStop ? h("div", { class: "text-link-row stop-row" }, h("button", { class: "text-button stop-ex", type: "button", onclick: () => askStop(session, entry, ex, done.length) }, "Stop this exercise here")) : null),
     actionBar(doneBtn),
   ];
 }
