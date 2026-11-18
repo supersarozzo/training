@@ -71,7 +71,8 @@ test("T-1 the stop Undo message on the workout screen shows at the top, away fro
   assert.ok(!plain.classList.contains("at-top"), "Plan edits keep the bottom place of the mock-up");
   assert.match(src("js/ui/pair.js"), /undoToast\(`\$\{ex\.name\}: stopped after .*\), 8000, \{ top: true \}\);/);
   const css = src("css/app.css");
-  assert.match(css, /\.toast\.undo-toast\.at-top \{[^}]*top: calc\(var\(--s3\) \+ var\(--top-clear\) \+ env\(safe-area-inset-top\)\)[^}]*bottom: auto/);
+  // Review round 1 (auditor): under the top bar, never over "End" (R3).
+  assert.match(css, /\.toast\.undo-toast\.at-top \{[^}]*top: calc\(var\(--s4\) \+ var\(--tap-min\) \+ var\(--s4\) \+ var\(--top-clear\) \+ env\(safe-area-inset-top\)\)[^}]*bottom: auto/);
 });
 
 // ---------- F: the food hint on Today ----------
@@ -80,7 +81,7 @@ test("F-1 foodHint: a line only when GitHub is set up and the last food sync had
   assert.equal(foodHint({}), null, "not set up: the sync line already says so");
   assert.equal(foodHint({ ...CONNECTED }), null, "no food sync yet");
   assert.equal(foodHint({ ...CONNECTED, food_last_sync_result: "ok" }), null);
-  for (const r of ["conflict", "error", "offline", "auth", "damaged"]) {
+  for (const r of ["conflict", "auth", "damaged"]) { // review round 1 (auditor): "offline" and "error" sync by themselves (R4)
     assert.equal(foodHint({ ...CONNECTED, food_last_sync_result: r }), "Food did not sync. See Diet.", r);
   }
   assert.equal(foodHint({ food_last_sync_result: "error" }), null, "no connection: no food hint");
