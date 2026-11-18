@@ -2,7 +2,7 @@
 import { model, go, rerender } from "./app.js";
 import { getActive, setActive, patchActive, clearActive } from "../active.js";
 import { exercises, days } from "../plan/plan-v2.js";
-import { planForDay, missedRule, canStartWorkout, blockPosition, sessionLayout } from "../engine/schedule.js";
+import { planForSession, missedRule, canStartWorkout, blockPosition, sessionLayout } from "../engine/schedule.js";
 import { buildSequence, nextPosition, walkSuggestion, finishedSessions, suggestFor, slotRecord } from "../engine/workout.js";
 import { startTimer } from "../timer.js";
 import { today } from "../clock.js";
@@ -12,8 +12,10 @@ import { openSheet, closeSheets } from "./parts.js";
 import { h } from "../h.js";
 
 // Everything a workout screen needs, built fresh on every draw from the saved data.
+// The workout is rebuilt from its own records (planForSession), never from today's plan: a Plan edit or a plan change
+// made after it started (or an app update in the middle of it) never changes it.
 export function buildCtx(doc, session, act) {
-  const plan = planForDay(session.plan_day, session.week, session.kind);
+  const plan = planForSession(session);
   const { units, seq } = buildSequence(plan.slots, { setsOverride: session.sets_override ?? null });
   const lastFinished = finishedSessions(doc.sessions).find((s) => s.date < session.date);
   const missed = missedRule(lastFinished ? lastFinished.date : null, session.date);
@@ -64,8 +66,8 @@ export function startWorkout({ kind = "full", planDay, swappedFrom = null }) {
   if (pos.state !== "running") return { ok: false, reason: "The plan is not running today." };
   const lastFinished = finishedSessions(doc.sessions).find((s) => s.date < t);
   const missed = missedRule(lastFinished ? lastFinished.date : null, t);
-  const plan = planForDay(planDay, pos.week, kind);
-  const session = model.startSession({ planDay, week: pos.week, kind, swappedFrom, slots: plan.slots, setsOverride: missed.setsOverride });
+  // No slots passed: the model reads the day to train (the saved Plan edit of that day, else the plan's day).
+  const session = model.startSession({ planDay, week: pos.week, kind, swappedFrom, setsOverride: missed.setsOverride });
   prime();
   keepScreenOn();
   setActive({ session_id: session.id, phase: "walk", timer_end: null, timer_total: null, rest: null, hold: null });

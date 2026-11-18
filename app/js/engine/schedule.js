@@ -104,10 +104,19 @@ export function planForDay(dayId, week, kind = "full", edit) {
   return { dayId, kind, week, focus: day.focus, walk: day.walk, rir: rirFor(week, dayId), slots: daySlots(dayId, week, edit), ...flags };
 }
 
+// Monday, Wednesday and Thursday's abs places as they were before the plan change of 2026-11-18 (answer 80 a).
+// A workout started on an app from before that change has no planned_sets: it keeps these numbers (its own day).
+const BEFORE_2026_11_18 = Object.freeze({
+  mon: { Abs1: { sets: 3, rest: 30 }, Abs2: { sets: 2, rest: 30 } },
+  wed: { Abs1: { sets: 3, rest: 30 }, Abs2: { sets: 2, rest: 30 } },
+  thu: { Abs1: { sets: 3, rest: 30 }, Abs2: { sets: 3, rest: 45 } },
+});
+
 // The slots of a workout already started (running or finished), from the workout itself: its own places and
 // exercises, and the sets and rest saved when it started (planned_sets, planned_rest). A Plan edit or a plan change
 // made later never changes it. A workout saved before planned_sets existed reads the sets and rest of its place in
-// the plan; a place the plan no longer has (Abs2 before 2026-11-18) gets the larger of 2 and the sets already saved.
+// the plan, except Monday, Wednesday and Thursday's abs places, which keep their numbers from before the plan change of
+// 2026-11-18 (BEFORE_2026_11_18); a place nobody knows gets the larger of 2 and the sets already saved.
 // Never throws on a place or exercise the plan does not know. Same shape as planForDay.
 export function planForSession(session) {
   const dayId = session.plan_day;
@@ -119,7 +128,8 @@ export function planForSession(session) {
   const okSets = (n) => Number.isInteger(n) && n >= 1 && n <= 10;
   const okRest = (r) => r === null || (typeof r === "number" && Number.isFinite(r) && r >= 0 && r <= 600);
   const slots = records.map((rec) => {
-    const p = planSlots.get(rec.slot);
+    const old = okSets(rec.planned_sets) ? null : BEFORE_2026_11_18[dayId]?.[rec.slot];
+    const p = old ? { slot: rec.slot, sets: old.sets, rest: old.rest } : planSlots.get(rec.slot);
     const saved = (Array.isArray(rec.sets) ? rec.sets : []).filter((x) => x && x.type === "work").length;
     const sets = okSets(rec.planned_sets) ? rec.planned_sets : p ? setsForSlot(week, p) : Math.min(Math.max(2, saved), 10);
     const rest = "planned_rest" in rec && okRest(rec.planned_rest) ? rec.planned_rest : p ? p.rest : null;

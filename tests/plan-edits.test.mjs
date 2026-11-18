@@ -41,14 +41,24 @@ const tueEdited = () => record("tue", [
   { slot: "E2", ex: "cable_curl", sets: 3, rest: 60 },
 ]);
 
-function setup(start = T) {
+function setup(start = T, doc = validDoc()) {
   const storage = fakeStorage();
   const store = createStore(storage);
   let ms = Date.parse(start);
   const clock = () => new Date((ms += 1000));
-  store.save(validDoc());
+  store.save(doc);
   return { storage, store, model: createModel(store, clock), tick: (s = 60) => { ms += s * 1000; } };
 }
+// A log where every exercise was done once before (a finished workout), so a new workout gets the week's sets:
+// a move never done before starts with at most 2 sets (answer 83 a, tests/wave1-fixes.test.mjs W4 to W6).
+const doneSet = { n: 1, type: "work", weight_kg: 10, reps: 10, seconds: null, rir: null, done_at: "2026-02-23T09:00:00.000Z" };
+const knownDoc = () => ({ ...validDoc(), sessions: [{
+  id: "s-20260223-known1", updated_at: "2026-02-23T09:30:00.000Z", date: "2026-02-23", plan_day: "mon", week: 7, kind: "full",
+  swapped_from: null, status: "finished", started_at: "2026-02-23T08:00:00.000Z", finished_at: "2026-02-23T09:30:00.000Z", walk: null,
+  exercises: Object.keys(exercises).map((id, i) => ({ slot: `K${i}`, plan_exercise: id, done_exercise: id, swap_reason: null, sets: [doneSet], note: "" })),
+  effort: 5, note: "",
+}] });
+const startedSession = (store, id) => store.load().sessions.find((x) => x.id === id);
 const planDayRec = (store, day) => (store.load().plan_days ?? []).find((r) => r.id === `p-plan-v2-${day}`);
 
 // ---------- data: the list, the check, merge, hasData ----------
@@ -450,7 +460,7 @@ test("25 unknown fields of the record and of its slots survive an edit", () => {
 // ---------- starting, running and finished workouts ----------
 
 test("26 starting a workout uses the edited day: slots, exercises and the planned sets of that week", () => {
-  const p = setup();
+  const p = setup(T, knownDoc());
   p.model.swapPlanSlot("tue", "A1", "goblet_squat");
   p.model.addPlanSlot("tue", "cable_curl");
   const s = p.model.startSession({ planDay: "tue", week: 7, kind: "full" });
@@ -497,10 +507,10 @@ test("27 an edit saved while a workout runs does not change that workout's slots
 test("28 planForSession matches planForDay for a workout started on a plain or an edited day", () => {
   for (const kind of ["full", "short"]) {
     for (const edited of [false, true]) {
-      const p = setup();
+      const p = setup(T, knownDoc());
       if (edited) { p.model.swapPlanSlot("fri", "A1", "goblet_squat"); p.model.addPlanSlot("fri", "cable_curl"); }
       const s = p.model.startSession({ planDay: "fri", week: 7, kind });
-      const fromSession = schedule.planForSession(p.store.load().sessions[0]);
+      const fromSession = schedule.planForSession(startedSession(p.store, s.id));
       const fromDay = schedule.planForDay("fri", 7, kind, edited ? planDayRec(p.store, "fri") : null);
       const pick = (x) => ({ slot: x.slot, ex: x.ex, sets: x.sets, rest: x.rest });
       assert.deepEqual(fromSession.slots.map(pick), fromDay.slots.map(pick), `${kind} ${edited}`);
@@ -511,11 +521,11 @@ test("28 planForSession matches planForDay for a workout started on a plain or a
 });
 
 test("29 a mid-workout swap keeps the planned sets on the new record", () => {
-  const p = setup();
+  const p = setup(T, knownDoc());
   const s = p.model.startSession({ planDay: "tue", week: 7, kind: "full" });
   p.model.logSet(s.id, "A1", { type: "work", weight_kg: 50, reps: 10 });
   p.model.swapExercise(s.id, "A1", "smith_squat", "busy");
-  const saved = p.store.load().sessions[0];
+  const saved = startedSession(p.store, s.id);
   const a1 = saved.exercises.filter((e) => e.slot === "A1");
   assert.equal(a1.length, 2);
   assert.ok(a1.every((e) => e.planned_sets === 4));

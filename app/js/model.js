@@ -7,9 +7,12 @@ import { validateDocument, clipText } from "./validate.js";
 import { mergeDocs } from "./sync/merge.js";
 import { PLAN_ID } from "./plan/plan-v2.js";
 import { planForDay } from "./engine/schedule.js";
+import { performances } from "./engine/workout.js";
 import { planDayId, isPlanDayId, checkSlots, checkPlanDay, findPlanDay, effectiveDay, planDaySlots, sameAsPlan, withSwap, withRemoved, withAdded } from "./engine/planedits.js";
 
 const NEWER_DAY = "This day was changed on a newer app version. Update the app first.";
+// Answer 83 a: a move never done before starts like week 1, with at most 2 work sets in its first workout.
+const NEW_MOVE_SETS = 2;
 const MAX_CHANGES = 50; // the "what did I change" list of a plan day keeps the last 50 entries
 
 // Monday of the current week (local), or the next Monday. Used for a new block's start.
@@ -117,7 +120,12 @@ export function createModel(store, clock = () => new Date()) {
     startSession({ planDay, week, kind, swappedFrom = null, slots, setsOverride = null }) {
       const clockNow = clock();
       const t = stamp();
-      const daySlots = slots ?? planForDay(planDay, week, kind, findPlanDay(store.load(), planDay)).slots;
+      const before = store.load();
+      const chosen = slots ?? planForDay(planDay, week, kind, findPlanDay(before, planDay)).slots;
+      // A move with no finished sets in any earlier workout (new in the plan, added or swapped in by a Plan edit)
+      // starts like week 1: at most 2 work sets this time (answer 83 a). The week's sets apply from the next time.
+      const daySlots = chosen.map((s) => (Number.isInteger(s.sets) && s.sets > NEW_MOVE_SETS
+        && performances(Array.isArray(before.sessions) ? before.sessions : [], s.ex).length === 0 ? { ...s, sets: NEW_MOVE_SETS } : s));
       const session = {
         id: newId("s", clockNow), updated_at: t, date: localDate(clockNow), plan_day: planDay, week, kind,
         swapped_from: swappedFrom, status: "in_progress", started_at: t, finished_at: null,
