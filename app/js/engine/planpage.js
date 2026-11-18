@@ -130,6 +130,15 @@ export function restTile(slot) {
   return { value: `${slot.rest} s`, note: "between sets" };
 }
 
+// The day arrows: the day before or after, into the previous or next week. At the block's two ends (Monday of
+// week 1, Friday of week 12) they wrap inside the week, as there is no week 0 or 13.
+export function stepDay(dayId, week, dir) {
+  const i = DAY_IDS.indexOf(dayId) + dir;
+  if (i < 0) return { day: DAY_IDS[DAY_IDS.length - 1], week: week > 1 ? week - 1 : week };
+  if (i >= DAY_IDS.length) return { day: DAY_IDS[0], week: week < LAST_WEEK ? week + 1 : week };
+  return { day: DAY_IDS[i], week };
+}
+
 export function neighbours(dayId, week, slotName) {
   const slots = daySets(dayId, week);
   const i = slots.findIndex((s) => s.slot === slotName);

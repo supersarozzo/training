@@ -16,7 +16,7 @@ import { icon } from "./icons.js";
 import { onMount, stagger } from "./motion.js";
 import { miniMap } from "./bodymap.js";
 import { openExerciseLayer, doseParts } from "./exlayer.js";
-import { pageFor, daySets, dayTotals, unitsOf, unitHeader, muscleWords } from "../engine/planpage.js";
+import { pageFor, daySets, dayTotals, unitsOf, unitHeader, muscleWords, stepDay } from "../engine/planpage.js";
 
 // The page remembers the picked day and week while you stay on the tab; coming back to the tab opens today again.
 const state = { day: null, week: null };
@@ -92,6 +92,9 @@ function exCard(day, week, slot) {
   h("span", { class: "chev" }, icon("chevron", 18)));
 }
 
+// "2 November": the block's start date in words (a date-only string read at noon, so no time zone shifts the day).
+const startWords = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long" });
+
 export function renderPlan() {
   const doc = model.doc();
   const t = today();
@@ -103,9 +106,10 @@ export function renderPlan() {
   const totals = dayTotals(day, week);
   const lay = dayLayout(doc, { planDay: day, week, today: t });
   const isToday = day === page.todayDay && week === page.week;
-  const i = DAY_IDS.indexOf(day);
-  const prev = DAY_IDS[(i + 4) % 5];
-  const next = DAY_IDS[(i + 1) % 5];
+  const prev = stepDay(day, week, -1);
+  const next = stepDay(day, week, 1);
+  const go = (to) => { state.day = to.day; state.week = to.week === page.week ? null : to.week; rerender(); };
+  const weekWords = (to) => (to.week === week ? "" : `, week ${to.week}`);
 
   const units = unitsOf(slots).map((u) => [
     h("div", { class: "unit-head" }, unitHeader(u)),
@@ -119,7 +123,7 @@ export function renderPlan() {
         h("button", { class: "week-chip", type: "button", onclick: () => openWeeks(page.week, week), "aria-label": `Week ${week} of ${weeks.length}, ${wi.phase}. Open the 12 weeks.` },
           `Week ${week} · ${wi.phase}`, icon("chevron", 16, { strokeWidth: 2.6 }))),
       h("div", { class: "plan-day" }, h("h1", {}, days[day].name), isToday ? h("span", { class: "today-tag" }, "Today") : null),
-      dayStrip(doc, day, page.todayDay, week),
+      dayStrip(doc, day, week === page.week ? page.todayDay : null, week),
       h("div", { class: "plan-sum" },
         h("div", { class: "plan-focus" }, days[day].focus),
         h("div", { class: "plan-meta" },
@@ -128,7 +132,7 @@ export function renderPlan() {
           h("span", {}, "stop with ", h("b", {}, rirText(rirFor(week, day))), " left"))),
       week !== page.week ? h("div", { class: "note-line" }, icon("info", 16), h("span", {}, `Showing week ${week}. This week is week ${page.week}.`),
         h("button", { class: "text-button", type: "button", onclick: () => { state.week = null; rerender(); } }, "Back to this week")) : null,
-      page.state === "before" && week === page.week ? h("p", { class: "small muted" }, `Your plan starts on Monday ${doc.block.start_monday}.`) : null,
+      page.state === "before" && week === page.week ? h("p", { class: "small muted" }, `Your plan starts on Monday ${startWords(doc.block.start_monday)}.`) : null,
       page.state === "after" && week === page.week ? h("p", { class: "small muted" }, "The 12 weeks are done. This is week 12 of the plan.") : null,
       walkCard(lay.walk.minutes, day),
       units,
@@ -142,7 +146,7 @@ export function renderPlan() {
 
   const bar = h("div", { class: "bar action-bar day-bar" }, h("div", { class: "bar-inner" },
     h("nav", { class: "day-nav", "aria-label": "Other days" },
-      h("button", { class: "button secondary", type: "button", onclick: () => { state.day = prev; rerender(); }, "aria-label": `Previous day: ${days[prev].name}` }, icon("back", 20), days[prev].name),
-      h("button", { class: "button secondary", type: "button", onclick: () => { state.day = next; rerender(); }, "aria-label": `Next day: ${days[next].name}` }, days[next].name, icon("chevron", 20)))));
+      h("button", { class: "button secondary", type: "button", onclick: () => go(prev), "aria-label": `Previous day: ${days[prev.day].name}${weekWords(prev)}` }, icon("back", 20), days[prev.day].name),
+      h("button", { class: "button secondary", type: "button", onclick: () => go(next), "aria-label": `Next day: ${days[next.day].name}${weekWords(next)}` }, days[next.day].name, icon("chevron", 20)))));
   return [main, bar];
 }
