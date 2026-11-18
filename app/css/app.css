@@ -4,6 +4,8 @@
    white cards, black main button with volt text. Tokens, contrast checks and motion rules: docs/DESIGN.md. */
 :root {
   --volt: #d7ff3c; --volt-deep: #b8e000; --ink: #0a0b0d;
+  /* The barcode scanner (Diet, 0.7.0) is a camera view: dark in both looks, as in the approved mock-up. */
+  --scan-bg: #050608; --scan-cam: #16110e; --scan-text: #ffffff; --scan-line: rgba(255, 255, 255, .35);
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   --font-display: -apple-system-headline, -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
 
