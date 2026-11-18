@@ -284,3 +284,11 @@ test("W2-20 no innerHTML and no style attribute in the new screen files", async 
     assert.ok(!/setAttribute\(\s*["']style["']/.test(src) && !/\bstyle\s*:\s*["'`{]/.test(src), `${f} sets a style attribute`);
   }
 });
+
+test("W2-21 the 'Whole plan check' card opens the muscle check: no local go() hides the router's go (auditor M1)", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const src = await readFile(new URL("../app/js/ui/planday.js", import.meta.url), "utf8");
+  assert.ok(!/\bconst go\s*=/.test(src), "planday.js declares its own go()");
+  assert.match(src, /import \{[^}]*\bgo\b[^}]*\} from "\.\/app\.js"/);
+  assert.match(src, /go\("#\/plan\/muscles"\)/);
+});
