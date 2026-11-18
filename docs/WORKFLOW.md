@@ -354,7 +354,7 @@ The app must work offline, keep the screen on, and save after every set (so a cl
 **5. Swap**
 - Button on each exercise: "Machine busy", "Don't like it", "It hurts".
 - Shows the 1 to 2 swaps. The log saves which exercise you really did.
-- "It hurts": the app says stop, suggests the swap with a lighter weight, and asks for a note.
+- "It hurts": the app says stop, suggests the swap with a lighter weight, and asks for a note. The lighter weight (0.7.1, `painSwapStart`): with a set today or a log of the old exercise, old kg × (first-try table of the new ÷ of the old) × 0.7, rounded down to the gym, at least one step (trainer D15); with nothing logged, about 30 % under the new exercise's own weight, never 0; the new exercise's own history wins.
 
 **6. Abs**
 - Same set screen. Timed holds (plank) use a countdown timer instead of reps.

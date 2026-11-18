@@ -38,7 +38,7 @@ export function openSwap(ctx, rec) {
     const go = (id) => {
       if (hurts && !note) { warn.textContent = "Write a short note first, so you remember what hurt."; return; }
       const last = workSets(rec).slice(-1)[0];
-      const startKg = hurts ? painSwapStart(id, { lastWorkKg: last?.weight_kg, origSugg: ctx.sugg(rec.done_exercise), newSugg: ctx.sugg(id) }, ctx.settings) : null;
+      const startKg = hurts ? painSwapStart(id, { origId: rec.done_exercise, lastWorkKg: last?.weight_kg, origSugg: ctx.sugg(rec.done_exercise), newSugg: ctx.sugg(id) }, ctx.settings) : null;
       model.swapExercise(ctx.session.id, rec.slot, id, reason, note, startKg);
       document.querySelectorAll("[data-sheet]").forEach((el) => el.remove());
       rerender();

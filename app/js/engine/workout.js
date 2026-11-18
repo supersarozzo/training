@@ -4,11 +4,11 @@
 // - what to suggest for each exercise (last time, next weight)
 // - walk suggestion
 // Source: plan v2 sections 3 to 6, 8, 9, 11; WORKFLOW D.
-import { exercises, MOVE_SECONDS, weekInfo, walkRules, BIG_LIFTS } from "../plan/plan-v2.js";
+import { exercises, MOVE_SECONDS, weekInfo, walkRules, BIG_LIFTS, firstTryKg } from "../plan/plan-v2.js";
 import { exerciseMuscles } from "../plan/muscles.js";
 import { localDate } from "../ids.js";
 import { planForDay, missedRule } from "./schedule.js";
-import { nextSuggestion, warmupSets, stepSize, weightAfterBreak, stepDown, lowerBy, firstTryWeight } from "./progression.js";
+import { nextSuggestion, warmupSets, stepSize, weightAfterBreak, stepDown, lowerBy, firstTryWeight, gymFloor } from "./progression.js";
 import { startWalk, nextWalkBase, walkForDay, walkAfterBreak } from "./walk.js";
 
 const isPairSlot = (slot) => /^[A-C][12]$/.test(slot);
@@ -239,16 +239,28 @@ export function lighterFor(newExerciseId, originalWeight, settings) {
   return lowerBy(originalWeight, 0.3, newExerciseId, settings);
 }
 
-// The weight an "It hurts" swap starts at (0.7.1, checker round 2, auditor round 3): null when the new exercise has its
-// own history. With a set done today or a log of the original: 30 % under that weight (the rule since 0.5). With
-// nothing logged (only a first-try number or a Plan weight of the original, which are not in the new exercise's
-// units): 30 % under the new exercise's own weight, never below its first try (its lightest step; D12: never 0).
-export function painSwapStart(newExerciseId, { lastWorkKg, origSugg, newSugg }, settings) {
+// The weight an "It hurts" swap starts at (0.7.1: checker round 2, auditor round 3, trainer D15). Always lighter, and
+// never in the old exercise's units:
+// - the new exercise has its own history: null (its own suggestion decides);
+// - nothing logged (no set today, no log of the old exercise; a first-try number or a Plan weight of the old one are
+//   not in the new exercise's units): about 30 % under the new exercise's own weight; when that rounds to 0, its own
+//   weight (already its lightest step; D12: never 0);
+// - a weight of the old exercise (a set today, else its log), trainer D15: old kg x (first-try table of the new / of
+//   the old) x 0.7, rounded down to the gym, at least one step. Raw table values: the profile factor cancels out.
+//   No table value (bodyweight or timed) or no weight: the rule since 0.5 (30 % under the old kg).
+export function painSwapStart(newExerciseId, { origId, lastWorkKg, origSugg, newSugg }, settings) {
   if (newSugg?.last) return null;
   const nothingLogged = lastWorkKg == null && !origSugg?.last;
-  const base = (nothingLogged ? newSugg?.weight_kg : lastWorkKg ?? origSugg?.weight_kg) ?? 0;
-  const kg = lighterFor(newExerciseId, base, settings);
-  return nothingLogged && kg === 0 && newSugg?.weight_kg > 0 ? newSugg.weight_kg : kg;
+  if (nothingLogged) {
+    const own = newSugg?.weight_kg ?? 0;
+    const kg = lighterFor(newExerciseId, own, settings);
+    return kg === 0 && own > 0 ? own : kg;
+  }
+  const oldKg = lastWorkKg ?? origSugg?.weight_kg ?? 0;
+  const tableOld = firstTryKg[origId];
+  const tableNew = firstTryKg[newExerciseId];
+  if (tableOld > 0 && tableNew > 0 && oldKg > 0) return gymFloor(oldKg * (tableNew / tableOld) * 0.7, newExerciseId, settings);
+  return lighterFor(newExerciseId, oldKg, settings);
 }
 
 // The smallest weight step for the + and - buttons.

@@ -67,6 +67,14 @@ export function firstTryWeight(exerciseId, settings, profile) {
   const table = firstTryKg[exerciseId];
   if (!ex || ex.step === "bodyweight" || ex.kind === "hold" || !table) return 0;
   const value = profile?.intake?.q22_sex === "male" ? table : table * 0.6;
+  return gymFloor(value, exerciseId, settings);
+}
+
+// A weight rounded DOWN to a size the gym has, at least one step, never 0 (the D12 rounding; also trainer D15): the
+// heaviest listed dumbbell at or below it (else the lightest listed, else 2 kg steps); the stack step; Smith 5 kg.
+export function gymFloor(value, exerciseId, settings) {
+  const ex = exercises[exerciseId];
+  if (!ex || ex.step === "bodyweight") return 0;
   let out;
   if (ex.step === "dumbbell") {
     const list = dumbbells(settings);
