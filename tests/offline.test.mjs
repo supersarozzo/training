@@ -45,19 +45,41 @@ function fakeWorld(origin = "https://example.test") {
   const stores = new Map();
   const net = { online: true, calls: [] };
   const caches = {
+    // 0.7.3 (worker 8.40): install now fetches each file itself and stores it with put (no addAll), and the fetch
+    // answer reads only the worker's own cache (open + match). The fake follows; the checks below are unchanged.
     open: async (name) => {
       if (!stores.has(name)) stores.set(name, new Map());
       const m = stores.get(name);
-      return { addAll: async (list) => list.forEach((f) => m.set(new URL(f, origin + "/").pathname, "cached:" + f)) };
+      const rel = (u) => { const p = new URL(typeof u === "string" ? u : u.url).pathname; return p === "/" ? "./" : p.slice(1); };
+      return {
+        put: async (key, res) => { if (stores.get(name) === m) m.set(new URL(key).pathname, "cached:" + rel(key)); },
+        match: async (req) => m.get(new URL(req.url).pathname),
+      };
     },
+    has: async (name) => stores.has(name),
     keys: async () => [...stores.keys()],
     delete: async (k) => stores.delete(k),
     match: async (req) => { for (const m of stores.values()) { const p = new URL(req.url).pathname; if (m.has(p)) return m.get(p); } return undefined; },
   };
-  const self = { location: { origin }, addEventListener: (t, f) => { handlers[t] = f; }, skipWaiting: () => { self.skipped = true; }, clients: {} };
-  const ctx = vm.createContext({ self, caches, URL, fetch: async (r) => { net.calls.push(r.url); if (!net.online) throw new Error("offline"); return "network"; } });
+  const self = { location: { origin, href: origin + "/sw.js" }, addEventListener: (t, f) => { handlers[t] = f; }, skipWaiting: () => { self.skipped = true; }, clients: {} };
+  const ctx = vm.createContext({ self, caches, URL, setTimeout: (f) => setImmediate(f), fetch: async (r) => {
+    const url = typeof r === "string" ? r : r.url;
+    net.calls.push(url);
+    if (!net.online) throw new Error("offline");
+    if (net.installing) { // 0.7.3: install reads the answer (ok, redirected, js/version.js text)
+      const body = url.includes("js/version.js") ? `export const APP_VERSION = "${APP_VERSION}";` : "file";
+      const res = { ok: true, status: 200, redirected: false, type: "basic", text: async () => body, clone: () => res };
+      return res;
+    }
+    return "network";
+  } });
   vm.runInContext(sw, ctx);
-  const run = async (type, ev) => { let p; handlers[type]({ ...ev, waitUntil: (x) => { p = x; }, respondWith: (x) => { p = x; } }); return p; };
+  const run = async (type, ev) => {
+    let p; const waits = [];
+    net.installing = type === "install";
+    handlers[type]({ ...ev, waitUntil: (x) => { waits.push(x); p ??= x; }, respondWith: (x) => { p = x; } });
+    const out = await p; await Promise.all(waits); net.installing = false; return out;
+  };
   return { run, stores, net, self };
 }
 
