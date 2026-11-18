@@ -175,6 +175,8 @@ export function planWeightNewer(state, last) {
 }
 
 export const FIRST_TRY_NOTE = "First try. Set 1 tells us if it is right.";
+// From week 2 the find-your-weight steps do not run, so the note says what to do instead (trainer D12 addition, dc59f13).
+export const FIRST_TRY_NOTE_LATER = "First try. Set 1 too easy (4 or more reps left) or too hard? Change the weight one step for the next set.";
 
 // What to show for one exercise today.
 // doc: the data document. ctx: { week, missed (result of missedRule), exerciseState (record or undefined) }
@@ -200,7 +202,7 @@ export function suggestFor(doc, exerciseId, ctx) {
     if (ex.step === "bodyweight") return { ...base, weight_kg: 0, action: "unknown", note: "" };
     // Nothing known yet: the first-try weight (trainer D12, 0.7.1); the week-1 steps correct it from set 1.
     const first = firstTryWeight(exerciseId, settings, doc.profile);
-    if (first > 0) return { ...base, weight_kg: first, action: "first_try", note: FIRST_TRY_NOTE };
+    if (first > 0) return { ...base, weight_kg: first, action: "first_try", note: ctx.week > 1 ? FIRST_TRY_NOTE_LATER : FIRST_TRY_NOTE };
     return { ...base, weight_kg: null, action: "unknown", note: "Pick a light weight you can lift with good form." };
   }
 

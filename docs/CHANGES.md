@@ -14,6 +14,9 @@ Leftovers wave, built by chat 8.39 on top of 0.7.0. The trainer (8.37) decided e
   not move. In week 1 an exercise you practised starts at the weight you found.
 - Every exercise shows a weight to try, for example "Try 20 kg", with "First try. Set 1 tells us if it is right." The
   find-your-weight steps then correct it. The numbers come from the trainer's table and never from your body weight.
+  An exercise you first do in week 2 or later says instead: "Set 1 too easy (4 or more reps left) or too hard? Change
+  the weight one step for the next set."
+- After "It hurts" with nothing logged yet, the new exercise starts below its own first-try weight, never above it.
 - A double tap no longer zooms the page. Pinch to zoom still works.
 - Plan: the Edit button sits at the top right again, in line with the cards.
 - The walk shows its real numbers for each day and week, for example "4 km/h · 2 % slope", on the Plan day page and on
