@@ -319,7 +319,9 @@ The app must work offline, keep the screen on, and save after every set (so a cl
 **1. Today screen**
 - Shows: day name, week number and phase (for example "Week 3 · Build"), the blocks of the day, the expected time.
 - Shows sync status ("Saved to GitHub at 18:42" or "3 workouts not synced yet").
-- Buttons: **Start**, **Short day (60 min)**, **Swap day** (for example do Friday's workout today).
+- A Monday to Friday day picker (0.6.0): any day of this week can be picked (done days have a tick); the screen shows the picked day.
+- Buttons: **Start** and **Short day (60 min)** train the picked day. A day that is not the calendar's day is saved as a swap.
+- In a set: **Stop this exercise here** moves on with the sets done so far (asks first, Undo for 8 s).
 - Reminder text: "Start a Strength workout on your Apple Watch now" (the free Watch option from the research).
 - If you missed days, the app says so in plain words and applies the rule in E3.
 
@@ -401,7 +403,7 @@ Extra rule (auto-deload): if 3 or more exercises have needed a 10 % drop within 
 | More than 4 weeks | All weights about 20 % lower, and one week with 2 sets per exercise, like week 1. |
 | Ill (fever, chest cold) | Rest. Back with the 5-to-13-days rule. |
 
-The day order stays Monday to Friday. A missed Monday does not move the week; the app offers to swap the day (Today screen).
+The day order stays Monday to Friday. A missed Monday does not move the week; any day of the week can be picked on Today (0.6.0).
 
 ---
 
