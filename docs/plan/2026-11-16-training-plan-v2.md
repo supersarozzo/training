@@ -32,7 +32,7 @@ Short list. The full list is in [plan v1, section 1](2026-11-16-training-plan.md
 | Friday | Lower body B | easier (leg day) |
 | Saturday, Sunday | Rest. A relaxed walk outside is fine. | – |
 
-Each muscle is trained about 2 times a week. Upper and lower days are never back to back with the same muscles. Wednesday is lighter (stop with 3 reps left), so the week does not wear you out.
+Each muscle has two hard sessions a week, 3 days apart (Monday and Thursday for the upper body, Tuesday and Friday for the legs). Wednesday is a lighter full-body day in between (stop with 3 reps left), so some muscles work two days in a row; this is safe because no set goes to failure (corrected 2026-11-18, trainer plan D13 in `2026-11-18-trainer-weekly-plan.md`). Wednesday's light touch also keeps the week from wearing you out.
 
 ## 3. Your choice: the walk comes first
 
