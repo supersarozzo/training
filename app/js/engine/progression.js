@@ -37,7 +37,38 @@ export function stepUp(w, exerciseId, settings, n = 1) {
   return round1(cur);
 }
 
-// The weight one step down from `w` (never below 0).
+// The lowest weight the app may suggest (trainer D19, 0.7.6): the smallest step the gym has. Dumbbells: the lightest
+// dumbbell in Settings > Gym weights (no list: 2 kg); stacks (machines and cables): one stack step; Smith and
+// plate-loaded moves: 5 kg (2.5 kg each side). Bodyweight and timed exercises, and ids this app does not know: 0.
+export function minWeight(exerciseId, settings) {
+  const ex = exercises[exerciseId];
+  if (!ex || ex.step === "bodyweight") return 0;
+  if (ex.step === "dumbbell") return dumbbells(settings)[0] ?? FALLBACK_DUMBBELL_STEP_KG;
+  if (ex.step === "smith_2x2.5") return SMITH_STEP_KG;
+  return stackStep(exerciseId, settings);
+}
+
+// D19: a lowered weight never goes below the floor, and never above `w` (a weight Rosario set below the floor holds).
+function floored(result, w, exerciseId, settings) {
+  return round1(Math.max(result, Math.min(minWeight(exerciseId, settings), w), 0));
+}
+
+// D19: a lowering that did not lower (the weight was already at its floor, or below it as Rosario set it).
+// Bodyweight and timed exercises never count. `w` the weight before, `result` the lowered one.
+export function lowerHitFloor(w, result, exerciseId) {
+  const ex = exercises[exerciseId];
+  return !!ex && ex.step !== "bodyweight" && w > 0 && result >= w;
+}
+
+// D19 rule 3: at the floor, the workout is made easier by effort: stop with at least 3 reps left.
+export const FLOOR_RIR = 3;
+export const FLOOR_NOTE = "Lightest weight already. Stop with 3 reps left today.";
+export function floorRir(rir) {
+  if (Array.isArray(rir)) return Math.min(...rir) < FLOOR_RIR ? FLOOR_RIR : rir;
+  return Math.max(rir, FLOOR_RIR);
+}
+
+// The weight one step down from `w`, never below the floor (trainer D19, minWeight).
 export function stepDown(w, exerciseId, settings, n = 1) {
   const ex = exercises[exerciseId];
   let cur = w;
@@ -49,7 +80,7 @@ export function stepDown(w, exerciseId, settings, n = 1) {
     } else if (ex.step === "smith_2x2.5") cur -= SMITH_STEP_KG;
     else if (ex.step === "stack") cur -= stackStep(exerciseId, settings);
   }
-  return round1(Math.max(cur, 0));
+  return floored(cur, w, exerciseId, settings);
 }
 
 // The size of the next step up from `w` in kg (for the big-jump rule).
@@ -88,7 +119,7 @@ export function gymFloor(value, exerciseId, settings) {
 }
 
 // Lower a weight by about `fraction` (0.1 = 10 %) and round DOWN to a size the gym has.
-// Always at least one step lower than `w`.
+// At least one step lower than `w`, but never below the floor (trainer D19: at the floor the weight holds).
 export function lowerBy(w, fraction, exerciseId, settings) {
   const ex = exercises[exerciseId];
   const target = w * (1 - fraction);
@@ -104,7 +135,7 @@ export function lowerBy(w, fraction, exerciseId, settings) {
     out = Math.floor(target / step + 1e-9) * step;
   }
   if (out >= w) out = stepDown(w, exerciseId, settings);
-  return round1(Math.max(out, 0));
+  return floored(out, w, exerciseId, settings);
 }
 
 // Warm-up sets before the first exercise of a pair: about 50 % x 10 and about 75 % x 5 (plan v2 section 5),
@@ -136,7 +167,7 @@ export function warmupSets(workWeight, exerciseId, settings, count = 2) {
 //   "rir" is the "how many more could you do?" tap: 0, 1, 2, 3, 4 (4 means 4 or more).
 // opts: { exerciseId, week, settings, range?, planRange? } `range` overrides the plan range (raised for bodyweight work);
 // `planRange` is the reps range set in the Plan (exercise_state my_range, 0.6.0), used in place of the plan's own.
-// Returns { action, weight_kg, range, note, noIncrease? } where action is one of
+// Returns { action, weight_kg, range, note, noIncrease?, atFloor? } where action is one of
 //   "increase", "increase2", "same_add_rep", "same_check", "extra_reps", "lower", "lower10", "hold".
 export function nextSuggestion(last, previous, opts) {
   const { exerciseId, week, settings } = opts;
@@ -149,16 +180,18 @@ export function nextSuggestion(last, previous, opts) {
   const base = { weight_kg: w, range: [low, top] };
 
   // Pain or form broke down: lower the weight. No increase until the form is good.
+  // D19: already at the floor, the weight holds and the note says to stop with 3 reps left (atFloor).
+  const atFloor = (out, s) => (lowerHitFloor(w, out, exerciseId) ? { ...s, weight_kg: out, atFloor: true, note: FLOOR_NOTE } : { ...s, weight_kg: out, atFloor: false });
   if (last.pain || last.formBroke) {
-    return { ...base, action: "lower", weight_kg: stepDown(w, exerciseId, settings), noIncrease: true,
-      note: "Lower the weight. No increase until the form is good." };
+    return atFloor(stepDown(w, exerciseId, settings), { ...base, action: "lower", noIncrease: true,
+      note: "Lower the weight. No increase until the form is good." });
   }
 
   // A set 3 or more below the range, two sessions in a row: lower about 10 % and restart at the bottom.
   const farBelow = (session) => session && session.sets.some((s) => (ex.kind === "hold" ? s.seconds ?? s.reps : s.reps) <= low - 3);
   if (farBelow(last) && farBelow(previous)) {
-    return { ...base, action: "lower10", weight_kg: lowerBy(w, 0.1, exerciseId, settings),
-      note: `Two hard sessions in a row. Lower the weight about 10 % and restart at ${low} ${unit}.` };
+    return atFloor(lowerBy(w, 0.1, exerciseId, settings), { ...base, action: "lower10",
+      note: `Two hard sessions in a row. Lower the weight about 10 % and restart at ${low} ${unit}.` });
   }
 
   // Easier weeks and week 1: no progression, same weights.
@@ -171,8 +204,8 @@ export function nextSuggestion(last, previous, opts) {
   // Bodyweight and timed exercises never go lighter. Pain has its own path (Swap › It hurts), above.
   const belowLow = (session) => session.sets.some((s) => (ex.kind === "hold" ? s.seconds ?? s.reps : s.reps) < low);
   if (last.stopped && previous?.stopped && ex.step !== "bodyweight" && belowLow(last) && belowLow(previous)) {
-    return { ...base, action: "lower", weight_kg: stepDown(w, exerciseId, settings),
-      note: "You stopped early twice and missed the range. One step lighter." };
+    return atFloor(stepDown(w, exerciseId, settings), { ...base, action: "lower",
+      note: "You stopped early twice and missed the range. One step lighter." });
   }
 
   // Stopped early last time ("Stop this exercise here", 0.6.0): fewer sets than planned never count as a full

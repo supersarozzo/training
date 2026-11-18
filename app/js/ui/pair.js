@@ -16,7 +16,7 @@ import { patchActive, getActive } from "../active.js";
 import { exercises } from "../plan/plan-v2.js";
 import { cues } from "../plan/cues.js";
 import { setWord, nReps } from "../words.js";
-import { stepUp, stepDown, warmupSets } from "../engine/progression.js";
+import { stepUp, stepDown, warmupSets, floorRir } from "../engine/progression.js";
 import { slotRecord, workSets, warmupDone, warmupCount, unitLabel, targetText } from "../engine/workout.js";
 import { askEnd, nextText, nextDue, restBetween, progressOf } from "./flow.js";
 import { openSwap } from "./swap.js";
@@ -239,7 +239,7 @@ export function renderPair(ctx, pos) {
     workoutScreen(
       topBar(title, () => askEnd(ctx), progressOf(session, seq)),
       exerciseHeader(ctx, rec),
-      h("div", { class: "target" }, targetText(exId, entry.sets, ctx.plan.rir, rangeFor(ctx.doc, exId))),
+      h("div", { class: "target" }, targetText(exId, entry.sets, sg.atFloor ? floorRir(ctx.plan.rir) : ctx.plan.rir, rangeFor(ctx.doc, exId))), // trainer D19: at the floor, 3 or more left
       h("div", { class: "info-lines" },
         sg.lastText && !prevBtn ? h("div", {}, sg.lastText) : null,
         sg.note && !(sg.action === "unknown") ? h("div", {}, sg.note) : null,

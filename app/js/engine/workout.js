@@ -9,7 +9,7 @@ import { nSets, repWord } from "../words.js";
 import { exerciseMuscles } from "../plan/muscles.js";
 import { localDate } from "../ids.js";
 import { planForDay, missedRule } from "./schedule.js";
-import { nextSuggestion, warmupSets, stepSize, weightAfterBreak, stepDown, lowerBy, firstTryWeight, gymFloor } from "./progression.js";
+import { nextSuggestion, warmupSets, stepSize, weightAfterBreak, stepDown, lowerBy, firstTryWeight, gymFloor, lowerHitFloor, FLOOR_NOTE } from "./progression.js";
 import { startWalk, nextWalkBase, walkForDay, walkAfterBreak } from "./walk.js";
 
 const isPairSlot = (slot) => /^[A-C][12]$/.test(slot);
@@ -239,7 +239,11 @@ export function suggestFor(doc, exerciseId, ctx) {
   // on a practice day (week 0, trainer D11) is the start of week 1, which may adjust it once more.
   if (last.week <= 1 && state && state.start_weight_kg) {
     let w = state.start_weight_kg;
-    if (ctx.missed?.weightFactor < 1) w = weightAfterBreak(w, ctx.missed.weightFactor, exerciseId, settings);
+    if (ctx.missed?.weightFactor < 1) {
+      w = weightAfterBreak(w, ctx.missed.weightFactor, exerciseId, settings);
+      // Trainer D19: the break asked for less, but the weight is already the lightest step.
+      if (lowerHitFloor(state.start_weight_kg, w, exerciseId)) return { ...base, weight_kg: w, action: "start", atFloor: true, note: FLOOR_NOTE };
+    }
     return { ...base, weight_kg: w, action: "start", note: last.week === 0 ? "The weight you found in practice." : "Your starting weight from week 1." };
   }
 
@@ -247,18 +251,21 @@ export function suggestFor(doc, exerciseId, ctx) {
   let weight = s.weight_kg;
   let note = s.note;
   let action = s.action;
+  let atFloor = s.atFloor === true;
   const missed = ctx.missed;
   if (missed && missed.weightFactor < 1) {
     weight = weightAfterBreak(last.weight_kg, missed.weightFactor, exerciseId, settings);
-    note = missed.kind === "minus_20" ? "Back from a long break: about 20 % lower." : "Back from a break: about 10 % lower.";
     action = "break";
+    // Trainer D19: already at the lightest step, the weight holds and the effort is easier (stop with 3 reps left).
+    atFloor = lowerHitFloor(last.weight_kg, weight, exerciseId);
+    note = atFloor ? FLOOR_NOTE : missed.kind === "minus_20" ? "Back from a long break: about 20 % lower." : "Back from a break: about 10 % lower.";
   } else if (missed && missed.noIncrease && s.weight_kg > last.weight_kg) {
     weight = last.weight_kg;
     note = "First workout back: same weight as last time, no increase.";
     action = "same_break";
   }
   const range = s.range ?? own;
-  return { ...base, weight_kg: weight, range, reps: range[0], action, note };
+  return { ...base, weight_kg: weight, range, reps: range[0], action, note, atFloor };
 }
 
 // A lighter weight for a swap after pain (plan v2 / WORKFLOW D5): about 30 % lower than the original's weight.

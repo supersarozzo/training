@@ -2,6 +2,16 @@
 
 What is new in each app version, in plain words. Newest first. Older versions: see `docs/HANDOVER.md` and the git log.
 
+## 0.7.6 · 2026-11-18
+
+The lowest weight (trainer decision D19), safer old versions, and small fixes, built by chat 8.43. Not live yet.
+
+- **The app never suggests a weight lighter than the lightest one the gym has.** Before, a break or two hard
+  workouts could turn a 5 kg cable into "0 kg". Now the lowest suggestion is the lightest dumbbell in Settings (2 kg if
+  you listed none), one plate on a machine or cable, or 5 kg on the Smith machine and the hip thrust.
+- **Already at the lightest weight?** The weight stays, and the card says: "Lightest weight already. Stop with 3 reps
+  left today." The target line then says "stop with 3 left". A weight you set yourself is never changed.
+
 ## 0.7.5 · 2026-11-18
 
 Machines instead of awkward moves (trainer decision D18) and "1 set", built by chat 8.42. Live since 2026-11-18.
