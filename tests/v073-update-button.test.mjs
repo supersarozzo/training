@@ -147,7 +147,8 @@ test("B10 after SKIP_WAITING, no new controller within 10 s: the page reloads an
 test("B11 a second tap while one runs is ignored", async () => {
   const p = await started(page());
   await Promise.all([p.u.updateNow(), p.u.updateNow()]);
-  assert.equal(p.fetched.length, 1);
+  // Changed in review round 2 (auditor 4): the fallback also reads the live sw.js once, so count the version checks.
+  assert.equal(p.fetched.filter((f) => /version\.js/.test(f.url)).length, 1);
   assert.equal(p.win.reloads, 1);
 });
 
