@@ -223,6 +223,9 @@ export function openCheck({ mode = "own", product = null, food: rec = null, pref
   });
 
   const result = h("div", { class: "check-result", "aria-live": "polite" });
+  // On the sheets with the amount first, the numbers check sits under the Save buttons: one line above them says so when
+  // it fails (round 2, auditor).
+  const warnTop = h("p", { class: "small", role: "status" });
   const error = h("p", { class: "error-text", role: "alert" });
   const btn = mainButton("Save and add", () => save(true));
   const second = secondaryButton("Save without adding", () => save(false));
@@ -231,6 +234,8 @@ export function openCheck({ mode = "own", product = null, food: rec = null, pref
     const c = checkFood({ per100g: per100g(), serving_g: src.serving_g ?? null, quantity: mode === "off" ? src.quantity ?? null : null });
     mount(result, c.ok ? h("p", { class: "okline" }, c.line)
       : h("div", { class: "warnbox" }, c.warnings.map((w) => h("p", {}, icon("warn", 16), " ", w))));
+    warnTop.textContent = c.ok ? "" : "The numbers look wrong. Check them under Food details.";
+    warnTop.hidden = c.ok;
     const a = amountG();
     btn.querySelector(".btn-main").textContent = a ? `Save and add ${show(a)} g` : "Save and add";
     btn.disabled = a === null;
@@ -295,6 +300,8 @@ export function openCheck({ mode = "own", product = null, food: rec = null, pref
     const use = () => {
       const r = checkPieceWeight(input.value);
       if (!r.ok) { err.textContent = r.reason; return; }
+      // The weight left as shown (31.3 for 125 g / 4): nothing to change (round 2, auditor), so the food stays as saved.
+      if (piece && r.g === Math.round(piece.g * 10) / 10) { asking = false; drawAmount(); return; }
       const before = piece ? piecesStart(num(st.amount), piece.g).count : 1; // a new weight keeps the count (checker)
       piece = pieceOf(withPieceWeight(baseServing, r.g));
       pieceSet = true;
@@ -320,6 +327,9 @@ export function openCheck({ mode = "own", product = null, food: rec = null, pref
   const amountRow = [seg, amountBox];
 
   const heading = mode === "off" ? "From Open Food Facts · check before saving" : mode === "saved" ? "Your food" : "Make a new food";
+  // "Your food" and a scanned food (0.7.5, Rosario: "name and details underneath and all the inputs and save button
+  // visible by default"): amount, meal and Save first, details under. A new food keeps its order (name and numbers first).
+  const firstAmount = mode === "saved" || mode === "off";
   const details = [
     mode === "off" ? h("p", { class: "muted small" }, "Anyone can add products to Open Food Facts, so numbers can be wrong. Compare with the pack. You can change anything.") : null,
     textIn("name", "Name", "120"),
@@ -333,11 +343,9 @@ export function openCheck({ mode = "own", product = null, food: rec = null, pref
     amountRow,
     h("div", { class: "label" }, "Meal"),
     mealRow(st.meal, (m) => { st.meal = m; }),
+    firstAmount ? warnTop : null,
     error, btn, second,
   ];
-  // "Your food" and a scanned food (0.7.5, Rosario: "name and details underneath and all the inputs and save button
-  // visible by default"): amount, meal and Save first, details under. A new food keeps its order (name and numbers first).
-  const firstAmount = mode === "saved" || mode === "off";
   const close = openSheet(
     h("h2", {}, heading),
     ...(firstAmount ? [...amountAndSave, h("h3", {}, "Food details"), ...details] : [...details, ...amountAndSave]),

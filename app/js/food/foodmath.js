@@ -169,24 +169,35 @@ const okPiece = (g) => typeof g === "number" && Number.isFinite(g) && g >= PIECE
 // A serving named with a count of more than one ("4 bites", "2 eggs", "about 2 hash browns", a pack's "2 biscuits
 // (25 g)") holds that many pieces (0.7.5, Rosario: "Pieces say 31g in the description but then 1 piece shows up as
 // 125g"). Returns { n, unit } with the single unit ("bite"), or null: no count, a count of 1, or a weight or volume
-// ("100 g", "250 ml"). The words come from the pack or Open Food Facts: data only, shown as text.
-const MEASURE = /^(g|grams?|kg|mg|ml|cl|dl|l|lit(?:re|er)s?|millilit(?:re|er)s?|oz|ounces?|lbs?|pounds?|kcal|cals?|calories?)$/i;
+// ("100 g", "30 g serving", "8 fl. oz", "250 ml": the FIRST word after the number is a weight or volume). The words come
+// from the pack or Open Food Facts: data only, shown as text.
+const MEASURE = /^(g|gr|grs|gm|gms|grams?|grammes?|kg|mg|ml|cl|dl|l|lit(?:re|er)s?|millilit(?:re|er)s?|fl|oz|ounces?|lbs?|pounds?|pints?|kcal|cals?|calories?)$/i;
+const IRREGULAR = { loaves: "loaf", halves: "half", leaves: "leaf" };
+function singularWord(w) {
+  const lower = w.toLowerCase();
+  if (Object.hasOwn(IRREGULAR, lower)) return IRREGULAR[lower];
+  if (/(brioche|quiche|niche)s$/i.test(w)) return w.slice(0, -1);
+  if (/[knh]ies$/i.test(w)) return w.slice(0, -1); // cookies, brownies, smoothies
+  if (/ies$/i.test(w) && w.length > 4) return `${w.slice(0, -3)}y`; // patties
+  if (/(ch|sh|ss|x|zz|o)es$/i.test(w)) return w.slice(0, -2); // sandwiches, boxes, potatoes
+  if (/[^s]s$/i.test(w)) return w.slice(0, -1); // bites, eggs, slices
+  return w;
+}
+// The last word before " of " is the one that counts: "slices of bread" -> "slice of bread".
 function singular(words) {
-  const parts = words.split(/\s+/);
-  let w = parts.pop();
-  if (/[kn]ies$/i.test(w)) w = w.slice(0, -1); // cookies, brownies
-  else if (/ies$/i.test(w) && w.length > 4) w = `${w.slice(0, -3)}y`; // patties
-  else if (/(ch|sh|ss|x|zz|o)es$/i.test(w)) w = w.slice(0, -2); // sandwiches, potatoes
-  else if (/[^s]s$/i.test(w)) w = w.slice(0, -1); // bites, eggs, slices
-  return [...parts, w].join(" ");
+  const m = /^(.*?)(\s+of\s+.*)$/i.exec(words);
+  const head = m ? m[1] : words;
+  const parts = head.split(/\s+/);
+  const last = parts.pop();
+  return [...parts, singularWord(last)].join(" ") + (m ? m[2] : "");
 }
 export function countedServing(label) {
   const words = typeof label === "string" ? label.trim() : "";
   const m = /^(?:(?:about|approx\.?|approximately|around|~)\s*)?(\d{1,3})\s+(.+)$/i.exec(words);
   if (!m) return null;
   const n = Number(m[1]);
-  const unit = m[2].replace(/\s*\([^)]*\)\s*$/, "").trim(); // "biscuits (25 g)" -> "biscuits"
-  if (n < 2 || n > 100 || !unit || /\d/.test(unit) || MEASURE.test(unit)) return null;
+  const unit = m[2].replace(/^x\s+/i, "").replace(/\s*\([^)]*\)\s*$/, "").trim(); // "x biscuits (25 g)" -> "biscuits"
+  if (n < 2 || n > 100 || !unit || /\d/.test(unit) || MEASURE.test(unit.split(/[\s.(]/)[0])) return null;
   return { n, unit: singular(unit) };
 }
 export function pieceOf(food) {

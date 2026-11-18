@@ -8,7 +8,7 @@ import { h } from "../h.js";
 import { openSheet, closeSheets, toast, stepper } from "./parts.js";
 import { model, store, rerender } from "./app.js";
 import { getActive } from "../active.js";
-import { days, exercises } from "../plan/plan-v2.js";
+import { days, exercises, d18Changes } from "../plan/plan-v2.js";
 import { thumb } from "./media.js";
 import { icon } from "./icons.js";
 import { miniMap } from "./bodymap.js";
@@ -77,16 +77,22 @@ const recordOf = (day) => model.effectivePlanDay(day).record ?? null;
 
 // Run one save. On a refusal the plain-words message is shown and nothing changed. Returns true when it saved.
 function save(day, doneText, work) {
-  let before, offerBefore;
+  let before;
   try {
     before = savedSlots(day);
-    offerBefore = d18Offer(day, recordOf(day), {});
     work();
   } catch (e) { toast(e.message); return false; }
   // A save on this app that puts an old D18 exercise back in a D18 place is Rosario's own choice: the D18 card must not
-  // offer to undo it (review round 1, checker), so that day's D18 card counts as answered "Keep mine".
-  const offerAfter = d18Offer(day, recordOf(day), {});
-  if (offerAfter && offerAfter.swaps.some((sw) => !(offerBefore?.swaps ?? []).some((b) => b.slot === sw.slot))) saveOfferAnswer(store, D18_OFFER_KEY(day), "kept");
+  // offer to undo it (review round 1, checker). It counts as "Keep mine" only when the card would then offer nothing but
+  // those just-made choices; a Remove, an Add or a freed place never answers it (round 2, checker and auditor).
+  const changes = Object.hasOwn(d18Changes, day) ? d18Changes[day] : null;
+  if (changes) {
+    const after = savedSlots(day);
+    const exAt = (slots, slot) => slots.find((s) => s.slot === slot)?.ex;
+    const chosen = Object.keys(changes).filter((slot) => exAt(after, slot) === changes[slot].from && exAt(before, slot) !== changes[slot].from);
+    const offer = chosen.length ? d18Offer(day, recordOf(day), {}) : null;
+    if (offer && offer.swaps.every((sw) => chosen.includes(sw.slot))) saveOfferAnswer(store, D18_OFFER_KEY(day), "kept");
+  }
   closeSheets();
   rerender();
   undoToast(doneText, () => model.savePlanDay(day, before));
