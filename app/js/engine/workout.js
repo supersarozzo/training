@@ -239,14 +239,15 @@ export function lighterFor(newExerciseId, originalWeight, settings) {
   return lowerBy(originalWeight, 0.3, newExerciseId, settings);
 }
 
-// The weight an "It hurts" swap starts at (0.7.1: checker round 2, auditor round 3, trainer D15). Always lighter, and
+// The weight an "It hurts" swap starts at (0.7.1: checker round 2, auditor round 3, trainer D15). Lighter (or the lightest step the gym has), and
 // never in the old exercise's units:
 // - the new exercise has its own history: null (its own suggestion decides);
 // - nothing logged (no set today, no log of the old exercise; a first-try number or a Plan weight of the old one are
 //   not in the new exercise's units): about 30 % under the new exercise's own weight; when that rounds to 0, its own
 //   weight (already its lightest step; D12: never 0);
-// - a weight of the old exercise (a set today, else its log), trainer D15: old kg x (first-try table of the new / of
-//   the old) x 0.7, rounded down to the gym, at least one step. Raw table values: the profile factor cancels out.
+// - a weight of the old exercise (a set today, else its log; the lower of the log and its next suggestion, so a
+//   progression step never makes it heavier), trainer D15: old kg x (first-try table of the new / of the old) x 0.7,
+//   rounded down to the gym, at least one step. Raw table values: the profile factor cancels out.
 //   No table value (bodyweight or timed) or no weight: the rule since 0.5 (30 % under the old kg).
 export function painSwapStart(newExerciseId, { origId, lastWorkKg, origSugg, newSugg }, settings) {
   if (newSugg?.last) return null;
@@ -256,7 +257,9 @@ export function painSwapStart(newExerciseId, { origId, lastWorkKg, origSugg, new
     const kg = lighterFor(newExerciseId, own, settings);
     return kg === 0 && own > 0 ? own : kg;
   }
-  const oldKg = lastWorkKg ?? origSugg?.weight_kg ?? 0;
+  const logged = typeof origSugg?.last?.weight_kg === "number" && typeof origSugg.weight_kg === "number"
+    ? Math.min(origSugg.last.weight_kg, origSugg.weight_kg) : origSugg?.last?.weight_kg ?? origSugg?.weight_kg;
+  const oldKg = lastWorkKg ?? logged ?? 0;
   const tableOld = firstTryKg[origId];
   const tableNew = firstTryKg[newExerciseId];
   if (tableOld > 0 && tableNew > 0 && oldKg > 0) return gymFloor(oldKg * (tableNew / tableOld) * 0.7, newExerciseId, settings);
