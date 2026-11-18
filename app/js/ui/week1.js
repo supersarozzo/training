@@ -19,6 +19,7 @@ import { openSwap } from "./swap.js";
 import { renderRest } from "./rest.js";
 import { exerciseHeader, whereLine } from "./pair.js";
 import { icon } from "./icons.js";
+import { soreNote } from "../planview.js";
 
 function bigRow(pick) {
   const row = choiceRow(LEFT_CHOICES.map((c) => [c, c]), null, pick, { columns: 4 });
@@ -52,7 +53,8 @@ export function renderWeek1(ctx) {
   const header = (extra) => [
     topBar(title, () => askEnd(ctx), { done: index, total: recs.length }),
     exerciseHeader(ctx, rec),
-    h("div", { class: "info-lines" }, whereLine(ctx, exId)),
+    h("div", { class: "info-lines" }, whereLine(ctx, exId),
+      soreNote(ctx.session.plan_day, ctx.session.week, rec.slot) ? h("div", { class: "sore-note" }, soreNote(ctx.session.plan_day, ctx.session.week, rec.slot)) : null), // trainer D13
     extra,
   ];
   const setRest = () => {

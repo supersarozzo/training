@@ -363,6 +363,8 @@ html[data-motion="off"] .flip.show-end .f1 { opacity: 1; }
 .info-lines > div { font-size: 15px; color: var(--text-muted); line-height: 1.4; margin-top: 3px; display: flex; gap: 6px; align-items: flex-start; }
 .info-lines svg { flex: none; margin-top: 2px; }
 .info-lines .warn { color: var(--status-warning); font-weight: 600; }
+.sore-note { color: var(--text-primary); font-weight: 600; } /* trainer D13: the soreness note (weeks 0-3, Wed and Thu A1) */
+.pcard .sore-note { display: block; margin-top: 4px; line-height: 1.35; }
 .where-line { color: var(--text-primary) !important; font-weight: 600; }
 .where-add { display: inline-flex; align-items: center; gap: 6px; margin-top: var(--s1); }
 .set-list { display: grid; gap: 6px; margin-bottom: var(--s3); }
@@ -677,7 +679,7 @@ a.text-button { display: inline-flex; align-items: center; gap: 2px; text-decora
   transition: transform var(--t-fast) var(--ease);
 }
 .gear:active { transform: scale(.92); }
-.today-head, .gym-head, .plan-top { padding-right: 52px; }
+.today-head, .gym-head { padding-right: 52px; } /* room for the gear; the Plan has none (0.7.1, P6: Edit flush right) */
 .screen > .gear + .eyebrow { padding-right: 52px; min-height: 22px; }
 .back-link { margin-bottom: var(--s2); }
 .gym-head { margin-bottom: var(--s3); }
@@ -689,7 +691,7 @@ a.text-button { display: inline-flex; align-items: center; gap: 2px; text-decora
 /* Plan day */
 .plan-flow { display: flex; flex-direction: column; gap: 10px; }
 .plan-flow > p { margin: 0; }
-.plan-top { display: flex; align-items: center; gap: var(--s2); min-height: var(--tap-min); } /* 0.7.1: the long week-1 label kept off the Edit chip */
+.plan-top { display: flex; align-items: center; gap: var(--s2); flex-wrap: nowrap; min-height: var(--tap-min); } /* 0.7.1: the long week-1 label kept off the Edit chip */
 .week-chip {
   display: inline-flex; align-items: center; gap: 2px; min-height: var(--tap-min); padding: 0; border: 0; background: none; cursor: pointer;
   color: var(--accent-text); font: 800 13px/1.2 var(--font); letter-spacing: .08em; text-transform: uppercase; text-align: left; white-space: nowrap;

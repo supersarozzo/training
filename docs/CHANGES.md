@@ -15,6 +15,11 @@ Leftovers wave, built by chat 8.39 on top of 0.7.0. The trainer (8.37) decided e
 - Every exercise shows a weight to try, for example "Try 20 kg", with "First try. Set 1 tells us if it is right." The
   find-your-weight steps then correct it. The numbers come from the trainer's table and never from your body weight.
 - A double tap no longer zooms the page. Pinch to zoom still works.
+- Plan: the Edit button sits at the top right again, in line with the cards.
+
+**From the trainer**
+- In the practice week and weeks 1 to 3, the first exercise on Wednesday and Thursday has a short note: if those
+  muscles are still very sore, use one step lighter; joint pain, skip it today.
 
 **Workouts**
 - Warm-up sets are shorter: a big lift gets two warm-up sets only when its muscle is the first of the day; a small

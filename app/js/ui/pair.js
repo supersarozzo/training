@@ -27,7 +27,7 @@ import { openExerciseInfo, videoButton } from "./exinfo.js";
 import { openMachineCard, whereOf, machineFor } from "./machines.js";
 import { machines } from "../plan/media.js";
 import { previousSets, setText, fmtKg } from "./stats.js";
-import { rangeFor } from "../planview.js";
+import { rangeFor, soreNote } from "../planview.js";
 import { undoToast } from "./planedit.js";
 
 let justDone = null; // the set that was just saved: its row plays the "done" animation once (redesign A)
@@ -244,6 +244,7 @@ export function renderPair(ctx, pos) {
         sg.note && !(sg.action === "unknown") ? h("div", {}, sg.note) : null,
         ctx.state(exId)?.machine_note ? h("div", {}, `Machine: ${ctx.state(exId).machine_note}`) : null,
         whereLine(ctx, exId),
+        soreNote(ctx.session.plan_day, ctx.session.week, entry.slot) ? h("div", { class: "sore-note" }, soreNote(ctx.session.plan_day, ctx.session.week, entry.slot)) : null, // trainer D13
         rec.swap_reason === "hurts" ? h("div", { class: "warn" }, "You swapped because it hurt. Start light.") : null,
         unknown ? h("div", { class: "warn" }, "Pick a light weight you can lift with good form.") : null),
       // Warm-up sets: tiles while they are due, one short line once done (DESIGN.md: "collapsed after done").

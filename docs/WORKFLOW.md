@@ -267,6 +267,8 @@ Week 1 teaches each exercise and finds a good weight. Nobody tests a maximum lif
 
 **First-try weights (0.7.1, trainer D12):** before an exercise has any weight (none set in the Plan, none logged, none found), the app shows "Try <kg>" with "First try. Set 1 tells us if it is right." on Today, the Plan cards, the opened exercise and the set screen. The weights come from the trainer's table (`plan-v2.js firstTryKg`), times 0.6 for a profile that is not "male", always rounded down to the gym's dumbbells, stack step or 5 kg plates, never 0. No body weight is read. In week 1 and practice the warm-up starts at about half of it and set 1 at it; the find-your-weight steps below then correct it.
 
+**Soreness note (0.7.1, trainer D13):** in the practice week and weeks 1-3, the A1 card of Wednesday and Thursday (on the Plan and in the workout) says to use one step lighter when those muscles are still very sore, and to skip it on joint pain. By the workout day and slot, so it follows a Plan swap and a day picked on another date. A note only.
+
 **Rules for week 1:**
 - 2 working sets per exercise, not 3.
 - Stop every set with about 3 reps left. It will feel easy. That is on purpose.

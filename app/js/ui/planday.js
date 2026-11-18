@@ -19,7 +19,7 @@ import { miniMap } from "./bodymap.js";
 import { openExerciseLayer, doseParts } from "./exlayer.js";
 import { pageFor, muscleWords } from "../engine/planpage.js";
 import { ADDED_SLOTS, MAX_ADDED } from "../engine/planedits.js";
-import { viewDay, unitsIn, editedMinutes, rangeFor, weightLine } from "../planview.js";
+import { viewDay, unitsIn, editedMinutes, rangeFor, weightLine, soreNote } from "../planview.js";
 import { renderMuscleCheck } from "./musclecheck.js";
 import { dayState, openSwapSheet, openAddSheet, removeSlot, changedCard, openDoseSheet } from "./planedit.js";
 
@@ -95,7 +95,8 @@ function exCard(doc, day, week, slot, edit = false) {
     h("b", { class: "pc-name" }, ex.name, badge ? h("span", { class: "badge inline acc" }, badge) : null),
     h("span", { class: "dose" }, doseParts(ex, slot.sets, range)),
     h("span", { class: `weight-line${wl.kg ? "" : " muted"}` }, wl.kg ? [h("b", {}, wl.text), wl.note === "Your weight, set in the Plan." ? " · yours" : ""] : wl.text),
-    h("span", { class: "small muted" }, words.card)),
+    h("span", { class: "small muted" }, words.card),
+    soreNote(day, week, slot.slot) ? h("span", { class: "small sore-note" }, soreNote(day, week, slot.slot)) : null),
   miniMap(slot.ex),
   h("span", { class: "chev" }, icon("chevron", 18)));
   if (!edit) return card;

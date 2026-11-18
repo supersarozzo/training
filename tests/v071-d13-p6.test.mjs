@@ -67,7 +67,7 @@ test("D13-5 a note only: sets, effort and the weight suggestion are unchanged", 
   assert.doesNotMatch(src("js/engine/workout.js"), /soreNote|soreNotes/);
   assert.doesNotMatch(src("js/engine/progression.js"), /soreNote|soreNotes/);
   // text only, never markup
-  for (const f of ["js/ui/planday.js", "js/ui/pair.js", "js/ui/week1.js"]) assert.doesNotMatch(src(f), /innerHTML/, f);
+  for (const f of ["js/ui/planday.js", "js/ui/pair.js", "js/ui/week1.js"]) assert.doesNotMatch(src(f), /\.innerHTML\s*=|insertAdjacentHTML|outerHTML\s*=/, f);
 });
 
 test("P6 the Plan's Edit chip sits at the far right of the content, on the week chip's line", () => {

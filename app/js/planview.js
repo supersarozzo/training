@@ -13,7 +13,7 @@ import { daySlots, blockPosition, canTrain, inWeekOf } from "./engine/schedule.j
 import { validRange, suggestFor } from "./engine/workout.js";
 import { findPlanDay, effectiveDay, planDaySlots, planSwapChoices, setsForSlot, ADDED_SLOTS, ADDED_SETS, ADDED_REST, MAX_ADDED } from "./engine/planedits.js";
 import { setsByMuscle, levelFor, soFarText, unitsOf, unitHeader, slotRole, GYM_GROUPS, gymGroupOf, fmtSets } from "./engine/planpage.js";
-import { days, exercises, weeks, weekInfo, DAY_IDS, MOVE_SECONDS } from "./plan/plan-v2.js";
+import { days, exercises, weeks, weekInfo, DAY_IDS, MOVE_SECONDS, soreNotes, SORE_NOTE_WEEKS } from "./plan/plan-v2.js";
 import { MUSCLES, EQUIPMENT, exerciseMuscles } from "./plan/muscles.js";
 
 const LAST_WEEK = weeks.length;
@@ -357,6 +357,12 @@ export function weightLine(doc, exId, week) {
   if (sg.action === "first_try") return { text: `Try ${sg.weight_kg} kg`, note: sg.note, kg: sg.weight_kg };
   if (typeof sg.weight_kg === "number" && sg.weight_kg > 0) return { text: `${sg.weight_kg} kg`, note: sg.action === "mine" ? sg.note : sg.lastText ?? sg.note ?? "", kg: sg.weight_kg };
   return { text: "Pick a light weight", note: "Start light with good form; the app counts up from what you log.", kg: null };
+}
+
+// The trainer's soreness note for a card (D13), or null: by the workout day id, the week and the slot.
+export function soreNote(dayId, week, slot) {
+  const n = Object.hasOwn(soreNotes, dayId ?? "") ? soreNotes[dayId] : null;
+  return n && n.slot === slot && SORE_NOTE_WEEKS.includes(week) ? n.text : null;
 }
 
 // Is any workout running (any day)? Reps and weight set in the Plan count on every day, so the Change sheet stays

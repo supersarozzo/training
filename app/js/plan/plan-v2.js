@@ -145,6 +145,15 @@ export const firstTryKg = Object.freeze({
   cable_crunch: 20,
 });
 
+// Soreness notes (trainer D13, 0.7.1): a note on two cards, only in the practice week (week 0) and weeks 1-3. Tied to
+// the workout's day id and slot (not the date, not the exercise), so a Plan swap or another day picked keeps it. A note
+// only: no sets, reps or weights change. Shown by planview.js soreNote.
+export const SORE_NOTE_WEEKS = Object.freeze([0, 1, 2, 3]);
+export const soreNotes = Object.freeze({
+  wed: Object.freeze({ slot: "A1", text: "Thighs still very sore from Tuesday? Use one step lighter today. Joint pain: skip it today." }),
+  thu: Object.freeze({ slot: "A1", text: "Chest or shoulders still very sore? Use one step lighter today. Joint pain: skip it today." }),
+});
+
 // Big lifts (plan v2 section 5; trainer L1, answer T2 to 8.39): the first exercise of a pair gets both warm-up sets
 // only when it is a big lift whose main muscle was not worked earlier that day; a small one gets one light set.
 export const BIG_LIFTS = Object.freeze([
