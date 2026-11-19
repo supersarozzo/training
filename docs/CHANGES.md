@@ -22,7 +22,7 @@ The lowest weight (trainer decision D19), safer old versions, and small fixes, b
   "Undo last set", and it never covers "End".
 - **Week 1 at the lightest weight:** when set 1 is too heavy but the weight is already the lightest, the app says
   "Lightest weight already. Do the reps you can with good form, or swap the exercise." instead of "Remove 2 steps".
-- **A new machine move after a break:** if its first weight is already the lightest, the card says "Lightest weight
+- **A new move that replaced an old one, after a break:** if its first weight is already the lightest, the card says "Lightest weight
   already. Stop with 3 reps left today."
 - **Food that did not sync shows on Today.** If the food file could not sync, Today says "Food did not sync. See Diet."
   It stays quiet when the food says it will sync by itself ("Will sync when online" or "Will sync later", or GitHub
