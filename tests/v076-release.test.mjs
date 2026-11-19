@@ -4,9 +4,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-test("V0 version: 0.7.6 in js/version.js and at the top of sw.js; the stamp is recorded for 0.7.6", async () => {
+// 0.7.7 (worker 8.44): "0.7.6 or later", the same in both files; tests/v077-release.test.mjs V0 pins 0.7.7.
+test("V0 version: 0.7.6 or later in js/version.js, the same at the top of sw.js", async () => {
   const { APP_VERSION } = await import("../app/js/version.js");
-  assert.equal(APP_VERSION, "0.7.6");
-  assert.equal(readFileSync(new URL("../app/sw.js", import.meta.url), "utf8").match(/const APP_VERSION = "([^"]+)"/)[1], "0.7.6");
-  assert.equal(JSON.parse(readFileSync(new URL("./fixtures/app-stamp.json", import.meta.url), "utf8")).version, "0.7.6");
+  const n = APP_VERSION.split(".").map(Number);
+  assert.ok(n[0] > 0 || n[1] > 7 || (n[1] === 7 && n[2] >= 6), APP_VERSION);
+  assert.equal(readFileSync(new URL("../app/sw.js", import.meta.url), "utf8").match(/const APP_VERSION = "([^"]+)"/)[1], APP_VERSION);
 });
