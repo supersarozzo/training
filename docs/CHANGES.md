@@ -30,9 +30,9 @@ The lowest weight (trainer decision D19), safer old versions, and small fixes, b
 - **Pieces for foods that only say grams.** A food whose pack serving says only "30 g" no longer counts the whole
   30 g as 1 piece. Pieces now asks "How much does 1 piece weigh? (g)" once. Foods like "4 bites" or "2 eggs" work as
   before.
-- **Online food search works again.** Searching a food name (Diet, Search) now uses Open Food Facts' newer search, UK
-  products only, and still sends only the words you type. If it is down, the app tries the old search once, then says
-  "Online search is not working right now. Try again later, or make a new food."
+- **A plain message when online food search is down.** When Open Food Facts' name search does not answer, the Diet
+  search now says "Online search is not working right now. Try again later, or make a new food." Your saved foods and
+  barcode lookups still work. (Their newer search address cannot be used by a web app, so the app stays on the old one.)
 - **Today's practice week label fits one line:** "Practice week".
 - **Protein numbers:** totals in whole grams everywhere; a single food under 10 g keeps one decimal ("4.3 g").
 

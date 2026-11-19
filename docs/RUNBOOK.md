@@ -98,7 +98,7 @@ Before the rewrite to the noreply address, all commits were saved in `private/tr
 1. Run `node --test "tests/*.test.mjs"`. If a test fails, the line names what broke.
 2. The app shows "Something is wrong" with a plain message: your data was not changed. Tell the Training chat what the message says.
 3. "Not saved. Phone storage full" (a sheet after a tap): the tap was not saved. Download a backup (Settings) and tell the Training chat. If sync says "Some data on this phone does not pass the app's own check. Nothing was sent.", the GitHub copy is safe and unchanged: do the same.
-4. "Online search is not working right now" (Diet search): both Open Food Facts search addresses failed. The app asks `https://search.openfoodfacts.org/search` first and the old `https://world.openfoodfacts.org/cgi/search.pl` once after it (0.7.6). Barcode lookups and your saved foods still work. If it lasts for days, tell the Training chat: the app's network list (CSP `connect-src` in `app/index.html`) allows only our site, `https://api.github.com`, `https://world.openfoodfacts.org` and `https://search.openfoodfacts.org`; a new address needs a new version.
+4. "Online search is not working right now" (Diet search, 0.7.6): Open Food Facts' name search (`https://world.openfoodfacts.org/cgi/search.pl`) did not answer. Barcode lookups and your saved foods still work; try later or make a new food. Its newer search address cannot be used by a web app (no CORS header, checked 2026-11-18).
 5. A blank page: open the browser console (F12 > Console) and copy the red text to the Training chat.
 
 ## Rollback of a change
