@@ -540,6 +540,8 @@ Sources (read 2026-11-18): Bosquet et al. 2013, Scand J Med Sci Sports 23(3):e14
 
 ### D20. No hip thrust movement; abs on benches and machines — **2 glute slots and 1 abs slot change; 2 new first-visit checks**
 
+*Status: built by worker 8.45 in app 0.7.8 (2026-11-19); not live until pushed. Build notes: docs/checks/2026-11-19-v078.md.*
+
 Asked by the Training Agent on 2026-11-19, for you (after 0.7.6): "Hip thrust is still here, and the abs exercises don't use machinery. They have the benches for abs, I'm pretty sure. Why are there no abs exercises with those machines?"
 
 **You were right.** D18 moved the hip thrust onto a machine, but it was still the hip thrust **movement**, and the photo still showed a barbell hip thrust. So to you nothing had changed. D20 removes the movement itself. For the abs, the gym's website lists no abs machine or abs bench, so D20 uses a bench the gym does have, and adds first-visit checks for the abs machines and benches.
@@ -649,6 +651,13 @@ Sources (read 2026-11-19): Neto et al. 2020, J Sports Sci Med 19(1):195-203, glu
 **Answers to worker 8.45 (2026-11-19, building D20 as 0.7.8):**
 1. **First weight from an older `hip_thrust` log: yes.** Order: a `smith_split_squat` log of its own always wins. Without one, use the most recent log of `booty_builder_hip_thrust` or `hip_thrust` (the booty log if both are on the same date). Each is lowered for a break with its own step (booty: its stack step; `hip_thrust`: 5 kg, `smith_2x2.5`), then converted with its own first try (both 20): kg × 5 ÷ 20, rounded down, at least 5 kg. Extra test: a made-up `hip_thrust` log of 40 and no booty log gives 10 kg; a `hip_thrust` log of 30 gives 7.5 → 5 kg.
 2. **Two offers for one place: one card at a time, yes.** Offer 1 first; offer 2 only after **Keep** on offer 1. After **Use it** on offer 1, offer 2 never shows for that place. If only offer 2's machine is found, it shows on its own. Each place is separate: an answer on Tuesday A2 does not change Friday A2.
+3. **Days edited before 0.7.5 (still holding the barbell `hip_thrust`, and on Tuesday `cable_crunch`): option a.** Rosario asked for no hip thrust movement, so one tap must reach the D20 moves, but never silently.
+   - The D20 card also covers `hip_thrust` → `smith_split_squat` (Tue C1, Fri B1) and `cable_crunch` → `reverse_crunch` (Tue A2).
+   - The D18 card no longer offers those places. It keeps only its other places (Tue C2 `dead_bug` → `plank`, Fri D `calf_raise_standing` → `calf_raise_leg_press`). With none of those left on a day, it does not show.
+   - A D18 **Keep mine** does not block the D20 card, because D20 is a new question. The D18 places it kept stay kept, and the D18 card does not come back.
+   - One card per day at a time: the D20 card first, then what is left of the D18 card. **Use it** changes only the places its card lists and keeps every other edit. **Keep mine** on the D20 card is final.
+   - The first weight uses answer 1 (from the `hip_thrust` log). `reverse_crunch` has no weight.
+   - Extra tests: an edited Tuesday with `hip_thrust`, `cable_crunch` and `dead_bug` shows the D20 card first (C1 and A2 only), then a D18 card with C2 only. The same day with a saved D18 "Keep mine" shows the D20 card once, and no D18 card.
 
 ## 5. Changes to your earlier choices
 
