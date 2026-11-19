@@ -646,6 +646,10 @@ Sources (read 2026-11-19): Neto et al. 2020, J Sports Sci Med 19(1):195-203, glu
 
 **Not verified:** whether this gym has a captain's chair, an abs bench or an ab crunch machine (hence the first-visit checks); the Smith machine's bar weight (first try 5 kg of plates on top of the bar is aimed low); the ACE study is a commissioned lab report, not a peer-reviewed paper; the 2008 lunge study is small (10 people); no study tested the split squat against the hip thrust for glute growth directly.
 
+**Answers to worker 8.45 (2026-11-19, building D20 as 0.7.8):**
+1. **First weight from an older `hip_thrust` log: yes.** Order: a `smith_split_squat` log of its own always wins. Without one, use the most recent log of `booty_builder_hip_thrust` or `hip_thrust` (the booty log if both are on the same date). Each is lowered for a break with its own step (booty: its stack step; `hip_thrust`: 5 kg, `smith_2x2.5`), then converted with its own first try (both 20): kg × 5 ÷ 20, rounded down, at least 5 kg. Extra test: a made-up `hip_thrust` log of 40 and no booty log gives 10 kg; a `hip_thrust` log of 30 gives 7.5 → 5 kg.
+2. **Two offers for one place: one card at a time, yes.** Offer 1 first; offer 2 only after **Keep** on offer 1. After **Use it** on offer 1, offer 2 never shows for that place. If only offer 2's machine is found, it shows on its own. Each place is separate: an answer on Tuesday A2 does not change Friday A2.
+
 ## 5. Changes to your earlier choices
 
 **None.** I kept 74 b and 80-83 exactly:
