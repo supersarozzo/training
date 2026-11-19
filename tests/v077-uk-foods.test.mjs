@@ -320,3 +320,24 @@ test("UK-12 more than 100 matches: the button says 'Show the first 100 of N'; no
   assert.ok(hit.textContent.includes("UK food tables"), "the saved row's small line says UK food tables");
   closeAll();
 });
+
+// ---------- review round 2 (checker n1) ----------
+
+test("UK-13 'No built-in UK food matches.' only when the tables have no match at all, never for your own saved UK food or barcode digits", async () => {
+  closeAll();
+  foodStore.save({ ...fm.doc(), foods: [], food_log: [] });
+  fm.saveFood(UK.ukFields(UK.parseUkFoods(data).find((x) => x.id === "fu-18-323")));
+  S.openSearch();
+  await settle();
+  const sheet = sheetNow();
+  sheet.querySelector("input").input("chick breast grilled without");
+  await settle();
+  assert.ok(!sheet.textContent.includes("No built-in UK food matches."), "the only match is your saved food, shown under Your foods");
+  sheet.querySelector("input").input("5000157024671");
+  await settle();
+  assert.ok(!sheet.textContent.includes("No built-in UK food matches."), "barcode digits are not a food name");
+  sheet.querySelector("input").input("zzqx");
+  await settle();
+  assert.ok(sheet.textContent.includes("No built-in UK food matches."));
+  closeAll();
+});
