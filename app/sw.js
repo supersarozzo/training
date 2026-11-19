@@ -1,6 +1,6 @@
 // Service worker: keeps every app file on the phone so the app opens without a network.
 // APP_VERSION must match js/version.js (a unit test checks this and the file list).
-const APP_VERSION = "0.7.7";
+const APP_VERSION = "0.7.8";
 const CACHE = `training-${APP_VERSION}`;
 const FILES = [
   "./",
@@ -140,6 +140,8 @@ const FILES = [
   "media/exercises/calf_raise_machine/1.jpg",
   "media/exercises/calf_raise_standing/0.jpg",
   "media/exercises/calf_raise_standing/1.jpg",
+  "media/exercises/captain_chair_knee_raise/0.jpg",
+  "media/exercises/captain_chair_knee_raise/1.jpg",
   "media/exercises/cat_cow/0.jpg",
   "media/exercises/cat_cow/1.jpg",
   "media/exercises/chest_press/0.jpg",
@@ -152,8 +154,12 @@ const FILES = [
   "media/exercises/db_glute_bridge/1.jpg",
   "media/exercises/db_lying_leg_curl/0.jpg",
   "media/exercises/db_lying_leg_curl/1.jpg",
+  "media/exercises/db_step_up/0.jpg",
+  "media/exercises/db_step_up/1.jpg",
   "media/exercises/dead_bug/0.jpg",
   "media/exercises/dead_bug/1.jpg",
+  "media/exercises/decline_bench_crunch/0.jpg",
+  "media/exercises/decline_bench_crunch/1.jpg",
   "media/exercises/face_pull/0.jpg",
   "media/exercises/face_pull/1.jpg",
   "media/exercises/glute_bridges/0.jpg",
@@ -208,6 +214,8 @@ const FILES = [
   "media/exercises/shoulder_press_machine/1.jpg",
   "media/exercises/side_plank/0.jpg",
   "media/exercises/side_plank/1.jpg",
+  "media/exercises/smith_split_squat/0.jpg",
+  "media/exercises/smith_split_squat/1.jpg",
   "media/exercises/smith_squat/0.jpg",
   "media/exercises/smith_squat/1.jpg",
   "media/exercises/triceps_pushdown/0.jpg",

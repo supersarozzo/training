@@ -15,8 +15,8 @@ export const PHOTO_SOURCE = { name: "free-exercise-db", url: "https://github.com
 
 // id -> { lib, match, matchNote?, svg? }
 export const media = {
-  chest_press: { lib: "Leverage_Chest_Press", match: "close", matchNote: "Photo shows a plate-loaded machine. Your gym's may have a weight stack with a pin; the move is the same." },
-  pulldown: { lib: "Wide-Grip_Lat_Pulldown", match: "close", matchNote: "Photo shows a pulldown seat; the plan uses the high cable, kneeling or seated. Same pull." },
+  chest_press: { lib: "Leverage_Chest_Press", match: "close", matchNote: "Similar move: the photo shows a plate-loaded machine. Your gym's may have a weight stack with a pin." },
+  pulldown: { lib: "Wide-Grip_Lat_Pulldown", match: "close", matchNote: "Similar move: the photo shows a pulldown seat. The plan uses the high cable, kneeling or seated." },
   shoulder_press_machine: { lib: "Machine_Shoulder_Military_Press", match: "same" },
   one_arm_db_row: { lib: "One-Arm_Dumbbell_Row", match: "same" },
   db_curl: { lib: "Dumbbell_Bicep_Curl", match: "same" },
@@ -25,9 +25,9 @@ export const media = {
   dead_bug: { lib: "Dead_Bug", match: "same" },
   leg_press: { lib: "Leg_Press", match: "same" },
   cable_crunch: { lib: "Cable_Crunch", match: "same" },
-  romanian_deadlift: { lib: "Stiff-Legged_Dumbbell_Deadlift", match: "close", matchNote: "Photo shows a stiff-legged deadlift. For the Romanian deadlift keep a small bend in the knees." },
+  romanian_deadlift: { lib: "Stiff-Legged_Dumbbell_Deadlift", match: "close", matchNote: "Similar move: the photo shows straight legs. For the Romanian deadlift keep a small bend in the knees." },
   face_pull: { lib: "Face_Pull", match: "same" },
-  hip_thrust: { lib: "Barbell_Hip_Thrust", match: "close", matchNote: "Photo shows a barbell on a bench. The Glute Drive machine is the same move with a pad." },
+  hip_thrust: { lib: "Barbell_Hip_Thrust", match: "close", matchNote: "Similar move: the photo shows a barbell on a bench. The Glute Drive machine has a pad instead." },
   leg_extension: { lib: "Leg_Extensions", match: "same" },
   goblet_squat: { lib: "Goblet_Squat", match: "same" },
   db_bench_press: { lib: "Dumbbell_Bench_Press", match: "same" },
@@ -39,27 +39,34 @@ export const media = {
   seated_cable_row: { lib: "Seated_Cable_Rows", match: "same" },
   seated_db_shoulder_press: { lib: "Dumbbell_Shoulder_Press", match: "same" },
   smith_squat: { lib: "Smith_Machine_Squat", match: "same" },
-  reverse_crunch: { lib: "Reverse_Crunch", match: "same" },
+  // Trainer D20 (0.7.8): the photo shows the floor; the plan does it on a flat bench.
+  reverse_crunch: { lib: "Reverse_Crunch", match: "close", matchNote: "Similar move: the photo shows the floor. Do it lying on a flat bench, holding its top end." },
   cable_pull_through: { lib: "Pull_Through", match: "same" },
   calf_raise_standing: { lib: "Smith_Machine_Calf_Raise", match: "same" },
   cable_curl: { lib: "Standing_Biceps_Cable_Curl", match: "same" },
-  cable_lateral_raise: { lib: "Cable_Seated_Lateral_Raise", match: "close", matchNote: "Photo shows it seated; standing works the same way." },
+  cable_lateral_raise: { lib: "Cable_Seated_Lateral_Raise", match: "close", matchNote: "Similar move: the photo shows it seated. Standing works the same way." },
   rear_delt_raise: { lib: "Dumbbell_Lying_Rear_Lateral_Raise", match: "same" },
-  db_glute_bridge: { lib: "Barbell_Glute_Bridge", match: "close", matchNote: "Photo shows a barbell. Hold one dumbbell on your hips instead." },
+  db_glute_bridge: { lib: "Barbell_Glute_Bridge", match: "close", matchNote: "Similar move: the photo shows a barbell. Hold one dumbbell on your hips instead." },
   calf_raise_leg_press: { lib: "Calf_Press_On_The_Leg_Press_Machine", match: "same" },
-  lat_pulldown_machine: { lib: "Close-Grip_Front_Lat_Pulldown", match: "close", matchNote: "Photo shows a close grip. Any grip the machine has is fine." },
+  lat_pulldown_machine: { lib: "Close-Grip_Front_Lat_Pulldown", match: "close", matchNote: "Similar move: the photo shows a close grip. Any grip the machine has is fine." },
   seated_row_machine: { lib: "Leverage_Iso_Row", match: "same" },
   leg_curl_machine: { lib: "Seated_Leg_Curl", match: "same" },
   calf_raise_machine: { lib: "Standing_Calf_Raises", match: "same" },
   // added 2026-11-18 (plan change): no exact library entry for these three, so each is a close match with a note
-  db_lying_leg_curl: { lib: "Lying_Leg_Curls", match: "close", matchNote: "Photo shows the leg curl machine. Lie the same way on a flat bench, a dumbbell between your feet." },
-  one_leg_db_calf_raise: { lib: "Standing_Dumbbell_Calf_Raise", match: "close", matchNote: "Photo shows two legs. Do one leg at a time, a dumbbell in one hand, and hold a rail." },
-  cable_leg_curl: { lib: "Standing_Leg_Curl", match: "close", matchNote: "Photo shows the standing leg curl machine. With the cable, strap on one ankle and curl that leg." },
+  db_lying_leg_curl: { lib: "Lying_Leg_Curls", match: "close", matchNote: "Similar move: the photo shows the leg curl machine. Lie the same way on a flat bench, a dumbbell between your feet." },
+  one_leg_db_calf_raise: { lib: "Standing_Dumbbell_Calf_Raise", match: "close", matchNote: "Similar move: the photo shows two legs. Do one leg at a time, a dumbbell in one hand, and hold a rail." },
+  cable_leg_curl: { lib: "Standing_Leg_Curl", match: "close", matchNote: "Similar move: the photo shows a leg curl machine. With the cable, strap on one ankle and curl that leg." },
   // added 2026-11-18 (trainer D18, 0.7.5): free-exercise-db commit f00c92c, photos unchanged (docs/MEDIA.md)
-  booty_builder_hip_thrust: { lib: "Barbell_Hip_Thrust", match: "close", matchNote: "Photo shows a barbell on a bench. On the hip thrust machine a belt holds your hips; the move is the same." },
-  weighted_crunch: { lib: "Weighted_Crunches", match: "close", matchNote: "Photo shows a weight plate and raised legs. Keep your feet flat on the floor and hold one dumbbell on your chest." },
+  booty_builder_hip_thrust: { lib: "Barbell_Hip_Thrust", match: "close", matchNote: "Similar move: the photo shows a barbell on a bench. On the hip thrust machine a belt holds your hips." },
+  weighted_crunch: { lib: "Weighted_Crunches", match: "close", matchNote: "Similar move: the photo shows a plate and raised legs. Keep your feet flat and hold one dumbbell on your chest." },
   ab_crunch_machine: { lib: "Ab_Crunch_Machine", match: "same" },
   reverse_pec_deck: { lib: "Reverse_Machine_Flyes", match: "same" },
+  // added 2026-11-19 (trainer D20, 0.7.8): free-exercise-db commit f00c92c, photos unchanged (docs/MEDIA.md). Every
+  // plan exercise shows its own equipment, or its note starts with "Similar move:" (tests/v078-d20.test.mjs D20-8).
+  smith_split_squat: { lib: "Smith_Single-Leg_Split_Squat", match: "close", matchNote: "Similar move: the photo shows the back foot on a bench. Keep both feet on the floor, one forward, one back." },
+  db_step_up: { lib: "Dumbbell_Step_Ups", match: "same" },
+  captain_chair_knee_raise: { lib: "Knee_Hip_Raise_On_Parallel_Bars", match: "same" },
+  decline_bench_crunch: { lib: "Decline_Crunch", match: "same" },
   // warm-up moves and the walk
   arm_circles: { lib: "Arm_Circles", match: "same" },
   arm_swings: { lib: "Dynamic_Chest_Stretch", match: "close", matchNote: "Swing your arms open and across, like this stretch." },
@@ -123,6 +130,11 @@ export const VIDEOS = {
   weighted_crunch: { url: "https://www.youtube.com/watch?v=GnOtkztXWQs", title: "How To Do: Dumbbell Crunch - Floor | Ab Workout Exercise", channel: "Fitway - Workout Trainer" },
   ab_crunch_machine: { url: "https://www.youtube.com/watch?v=NpjB_rp756Y", title: "Life Fitness Circuit Series Ab Crunch Instructions", channel: "Life Fitness / Hammer Strength" },
   reverse_pec_deck: { url: "https://www.youtube.com/watch?v=hmtnyIGgR9A", title: "How To: Reverse Pec Deck Rear Delt Fly", channel: "Ignore Limits" },
+  // added 2026-11-19 (trainer D20, 0.7.8): YouTube oEmbed answered with this title and channel on 2026-11-19 (docs/MEDIA.md)
+  smith_split_squat: { url: "https://www.youtube.com/watch?v=y8XdzYUGDaI", title: "How To Do Smith Machine Split Squat | Exercise Demo", channel: "OriGym" },
+  db_step_up: { url: "https://www.youtube.com/watch?v=hgkk12L_Umk", title: "HOW TO DO A DUMBBELL STEP-UP | Coach Kelly Cues", channel: "Kelly Matthews" },
+  captain_chair_knee_raise: { url: "https://www.youtube.com/watch?v=7KDDZtaUaxw", title: "How To Do A CAPTAIN'S CHAIR KNEE RAISE | Exercise Demonstration Video and Guide", channel: "Live Lean TV Daily Exercises" },
+  decline_bench_crunch: { url: "https://www.youtube.com/watch?v=-jFc70vicCg", title: "Decline Bench Crunch", channel: "workouts4fitness" },
   arm_circles: { url: "https://www.youtube.com/watch?v=3STTSi_jdHk", title: "How To Arm Circles | Nuffield Health", channel: "Nuffield Health" },
   arm_swings: { url: "https://www.youtube.com/watch?v=p7EnbCprr5w", title: "Arm swings side to side", channel: "NHS inform" },
   cat_cow: { url: "https://www.youtube.com/watch?v=1Y0YjXS9sKI", title: "How to Do a Cat Cow Stretch: A Guide from Physical Therapists", channel: "Hinge Health" },
@@ -181,6 +193,9 @@ export const machines = {
   // Added 2026-11-18 (trainer D18, 0.7.5). booty_builder: on the gym's website (no check). ab_crunch: the new first-visit check.
   booty_builder: { name: "Hip thrust machine (Booty Builder)", sign: "Booty Builder", area: "glutes", photo: "booty_builder_hip_thrust", tip: "Set the seat and foot plate for your height first; belt snug over your hips.", look: "A seat with a back pad and a foot plate, a padded belt over the hips and a weight stack with a pin." },
   ab_crunch: { name: "Ab crunch machine", sign: "Abdominal Crunch", area: "machines", photo: "ab_crunch_machine", check: "ab_crunch", tip: "Start light; curl with your abs, not your arms.", look: "A seat with pads or handles at chest height that you curl forward and down." },
+  // Added 2026-11-19 (trainer D20, 0.7.8): the two new first-visit checks; ids appended in machine-ids.js.
+  captain_chair: { name: "Captain's chair", sign: "Vertical Knee Raise / Captain's Chair", area: "machines", photo: "captain_chair_knee_raise", check: "captain_chair", tip: "Back flat on the pad; lift with your abs, do not swing.", look: "A tall frame with a back pad and two padded arm rests with handles; your legs hang free." },
+  ab_bench: { name: "Decline abs bench", sign: "Decline Bench / Ab Bench", area: "free_weights", photo: "decline_bench_crunch", check: "ab_bench", tip: "Start with a small slope; hook your feet under the rollers.", look: "A sloped bench with foam rollers at the high end to hold your feet." },
   calf_raise: { name: "Calf raise machine", sign: "Calf Raise", area: "machines", photo: "calf_raise_machine", check: "calf_raise", tip: "Full stretch at the bottom, pause at the top.", look: "Shoulder pads over a small step; you rise up on your toes." },
 };
 
@@ -191,12 +206,13 @@ export const machineOf = {
   cable_crunch: "cable_station", romanian_deadlift: "dumbbells_bench", face_pull: "cable_station", hip_thrust: "hip_thrust",
   leg_extension: "leg_extension", goblet_squat: "dumbbells_bench", db_bench_press: "dumbbells_bench", lateral_raise: "dumbbells_bench",
   hammer_curl: "dumbbells_bench", overhead_triceps_ext: "cable_station", side_plank: "mat_area", incline_db_press: "dumbbells_bench",
-  seated_cable_row: "cable_station", seated_db_shoulder_press: "dumbbells_bench", smith_squat: "smith_machine", reverse_crunch: "mat_area",
+  seated_cable_row: "cable_station", seated_db_shoulder_press: "dumbbells_bench", smith_squat: "smith_machine", reverse_crunch: "dumbbells_bench",
   cable_pull_through: "cable_station", calf_raise_standing: "smith_machine", cable_curl: "cable_station", cable_lateral_raise: "cable_station",
   rear_delt_raise: "dumbbells_bench", db_glute_bridge: "mat_area", calf_raise_leg_press: "leg_press", lat_pulldown_machine: "lat_pulldown",
   seated_row_machine: "seated_row", leg_curl_machine: "leg_curl", calf_raise_machine: "calf_raise",
   db_lying_leg_curl: "dumbbells_bench", one_leg_db_calf_raise: "dumbbells_bench", cable_leg_curl: "cable_station",
   booty_builder_hip_thrust: "booty_builder", weighted_crunch: "mat_area", ab_crunch_machine: "ab_crunch", reverse_pec_deck: "pec_deck",
+  smith_split_squat: "smith_machine", db_step_up: "dumbbells_bench", captain_chair_knee_raise: "captain_chair", decline_bench_crunch: "ab_bench",
   uphill_walk: "treadmill", arm_circles: "mat_area", arm_swings: "mat_area", cat_cow: "mat_area", bodyweight_squats: "mat_area",
   glute_bridges: "mat_area", hip_hinge: "mat_area", pushups_bench: "mat_area",
 };

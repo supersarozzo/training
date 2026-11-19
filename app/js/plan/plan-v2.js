@@ -33,7 +33,9 @@ export const exercises = {
   seated_cable_row: { name: "Seated cable row", equipment: "Cable, low pulley (functional trainer)", kind: "reps", range: [8, 12], step: "stack", muscle: "back", swaps: [{ id: "one_arm_db_row" }, { id: "seated_row_machine", needsMachine: "seated_row" }] },
   seated_db_shoulder_press: { name: "Seated dumbbell shoulder press", equipment: "Dumbbells + upright bench", kind: "reps", range: [8, 12], step: "dumbbell", muscle: "shoulders", swaps: [{ id: "shoulder_press_machine" }] },
   smith_squat: { name: "Smith machine squat", equipment: "Smith press station, safety stops set", kind: "reps", range: [8, 12], step: "smith_2x2.5", muscle: "quads", swaps: [{ id: "leg_press" }] },
-  reverse_crunch: { name: "Reverse crunch", equipment: "Bench or mat", kind: "reps", range: [10, 15], step: "bodyweight", muscle: "abs", swaps: [{ id: "dead_bug" }] },
+  // Trainer D20 (0.7.8): always on a flat bench (planned on Tue A2 and Fri A2); the abs machines and benches the first
+  // visit finds are offered as swaps.
+  reverse_crunch: { name: "Reverse crunch", equipment: "Flat bench: lie on it, hold its top end behind your head", kind: "reps", range: [10, 15], step: "bodyweight", muscle: "abs", swaps: [{ id: "captain_chair_knee_raise", needsMachine: "captain_chair" }, { id: "decline_bench_crunch", needsMachine: "ab_bench" }, { id: "ab_crunch_machine", needsMachine: "ab_crunch" }, { id: "weighted_crunch" }, { id: "dead_bug" }] },
   cable_pull_through: { name: "Cable pull-through", equipment: "Cable, low pulley, rope", kind: "reps", range: [12, 15], step: "stack", muscle: "glutes", swaps: [{ id: "romanian_deadlift" }, { id: "leg_curl_machine", needsMachine: "leg_curl" }] },
   calf_raise_standing: { name: "Standing calf raise", equipment: "Smith machine, step or plate under the toes", kind: "reps", range: [12, 15], step: "smith_2x2.5", muscle: "calves", swaps: [{ id: "calf_raise_leg_press" }, { id: "calf_raise_machine", needsMachine: "calf_raise" }] },
   // Added 2026-11-18 (plan change, answers 80-83): planned on Mon and Wed (calf raise) and Thu (leg curl) in the D slot.
@@ -43,6 +45,9 @@ export const exercises = {
   // days but stay here (saved logs, exercise_state and Plan edits name them) and stay offered as swaps.
   booty_builder_hip_thrust: { name: "Hip thrust machine", equipment: "Booty Builder (glutes area)", kind: "reps", range: [8, 12], step: "stack", muscle: "glutes", swaps: [{ id: "hip_thrust" }, { id: "db_glute_bridge" }] },
   weighted_crunch: { name: "Crunch with a dumbbell", equipment: "Mat or flat bench, 1 dumbbell on the chest", kind: "reps", range: [10, 15], step: "dumbbell", muscle: "abs", swaps: [{ id: "ab_crunch_machine", needsMachine: "ab_crunch" }, { id: "cable_crunch" }, { id: "reverse_crunch" }] },
+  // Added 2026-11-19 (trainer D20, 0.7.8): no hip thrust movement. Planned on Tue C1 and Fri B1. booty_builder_hip_thrust,
+  // hip_thrust and weighted_crunch left the days but stay here (saved logs, exercise_state and Plan edits name them).
+  smith_split_squat: { name: "Smith machine split squat", equipment: "Smith press station, safety stops set", kind: "reps", range: [8, 12], perSide: true, step: "smith_2x2.5", muscle: "glutes", swaps: [{ id: "db_step_up" }, { id: "booty_builder_hip_thrust" }, { id: "hip_thrust" }] },
   db_lying_leg_curl: { name: "Dumbbell lying leg curl", equipment: "Dumbbell + flat bench, lying face down", kind: "reps", range: [10, 15], step: "dumbbell", muscle: "hamstrings", swaps: [{ id: "leg_curl_machine", needsMachine: "leg_curl" }, { id: "cable_leg_curl" }, { id: "romanian_deadlift" }] },
 
   // Swap-only exercises (they appear only as a swap)
@@ -60,6 +65,11 @@ export const exercises = {
   // Added 2026-11-18 (trainer D18, 0.7.5): machines the gym's website does not confirm; offered after the first visit.
   ab_crunch_machine: { name: "Ab crunch machine", equipment: "Ab crunch machine (first visit check)", kind: "reps", range: [10, 15], step: "stack", muscle: "abs", swaps: [] },
   reverse_pec_deck: { name: "Reverse pec deck", equipment: "Pec deck, facing the pad (first visit check)", kind: "reps", range: [12, 15], step: "stack", muscle: "back", swaps: [] },
+  // Added 2026-11-19 (trainer D20, 0.7.8): the fallback when the Smith machine is busy, and the abs machines and benches
+  // the gym's website does not confirm (offered after the first visit).
+  db_step_up: { name: "Dumbbell step-up", equipment: "Bench at knee height or lower + dumbbells", kind: "reps", range: [8, 12], perSide: true, step: "dumbbell", muscle: "glutes", swaps: [{ id: "smith_split_squat" }] },
+  captain_chair_knee_raise: { name: "Knee raise on the captain's chair", equipment: "Captain's chair: back pad and arm rests (first visit check)", kind: "reps", range: [10, 15], step: "bodyweight", muscle: "abs", swaps: [] },
+  decline_bench_crunch: { name: "Crunch on a decline abs bench", equipment: "Decline abs bench with foot rollers (first visit check)", kind: "reps", range: [10, 15], step: "bodyweight", muscle: "abs", swaps: [] },
 };
 
 // Is this an exercise id this app knows? (0.7.6, worker 8.43.) A workout synced from a newer app can hold an id this
@@ -70,8 +80,9 @@ export function knownExercise(id) {
 }
 
 // The extra machines the first visit checks (question 17).
-// "ab_crunch" added by trainer D18 (0.7.5), at the end (the order is the order of the Settings fields).
-export const extraMachines = ["lat_pulldown", "seated_row", "leg_curl", "pec_deck", "calf_raise", "ab_crunch"];
+// "ab_crunch" added by trainer D18 (0.7.5), "captain_chair" and "ab_bench" by trainer D20 (0.7.8), always at the end
+// (the order is the order of the Settings fields).
+export const extraMachines = ["lat_pulldown", "seated_row", "leg_curl", "pec_deck", "calf_raise", "ab_crunch", "captain_chair", "ab_bench"];
 
 // One-tap machine offers (trainer D18, 0.7.5). When the first visit says the gym has `machine`, a Plan day whose place
 // holds `from` (the confirmed fallback) offers `to` once: "The gym has a <machine>. Use it instead of <exercise>?"
@@ -82,6 +93,12 @@ export const machineOffers = Object.freeze([
   Object.freeze({ machine: "seated_row", from: "seated_cable_row", to: "seated_row_machine" }),
   Object.freeze({ machine: "ab_crunch", from: "weighted_crunch", to: "ab_crunch_machine" }),
   Object.freeze({ machine: "pec_deck", from: "face_pull", to: "reverse_pec_deck" }),
+  // Trainer D20 (0.7.8): `days` = only on those days. Tuesday A2 offer 1 the captain's chair, Friday A2 offer 1 the
+  // decline abs bench, offer 2 on both the ab crunch machine. Two offers for one place show one at a time, in this
+  // order: the next one only after Keep on the one before (engine/planedits.js machineOffers).
+  Object.freeze({ machine: "captain_chair", from: "reverse_crunch", to: "captain_chair_knee_raise", days: Object.freeze(["tue"]) }),
+  Object.freeze({ machine: "ab_bench", from: "reverse_crunch", to: "decline_bench_crunch", days: Object.freeze(["fri"]) }),
+  Object.freeze({ machine: "ab_crunch", from: "reverse_crunch", to: "ab_crunch_machine", days: Object.freeze(["tue", "fri"]) }),
 ]);
 
 // The places trainer D18 (0.7.5) changed: day -> slot -> { from (the old exercise), to (the new one) }. A saved Plan edit
@@ -96,6 +113,20 @@ export const d18Changes = Object.freeze({
   fri: Object.freeze({
     B1: Object.freeze({ from: "hip_thrust", to: "booty_builder_hip_thrust" }),
     D: Object.freeze({ from: "calf_raise_standing", to: "calf_raise_leg_press" }),
+  }),
+});
+
+// The places trainer D20 (0.7.8) changed: day -> slot -> { from (the old exercises: D18's first, then the one before
+// 0.7.5), to }. A saved Plan edit still holding one of them there gets a one-time offer, never a silent rewrite
+// (engine/planedits.js d20Offer). Trainer answer 3 to 8.45 (7085033): a day edited before 0.7.5 gets this card for those
+// places too, and the D18 card no longer offers them.
+export const d20Changes = Object.freeze({
+  tue: Object.freeze({
+    A2: Object.freeze({ from: Object.freeze(["weighted_crunch", "cable_crunch"]), to: "reverse_crunch" }),
+    C1: Object.freeze({ from: Object.freeze(["booty_builder_hip_thrust", "hip_thrust"]), to: "smith_split_squat" }),
+  }),
+  fri: Object.freeze({
+    B1: Object.freeze({ from: Object.freeze(["booty_builder_hip_thrust", "hip_thrust"]), to: "smith_split_squat" }),
   }),
 });
 
@@ -121,10 +152,10 @@ export const days = {
     name: "Tuesday", focus: "Lower body A", walk: "easy", upper: false, leg: true,
     slots: [
       { slot: "A1", ex: "leg_press", sets: 3, rest: null },
-      { slot: "A2", ex: "weighted_crunch", sets: 3, rest: 90 }, // D18 (0.7.5): was cable_crunch
+      { slot: "A2", ex: "reverse_crunch", sets: 3, rest: 90 }, // D20 (0.7.8): was weighted_crunch (D18), cable_crunch before
       { slot: "B1", ex: "romanian_deadlift", sets: 3, rest: null },
       { slot: "B2", ex: "face_pull", sets: 3, rest: 90 },
-      { slot: "C1", ex: "booty_builder_hip_thrust", sets: 3, rest: null }, // D18 (0.7.5): was hip_thrust
+      { slot: "C1", ex: "smith_split_squat", sets: 3, rest: null }, // D20 (0.7.8): was booty_builder_hip_thrust (D18), hip_thrust before
       { slot: "C2", ex: "plank", sets: 3, rest: 75 }, // D18 (0.7.5): was dead_bug
       { slot: "D", ex: "leg_extension", sets: 3, rest: 60 },
     ],
@@ -160,7 +191,7 @@ export const days = {
     slots: [
       { slot: "A1", ex: "smith_squat", sets: 3, rest: null },
       { slot: "A2", ex: "reverse_crunch", sets: 3, rest: 90 },
-      { slot: "B1", ex: "booty_builder_hip_thrust", sets: 3, rest: null }, // D18 (0.7.5): was hip_thrust
+      { slot: "B1", ex: "smith_split_squat", sets: 3, rest: null }, // D20 (0.7.8): was booty_builder_hip_thrust (D18), hip_thrust before
       { slot: "B2", ex: "lateral_raise", sets: 3, rest: 75 },
       { slot: "C1", ex: "cable_pull_through", sets: 3, rest: null },
       { slot: "C2", ex: "side_plank", sets: 2, rest: 60 },
@@ -187,6 +218,8 @@ export const firstTryKg = Object.freeze({
   cable_crunch: 20,
   // Trainer D18 (0.7.5). The Booty Builder V8 stack numbers are not known: 20 is a guess, aimed low.
   booty_builder_hip_thrust: 20, weighted_crunch: 2, ab_crunch_machine: 15, reverse_pec_deck: 10,
+  // Trainer D20 (0.7.8). The split squat: plates in total, the bar not counted (the bar weight is not known; aimed low).
+  smith_split_squat: 5, db_step_up: 6,
 });
 
 // Soreness notes (trainer D13, 0.7.1): a note on two cards, only in the practice week (week 0) and weeks 1-3. Tied to
@@ -205,6 +238,7 @@ export const BIG_LIFTS = Object.freeze([
   "pulldown", "lat_pulldown_machine", "one_arm_db_row", "seated_cable_row", "seated_row_machine",
   "leg_press", "smith_squat", "goblet_squat", "hip_thrust", "db_glute_bridge", "romanian_deadlift",
   "booty_builder_hip_thrust", // D18 (0.7.5): Tuesday C1 keeps both warm-up sets, as the hip thrust did under T2
+  "smith_split_squat", // D20 (0.7.8): Tuesday C1 and Friday B1 get both warm-up sets (no glute main lift earlier that day)
 ]);
 
 // Seconds to move from the first to the second exercise of a pair (plan v2 section 5).

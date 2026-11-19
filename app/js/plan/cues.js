@@ -27,7 +27,8 @@ export const cues = {
   plank: "Elbows under your shoulders, body in one straight line. Squeeze your glutes and tummy. Breathe normally. Stop if your lower back sags.",
   side_plank: "Lie on your side, one elbow under your shoulder, hips lifted. Keep your body in a straight line. Do both sides.",
   dead_bug: "Lie on your back, arms up, knees bent at 90 degrees. Slowly lower one arm and the opposite leg. Keep your lower back pressed to the floor. Switch sides.",
-  reverse_crunch: "Lie on your back, knees bent. Use your abs to lift your hips slightly off the floor and curl your knees towards your chest. Lower slowly, do not swing.",
+  reverse_crunch: "Lie on a flat bench and hold its top end behind your head, knees bent. Curl your hips up off the bench, bringing your knees toward your chest, then lower slowly. Do not swing.", // trainer D20 (0.7.8)
+  smith_split_squat: "Bar on your upper back, one foot forward and one back, a long step. Bend both knees until the back knee is near the floor, lean slightly forward, and push up through the front heel. Do all reps, then switch legs. Set the safety stops just below your lowest point.", // trainer D20 (0.7.8)
   rear_delt_raise: "Lie face down on a bench set to a low slope. Light dumbbells. Lift your arms out to the sides, thumbs down, squeeze the back of your shoulders.",
 
   // Swap-only exercises
@@ -45,6 +46,10 @@ export const cues = {
   one_leg_db_calf_raise: "Ball of one foot on a step, a dumbbell in the hand on that side, the other hand on a rail. Go all the way up, pause for 1 second, lower slowly for a full stretch. Do both legs.",
   cable_leg_curl: "Strap on one ankle at the low pulley, hold a frame for balance. Curl your heel towards your seat, pause for 1 second, lower slowly. Keep your thigh still. Do both legs.",
   calf_raise_machine: "Balls of your feet on the plate. Go all the way up, pause for 1 second, then lower slowly all the way for a good stretch.",
+  // Trainer D20 (0.7.8)
+  db_step_up: "Dumbbells at your sides, your whole foot on the bench. Push through that heel to stand up on the bench, then step down slowly. Do all reps, then switch legs. Use a lower bench if your knee comes above your hip.",
+  captain_chair_knee_raise: "Back against the pad, forearms on the rests. Lift your knees to hip height or higher, curling your hips up a little, then lower slowly. No swinging.",
+  decline_bench_crunch: "Hook your feet under the rollers and lie back on the slope. Breathe out and curl your shoulders up, pause, lower slowly. Hands across your chest; do not pull your head.",
 
   // Other cues
   uphill_walk: "Stand tall, short quick steps, arms swing. Do not lean on the rails or hang on them; touch them only for balance.",

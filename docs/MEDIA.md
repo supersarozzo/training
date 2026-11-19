@@ -64,6 +64,12 @@ Date: 2026-11-17. Written by task chat 8.24 (redesign merge). Data source: `app/
 | weighted_crunch | [Weighted_Crunches](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Weighted_Crunches) | close (photo shows a plate and raised legs; 0.7.5, D18) |
 | ab_crunch_machine | [Ab_Crunch_Machine](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Ab_Crunch_Machine) | same (0.7.5, D18) |
 | reverse_pec_deck | [Reverse_Machine_Flyes](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Reverse_Machine_Flyes) | same (0.7.5, D18) |
+| smith_split_squat | [Smith_Single-Leg_Split_Squat](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Smith_Single-Leg_Split_Squat) | close: "Similar move:" the photo has the back foot on a bench (0.7.8, D20) |
+| db_step_up | [Dumbbell_Step_Ups](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Dumbbell_Step_Ups) | same (0.7.8, D20) |
+| captain_chair_knee_raise | [Knee_Hip_Raise_On_Parallel_Bars](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Knee_Hip_Raise_On_Parallel_Bars) | same: a captain's chair with back pad and arm rests (0.7.8, D20) |
+| decline_bench_crunch | [Decline_Crunch](https://github.com/yuhonas/free-exercise-db/tree/main/exercises/Decline_Crunch) | same: a decline bench with foot rollers (0.7.8, D20) |
+
+**0.7.8 (trainer D20, worker 8.45):** 4 new moves, 8 photos (850 x 567, unchanged, free-exercise-db commit f00c92c, the same commit as before; each photo looked at by the builder). `reverse_crunch` keeps its photo (on the floor) and is now "close" with the note "Similar move: the photo shows the floor. Do it lying on a flat bench, holding its top end." (the library's Decline_Reverse_Crunch shows straight legs on a decline bench, a different move). Every "close" exercise note now starts with "Similar move:" (D20 "Pictures must show the real equipment").
 
 ## Icons
 
@@ -126,3 +132,7 @@ All interface icons and the gym-area icons are original inline SVG written for t
 | weighted_crunch | [How To Do: Dumbbell Crunch - Floor \| Ab Workout Exercise](https://www.youtube.com/watch?v=GnOtkztXWQs) | Fitway - Workout Trainer | 200, same title and channel (0.7.5; not watched yet) |
 | ab_crunch_machine | [Life Fitness Circuit Series Ab Crunch Instructions](https://www.youtube.com/watch?v=NpjB_rp756Y) | Life Fitness / Hammer Strength | 200, same title and channel (0.7.5; not watched yet) |
 | reverse_pec_deck | [How To: Reverse Pec Deck Rear Delt Fly](https://www.youtube.com/watch?v=hmtnyIGgR9A) | Ignore Limits | 200, same title and channel (0.7.5; not watched yet) |
+| smith_split_squat | [How To Do Smith Machine Split Squat \| Exercise Demo](https://www.youtube.com/watch?v=y8XdzYUGDaI) | OriGym | answered with this title and channel on 2026-11-19 (0.7.8; not watched yet) |
+| db_step_up | [HOW TO DO A DUMBBELL STEP-UP \| Coach Kelly Cues](https://www.youtube.com/watch?v=hgkk12L_Umk) | Kelly Matthews | answered with this title and channel on 2026-11-19 (0.7.8; not watched yet) |
+| captain_chair_knee_raise | [How To Do A CAPTAIN'S CHAIR KNEE RAISE \| Exercise Demonstration Video and Guide](https://www.youtube.com/watch?v=7KDDZtaUaxw) | Live Lean TV Daily Exercises | answered with this title and channel on 2026-11-19 (0.7.8; not watched yet) |
+| decline_bench_crunch | [Decline Bench Crunch](https://www.youtube.com/watch?v=-jFc70vicCg) | workouts4fitness | answered with this title and channel on 2026-11-19 (0.7.8; not watched yet) |

@@ -189,14 +189,35 @@ export const REPLACED_BY_D18 = Object.freeze({
   weighted_crunch: "cable_crunch",
   calf_raise_leg_press: "calf_raise_standing",
 });
+// Trainer D20 (0.7.8): the Smith machine split squat took the hip thrust machine's place (Tue C1, Fri B1); the same
+// conversion (old kg x 5 / 20). A phone that logged only the hip thrust before 0.7.5 converts from that log: the
+// newest log of either counts (the hip thrust machine first when both are on the same day).
+export const REPLACED_BY_D20 = Object.freeze({
+  smith_split_squat: Object.freeze(["booty_builder_hip_thrust", "hip_thrust"]),
+});
+const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+// The newest log of the old exercise(s) a new planned exercise replaced: { id, perf } or null.
+function replacedLog(doc, exerciseId) {
+  const ids = own(REPLACED_BY_D20, exerciseId) ? REPLACED_BY_D20[exerciseId] : own(REPLACED_BY_D18, exerciseId) ? [REPLACED_BY_D18[exerciseId]] : [];
+  let best = null;
+  for (const id of ids) {
+    const perf = performances(doc.sessions, id)[0];
+    if (!perf) continue;
+    // Same date: the first id in the list wins (trainer answer 1 to 8.45, 48f90b5: the hip thrust machine log).
+    const newer = !best || perf.date > best.perf.date;
+    if (newer) best = { id, perf };
+  }
+  return best;
+}
 // After a break (factor < 1) the old weight is lowered first by the break rule, then converted (trainer answer 1 a to
 // 8.42: "Coming back after a break is when too heavy hurts most").
 export function fromReplaced(doc, exerciseId, breakFactor = 1) {
-  const oldId = REPLACED_BY_D18[exerciseId];
+  const log = replacedLog(doc, exerciseId);
+  const oldId = log?.id;
   const tableNew = firstTryKg[exerciseId];
   const tableOld = firstTryKg[oldId];
   if (!oldId || !(tableNew > 0) || !(tableOld > 0)) return null;
-  const old = performances(doc.sessions, oldId)[0];
+  const old = log.perf;
   if (!old || !(old.weight_kg > 0)) return null;
   const oldKg = breakFactor < 1 ? weightAfterBreak(old.weight_kg, breakFactor, oldId, doc.shared_settings) : old.weight_kg;
   return { weight_kg: gymFloor(oldKg * (tableNew / tableOld), exerciseId, doc.shared_settings), from: oldId };

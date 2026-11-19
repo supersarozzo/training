@@ -19,12 +19,12 @@ import { onMount, stagger } from "./motion.js";
 import { miniMap } from "./bodymap.js";
 import { openExerciseLayer, doseParts, changeLabel } from "./exlayer.js";
 import { pageFor, muscleWords } from "../engine/planpage.js";
-import { ADDED_SLOTS, MAX_ADDED, machineOffers, d18Offer } from "../engine/planedits.js";
+import { ADDED_SLOTS, MAX_ADDED, machineOffers, d18Offer, d20Offer } from "../engine/planedits.js";
 import { readOfferAnswers } from "../prefs.js";
 import { setWord, repWord } from "../words.js";
 import { viewDay, unitsIn, editedMinutes, rangeFor, weightLine, soreNote, walkWords } from "../planview.js";
 import { renderMuscleCheck } from "./musclecheck.js";
-import { dayState, openSwapSheet, openAddSheet, removeSlot, changedCard, openDoseSheet, openWalkSheet, offerCard, d18OfferCard } from "./planedit.js";
+import { dayState, openSwapSheet, openAddSheet, removeSlot, changedCard, openDoseSheet, openWalkSheet, offerCard, d18OfferCard, d20OfferCard } from "./planedit.js";
 
 // The page remembers the picked day and week while you stay on the tab; coming back to the tab opens today again.
 // `edit`: Edit mode (build step 4). It is page state: it ends when the day changes or the tab is left.
@@ -155,7 +155,13 @@ export function renderPlan() {
   // workout runs on it, not a day saved by a newer app), and not in Edit mode (Swap is there).
   const answered = readOfferAnswers(store);
   const offers = view.canEdit && !edit ? machineOffers(day, view.record, doc.shared_settings, answered) : [];
-  const planOffer = view.canEdit && !edit ? d18Offer(day, view.record, answered) : null; // trainer's answer 3 to 8.42
+  const d20 = view.canEdit && !edit ? d20Offer(day, view.record, answered) : null; // trainer D20 (0.7.8)
+  const d18 = view.canEdit && !edit ? d18Offer(day, view.record, answered) : null; // trainer's answer 3 to 8.42
+  // Trainer answer 3 to 8.45 (0.7.8): one plan card per day at a time, the D20 card first, then what is left of D18's.
+  const planOffer = d20 ? null : d18;
+  // One card per place (trainer answer 2 to 8.45): a machine offer waits while a plan card offers the same place.
+  const planPlaces = new Set([...(d20?.swaps ?? []), ...(d18?.swaps ?? [])].map((sw) => sw.slot));
+  const shownOffers = offers.filter((o) => !planPlaces.has(o.slot));
   const lockCard = view.locked ? h("div", { class: "card lock-card" }, icon("info", 20), h("p", {}, "Workout running. This day can be changed after the workout ends.")) : null;
   const newerLine = view.newerVersion ? h("div", { class: "note-line" }, icon("info", 16), h("span", {}, "This day was changed on a newer app version. Update the app to change it.")) : null;
   const editChip = view.canEdit ? h("button", {
@@ -185,8 +191,9 @@ export function renderPlan() {
       editCard,
       lockCard,
       newerLine,
+      d20 ? d20OfferCard(day, d20) : null,
       planOffer ? d18OfferCard(day, planOffer) : null,
-      offers.map((o) => offerCard(day, o)),
+      shownOffers.map((o) => offerCard(day, o)),
       !edit && view.edited ? changedCard(day, view.record, { canReset: view.canEdit }) : null,
       edit ? walkEditCard(walkCard(lay.walk, day), day, week) : walkCard(lay.walk, day),
       units,

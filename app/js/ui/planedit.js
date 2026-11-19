@@ -8,12 +8,12 @@ import { h } from "../h.js";
 import { openSheet, closeSheets, toast, stepper } from "./parts.js";
 import { model, store, rerender } from "./app.js";
 import { getActive } from "../active.js";
-import { days, exercises, d18Changes } from "../plan/plan-v2.js";
+import { days, exercises, d18Changes, d20Changes } from "../plan/plan-v2.js";
 import { thumb } from "./media.js";
 import { icon } from "./icons.js";
 import { miniMap } from "./bodymap.js";
 import { viewDay, swapSheet, addSheet, exName, dayChanges, changedOn, rangeFor, rangeText, weightLine, workoutRunning, walkWords } from "../planview.js";
-import { withSets, setsForSlot, MIN_SETS, MAX_SETS, walkLimits, walkHint, withD18, D18_PLACE_KEY } from "../engine/planedits.js";
+import { withSets, setsForSlot, MIN_SETS, MAX_SETS, walkLimits, walkHint, withD18, D18_PLACE_KEY, withD20, D20_PLACE_KEY, changeFroms } from "../engine/planedits.js";
 import { machines } from "../plan/media.js";
 import { saveOfferAnswer } from "../prefs.js";
 import { nSets, repWord } from "../words.js";
@@ -74,7 +74,8 @@ export function undoToast(text, onUndo, ms = 8000, { top = false } = {}) {
 }
 
 // Run one save. On a refusal the plain-words message is shown and nothing changed. Returns true when it saved.
-function save(day, doneText, work) {
+// `fromCard`: the save is the D18 card's "Use them" (the plan's choice, not Rosario's own), so it answers no place.
+function save(day, doneText, work, { fromCard = false } = {}) {
   let before;
   try {
     before = savedSlots(day);
@@ -82,13 +83,19 @@ function save(day, doneText, work) {
   } catch (e) { toast(e.message); return false; }
   // A save on this app that puts an old D18 exercise back in a D18 place is Rosario's own choice: the D18 card never
   // offers that place back (rounds 1 to 3). Only that place is answered; a Remove, an Add or a freed place answers nothing,
-  // and the card still offers the other places until Rosario answers it.
-  const changes = Object.hasOwn(d18Changes, day) ? d18Changes[day] : null;
-  if (changes) {
-    const after = savedSlots(day);
-    const exAt = (slots, slot) => slots.find((s) => s.slot === slot)?.ex;
-    const chosen = Object.keys(changes).filter((slot) => exAt(after, slot) === changes[slot].from && exAt(before, slot) !== changes[slot].from);
-    for (const slot of chosen) saveOfferAnswer(store, D18_PLACE_KEY(day, slot, changes[slot].to), "kept");
+  // and the card still offers the other places until Rosario answers it. Trainer D20 (0.7.8): the same for D20's places
+  // (the hip thrust machine or the crunch with a dumbbell put back, or the moves before 0.7.5). A card's own "Use it"
+  // is not such a choice (fromCard), so it answers no other card's place.
+  if (!fromCard) {
+    for (const [all, placeKey] of [[d18Changes, D18_PLACE_KEY], [d20Changes, D20_PLACE_KEY]]) {
+      const changes = Object.hasOwn(all, day) ? all[day] : null;
+      if (!changes) continue;
+      const after = savedSlots(day);
+      const exAt = (slots, slot) => slots.find((s) => s.slot === slot)?.ex;
+      const froms = (slot) => changeFroms(changes[slot]);
+      const chosen = Object.keys(changes).filter((slot) => froms(slot).includes(exAt(after, slot)) && !froms(slot).includes(exAt(before, slot)));
+      for (const slot of chosen) saveOfferAnswer(store, placeKey(day, slot, changes[slot].to), "kept");
+    }
   }
   closeSheets();
   rerender();
@@ -335,20 +342,48 @@ export function offerCard(day, offer) {
 // those places (sets and rest stay), with the 8 s Undo toast. Keep mine: nothing changes. Asked once on this phone.
 export function d18OfferCard(day, offer) {
   const name = dayName(day);
+  // Trainer answer 3 to 8.45 (0.7.8): the card keeps only the places D20 did not change again, so it has one place now.
+  const many = offer.swaps.length > 1;
   const use = () => {
     // Only the places that still hold the old exercise now (a sync may have changed one since the card was drawn).
     const now = model.effectivePlanDay(day).slots;
     const swaps = offer.swaps.filter((sw) => now.find((s) => s.slot === sw.slot)?.ex === sw.from && !now.some((s) => s.ex === sw.to));
     if (!swaps.length) { toast(`${name} changed meanwhile. Nothing was swapped.`); rerender(); return; }
-    const ok = save(day, `${name} now uses the plan's new exercises.`, () => model.savePlanDay(day, withD18(savedSlots(day), swaps)));
+    const ok = save(day, `${name} now uses the plan's new exercises.`, () => model.savePlanDay(day, withD18(savedSlots(day), swaps)), { fromCard: true });
     if (ok) saveOfferAnswer(store, offer.key, "used");
   };
   const keep = () => { saveOfferAnswer(store, offer.key, "kept"); rerender(); };
   return h("div", { class: "card changed-card" },
-    h("p", {}, h("b", {}, `The plan now uses simpler machines on ${name}. Use them in your edited ${name}?`)),
+    h("p", {}, h("b", {}, `The plan now uses simpler machines on ${name}. Use ${many ? "them" : "it"} in your edited ${name}?`)),
     h("p", {}, offer.swaps.map((sw, i) => [i ? h("br") : null, `${exName(sw.from)} → ${exName(sw.to)}`])),
     h("p", { class: "small muted" }, "Only these change. Your sets and rest stay. Past workouts are not changed."),
-    h("button", { class: "button secondary", type: "button", "aria-label": `Use the plan's new exercises in your edited ${name}`, onclick: use }, icon("swap", 18), "Use them"),
+    h("button", { class: "button secondary", type: "button", "aria-label": `Use the plan's new ${many ? "exercises" : "exercise"} in your edited ${name}`, onclick: use }, icon("swap", 18), many ? "Use them" : "Use it"),
+    h("button", { class: "text-button", type: "button", "aria-label": `Keep your ${name} as it is`, onclick: keep }, "Keep mine"));
+}
+
+// ---------- the D20 offer for a saved Tuesday or Friday edit (trainer D20, 0.7.8) ----------
+// "The plan now uses the Smith machine split squat on Friday. Use it in your edited Friday?" Use it (Use them for two
+// places): one save that changes only those places (sets, rest and all other edits stay), with the 8 s Undo toast.
+// Keep mine: nothing changes. Asked once on this phone. The same look as the D18 card.
+const theName = (id) => { const n = exName(id); return `the ${/^Smith /.test(n) ? n : n.charAt(0).toLowerCase() + n.slice(1)}`; };
+export function d20OfferCard(day, offer) {
+  const name = dayName(day);
+  const many = offer.swaps.length > 1;
+  const newNames = [...new Set(offer.swaps.map((sw) => sw.to))].sort((a, b) => (a === "smith_split_squat" ? -1 : b === "smith_split_squat" ? 1 : 0)).map(theName).join(" and ");
+  const use = () => {
+    // Only the places that still hold the old exercise now (a sync may have changed one since the card was drawn).
+    const now = model.effectivePlanDay(day).slots;
+    const swaps = offer.swaps.filter((sw) => now.find((s) => s.slot === sw.slot)?.ex === sw.from && !now.some((s) => s.ex === sw.to));
+    if (!swaps.length) { toast(`${name} changed meanwhile. Nothing was swapped.`); rerender(); return; }
+    const ok = save(day, `${name} now uses the plan's new exercises.`, () => model.savePlanDay(day, withD20(savedSlots(day), swaps)), { fromCard: true });
+    if (ok) saveOfferAnswer(store, offer.key, "used");
+  };
+  const keep = () => { saveOfferAnswer(store, offer.key, "kept"); rerender(); };
+  return h("div", { class: "card changed-card" },
+    h("p", {}, h("b", {}, `The plan now uses ${newNames} on ${name}. Use ${many ? "them" : "it"} in your edited ${name}?`)),
+    h("p", {}, offer.swaps.map((sw, i) => [i ? h("br") : null, `${exName(sw.from)} → ${exName(sw.to)}`])),
+    h("p", { class: "small muted" }, "Only these change. Your sets and rest stay. Past workouts are not changed."),
+    h("button", { class: "button secondary", type: "button", "aria-label": `Use the plan's new ${many ? "exercises" : "exercise"} in your edited ${name}`, onclick: use }, icon("swap", 18), many ? "Use them" : "Use it"),
     h("button", { class: "text-button", type: "button", "aria-label": `Keep your ${name} as it is`, onclick: keep }, "Keep mine"));
 }
 

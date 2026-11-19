@@ -2,6 +2,31 @@
 
 What is new in each app version, in plain words. Newest first. Older versions: see `docs/HANDOVER.md` and the git log.
 
+## 0.7.8 · 2026-11-19
+
+No hip thrust movement, and abs on benches and machines (trainer decision D20), built by chat 8.45. Not live yet.
+
+- **Tuesday and Friday: the Smith machine split squat instead of the hip thrust machine.** One foot forward, one back,
+  the bar on rails, safety stops set. A long step with a slight forward lean makes the glutes do the main work. If the
+  Smith machine is busy, Swap offers the **dumbbell step-up**. The first time, the weight comes from your last hip thrust
+  machine weight (40 kg there gives 10 kg here; plates in total, the bar not counted) and you do 2 work sets.
+- **Tuesday's abs: the reverse crunch on a flat bench**, the same move as Friday. You lie on a flat bench and hold its
+  top end behind your head. Both days now say so, in the tip and under the photo.
+- **Two new questions for your first visit** (Settings › Gym weights): "Captain's chair (knee raise station)" and
+  "Abs bench (decline bench with foot rollers)", after the ab crunch machine. When an answer is "The gym has it", the
+  Plan offers it once: the captain's chair on Tuesday, the decline abs bench on Friday, the ab crunch machine on both.
+  One card at a time for one place: the second one comes only after you tap Keep on the first.
+- **Your edited Tuesday or Friday is never changed by itself.** If you edited one and it still has the hip thrust
+  machine or the older hip thrust (or the crunch with a dumbbell, or the cable crunch), it shows one card: "The plan
+  now uses the Smith machine split squat ... Use it in your edited Friday?" with **Use it** and **Keep mine**. A day
+  edited before 0.7.5 then shows what is left of the 0.7.5 card (the plank, or the calf raise on the leg press), one
+  card at a time. A machine offer for the same exercise waits until you answer the card.
+- **Photos say when they are not exact.** Every plan exercise either shows its own equipment, or the line under the
+  photo starts with "Similar move:" and says what differs.
+- Past workouts, a workout in progress and your history stay exactly as they were. Weekly sets: glutes, abs and the
+  back of the thighs are the same; the front and inner thighs get about 3 more counted sets a week (the split squat
+  uses them as helpers).
+
 ## 0.7.7 · 2026-11-19
 
 A calories chart on Progress, an easier-to-find body weight chart, and built-in UK foods in the Diet search, built by

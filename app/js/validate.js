@@ -45,7 +45,7 @@ export function defaultSettings() {
     body_unit: "kg",
     dumbbell_steps_kg: [],
     stack_step_kg: { default: 0 },
-    extra_machines: { lat_pulldown: null, seated_row: null, leg_curl: null, pec_deck: null, calf_raise: null, ab_crunch: null }, // ab_crunch: trainer D18 (0.7.5)
+    extra_machines: { lat_pulldown: null, seated_row: null, leg_curl: null, pec_deck: null, calf_raise: null, ab_crunch: null, captain_chair: null, ab_bench: null }, // ab_crunch: trainer D18 (0.7.5); captain_chair, ab_bench: D20 (0.7.8)
     shortcut: { on: false, name: "Log Training" },
   };
 }

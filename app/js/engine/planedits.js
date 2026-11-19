@@ -14,7 +14,7 @@
 // 0.7.4 (worker 8.41, iPhone P5 part 2): a record may carry the day's own walk, `walk: { speed_kmh, slope_pct, minutes }`,
 // fixed for that day in every week until "Back to the plan's walk". Limits from the walk engine and the trainer
 // (WALK_LIMITS). A walk this app cannot use makes the whole record unusable here (newerVersion), like an unknown slot.
-import { PLAN_ID, days, exercises, weekInfo, walkRules, machineOffers as OFFERS, d18Changes } from "../plan/plan-v2.js";
+import { PLAN_ID, days, exercises, weekInfo, walkRules, machineOffers as OFFERS, d18Changes, d20Changes } from "../plan/plan-v2.js";
 
 export const SLOT_NAMES = Object.freeze(["A1", "A2", "B1", "B2", "C1", "C2", "Abs1", "Abs2", "D", "E1", "E2"]);
 export const ADDED_SLOTS = Object.freeze(["E1", "E2"]);
@@ -274,8 +274,11 @@ export function machineOffers(dayId, record, settings, answered = {}) {
   for (const s of eff.slots) {
     for (const o of OFFERS) {
       if (s.ex !== o.from || settings?.extra_machines?.[o.machine] !== true || inDay.has(o.to) || !isKnownExercise(o.to)) continue;
+      if (o.days && !o.days.includes(dayId)) continue; // trainer D20 (0.7.8): an offer for some days only
       const key = offerKey(dayId, s.slot, o.to);
       if (answered && own(answered, key)) continue;
+      // Trainer D20 (0.7.8): one offer per place at a time, in the order of the list; the next one after Keep.
+      if (out.some((x) => x.slot === s.slot)) continue;
       out.push({ key, machine: o.machine, slot: s.slot, from: o.from, to: o.to });
     }
   }
@@ -291,10 +294,31 @@ export function machineOffers(dayId, record, settings, answered = {}) {
 export const D18_OFFER_KEY = (dayId) => `${dayId}:D18:plan`;
 // One place Rosario put back to its old exercise (round 3, both reviewers): the card never offers it back.
 export const D18_PLACE_KEY = (dayId, slot, to) => `${dayId}:${slot}:${to}`;
+// Trainer answer 3 to 8.45 (0.7.8): the places D20 changed again belong to the D20 card; the D18 card keeps the others.
 export function d18Offer(dayId, record, answered = {}) {
-  const changes = isPlanDayId(dayId) ? d18Changes[dayId] : null;
+  const d20Places = isPlanDayId(dayId) && own(d20Changes, dayId) ? Object.keys(d20Changes[dayId]) : [];
+  return planChangeOffer(d18Changes, D18_OFFER_KEY(dayId), dayId, record, answered, d20Places);
+}
+
+// ---------- the D20 offer, the same rule for the places trainer D20 (0.7.8) changed ----------
+// "The plan now uses the Smith machine split squat on Friday. Use it in your edited Friday?" Only places still holding
+// an old exercise there: D18's (hip thrust machine, crunch with a dumbbell) or, for a day edited before 0.7.5, the one
+// before it (hip thrust, cable crunch; trainer answer 3 to 8.45). A D18 Keep mine does not block it (a new question).
+// The Plan day shows this card first and what is left of the D18 card after it (one card per day at a time).
+export const D20_OFFER_KEY = (dayId) => `${dayId}:D20:plan`;
+export const D20_PLACE_KEY = D18_PLACE_KEY;
+export function d20Offer(dayId, record, answered = {}) {
+  return planChangeOffer(d20Changes, D20_OFFER_KEY(dayId), dayId, record, answered);
+}
+// The day's slots with D20's exercises in those places; sets and rest stay as Rosario saved them. Pure (a new list).
+export const withD20 = (slots, swaps) => withD18(slots, swaps);
+
+const fromsOf = (c) => (Array.isArray(c.from) ? c.from : [c.from]);
+// The old exercises of one changed place (a list for D20, one id for D18).
+export const changeFroms = fromsOf;
+function planChangeOffer(allChanges, key, dayId, record, answered, skipSlots = []) {
+  const changes = isPlanDayId(dayId) && own(allChanges, dayId) ? allChanges[dayId] : null;
   if (!changes || !isObj(record) || record.deleted === true) return null;
-  const key = D18_OFFER_KEY(dayId);
   if (answered && own(answered, key)) return null;
   const eff = effectiveDay(dayId, record);
   if (!eff.edited || eff.newerVersion) return null;
@@ -302,7 +326,8 @@ export function d18Offer(dayId, record, answered = {}) {
   const swaps = [];
   for (const s of eff.slots) {
     const c = own(changes, s.slot) ? changes[s.slot] : null;
-    if (c && s.ex === c.from && !inDay.has(c.to) && !(answered && own(answered, D18_PLACE_KEY(dayId, s.slot, c.to)))) swaps.push({ slot: s.slot, from: c.from, to: c.to });
+    if (!c || skipSlots.includes(s.slot)) continue;
+    if (fromsOf(c).includes(s.ex) && !inDay.has(c.to) && !(answered && own(answered, D18_PLACE_KEY(dayId, s.slot, c.to)))) swaps.push({ slot: s.slot, from: s.ex, to: c.to });
   }
   return swaps.length ? { key, swaps } : null;
 }

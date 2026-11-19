@@ -20,8 +20,9 @@ import { APP_VERSION } from "../version.js";
 import { updateNow, updateStatusWords } from "./update.js";
 import { updateWords } from "../updater.js";
 
-// ab_crunch: the first-visit check added by trainer D18 (0.7.5). A "yes" makes the Plan offer the machine once (planday.js).
-const MACHINE_NAMES = { lat_pulldown: "Lat pulldown machine", seated_row: "Seated row machine", leg_curl: "Leg curl machine", pec_deck: "Pec deck", calf_raise: "Calf raise machine", ab_crunch: "Ab crunch machine" };
+// ab_crunch: the first-visit check added by trainer D18 (0.7.5); captain_chair and ab_bench by trainer D20 (0.7.8).
+// A "yes" makes the Plan offer the machine once (planday.js).
+const MACHINE_NAMES = { lat_pulldown: "Lat pulldown machine", seated_row: "Seated row machine", leg_curl: "Leg curl machine", pec_deck: "Pec deck", calf_raise: "Calf raise machine", ab_crunch: "Ab crunch machine", captain_chair: "Captain's chair (knee raise station)", ab_bench: "Abs bench (decline bench with foot rollers)" };
 let gymMessage = null;
 let draft = null; // { dumbbells, stack, machines }
 

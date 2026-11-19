@@ -82,6 +82,8 @@ export const exerciseMuscles = {
   // Added 2026-11-18 (trainer D18, 0.7.5): the same muscles as the exercise each one replaces (hip_thrust, cable_crunch).
   booty_builder_hip_thrust: { main: ["glutes"], helpers: ["hamstrings"], equip: "machine", own: { reason: "Trainer D18 and M1: the hip thrust machine is the hip thrust with a belt; the ankle does not move, so no calves (StrengthLog; Contreras 2015 EMG)" } }, // photo: Barbell_Hip_Thrust
   weighted_crunch: { main: ["abs"], helpers: [], equip: "dumbbell" }, // Weighted_Crunches
+  // Added 2026-11-19 (trainer D20, 0.7.8): the glutes are the main mover (free-exercise-db says quadriceps).
+  smith_split_squat: { main: ["glutes"], helpers: ["quads", "hamstrings", "adductors"], equip: "smith", own: { reason: "Trainer D20: a long step with a slight forward lean makes the glutes a main mover (Neto 2020 review: split squat over 60 % MVIC; Farrokhi 2008 EMG: forward lean raises glute work)" } }, // photo: Smith_Single-Leg_Split_Squat
 
   // Swap-only exercises
   cable_curl: { main: ["biceps"], helpers: ["forearms"], equip: "cable", own: { reason: "Trainer M5: forearms help, as in the dumbbell curl (StrengthLog; Wikipedia Biceps curl)" } },
@@ -98,6 +100,10 @@ export const exerciseMuscles = {
   // Added 2026-11-18 (trainer D18, 0.7.5): offered only after the first visit finds the machine.
   ab_crunch_machine: { main: ["abs"], helpers: [], equip: "machine" }, // Ab_Crunch_Machine
   reverse_pec_deck: { main: ["rear_delts"], helpers: ["mid_back"], equip: "machine", own: { reason: "Trainer D18 and M8: the muscles between the shoulder blades help, as in the rear-delt raise and the face pull (StrengthLog trapezius; Ekstrom 2003 EMG: middle trapezius)" } }, // Reverse_Machine_Flyes
+  // Added 2026-11-19 (trainer D20, 0.7.8): the Smith machine fallback and the abs offers after the first visit.
+  db_step_up: { main: ["glutes"], helpers: ["quads", "hamstrings", "adductors"], equip: "dumbbell", own: { reason: "Trainer D20: step-ups gave the highest glute work in the Neto 2020 review" } }, // Dumbbell_Step_Ups
+  captain_chair_knee_raise: { main: ["abs"], helpers: [], equip: "machine" }, // Knee_Hip_Raise_On_Parallel_Bars
+  decline_bench_crunch: { main: ["abs"], helpers: [], equip: "bodyweight" }, // Decline_Crunch
 };
 
 // Body drawing part (app/vendor/body-muscles/shapes.js) -> our muscle group, by the start of the part id.
