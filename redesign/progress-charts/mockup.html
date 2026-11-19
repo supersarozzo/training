@@ -1,0 +1,709 @@
+<title>Progress Charts Mock-up</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one column of notes, phone frames side by side (OLD | NEW), stacked on a phone.
+   The page has its own neutral tokens; each phone frame carries the app's own tokens (DESIGN.md section 2). */
+:root {
+  --pg-bg: #eceef1; --pg-card: #ffffff; --pg-text: #15171b; --pg-muted: #545a66; --pg-line: rgba(10,12,16,.12);
+  --pg-q: #c2185b; --pg-q-soft: rgba(194,24,91,.10); --pg-q-text: #ffffff;
+  --pg-ok: #2f6b0c;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --pg-bg: #050608; --pg-card: #101216; --pg-text: #eef0f3; --pg-muted: #a0a6b2; --pg-line: rgba(255,255,255,.12);
+  --pg-q: #ff5c9a; --pg-q-soft: rgba(255,92,154,.14); --pg-q-text: #16070d; --pg-ok: #b9e34a; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --pg-bg: #050608; --pg-card: #101216; --pg-text: #eef0f3; --pg-muted: #a0a6b2; --pg-line: rgba(255,255,255,.12);
+  --pg-q: #ff5c9a; --pg-q-soft: rgba(255,92,154,.14); --pg-q-text: #16070d; --pg-ok: #b9e34a; color-scheme: dark; }
+
+body { background: var(--pg-bg); color: var(--pg-text); font: 16px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 60px; }
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+h1.pg { font: 800 28px/1.15 -apple-system, system-ui, sans-serif; margin: 0; letter-spacing: -.02em; text-wrap: balance; }
+h2.pg { font: 700 21px/1.25 -apple-system, system-ui, sans-serif; margin: 0 0 10px; text-wrap: balance; }
+h3.pg { font: 700 17px/1.3 -apple-system, system-ui, sans-serif; margin: 0 0 6px; }
+.meta { color: var(--pg-muted); font-size: 14px; margin: 4px 0 0; }
+.note { background: var(--pg-card); border: 1px solid var(--pg-line); border-radius: 14px; padding: 16px 18px; }
+.note p, .note li { max-width: 72ch; }
+.note ul, .note ol { margin: 6px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.tag { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--pg-line); color: var(--pg-muted); }
+.newval { color: var(--pg-q); font-weight: 700; }
+table.pg { border-collapse: collapse; width: 100%; font-size: 14px; }
+table.pg th, table.pg td { text-align: left; vertical-align: top; padding: 8px 10px; border-top: 1px solid var(--pg-line); }
+table.pg th { color: var(--pg-muted); font-weight: 700; }
+.tbl { overflow-x: auto; }
+.qbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  background: var(--pg-card); border: 1px solid var(--pg-line); border-radius: 14px; padding: 10px 12px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--pg-bg); }
+.qbar button, .pick button, .qcard button { font: 700 15px/1 -apple-system, system-ui, sans-serif; min-height: 44px; padding: 0 16px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--pg-line); background: transparent; color: var(--pg-text); touch-action: manipulation; }
+.qbar button[aria-pressed="true"] { background: var(--pg-q); border-color: var(--pg-q); color: var(--pg-q-text); }
+.qbar .status { font-size: 14px; color: var(--pg-muted); }
+button:focus-visible { outline: 2px solid var(--pg-q); outline-offset: 2px; }
+
+.pair { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+.col { display: flex; flex-direction: column; gap: 8px; flex: 0 1 375px; min-width: 0; max-width: 375px; }
+.col .lbl { font-weight: 800; font-size: 15px; display: flex; gap: 8px; align-items: center; }
+.col .lbl .tag { font-size: 11px; }
+.under { font-size: 14px; color: var(--pg-muted); }
+.under ul { margin: 4px 0 0; padding-left: 18px; }
+
+.ph, .ph *, .ph *::before, .ph *::after { box-sizing: border-box; }
+/* ---------- the phone: app tokens (DESIGN.md section 2) ---------- */
+.ph { --volt: #d7ff3c; --ink: #0a0b0d;
+  --bg-canvas: #f2f3f5; --bg-surface: #ffffff; --bg-raised: #ffffff; --bg-subtle: #e9ebef;
+  --border-default: rgba(10,12,16,.09); --border-strong: #737985; --text-primary: #0b0c0f; --text-muted: #545a66;
+  --accent: #4d7c0f; --accent-text: #3f6212; --accent-soft: rgba(77,124,15,.12); --gold: #a16207;
+  --status-success: #15803d; --btn-bg: #0b0c0f; --btn-text: var(--volt); --scrim: rgba(8,9,12,.45); --shadow-overlay: 0 18px 48px rgba(10,12,16,.22);
+  --glow: none; --shadow-card: 0 1px 2px rgba(10,12,16,.05), 0 8px 24px rgba(10,12,16,.06); --bar-glass: rgba(242,243,245,.82);
+  position: relative; width: 100%; max-width: 375px; height: 812px; border-radius: 34px; overflow: hidden;
+  border: 1px solid var(--pg-line); background: var(--bg-canvas); color: var(--text-primary); color-scheme: light;
+  font: 17px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; }
+.ph.dark { --bg-canvas: #08090c; --bg-surface: #121419; --bg-raised: #1a1d24; --bg-subtle: #23272f;
+  --border-default: rgba(255,255,255,.08); --border-strong: #6b7280; --text-primary: #f5f6f8; --text-muted: #a0a6b2;
+  --accent: var(--volt); --accent-text: var(--volt); --accent-soft: rgba(215,255,60,.12); --gold: #fbbf24;
+  --status-success: #4ade80; --btn-bg: var(--volt); --btn-text: var(--ink); --scrim: rgba(0,0,0,.6); --shadow-overlay: 0 24px 64px rgba(0,0,0,.6);
+  --glow: drop-shadow(0 0 10px rgba(215,255,60,.35)); --shadow-card: none; --bar-glass: rgba(8,9,12,.78); color-scheme: dark; }
+.ph.short { height: auto; border-radius: 20px; }
+.ph .scr { position: absolute; inset: 0; overflow-y: auto; padding: 16px 16px 120px; }
+.ph.short .scr { position: relative; padding: 16px; }
+.ph .inner { position: relative; }
+.ph .fold { position: absolute; left: -16px; right: -16px; height: 0; border-top: 2px dashed var(--pg-q); opacity: .0; }
+.ph .settings-btn { position: absolute; top: 0; right: 0; min-height: 44px; display: inline-flex; align-items: center; padding: 0 16px; border-radius: 999px;
+  background: var(--bg-raised); border: 1px solid var(--border-default); font: 650 15px/1 -apple-system, system-ui, sans-serif; color: var(--text-primary); }
+.ph .eyebrow { display: block; font-size: 13px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+.ph .eyebrow.accent { color: var(--accent-text); }
+.ph .h1 { font: 800 32px/1.08 -apple-system, system-ui, sans-serif; letter-spacing: -.03em; margin: 0 0 16px; }
+.ph .h2 { font: 700 20px/1.25 -apple-system, system-ui, sans-serif; letter-spacing: -.015em; margin: 0 0 12px; }
+.ph.old .h2 { font-size: 21px; }
+.ph .card { background: var(--bg-surface); border: 1px solid var(--border-default); box-shadow: var(--shadow-card); border-radius: 20px; padding: 16px; margin-bottom: 12px; }
+.ph .tiles { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.ph .tile { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 20px; padding: 12px; box-shadow: var(--shadow-card); min-width: 0; }
+.ph .tile .label { font-size: 14px; color: var(--text-muted); }
+.ph .tile .value { font: 800 24px/1.05 -apple-system, system-ui, sans-serif; letter-spacing: -.03em; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.ph .unit { font-size: 14px; color: var(--text-muted); font-weight: 700; letter-spacing: 0; }
+.ph .row { display: flex; align-items: center; gap: 12px; }
+.ph .row > * { flex: 1; min-width: 0; }
+.ph .label { font-size: 14px; color: var(--text-muted); }
+.ph .big { font: 800 40px/1 -apple-system, system-ui, sans-serif; letter-spacing: -.04em; white-space: nowrap; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.ph .val { font: 800 30px/1.1 -apple-system, system-ui, sans-serif; letter-spacing: -.03em; font-variant-numeric: tabular-nums; margin-top: 2px; white-space: nowrap; }
+.ph.new .val { font: 700 20px/1.25 -apple-system, system-ui, sans-serif; margin-top: 8px; }
+.ph .small { font-size: 14px; line-height: 1.4; }
+.ph .muted { color: var(--text-muted); }
+.ph .metric { margin-bottom: 12px; }
+.ph .btn2 { display: flex; align-items: center; justify-content: center; min-height: 52px; border-radius: 16px; margin-top: 12px; background: var(--bg-surface);
+  border: 1px solid var(--border-default); box-shadow: var(--shadow-card); font: 650 18px/1 -apple-system, system-ui, sans-serif; color: var(--text-primary); }
+.ph .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin: 0 0 16px; border-radius: 14px; background: var(--bg-subtle); }
+.ph .seg span { min-height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 11px; color: var(--text-muted); font: 700 15px/1 -apple-system, system-ui, sans-serif; }
+.ph .seg span.on { background: var(--bg-surface); color: var(--text-primary); box-shadow: var(--shadow-card); }
+.ph .legend { margin: 8px 0 0; }
+.ph .exrow { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 0; border-top: 1px solid var(--border-default); }
+.ph .exrow:first-of-type { border-top: 0; }
+.ph .datebox { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: var(--bg-subtle); flex: none; line-height: 1; }
+.ph .datebox b { font-size: 17px; }
+.ph .datebox span { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+.ph .thumb { width: 44px; height: 44px; border-radius: 12px; background: var(--bg-subtle); flex: none; }
+.ph .exrow .t { font-weight: 700; font-size: 17px; display: block; }
+.ph .chev { color: var(--text-muted); width: 18px; height: 18px; flex: none; }
+.ph .tabs { position: absolute; left: 0; right: 0; bottom: 0; display: flex; padding: 4px 8px 18px; background: var(--bar-glass); border-top: 1px solid var(--border-default);
+  -webkit-backdrop-filter: saturate(160%) blur(20px); backdrop-filter: saturate(160%) blur(20px); }
+.ph .tab { position: relative; flex: 1; min-height: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--text-muted); font-size: 12px; font-weight: 650; }
+.ph .tab svg { width: 26px; height: 26px; }
+.ph .tab.on { color: var(--accent-text); }
+.ph .tab.on::before { content: ""; position: absolute; top: 0; width: 28px; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
+.ph .tab.on svg { filter: var(--glow); }
+.ph .ic { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* charts (app: .chart-*) */
+.ph svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+.ph .c-grid { stroke: var(--border-default); stroke-width: 1; }
+.ph .c-text { fill: var(--text-muted); font: 600 12px -apple-system, system-ui, sans-serif; }
+.ph .c-text.strong { fill: var(--text-primary); font-weight: 700; }
+.ph .c-line { stroke: var(--accent); fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.ph .c-line.old { stroke-width: 2.5; filter: var(--glow); }
+.ph .c-line.new { stroke-width: 2; }
+.ph .c-line.new.glow { filter: var(--glow); }
+.ph .c-dot { fill: var(--text-muted); }
+.ph .c-last { fill: var(--accent); stroke: var(--bg-surface); stroke-width: 3; }
+.ph .c-top { stop-color: var(--accent); stop-opacity: .28; }
+.ph .c-bot { stop-color: var(--accent); stop-opacity: 0; }
+.ph .c-bar { fill: var(--accent); }
+.ph .c-today { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 4 3; }
+.ph .c-target { stroke: var(--text-primary); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.ph .c-gap { stroke: var(--text-muted); stroke-width: 2; stroke-linecap: round; }
+.ph .c-empty-grid { stroke: var(--border-default); stroke-width: 1; }
+
+/* food search sheet (app: .sheet, .searchbar, .fl in diet.css) */
+.ph .behind { position: absolute; inset: 0; padding: 16px; opacity: .9; }
+.ph .dim { position: absolute; inset: 0; background: var(--scrim); }
+.ph .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 88%; overflow-y: auto; background: var(--bg-surface); border: 1px solid var(--border-default); border-bottom: 0;
+  border-radius: 24px 24px 0 0; box-shadow: var(--shadow-overlay); padding: 0 16px 24px; }
+.ph .sheet-head { position: relative; display: flex; justify-content: flex-end; padding-top: 6px; min-height: 44px; }
+.ph .sheet-head::before { content: ""; position: absolute; left: 50%; top: 8px; width: 40px; height: 5px; margin-left: -20px; border-radius: 3px; background: var(--border-strong); opacity: .5; }
+.ph .sheet-head .x { min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; padding: 0 12px; color: var(--accent-text); font-weight: 700; border-radius: 999px; }
+.ph .searchbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.ph .inp { flex: 1; min-width: 0; min-height: 52px; display: flex; align-items: center; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: 14px; background: var(--bg-raised); font-size: 17px; }
+.ph .field { margin-bottom: 16px; }
+.ph .field .inp { width: 100%; min-height: 52px; font-size: 17px; }
+.ph .okline { color: var(--status-success); font-weight: 700; font-size: 15px; margin: 0 0 12px; }
+.ph .sheet .h2 { font-size: 21px; }
+.ph .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.ph .lbl2 { display: block; font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+.ph .stepbox { display: flex; align-items: center; gap: 12px; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 20px; padding: 4px; margin-bottom: 12px; }
+.ph .stepbtn { flex: none; width: 58px; height: 58px; display: flex; align-items: center; justify-content: center; font: 500 30px/1 -apple-system, system-ui, sans-serif; background: var(--bg-raised); border: 1px solid var(--border-default); border-radius: 14px; }
+.ph .stepval { flex: 1; display: flex; align-items: baseline; justify-content: center; gap: 4px; font: 800 42px/1.1 -apple-system, system-ui, sans-serif; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+.ph .meals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 8px 0 16px; }
+.ph .meals span { min-height: 48px; display: flex; align-items: center; justify-content: center; font: 700 14px/1 -apple-system, system-ui, sans-serif; background: var(--bg-raised); border: 1px solid var(--border-default); border-radius: 14px; }
+.ph .meals span.on { background: var(--btn-bg); color: var(--btn-text); border-color: transparent; }
+.ph .ringrow { display: flex; justify-content: center; gap: 24px; padding: 8px 0; }
+.ph .rtrack { fill: none; stroke: var(--border-default); stroke-width: 10; }
+.ph .rfill { fill: none; stroke: var(--accent); stroke-width: 10; stroke-linecap: round; }
+.ph .sbtn { min-height: 52px; padding: 0 16px; display: flex; align-items: center; gap: 8px; border-radius: 16px; background: var(--btn-bg); color: var(--btn-text); font: 700 16px/1 -apple-system, system-ui, sans-serif; }
+.ph .sbtn svg { width: 18px; height: 18px; }
+.ph .h3 { font-size: 17px; font-weight: 700; margin: 16px 0 8px; }
+.ph .fl { display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 8px 0; border-bottom: 1px solid var(--border-default); }
+.ph .fl:last-child { border-bottom: 0; }
+.ph .fl .nm { flex: 1; min-width: 0; }
+.ph .fl .nm b { display: block; font-size: 16px; }
+.ph .fl .nm small { display: block; font-size: 14px; color: var(--text-muted); }
+.ph .fl .kc { text-align: right; font-size: 14px; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ph .tbtn { min-height: 44px; display: inline-flex; align-items: center; padding: 0 12px; margin-left: -12px; color: var(--accent-text); font-weight: 700; border-radius: 999px; }
+.ph .credit { font-size: 14px; color: var(--text-muted); margin: 12px 0 0; }
+.ph .credit u { color: var(--accent-text); text-decoration: underline; }
+.ph .btnmain { display: flex; align-items: center; justify-content: center; min-height: 58px; border-radius: 16px; background: var(--btn-bg); color: var(--btn-text); font: 700 18px/1 -apple-system, system-ui, sans-serif; margin-top: 12px; }
+.ph .stepper { display: grid; grid-template-columns: 56px 1fr 56px; gap: 8px; align-items: center; margin: 8px 0; }
+.ph .stepper .pm { width: 56px; height: 56px; border-radius: 16px; border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; }
+.ph .stepper .mid { text-align: center; border: 1px solid var(--border-strong); border-radius: 14px; min-height: 56px; display: flex; flex-direction: column; justify-content: center; }
+.ph .stepper .mid small { font-size: 12px; color: var(--text-muted); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.ph .stepper .mid b { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ph .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.ph .chip { min-height: 44px; display: inline-flex; align-items: center; padding: 0 16px; border-radius: 999px; border: 1px solid var(--border-default); background: var(--bg-raised); font: 650 15px/1 -apple-system, system-ui, sans-serif; }
+.ph .chip.on { background: var(--accent-soft); color: var(--accent-text); border-color: transparent; }
+.ph .srcline { font-size: 14px; color: var(--text-muted); margin: 0 0 8px; }
+
+/* the question layer (mock-up only, never in the app) */
+.qring { outline: 2px dashed var(--pg-q) !important; outline-offset: 3px; border-radius: 12px; }
+.qdot { position: absolute; z-index: 5; width: 30px; height: 30px; border-radius: 50%; background: var(--pg-q); color: var(--pg-q-text);
+  font: 800 13px/30px -apple-system, system-ui, sans-serif; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,.3); border: 0; cursor: pointer; padding: 0; }
+.qcards { display: flex; flex-direction: column; gap: 12px; }
+.qcard { background: var(--pg-q-soft); border: 1px solid var(--pg-q); border-radius: 14px; padding: 14px 16px; }
+.qcard .opts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.qcard button[aria-pressed="true"] { background: var(--pg-q); border-color: var(--pg-q); color: var(--pg-q-text); }
+.qcard .rec { font-size: 14px; margin: 8px 0 0; }
+.qcard .saved { font-size: 13px; color: var(--pg-muted); margin: 6px 0 0; min-height: 1em; }
+.pick { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pick button[aria-pressed="true"] { background: var(--pg-ok); border-color: var(--pg-ok); color: var(--pg-card); }
+.hidden-q .qonly { display: none !important; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1 class="pg">Progress: weight and calories charts</h1>
+    <p class="meta">Mock-up v4 · worker 8.44 · 18 Nov 2026 · for app 0.7.7 · every number on this page is made up</p>
+  </header>
+
+  <div class="qbar" id="qbar">
+    <button type="button" id="qtoggle" aria-pressed="false">Show questions (4 open)</button>
+    <span class="status" id="qstatus">The questions are hidden, so you see the screens first.</span>
+  </div>
+
+  <section class="note">
+    <h2 class="pg">In short</h2>
+    <ul>
+      <li><b>The body weight chart is already on Progress.</b> But with no weigh-ins it shows only one grey line of text, no chart. That is most likely why it looks missing. NEW draws an empty chart frame with the words inside, and gives the card a real title.</li>
+      <li><b>New calories chart</b> under it: one bar per day with the kcal you ate, the daily target as a dashed line, today drawn as an outline (not finished), and a day with no food logged left empty (a gap, never a 0).</li>
+      <li><b>Both charts go to the top</b> of Progress (question 103): the weight chart is on the first screen, the calories chart one short scroll below it. Today, with workouts logged, the weight chart starts lower and the calories chart would come after the totals.</li>
+      <li>Two fixes to follow DESIGN.md: at most 4 grid lines (today the weight chart draws 5), and the line 2 px (today 2.5 px).</li>
+      <li><b>Diet search gets built-in UK foods</b> (your answer 97): plain foods like rice, banana, chicken breast and boiled egg from the UK government food tables (CoFID 2021, Open Government Licence). They show while you type and work without signal. Notes: docs/research/2026-11-18-uk-food-tables.md in the project.</li>
+    </ul>
+  </section>
+
+  <section class="note">
+    <h2 class="pg">Problems found on the real app (0.7.5, made-up data, 375 x 812)</h2>
+    <ol>
+      <li><b>No chart until the first weigh-in.</b> The card shows "No data yet. Log a weigh-in to start the line." in small grey text and a button. Nothing looks like a graph, so the chart is easy to miss.</li>
+      <li><b>The card title is a small grey eyebrow</b> ("BODY WEIGHT"), while the Exercises card below has a real title. The most important card looks the least important.</li>
+      <li><b>5 grid lines</b> (80.5 to 82.5 kg). DESIGN.md section 8 says at most 4.</li>
+      <li><b>The line is 2.5 px with a glow and a shaded area.</b> DESIGN.md says 2 px, glow only on rings and the main button, and no gradients except the photo scrim. The glowing line came from the approved redesign A, so the file and the app disagree (question 102).</li>
+      <li><b>The last weigh-in date is "2026-11-18"</b>, a computer date. Everywhere else the app writes "18 Nov".</li>
+      <li><b>No calories history anywhere.</b> Diet shows today and one line "Last 7 days, average". You cannot see which days were high, low or not logged.</li>
+      <li><b>Workout totals come first</b> on Progress. With workouts logged, the weight chart starts lower and the exercise list pushes everything else down.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2 class="pg">Progress, dark</h2>
+    <div class="pair">
+      <div class="col"><div class="lbl">OLD <span class="tag">live 0.7.5</span></div><div id="oldDark"></div>
+        <div class="under">What the app shows today with 3 made-up workouts and 20 weigh-ins. Scroll inside the phone.</div></div>
+      <div class="col"><div class="lbl">NEW <span class="tag">0.7.7</span></div><div id="newDark"></div>
+        <div class="under">Scroll inside the phone to see the totals, the exercises and the recent workouts. They are the same as today.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="pg">Progress, light</h2>
+    <div class="pair">
+      <div class="col"><div class="lbl">OLD <span class="tag">live 0.7.5</span></div><div id="oldLight"></div></div>
+      <div class="col"><div class="lbl">NEW <span class="tag">0.7.7</span></div><div id="newLight"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="pg">Diet search: built-in UK foods (Rosario, answer 97: yes)</h2>
+    <p class="meta">You typed "chick" in Diet > Search. OLD finds only your own saved foods until you tap Search (online). NEW also lists plain UK foods from the government food tables, at once and offline. Food names are written the way the tables write them; the numbers here are examples, not copied from the tables.</p>
+    <div class="pair">
+      <div class="col"><div class="lbl">OLD <span class="tag">live 0.7.5</span></div><div id="sOldDark"></div></div>
+      <div class="col"><div class="lbl">NEW <span class="tag">0.7.7</span></div><div id="sNewDark"></div>
+        <div class="under"><ul><li>New group "Common UK foods (built in, work offline)" under Your foods, up to 8 rows, then "Show all 23".</li><li>The online search ("From Open Food Facts") still runs only when you tap Search, below these.</li><li>One more credit line at the bottom (the licence asks for it). The same line also goes at the foot of the Diet tab, under the Open Food Facts line (not drawn).</li><li>The rows are in the order the search rule gives: names that start with the typed word first, then shorter names first.</li></ul></div></div>
+      <div class="col"><div class="lbl">NEW, after a tap <span class="tag">0.7.7</span></div><div id="fNewDark"></div>
+        <div class="under">The live "Your food" sheet, unchanged, with two differences: the heading "From the UK food tables" (live: "Your food"; Open Food Facts foods say "From Open Food Facts · check before saving") and, under Food details, the line "From the UK food tables. Numbers per 100 g, edible part. You can change anything." in place of the Open Food Facts warning, plus the licence credit line. Both Save buttons keep the food in Your foods, so it shows in "Log again" next time. Scroll inside the phone for Food details.</div></div>
+    </div>
+    <div class="pair" style="margin-top:24px">
+      <div class="col"><div class="lbl">OLD · light</div><div id="sOldLight"></div></div>
+      <div class="col"><div class="lbl">NEW · light</div><div id="sNewLight"></div></div>
+      <div class="col"><div class="lbl">NEW, after a tap · light</div><div id="fNewLight"></div></div>
+    </div>
+  </section>
+
+  <section class="qonly">
+    <h2 class="pg">Questions</h2>
+    <div class="qcards" id="qcards"></div>
+  </section>
+
+  <section>
+    <h2 class="pg">States of the two cards</h2>
+    <p class="meta">DESIGN.md asks every chart for an empty, a loading and an error state. The data is on the phone, so a chart never waits (no loading state is drawn). Each state in dark and light.</p>
+    <div id="states" style="display:none"></div>
+  </section>
+
+  <section class="note">
+    <h2 class="pg">One-tap pick</h2>
+    <div class="pick" id="pick">
+      <span>Progress screen:</span>
+      <button type="button" data-pick="new">NEW is right</button>
+      <button type="button" data-pick="old">Keep OLD</button>
+      <button type="button" data-pick="talk">I will comment</button>
+    </div>
+    <p class="meta" id="picksaved"></p>
+  </section>
+
+  <section class="note">
+    <h2 class="pg">⚠️ Where I disagree with you</h2>
+    <ol>
+      <li><b>A daily calories chart can make every day feel like a test.</b> One high day does not change your weight; the week does. So the big number on the card is the 7-day average (the same number Diet already shows), not today, and a day over the target has the same colour as any other day: no red, no warning.</li>
+      <li><b>You asked for a body weight graph, but it already exists.</b> Adding a second one would split your weigh-ins. NEW keeps one chart and fixes why it was easy to miss (empty card, small title, too far down).</li>
+      <li><b>Daily weigh-ins jump up and down by up to 1 kg</b> (water, salt, food in the gut). The line is the 7-day trend, and that is the number to watch. NEW adds one line of words under the chart that says so.</li>
+    </ol>
+  </section>
+
+  <section class="note">
+    <h2 class="pg">How well-made apps do it</h2>
+    <p class="meta">From my knowledge of these apps, not opened again today (see Not verified).</p>
+    <ul>
+      <li><b>Apple Health (Dietary Energy):</b> one bar per day, the average as the big number above the chart, D / W / M / 6M / Y switch. Days with no data have no bar.</li>
+      <li><b>MyFitnessPal (Nutrition, weekly):</b> bars per day with the daily goal as a line, net average under it.</li>
+      <li><b>Lose It!:</b> a week of bars against the daily budget; under-budget and over-budget days in different colours (we do not copy the colours: see "Where I disagree", point 1).</li>
+      <li><b>MacroFactor and Happy Scale (weight):</b> each weigh-in as a small dot and a smooth trend line on top. This is the same idea as our weight chart.</li>
+      <li><b>Cronometer:</b> calorie history as bars with a target line; days not logged are left empty.</li>
+      <li><b>Food search with a built-in list</b> (Cronometer, MyFitnessPal, Apple-style search): plain "generic" foods from national food tables come first or next to your own foods, branded products after. Our NEW search does the same with the UK tables.</li>
+      <li><b>The UK food tables:</b> gov.uk page "Composition of foods integrated dataset (CoFID)", read 18 Nov 2026: Excel file 4.42 MB, Open Government Licence v3.0, last updated 19 March 2021.</li>
+    </ul>
+  </section>
+
+  <section class="note">
+    <h2 class="pg">New values, Rosario to approve</h2>
+    <p class="meta">Values not in DESIGN.md today. Everything else on NEW uses the DESIGN.md tokens and the existing parts (card, h2, big number, secondary button, the two-part switch from the Gym tab).</p>
+    <div class="tbl"><table class="pg">
+      <thead><tr><th>What</th><th>Value</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td class="newval">Bar chart (a new chart kind)</td><td>bars in <code>--accent</code>, 20 px wide (7 days) or 6 px (30 days), top corners 4 px, from 0</td><td>Daily totals are separate amounts; bars show a missing day as a clear gap. Bars always start at 0, so their height is honest.</td></tr>
+        <tr><td class="newval">Target line</td><td><code>--text-primary</code>, 1.5 px, dashed 5 / 4, across the whole chart, no number on the chart (the number is in the card head, so it never sits on a bar)</td><td>A reference, not the data, so not the accent. Words name it under the big number ("the dashed line").</td></tr>
+        <tr><td class="newval">Today's bar</td><td>outline only: <code>--accent</code>, 2 px, dashed 4 / 3, the word "so far" above</td><td>Today is not finished. Never counted in the average.</td></tr>
+        <tr><td class="newval">Day with no food</td><td>no bar; a 2 px <code>--text-muted</code> dash, 8 px wide (7 days) on the base line</td><td>A gap, never a 0. The legend line says "No bar: no food logged".</td></tr>
+        <tr><td class="newval">Empty chart frame</td><td>the chart's 4 grid lines without numbers, the empty words in the middle</td><td>The card looks like a chart before the first weigh-in or food.</td></tr>
+        <tr><td class="newval">Words under each chart</td><td>one small muted line (14 px)</td><td>Says what the dots, line and bars mean. Words decide (DESIGN.md section 1).</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="note">
+    <h2 class="pg">Where NEW differs from the live app</h2>
+    <ul>
+      <li>Weight card: title "Body weight" as a card title (h2, 20 px; the live h2 is 21 px) instead of the eyebrow; the date as "18 Nov"; the trend number in h2 size (20 px, the live app uses 30 px, not in DESIGN.md); one line of words under the chart.</li>
+      <li>Weight chart: 3 grid lines (80.5, 81.5, 82.5 kg) instead of 5, so the line uses the whole height; line 2 px. With answer 102 a: no glow, no shaded area. <span class="newval">New scale rule, Rosario to approve:</span> at most 4 lines, steps of 0.5, 1, 2 or 5 (times 10, 100...), and the first line may sit on a half step when that fits the weigh-ins in fewer lines.</li>
+      <li>Units in small muted text next to the number ("80.8" big, "kg" small), as DESIGN.md section 4 says; the live app writes "80.8 kg" all big.</li>
+      <li><span class="newval">"Open Diet" button on the Calories card</span> (secondary button, like "Weigh in" on the weight card), Rosario to approve. It is a second button on Progress; without it, the way to log food is the Diet tab.</li>
+      <li>"Average a day" is the same number as Diet's "Last 7 days, average" (the 7 days before today, days with food only), so the two screens never disagree.</li>
+      <li>Kept from the live app although DESIGN.md says otherwise (out of scope, listed for later): the secondary button (18 px, weight 650, surface fill and soft border; DESIGN.md section 8 says a hairline in border-strong and no fill), the Settings pill and the switch labels (15 px), the eyebrow (13 px; DESIGN.md says 12 px), the totals numbers (24 px).</li>
+      <li>New calories card under the weight card, then the workout totals (answer 103 a).</li>
+      <li>Not changed and kept on purpose: the page title (live 32 px; DESIGN.md says 26 to 28 px), the totals tiles (24 px numbers), the exercise list and recent workouts. They are out of scope for this step; listed as later work.</li>
+    </ul>
+  </section>
+
+  <section class="note">
+    <h2 class="pg">Not verified</h2>
+    <ul>
+      <li>The app screens above are redrawn in HTML from the app's tokens and from screenshots of the real app at 375 x 812 with made-up data. They are not screenshots.</li>
+      <li>The app examples were not opened again today; they come from my knowledge of the apps.</li>
+      <li>Not seen on a real iPhone. Exercise photos are grey squares here.</li>
+      <li>Built-in foods: the exact list and its size need the 4.42 MB Excel file from gov.uk, which is not downloaded yet (waits for your OK). The number of foods in the tables (about 2,900, from memory) is not verified.</li>
+      <li>The calorie target is today's target for every day. If the target changed during the 30 days, older days are drawn against the new target (the app keeps no history of targets).</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(() => {
+  const NS = "http://www.w3.org/2000/svg";
+  const DAY0 = Date.UTC(2026, 10, 18);
+  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const WD = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const dateOf = (n) => new Date(DAY0 - n * 86400000);
+  const short = (n) => { const d = dateOf(n); return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`; };
+  const fmt = (n) => n.toLocaleString("en-GB");
+
+  // Made-up data (never real body numbers).
+  const WEIGH = [[24,82.0],[23,82.2],[22,82.1],[21,81.7],[19,82.0],[18,81.7],[17,81.5],[15,81.8],[14,81.4],[13,81.3],[12,81.6],[11,81.4],[8,81.4],[7,81.1],[6,80.8],[5,81.0],[4,81.1],[2,80.6],[1,80.9],[0,80.8]];
+  // the app's trendAt (engine/trend.js): the mean of the weigh-ins from that day back 6 days
+  const TREND = WEIGH.map(([n]) => { const inside = WEIGH.filter(([m]) => m >= n && m <= n + 6); return [n, inside.reduce((a, [, kg]) => a + kg, 0) / inside.length]; });
+  const KC = [1240,2100,0,1980,2450,2200,2050,0,2600,2150,1900,2250,0,2300,2080,2400,1850,2200,0,0,2150,2500,1950,2250,2100,1800,2350,2050,1980,2300];
+  const TARGET = 2200;
+  const last7 = [1,2,3,4,5,6,7].map((n) => KC[n]).filter((k) => k > 0);
+  const AVG = Math.round(last7.reduce((a, b) => a + b, 0) / last7.length);
+
+  const state = { q101: "a", q102: "a", q103: "a", q104: "a", show: false };
+  const picked = {}; // only what Rosario tapped (or saved before); the drawing uses the recommended answer until then
+  const openCount = () => QS.filter((x) => !picked[x.key]).length;
+  function qLabel() { return state.show ? "Hide questions" : `Show questions (${openCount()} open)`; }
+
+  function el(tag, attrs = {}, ...kids) {
+    const svg = ["svg","line","path","circle","rect","text","g","defs","linearGradient","stop"].includes(tag);
+    const e = svg ? document.createElementNS(NS, tag) : document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) if (v !== null && v !== undefined && v !== false) e.setAttribute(k, v);
+    for (const k of kids.flat(Infinity)) if (k !== null && k !== undefined && k !== false) e.append(typeof k === "string" ? document.createTextNode(k) : k);
+    return e;
+  }
+  const ICON = {
+    today: ["M4 6.5h16v13H4z","M4 10h16","M8 4v4","M16 4v4"],
+    plan: ["M8 6h12","M8 12h12","M8 18h12","M4 6h.01","M4 12h.01","M4 18h.01"],
+    gym: ["M3 10v4","M6 7v10","M18 7v10","M21 10v4","M6 12h12"],
+    diet: ["M7 3v8","M5 3v5a2 2 0 0 0 4 0V3","M7 11v10","M16 3c-2 2-2.5 5-2.5 8h4V3z","M17.5 11v10"],
+    progress: ["M4 19h16","M6 15l4-5 3 3 5-7"],
+    chevron: ["M9 6l6 6-6 6"],
+    search: ["M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14z", "M20 20l-4-4"],
+  };
+  const icon = (name, cls = "") => el("svg", { viewBox: "0 0 24 24", class: `ic ${cls}`, "aria-hidden": "true" }, ICON[name].map((d) => el("path", { d })));
+  const tabs = () => el("div", { class: "tabs" }, [["today","Today"],["plan","Plan"],["gym","Gym"],["diet","Diet"],["progress","Progress"]]
+    .map(([id, w]) => el("div", { class: `tab${id === "progress" ? " on" : ""}` }, icon(id), w)));
+
+  let gid = 0;
+  // ---------- weight chart ----------
+  function weightChart(kind) {
+    const W = 343, H = 200, box = { l: 44, r: W - 10, t: 24, b: H - 26 };
+    const ticks = kind === "old" ? [80.5, 81, 81.5, 82, 82.5] : [80.5, 81.5, 82.5];
+    const yMin = ticks[0], yMax = ticks[ticks.length - 1], xMin = -24, xMax = 0;
+    const px = (n) => box.l + ((-n - xMin) / (xMax - xMin)) * (box.r - box.l);
+    const py = (v) => box.b - ((v - yMin) / (yMax - yMin)) * (box.b - box.t);
+    const glow = kind === "old" || state.q102 === "b";
+    const id = `wf${++gid}`;
+    const d = TREND.map(([n, v], i) => `${i ? "L" : "M"}${px(n).toFixed(1)},${py(v).toFixed(1)}`).join(" ");
+    const lastP = TREND[TREND.length - 1];
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart", role: "img", "aria-label": "Body weight in kg: weigh-ins as dots, the 7-day trend as a line" },
+      el("defs", {}, el("linearGradient", { id, x1: 0, y1: 0, x2: 0, y2: 1 }, el("stop", { offset: "0%", class: "c-top" }), el("stop", { offset: "100%", class: "c-bot" }))),
+      ticks.map((t) => [el("line", { x1: box.l, x2: box.r, y1: py(t), y2: py(t), class: "c-grid" }),
+        el("text", { x: box.l - 6, y: py(t) + 4, "text-anchor": "end", class: "c-text" }, String(t))]),
+      glow ? el("path", { d: `${d} L${px(lastP[0])},${box.b} L${px(TREND[0][0])},${box.b} Z`, fill: `url(#${id})`, stroke: "none" }) : null,
+      WEIGH.map(([n, kg]) => el("circle", { cx: px(n), cy: py(kg), r: 3, class: "c-dot" })),
+      el("path", { d, class: `c-line ${kind === "old" ? "old" : "new"}${kind !== "old" && glow ? " glow" : ""}` }),
+      el("circle", { cx: px(lastP[0]), cy: py(lastP[1]), r: 5, class: "c-last" }),
+      el("text", { x: box.l, y: H - 6, class: "c-text" }, short(24)),
+      el("text", { x: box.r, y: H - 6, "text-anchor": "end", class: "c-text" }, short(0)),
+      el("text", { x: 4, y: 10, class: "c-text" }, "kg"));
+    return svg;
+  }
+  function emptyFrame(words) {
+    const W = 343, H = 200, box = { l: 44, r: W - 10, t: 24, b: H - 26 };
+    const ys = [0, 1, 2, 3].map((i) => box.t + (i * (box.b - box.t)) / 3);
+    return el("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart", role: "img", "aria-label": words },
+      ys.map((y) => el("line", { x1: box.l, x2: box.r, y1: y, y2: y, class: "c-empty-grid" })),
+      el("text", { x: (box.l + box.r) / 2, y: (box.t + box.b) / 2 - 4, "text-anchor": "middle", class: "c-text strong" }, words[0]),
+      el("text", { x: (box.l + box.r) / 2, y: (box.t + box.b) / 2 + 14, "text-anchor": "middle", class: "c-text" }, words[1]));
+  }
+  // ---------- calories chart ----------
+  function kcalChart(days, { noTarget = false } = {}) {
+    const W = 343, H = 200, box = { l: 44, r: W - 10, t: 24, b: H - 26 };
+    const ticks = [0, 1000, 2000, 3000], yMax = 3000;
+    const py = (v) => box.b - (v / yMax) * (box.b - box.t);
+    const n = days; // finished days before today, plus today
+    const slots = n + 1, slot = (box.r - box.l) / slots;
+    const bw = days === 7 ? 20 : 6;
+    const parts = [];
+    for (let i = 0; i < slots; i++) {
+      const ago = n - i; // n .. 0
+      const k = KC[ago];
+      const cx = box.l + slot * (i + 0.5);
+      if (ago === 0) {
+        const y = py(k);
+        parts.push(el("rect", { x: cx - bw / 2 + 1, y, width: bw - 2, height: box.b - y, rx: days === 7 ? 4 : 2, class: "c-today" }));
+        if (days === 7) parts.push(el("text", { x: cx, y: y - 6, "text-anchor": "middle", class: "c-text" }, "so far"));
+      } else if (k > 0) {
+        const y = py(k), h = box.b - y, r = days === 7 ? 4 : 2;
+        parts.push(el("path", { d: `M${cx - bw / 2},${box.b} V${y + r} Q${cx - bw / 2},${y} ${cx - bw / 2 + r},${y} H${cx + bw / 2 - r} Q${cx + bw / 2},${y} ${cx + bw / 2},${y + r} V${box.b} Z`, class: "c-bar" }));
+      } else {
+        const gw = days === 7 ? 8 : 4;
+        parts.push(el("line", { x1: cx - gw / 2, x2: cx + gw / 2, y1: box.b - 1, y2: box.b - 1, class: "c-gap" }));
+      }
+      if (days === 7) parts.push(el("text", { x: cx, y: H - 6, "text-anchor": "middle", class: ago === 0 ? "c-text strong" : "c-text" }, ago === 0 ? "Today" : WD[dateOf(ago).getUTCDay()]));
+    }
+    const ty = py(TARGET);
+    return el("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart", role: "img",
+      "aria-label": `Calories eaten each day, last ${days} days and today; ${noTarget ? "no target" : "the target as a dashed line"}; days with no food have no bar` },
+      ticks.map((t) => [el("line", { x1: box.l, x2: box.r, y1: py(t), y2: py(t), class: "c-grid" }),
+        el("text", { x: box.l - 6, y: py(t) + 4, "text-anchor": "end", class: "c-text" }, fmt(t))]),
+      parts,
+      noTarget ? null : el("line", { x1: box.l, x2: box.r, y1: ty, y2: ty, class: "c-target" }),
+
+      days === 30 ? [el("text", { x: box.l, y: H - 6, class: "c-text" }, short(30)), el("text", { x: box.r, y: H - 6, "text-anchor": "end", class: "c-text strong" }, "Today")] : null,
+      el("text", { x: 4, y: 10, class: "c-text" }, "kcal"));
+  }
+
+  // ---------- cards ----------
+  const trendNow = TREND[TREND.length - 1][1].toFixed(1);
+  function weightCardOld({ empty = false } = {}) {
+    return el("div", { class: "card" }, el("span", { class: "eyebrow" }, "Body weight"),
+      empty ? el("p", { class: "muted", style: null }, "No data yet. Log a weigh-in to start the line.") :
+      [el("div", { class: "row" },
+        el("div", { class: "metric" }, el("div", { class: "label" }, "Last weigh-in"), el("div", { class: "big" }, "80.8 kg"), el("div", { class: "small muted" }, "2026-11-18")),
+        el("div", { class: "metric" }, el("div", { class: "label" }, "Trend (7 days)"), el("div", { class: "val" }, `${trendNow} kg`), el("div", { class: "small muted" }, "the line"))),
+      weightChart("old")],
+      el("div", { class: "btn2" }, "Weigh in"));
+  }
+  function weightCardNew({ empty = false } = {}) {
+    return el("div", { class: "card", "data-card": "weight" }, el("div", { class: "h2", "data-q": empty ? null : "103" }, "Body weight"),
+      empty ? emptyFrame(["No data yet.", "Log a weigh-in to start the line."]) :
+      [el("div", { class: "row" },
+        el("div", { class: "metric" }, el("div", { class: "label" }, "Last weigh-in"), el("div", { class: "big" }, "80.8", el("span", { class: "unit" }, " kg")), el("div", { class: "small muted" }, "18 Nov")),
+        el("div", { class: "metric" }, el("div", { class: "label" }, "Trend (7 days)"), el("div", { class: "val" }, trendNow, el("span", { class: "unit" }, " kg")), el("div", { class: "small muted" }, "the line"))),
+      el("div", { "data-q": "102" }, weightChart("new")),
+      el("p", { class: "small muted legend" }, "Dots: each weigh-in. Line: the 7-day trend, the number to watch.")],
+      el("div", { class: "btn2" }, "Weigh in"));
+  }
+  function kcalCard({ days = 7, empty = false, noTarget = false, switchOn = state.q101 === "a" } = {}) {
+    const seg = switchOn ? el("div", { class: "seg", "data-q": "101" }, el("span", { class: days === 7 ? "on" : "" }, "7 days"), el("span", { class: days === 30 ? "on" : "" }, "30 days")) : null;
+    if (empty) return el("div", { class: "card" }, el("div", { class: "h2" }, "Calories"), seg,
+      emptyFrame(["No food logged yet.", "Log food on the Diet tab to start the bars."]), el("div", { class: "btn2" }, "Open Diet"));
+    const avg = days === 7 ? AVG : Math.round(KC.slice(1, 31).filter((k) => k > 0).reduce((a, b) => a + b, 0) / KC.slice(1, 31).filter((k) => k > 0).length);
+    const logged = days === 7 ? last7.length : KC.slice(1, 31).filter((k) => k > 0).length;
+    return el("div", { class: "card", "data-card": "kcal" }, el("div", { class: "h2", "data-q": switchOn ? null : "101" }, "Calories"), seg,
+      el("div", { class: "row" },
+        el("div", { class: "metric" }, el("div", { class: "label" }, `Average a day`), el("div", { class: "big" }, fmt(avg), el("span", { class: "unit" }, " kcal")), el("div", { class: "small muted" }, `${days} days before today · ${logged} with food`)),
+        el("div", { class: "metric" }, el("div", { class: "label" }, "Target"), noTarget ? el("div", { class: "val" }, "None") : el("div", { class: "val" }, fmt(TARGET), el("span", { class: "unit" }, " kcal")),
+          el("div", { class: "small muted" }, noTarget ? "your intake: protein only" : "the dashed line"))),
+      kcalChart(days, { noTarget }),
+      el("p", { class: "small muted legend" }, "Bars: kcal eaten each day. No bar: no food logged. Today is not finished and not in the average."),
+      el("div", { class: "btn2" }, "Open Diet"));
+  }
+  const totals = () => el("div", { class: "tiles" },
+    el("div", { class: "tile" }, el("div", { class: "label" }, "Workouts"), el("div", { class: "value" }, "3")),
+    el("div", { class: "tile" }, el("div", { class: "label" }, "Sets"), el("div", { class: "value" }, "61")),
+    el("div", { class: "tile" }, el("div", { class: "label" }, "Lifted"), el("div", { class: "value" }, "9840", el("span", { class: "unit" }, " kg"))));
+  const exercises = () => el("div", { class: "card" }, el("div", { class: "h2" }, "Exercises"),
+    [["Chest press machine", "3 workouts · best 35 kg"], ["Lat pulldown", "3 workouts · best 40 kg"], ["Leg press", "2 workouts · best 80 kg"], ["Plank", "2 workouts · best 40 seconds"]]
+      .map(([t, s]) => el("div", { class: "exrow" }, el("span", { class: "thumb" }), el("span", { style: null, class: "grow" }, el("span", { class: "t" }, t), el("span", { class: "small muted" }, s)), icon("chevron", "chev"))));
+  const recent = () => el("div", { class: "card" }, el("div", { class: "h2" }, "Recent workouts"),
+    [["17", "Back and biceps", "21 sets · 3420 kg lifted · walk 20 min"], ["16", "Legs and abs", "19 sets · 3960 kg lifted · walk 20 min"]]
+      .map(([d, t, s]) => el("div", { class: "exrow" }, el("span", { class: "datebox" }, el("b", {}, d), el("span", {}, "Nov")), el("span", {}, el("span", { class: "t" }, t), el("span", { class: "small muted" }, s)))));
+  const top = () => [el("span", { class: "settings-btn" }, "Settings"), el("span", { class: "eyebrow accent" }, "Your 12 weeks"), el("div", { class: "h1" }, "Progress")];
+
+  function phone(theme, kind) {
+    const inner = el("div", { class: "inner" }, top());
+    if (kind === "old") inner.append(totals(false), weightCardOld(), exercises(), recent());
+    else if (state.q103 === "a") inner.append(weightCardNew(), kcalCard(), totals(true), exercises(), recent());
+    else inner.append(totals(true), weightCardNew(), kcalCard(), exercises(), recent());
+    return el("div", { class: `ph ${theme} ${kind}`, role: "img", "aria-label": `${kind.toUpperCase()} Progress screen, ${theme}` }, el("div", { class: "scr" }, inner), tabs());
+  }
+  function shortPhone(theme, kind, card) {
+    return el("div", { class: `ph short ${theme} ${kind}` }, el("div", { class: "scr" }, el("div", { class: "inner" }, card)));
+  }
+
+  // ---------- food search (Diet) ----------
+  const FOODS0 = [["Chicken, breast, grilled without skin, meat only", 148], ["Chicken, breast, raw, meat only", 106], ["Chicken, thigh, raw, meat only", 126],
+    ["Chicken, leg quarter, roasted, meat and skin", 236], ["Chickpeas, canned, re-heated, drained", 114], ["Chicken, mince, raw", 141], ["Chicken, wing, grilled, meat and skin", 274], ["Chickpeas, dried, boiled in unsalted water", 121]];
+  const FOODS = FOODS0.slice().sort((a, b) => a[0].length - b[0].length);
+  const fl = (name, sub, kc) => el("div", { class: "fl" }, el("span", { class: "nm" }, el("b", {}, name), sub ? el("small", {}, sub) : null), el("span", { class: "kc" }, kc));
+  const offCredit = () => el("p", { class: "credit" }, "Contains data from ", el("u", {}, "Open Food Facts"), ", available under the ", el("u", {}, "Open Database License"), ".");
+  const oglCredit = () => el("p", { class: "credit" }, "Contains public sector information licensed under the ", el("u", {}, "Open Government Licence v3.0"), ". Common foods: McCance and Widdowson's Composition of Foods Integrated Dataset 2021, Public Health England.");
+  function sheetFrame(theme, kind, ...content) {
+    return el("div", { class: `ph ${theme} ${kind}`, role: "img", "aria-label": `${kind.toUpperCase()} Diet search sheet, ${theme}` },
+      el("div", { class: "behind" }, el("span", { class: "eyebrow" }, "Food · Wednesday 18 Nov"), el("div", { class: "h1" }, "Diet"),
+        el("div", { class: "card" }, el("div", { class: "ringrow" }, [0.62, 0.56].map((f) => el("svg", { viewBox: "0 0 120 120", width: 112, height: 112, "aria-hidden": "true" },
+          el("circle", { cx: 60, cy: 60, r: 50, class: "rtrack" }),
+          el("circle", { cx: 60, cy: 60, r: 50, class: "rfill", "stroke-dasharray": `${(314 * f).toFixed(0)} 314`, transform: "rotate(-90 60 60)" })))))),
+      el("div", { class: "dim" }),
+      el("div", { class: "sheet" }, el("div", { class: "sheet-head" }, el("span", { class: "x" }, "Close")), el("div", { class: "inner" }, ...content)));
+  }
+  function searchSheet(theme, kind) {
+    const top = [el("div", { class: "h2" }, "Your foods"),
+      el("div", { class: "searchbar" }, el("span", { class: "inp" }, "chick"), el("span", { class: "sbtn" }, icon("search"), "Search")),
+      el("p", { class: "small muted" }, "Search runs when you tap Search. UK products only."),
+      el("div", { class: "h3" }, "Your foods (work offline)"), fl("Chicken thighs, skinless", "My shop", "177 kcal / 100 g")];
+    if (kind === "old") return sheetFrame(theme, kind, top, el("div", { class: "btn2" }, "Make a new food"), offCredit());
+    return sheetFrame(theme, kind, top,
+      el("div", { "data-q": "104" }, el("div", { class: "h3" }, "Common UK foods (built in, work offline)"),
+        (state.q104 === "b" ? FOODS0.slice(0, 4).concat([["Chicken curry, takeaway", 145], ["Chicken korma, takeaway", 175], ["Chicken nuggets, takeaway", 266], ["Chicken and mushroom pie, single crust, homemade", 199]]).sort((a, b) => a[0].length - b[0].length) : FOODS)
+          .map(([n, k]) => fl(n, "UK food tables", `${k} kcal / 100 g`)),
+        el("span", { class: "tbtn" }, state.q104 === "b" ? "Show all 61" : "Show all 23")),
+      el("div", { class: "btn2" }, "Make a new food"), offCredit(), oglCredit());
+  }
+  function builtinSheet(theme) {
+    const fld = (label, value) => el("div", { class: "field" }, el("span", { class: "lbl2" }, label), el("span", { class: "inp" }, value));
+    return sheetFrame(theme, "new",
+      el("div", { class: "h2" }, "From the UK food tables"),
+      el("div", { class: "h3" }, "How much did you have?"),
+      el("div", { class: "seg" }, el("span", { class: "on" }, "Grams"), el("span", {}, "Pieces")),
+      el("span", { class: "lbl2" }, "Portion"),
+      el("div", { class: "stepbox" }, el("span", { class: "stepbtn" }, "−"), el("span", { class: "stepval" }, "150", el("span", { class: "unit" }, "g")), el("span", { class: "stepbtn" }, "+")),
+      el("span", { class: "lbl2" }, "Meal"),
+      el("div", { class: "meals" }, el("span", {}, "Breakfast"), el("span", { class: "on" }, "Lunch"), el("span", {}, "Dinner"), el("span", {}, "Snacks")),
+      el("div", { class: "btnmain" }, "Save and add 150 g"),
+      el("div", { class: "btn2" }, "Save without adding"),
+      el("div", { class: "h3" }, "Food details"),
+      el("p", { class: "srcline" }, "From the UK food tables. Numbers per 100 g, edible part. You can change anything."),
+      fld("Name", "Chicken, breast, grilled without skin, meat only"),
+      el("div", { class: "h3" }, "Per 100 g"),
+      el("div", { class: "grid2" }, fld("Calories (kcal)", "148"), fld("Protein (g)", "32"), fld("Carbs (g)", "0"), fld("Fat (g)", "2.2")),
+      el("p", { class: "okline" }, "✓ The numbers add up."),
+      oglCredit());
+  }
+
+  // ---------- questions ----------
+  const QS = [
+    { n: 101, key: "q101", q: "The calories chart: 7 days only, or a 7 days | 30 days switch?",
+      a: "a) 7 days | 30 days switch, 7 days first", b: "b) 7 days only, no switch",
+      rec: "Recommended: a, because 30 days shows the pattern next to the weight chart, which covers weeks; the switch is the one already used on the Gym tab." },
+    { n: 102, key: "q102", q: "The chart line: plain, as DESIGN.md says, or keep today's glow and shaded area?",
+      a: "a) Plain 2 px line, no glow, no shaded area", b: "b) Keep the glow and the shaded area (DESIGN.md changes)",
+      rec: "Recommended: a, because both charts then look like one set, the dots stay easy to see, and the app and DESIGN.md stop disagreeing." },
+    { n: 103, key: "q103", q: "Order on Progress: charts first, or the workout totals first as today?",
+      a: "a) Body weight, then Calories, then the totals", b: "b) Totals first, as today",
+      rec: "Recommended: a, because then the weight chart is on the first screen, even after many workouts, and both charts are what you asked to see." },
+    { n: 104, key: "q104", q: "Built-in foods: only plain foods, or every food in the UK tables?",
+      a: "a) Plain foods only (about 800 to 1,200: rice, fruit, meat, fish, eggs, milk, vegetables)", b: "b) Every food in the tables (about 2,900, also dishes like lasagne or bhaji)",
+      rec: "Recommended: a, because search then shows the food you mean, not ten dishes; your own foods and Open Food Facts cover branded and ready meals. Both should fit under 500 KB (an estimate until the file is downloaded)." },
+  ];
+  let db = null;
+  function renderCards() {
+    const box = document.getElementById("qcards");
+    box.replaceChildren(...QS.map((x) => {
+      const mk = (val, label) => el("button", { type: "button", "aria-pressed": String(picked[x.key] === val), "data-key": x.key, "data-val": val }, label);
+      return el("div", { class: "qcard", id: `card${x.n}` },
+        el("h3", { class: "pg" }, `❓ ${x.n}. ${x.q}`),
+        el("div", { class: "opts" }, mk("a", x.a), mk("b", x.b)),
+        el("p", { class: "rec" }, x.rec),
+        el("p", { class: "saved", id: `saved${x.n}` }, savedText[x.key] || "Not answered yet. The screens show the recommended answer."));
+    }));
+  }
+  const savedText = {};
+  function place() {
+    document.querySelectorAll(".qdot").forEach((d) => d.remove());
+    document.querySelectorAll(".qring").forEach((d) => d.classList.remove("qring"));
+    if (!state.show) return;
+    document.querySelectorAll("#newDark .ph .inner, #newLight .ph .inner, #sNewDark .ph .inner, #sNewLight .ph .inner").forEach((inner) => {
+      inner.querySelectorAll("[data-q]").forEach((t) => {
+        t.classList.add("qring");
+        const r = t.getBoundingClientRect(), ir = inner.getBoundingClientRect();
+        const dot = el("button", { type: "button", class: "qdot", "aria-label": `Question ${t.dataset.q}` }, t.dataset.q);
+        dot.style.top = `${Math.max(0, r.top - ir.top - 14)}px`;
+        dot.style.left = `${Math.min(ir.width - 30, r.right - ir.left - 18)}px`;
+        dot.addEventListener("click", () => document.getElementById(`card${t.dataset.q}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
+        inner.append(dot);
+      });
+    });
+  }
+  function render() {
+    document.getElementById("oldDark").replaceChildren(phone("dark", "old"));
+    document.getElementById("newDark").replaceChildren(phone("dark", "new"));
+    document.getElementById("oldLight").replaceChildren(phone("light", "old"));
+    document.getElementById("newLight").replaceChildren(phone("light", "new"));
+    document.getElementById("sOldDark").replaceChildren(searchSheet("dark", "old"));
+    document.getElementById("sNewDark").replaceChildren(searchSheet("dark", "new"));
+    document.getElementById("fNewDark").replaceChildren(builtinSheet("dark"));
+    document.getElementById("sOldLight").replaceChildren(searchSheet("light", "old"));
+    document.getElementById("sNewLight").replaceChildren(searchSheet("light", "new"));
+    document.getElementById("fNewLight").replaceChildren(builtinSheet("light"));
+    renderStates();
+    renderCards();
+    document.body.classList.toggle("hidden-q", !state.show);
+    setTimeout(place, 0);
+  }
+  function renderStates() {
+    const host = document.getElementById("states");
+    host.style.display = "flex"; host.style.flexDirection = "column"; host.style.gap = "24px";
+    const rows = [
+      ["Body weight, no weigh-ins yet", "OLD shows one line of text. NEW keeps the same words but draws the empty chart frame and the card title, so it looks like a chart.",
+        (t) => [["OLD", shortPhone(t, "old", weightCardOld({ empty: true }))], ["NEW", shortPhone(t, "new", weightCardNew({ empty: true }))]]],
+      ["Calories, 30 days picked", "Shown only with answer 101 a. Thin bars, dates at both ends, the same gaps and today's outline (no “so far” word here: no room; the line under the chart says it).",
+        (t) => [["NEW", shortPhone(t, "new", kcalCard({ days: 30, switchOn: true }))]]],
+      ["Calories, no food logged yet (empty) and no calorie target", "Empty: the frame and the words; Open Diet. No target (intake answer \"protein only\"): no dashed line, Target says None.",
+        (t) => [["NEW empty", shortPhone(t, "new", kcalCard({ empty: true }))], ["NEW no target", shortPhone(t, "new", kcalCard({ noTarget: true }))]]],
+      ["Error", "If the food box on the phone can not be read, the Calories card shows the app's usual error card in its place: \"Food data could not be read. Your food log is not changed.\" The weight card is not affected. Not drawn: it uses the existing error card.", () => []],
+    ];
+    host.replaceChildren(...rows.map(([title, words, make]) => {
+      const items = [...make("dark"), ...make("light").map(([l, p]) => [`${l} · light`, p])];
+      return el("div", {}, el("h3", { class: "pg" }, title), el("p", { class: "meta" }, words),
+        items.length ? el("div", { class: "pair" }, items.map(([l, p]) => el("div", { class: "col" }, el("div", { class: "lbl" }, l.includes("light") ? l : `${l} · dark`), p))) : null);
+    }));
+  }
+
+  document.getElementById("qtoggle").addEventListener("click", (e) => {
+    state.show = !state.show;
+    e.currentTarget.setAttribute("aria-pressed", String(state.show));
+    e.currentTarget.textContent = qLabel();
+    document.getElementById("qstatus").textContent = state.show ? "Pink circles mark what each question is about (scroll inside the phones too). Tap a circle to jump to its question." : "The questions are hidden, so you see the screens first.";
+    document.body.classList.toggle("hidden-q", !state.show);
+    setTimeout(place, 0);
+  });
+  document.addEventListener("click", async (e) => {
+    const b = e.target.closest(".qcard button");
+    if (!b) return;
+    const key = b.dataset.key, val = b.dataset.val, n = key.slice(1);
+    state[key] = val; picked[key] = val;
+    document.getElementById("qtoggle").textContent = qLabel();
+    savedText[key] = db ? "Saving…" : "Picked on this screen only (saving is not available here).";
+    render();
+    if (!db) return;
+    try {
+      await db.doc(`answers/${key}`).set({ pick: val, at: new Date().toISOString(), version: "v4" });
+      const back = await db.doc(`answers/${key}`).get();
+      savedText[key] = back.exists && back.data().pick === val ? `Saved: ${n} ${val}` : "Not saved. Try again.";
+    } catch { savedText[key] = "Not saved. Try again."; }
+    const s = document.getElementById(`saved${n}`); if (s) s.textContent = savedText[key];
+  });
+  document.getElementById("pick").addEventListener("click", async (e) => {
+    const b = e.target.closest("button[data-pick]"); if (!b) return;
+    document.querySelectorAll("#pick button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    const out = document.getElementById("picksaved");
+    if (!db) { out.textContent = "Picked on this screen only (saving is not available here)."; return; }
+    try { await db.doc("picks/progress").set({ pick: b.dataset.pick, at: new Date().toISOString(), version: "v4" }); out.textContent = "Saved."; }
+    catch { out.textContent = "Not saved. Try again."; }
+  });
+  window.addEventListener("resize", () => setTimeout(place, 0));
+
+  render();
+  (async () => {
+    try {
+      db = window.claude ? await window.claude.use("db") : null;
+      if (!db) return;
+      for (const x of QS) {
+        const s = await db.doc(`answers/${x.key}`).get();
+        if (s.exists && ["a", "b"].includes(s.data().pick)) { state[x.key] = s.data().pick; picked[x.key] = s.data().pick; savedText[x.key] = `Saved: ${x.n} ${s.data().pick}`; }
+      }
+      document.getElementById("qtoggle").textContent = qLabel();
+      const p = await db.doc("picks/progress").get();
+      if (p.exists) document.querySelectorAll("#pick button").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.pick === p.data().pick)));
+      render();
+    } catch { /* the page works without saving */ }
+  })();
+})();
+</script>
