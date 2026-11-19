@@ -49,6 +49,10 @@ test("O1 the five offers of D18: machine check, the confirmed exercise now, the 
     ["seated_row", "seated_cable_row", "seated_row_machine"],
     ["ab_crunch", "weighted_crunch", "ab_crunch_machine"],
     ["pec_deck", "face_pull", "reverse_pec_deck"],
+    // D20 (0.7.8): the abs offers on Tuesday and Friday A2 (tests/v078-d20.test.mjs D20-5)
+    ["captain_chair", "reverse_crunch", "captain_chair_knee_raise"],
+    ["ab_bench", "reverse_crunch", "decline_bench_crunch"],
+    ["ab_crunch", "reverse_crunch", "ab_crunch_machine"],
   ]);
 });
 
@@ -59,7 +63,7 @@ test("O2 the rule: an offer only when the check says yes, on the days and places
   assert.deepEqual(at("tue", all), ["A2:ab_crunch_machine", "B2:reverse_pec_deck"]);
   assert.deepEqual(at("wed", all), ["B1:lat_pulldown_machine"]);
   assert.deepEqual(at("thu", all), ["A2:seated_row_machine", "B2:reverse_pec_deck", "D:leg_curl_machine"]);
-  assert.deepEqual(at("fri", all), []);
+  assert.deepEqual(at("fri", all), ["A2:ab_crunch_machine"]); // D20 (0.7.8): Friday A2 (reverse crunch) gets the ab crunch offer
   for (const v of [undefined, null, false]) assert.deepEqual(at("thu", { leg_curl: v, seated_row: v, pec_deck: v }), [], `check ${v}`);
   const [first] = machineOffers("thu", null, { extra_machines: all }, {});
   assert.deepEqual(at("thu", all, { [first.key]: "kept" }), ["B2:reverse_pec_deck", "D:leg_curl_machine"], "a Keep is final");
@@ -192,6 +196,8 @@ function freshEditedTuesday() {
   const doc = store.load();
   doc.plan_days = [{ id: "p-plan-v2-tue", updated_at: "2026-02-01T10:00:00.000Z", plan_id: "plan-v2", day: "tue", slots: OLD_TUE.map(([slot, ex, sets, rest]) => ({ slot, ex, sets, rest })) }];
   store.save(doc);
+  // D20 answer 3 (0.7.8): the D18 card shows after the D20 card; these tests are about the D18 card, so D20 is answered.
+  store.saveDevice({ machine_offers: { "tue:D20:plan": "kept" } });
 }
 const d18Cards = (p) => p.querySelectorAll(".card").filter((c) => c.textContent.startsWith("The plan now uses simpler machines"));
 
@@ -199,18 +205,21 @@ test("U1 an edited Tuesday with old exercises shows the offer in the trainer's w
   freshEditedTuesday();
   const cards = d18Cards(openDay("tue"));
   assert.equal(cards.length, 1);
-  assert.match(cards[0].textContent, /The plan now uses simpler machines on Tuesday\. Use them in your edited Tuesday\?/);
-  assert.match(cards[0].textContent, /Hip thrust → Hip thrust machine/);
-  assert.ok(button(cards[0], "Use them") && button(cards[0], "Keep mine"));
-  assert.equal(model.effectivePlanDay("tue").slots.find((s) => s.slot === "C1").ex, "hip_thrust");
+  // D20 answer 3 (0.7.8): only C2 is left on the D18 card (was Hip thrust → Hip thrust machine), one place: "Use it".
+  assert.match(cards[0].textContent, /The plan now uses simpler machines on Tuesday\. Use it in your edited Tuesday\?/);
+  assert.match(cards[0].textContent, /Dead bug → Plank/);
+  assert.doesNotMatch(cards[0].textContent, /Hip thrust → Hip thrust machine/);
+  assert.ok(button(cards[0], "Use it") && button(cards[0], "Keep mine"));
+  assert.equal(model.effectivePlanDay("tue").slots.find((s) => s.slot === "C2").ex, "dead_bug");
   assert.equal(d18Cards(openDay("fri")).length, 0, "Friday is the plan's own day: no offer");
 });
 
-test("U2 Use them: the three old exercises become the new ones; the edited sets stay; asked once", () => {
+test("U2 Use it: the old exercise left on the D18 card becomes the new one; the edited sets stay; asked once", () => {
   freshEditedTuesday();
-  button(d18Cards(openDay("tue"))[0], "Use them").click();
+  button(d18Cards(openDay("tue"))[0], "Use it").click();
   const eff = model.effectivePlanDay("tue");
-  assert.deepEqual(eff.slots.map((s) => [s.slot, s.ex, s.sets]), [["A1", "leg_press", 4], ["A2", "weighted_crunch", 3], ["B1", "romanian_deadlift", 3], ["B2", "face_pull", 3], ["C1", "booty_builder_hip_thrust", 3], ["C2", "plank", 3], ["D", "leg_extension", 3]]);
+  // D20 answer 3 (0.7.8): only C2 (A2 and C1 were weighted_crunch and booty_builder_hip_thrust; they are the D20 card's).
+  assert.deepEqual(eff.slots.map((s) => [s.slot, s.ex, s.sets]), [["A1", "leg_press", 4], ["A2", "cable_crunch", 3], ["B1", "romanian_deadlift", 3], ["B2", "face_pull", 3], ["C1", "hip_thrust", 3], ["C2", "plank", 3], ["D", "leg_extension", 3]]);
   assert.equal(eff.edited, true, "still Rosario's edited Tuesday (leg press 4 sets)");
   assert.equal(d18Cards(openDay("tue")).length, 0);
 });

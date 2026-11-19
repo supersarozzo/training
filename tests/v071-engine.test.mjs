@@ -133,6 +133,7 @@ test("B2-1 the big lifts list is the trainer's", () => {
     "pulldown", "lat_pulldown_machine", "one_arm_db_row", "seated_cable_row", "seated_row_machine", "leg_press", "smith_squat", "goblet_squat",
     "hip_thrust", "db_glute_bridge", "romanian_deadlift",
     "booty_builder_hip_thrust", // trainer D18 (0.7.5): the hip thrust machine takes the hip thrust's place and its warm-up sets
+    "smith_split_squat", // trainer D20 (0.7.8): the split squat takes the hip thrust machine's place and its warm-up sets
   ].sort());
 });
 

@@ -259,6 +259,7 @@ test("machine ids are fixed: a rename would orphan saved notes, so it must fail 
     "treadmill", "chest_press", "shoulder_press", "leg_press", "leg_extension", "cable_station", "smith_machine",
     "hip_thrust", "dumbbells_bench", "mat_area", "lat_pulldown", "seated_row", "leg_curl", "pec_deck", "calf_raise",
     "booty_builder", "ab_crunch", // appended by trainer D18 (0.7.5); the ids above never change
+    "captain_chair", "ab_bench", // appended by trainer D20 (0.7.8)
   ]);
   assert.ok(Object.isFrozen(MACHINE_IDS));
   for (const id of MACHINE_IDS) assert.match(id, /^[a-z0-9_]{1,50}$/);

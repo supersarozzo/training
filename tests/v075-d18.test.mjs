@@ -21,6 +21,13 @@ import { validDoc } from "./fixtures/profiles.mjs";
 const NEW_IDS = ["booty_builder_hip_thrust", "weighted_crunch", "ab_crunch_machine", "reverse_pec_deck"];
 const OLD_IDS = ["hip_thrust", "cable_crunch", "dead_bug", "calf_raise_standing"];
 const row = (d) => days[d].slots.map((s) => [s.slot, s.ex, s.sets, s.rest]);
+// Tuesday and Friday as D18 left them (0.7.5 to 0.7.7). Trainer D20 (0.7.8) changed Tuesday A2 and C1 and Friday B1 again
+// (tests/v078-d20.test.mjs D20-1 locks the days now); D18's own checks below read these.
+const AFTER_D18 = {
+  tue: [["A1", "leg_press", 3, null], ["A2", "weighted_crunch", 3, 90], ["B1", "romanian_deadlift", 3, null], ["B2", "face_pull", 3, 90], ["C1", "booty_builder_hip_thrust", 3, null], ["C2", "plank", 3, 75], ["D", "leg_extension", 3, 60]],
+  fri: [["A1", "smith_squat", 3, null], ["A2", "reverse_crunch", 3, 90], ["B1", "booty_builder_hip_thrust", 3, null], ["B2", "lateral_raise", 3, 75], ["C1", "cable_pull_through", 3, null], ["C2", "side_plank", 2, 60], ["D", "calf_raise_leg_press", 3, 60]],
+};
+const d18Row = (d) => AFTER_D18[d] ?? row(d);
 
 // Tuesday and Friday before D18 (0.7.4), as the trainer kept them in tests/trainer-plan.test.mjs before this change.
 const BEFORE = {
@@ -37,11 +44,14 @@ const UNCHANGED = {
 // ---------- D18-1 the five day changes ----------
 
 test("D18-1 the five day changes: Tuesday A2, C1, C2 and Friday B1, D; sets and rest unchanged on every slot", () => {
-  assert.deepEqual(row("tue"), [
+  // D20 (0.7.8): the places D18 changed and D20 did not still hold D18's exercise; the others are D20's (D20-1).
+  assert.equal(row("tue").find((r) => r[0] === "C2")[1], "plank");
+  assert.equal(row("fri").find((r) => r[0] === "D")[1], "calf_raise_leg_press");
+  assert.deepEqual(d18Row("tue"), [
     ["A1", "leg_press", 3, null], ["A2", "weighted_crunch", 3, 90], ["B1", "romanian_deadlift", 3, null], ["B2", "face_pull", 3, 90],
     ["C1", "booty_builder_hip_thrust", 3, null], ["C2", "plank", 3, 75], ["D", "leg_extension", 3, 60],
   ]);
-  assert.deepEqual(row("fri"), [
+  assert.deepEqual(d18Row("fri"), [
     ["A1", "smith_squat", 3, null], ["A2", "reverse_crunch", 3, 90], ["B1", "booty_builder_hip_thrust", 3, null], ["B2", "lateral_raise", 3, 75],
     ["C1", "cable_pull_through", 3, null], ["C2", "side_plank", 2, 60], ["D", "calf_raise_leg_press", 3, 60],
   ]);
@@ -70,7 +80,7 @@ function fractionalSets(dayRows, week) {
 
 test("D18-2 every muscle, every week 1-12: the fractional sets per muscle are the same before and after", () => {
   const before = { ...UNCHANGED, ...BEFORE };
-  const now = Object.fromEntries(DAY_IDS.map((d) => [d, row(d)]));
+  const now = Object.fromEntries(DAY_IDS.map((d) => [d, d18Row(d)])); // D20 (0.7.8): D18's days; D20-2 checks D20's own change
   for (let week = 1; week <= 12; week++) {
     const a = fractionalSets(before, week);
     const b = fractionalSets(now, week);
@@ -218,7 +228,7 @@ test("D18-4 a saved Plan edit naming hip_thrust (and the other old ids) still us
   assert.deepEqual(eff.slots.map((s) => s.ex), BEFORE.tue.map((r) => r[1]));
   // Only C1 swapped back to the old hip thrust: the rest of the day is the new plan's.
   const one = { ...record, slots: row("tue").map(([slot, ex, sets, rest]) => ({ slot, ex: slot === "C1" ? "hip_thrust" : ex, sets, rest })) };
-  assert.deepEqual(effectiveDay("tue", one).slots.map((s) => s.ex), ["leg_press", "weighted_crunch", "romanian_deadlift", "face_pull", "hip_thrust", "plank", "leg_extension"]);
+  assert.deepEqual(effectiveDay("tue", one).slots.map((s) => s.ex), ["leg_press", "reverse_crunch", "romanian_deadlift", "face_pull", "hip_thrust", "plank", "leg_extension"]); // D20 (0.7.8): A2 is the plan's reverse crunch now
   assert.equal(planForDay("tue", 3, "full", one).slots.find((s) => s.slot === "C1").ex, "hip_thrust");
   // The Friday edit too.
   const fri = { id: planDayId("fri"), updated_at: "2026-02-01T10:00:00.000Z", plan_id: "plan-v2", day: "fri", slots: BEFORE.fri.map(([slot, ex, sets, rest]) => ({ slot, ex, sets, rest: slot === "D" ? 90 : rest })) };
@@ -227,7 +237,10 @@ test("D18-4 a saved Plan edit naming hip_thrust (and the other old ids) still us
 
 test("B-2 the plan's own pick: the old hip thrust is offered back on the slot it left", () => {
   assert.ok(planSwapChoices("tue", "C1", null, {}).includes("hip_thrust"));
-  assert.ok(planSwapChoices("tue", "A2", null, {}).includes("cable_crunch"));
+  // D20 (0.7.8): Tuesday A2 is the reverse crunch, whose swaps (trainer D20) offer the crunch with a dumbbell, which
+  // offers the cable crunch.
+  assert.ok(planSwapChoices("tue", "A2", null, {}).includes("weighted_crunch"));
+  assert.ok(exercises.weighted_crunch.swaps.some((s) => s.id === "cable_crunch"));
   assert.ok(planSwapChoices("tue", "C2", null, {}).includes("dead_bug"));
   assert.ok(planSwapChoices("fri", "D", null, {}).includes("calf_raise_standing"));
 });
@@ -248,10 +261,10 @@ test("D18-5 ab crunch machine and reverse pec deck are hidden unless the first-v
 });
 
 test("D18-5 the new first-visit check 'ab_crunch': appended to the checks, the defaults, the machine ids and the cards", () => {
-  assert.deepEqual(extraMachines, ["lat_pulldown", "seated_row", "leg_curl", "pec_deck", "calf_raise", "ab_crunch"]);
+  assert.deepEqual(extraMachines.slice(0, 6), ["lat_pulldown", "seated_row", "leg_curl", "pec_deck", "calf_raise", "ab_crunch"]); // D20 (0.7.8) appended two more
   assert.deepEqual(Object.keys(defaultSettings().extra_machines), extraMachines);
   assert.equal(defaultSettings().extra_machines.ab_crunch, null, "not checked yet");
-  assert.deepEqual(MACHINE_IDS.slice(-2), ["booty_builder", "ab_crunch"], "new gym-spot ids are appended, never renamed");
+  assert.deepEqual(MACHINE_IDS.slice(15, 17), ["booty_builder", "ab_crunch"], "new gym-spot ids are appended, never renamed"); // D20 (0.7.8) appended two more after them
   assert.equal(machines.ab_crunch.check, "ab_crunch");
   assert.equal(machines.booty_builder.check, undefined, "the Booty Builder is confirmed by the gym's website: no check");
   // A document from before 0.7.5 (no ab_crunch key) still passes and reads as "not checked".
@@ -341,7 +354,7 @@ test("D18-7 tests/trainer-plan.test.mjs locks the new days and knows the four ne
   const { readFileSync } = await import("node:fs");
   const src = readFileSync(new URL("./trainer-plan.test.mjs", import.meta.url), "utf8");
   for (const id of NEW_IDS) assert.ok(src.includes(`"${id}"`), `trainer 1 lists ${id}`);
-  assert.ok(src.includes('["A2", "weighted_crunch", 3, 90]'), "KEPT_DAYS has the new Tuesday");
+  assert.ok(src.includes('["C2", "plank", 3, 75]'), "KEPT_DAYS has D18's Tuesday C2"); // D20 (0.7.8) changed Tuesday A2 again (D20-9)
   assert.ok(src.includes('["D", "calf_raise_leg_press", 3, 60]]'), "KEPT_DAYS has the new Friday D");
 });
 
@@ -383,8 +396,9 @@ test("A-3 a saved Tuesday or Friday edit still holding old D18 exercises gets on
   const tue = recordOf("tue", BEFORE.tue.map((r) => (r[0] === "A1" ? ["A1", r[1], 4, r[3]] : r)));
   const o = d18Offer("tue", tue, {});
   assert.equal(o.key, "tue:D18:plan");
-  assert.deepEqual(o.swaps, [{ slot: "A2", from: "cable_crunch", to: "weighted_crunch" }, { slot: "C1", from: "hip_thrust", to: "booty_builder_hip_thrust" }, { slot: "C2", from: "dead_bug", to: "plank" }]);
-  assert.deepEqual(d18Offer("fri", recordOf("fri", BEFORE.fri), {}).swaps.map((s) => s.slot), ["B1", "D"]);
+  // D20 answer 3 (0.7.8): A2 and C1 (and Friday B1) belong to the D20 card now; the D18 card keeps its other places.
+  assert.deepEqual(o.swaps, [{ slot: "C2", from: "dead_bug", to: "plank" }]);
+  assert.deepEqual(d18Offer("fri", recordOf("fri", BEFORE.fri), {}).swaps.map((s) => s.slot), ["D"]);
   assert.equal(d18Offer("tue", tue, { "tue:D18:plan": "kept" }), null, "Keep mine is final");
   assert.equal(d18Offer("tue", tue, { "tue:D18:plan": "used" }), null);
   assert.equal(d18Offer("tue", null, {}), null, "the plan's own Tuesday: nothing to offer");
@@ -394,10 +408,13 @@ test("A-3 a saved Tuesday or Friday edit still holding old D18 exercises gets on
   assert.equal(d18Offer("tue", { ...tue, slots: [{ slot: "Z9", ex: "plank", sets: 1, rest: 30 }] }, {}), null, "a record from a newer app");
   // Only the slots still holding the old exercise; a slot swapped to something else by Rosario is left alone.
   const mixed = recordOf("tue", BEFORE.tue.map((r) => (r[0] === "C1" ? ["C1", "db_glute_bridge", 3, null] : r)));
-  assert.deepEqual(d18Offer("tue", mixed, {}).swaps.map((s) => s.slot), ["A2", "C2"]);
+  assert.deepEqual(d18Offer("tue", mixed, {}).swaps.map((s) => s.slot), ["C2"]); // D20 answer 3 (0.7.8): was A2, C2
   // A new exercise already elsewhere in the day (an added plank): that slot cannot change, the others still can.
+  // D20 answer 3 (0.7.8): C2 was the only D18 place left on Tuesday, so no D18 card at all (was A2, C1).
   const withPlank = recordOf("tue", [...BEFORE.tue, ["E1", "plank", 3, 60]]);
-  assert.deepEqual(d18Offer("tue", withPlank, {}).swaps.map((s) => s.slot), ["A2", "C1"]);
+  assert.equal(d18Offer("tue", withPlank, {}), null);
+  const friPlank = recordOf("fri", BEFORE.fri.map((r) => (r[0] === "B1" ? ["B1", "db_glute_bridge", 3, null] : r)));
+  assert.deepEqual(d18Offer("fri", friPlank, {}).swaps.map((s) => s.slot), ["D"], "a place swapped by Rosario is left alone, the other still offered");
 });
 
 test("A-4 Use them: only those slots change; Rosario's sets and rest stay", () => {
@@ -405,8 +422,9 @@ test("A-4 Use them: only those slots change; Rosario's sets and rest stay", () =
   const tue = recordOf("tue", rows);
   const out = withD18(tue.slots, d18Offer("tue", tue, {}).swaps);
   assert.deepEqual(out.map((s) => [s.slot, s.ex, s.sets, s.rest]), [
-    ["A1", "leg_press", 4, null], ["A2", "weighted_crunch", 3, 90], ["B1", "romanian_deadlift", 3, null], ["B2", "face_pull", 3, 90],
-    ["C1", "booty_builder_hip_thrust", 3, null], ["C2", "plank", 2, 60], ["D", "leg_extension", 3, 60],
+    // D20 answer 3 (0.7.8): A2 and C1 stay for the D20 card (were weighted_crunch and booty_builder_hip_thrust).
+    ["A1", "leg_press", 4, null], ["A2", "cable_crunch", 3, 90], ["B1", "romanian_deadlift", 3, null], ["B2", "face_pull", 3, 90],
+    ["C1", "hip_thrust", 3, null], ["C2", "plank", 2, 60], ["D", "leg_extension", 3, 60],
   ]);
   assert.deepEqual(tue.slots.map((s) => s.ex), BEFORE.tue.map((r) => r[1]), "the record itself is not changed by the pure call");
 });

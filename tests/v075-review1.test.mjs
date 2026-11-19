@@ -85,18 +85,34 @@ test("R3 a machine offer tapped after a sync changed that place: nothing is repl
   assert.equal(cardsStarting(page(), /^The gym has a leg curl machine/).length, 0);
 });
 
-test("R4 the D18 card tapped after a sync changed one place: only the places that still hold the old exercise change", () => {
+// D20 answer 3 (0.7.8): Tuesday A2 and C1 of a day edited before 0.7.5 are offered by the D20 card now (it shows first),
+// so this check runs on that card: the same re-check at the tap. C2 is the D18 card's, which comes after.
+test("R4 the plan card tapped after a sync changed one place: only the places that still hold the old exercise change", () => {
   fresh();
   const doc = store.load(); doc.plan_days = [rec("tue", OLD_TUE.map((s) => ({ ...s })))]; store.save(doc);
-  const card = cardsStarting(openDay("tue"), /^The plan now uses simpler machines/)[0];
+  const card = cardsStarting(openDay("tue"), /^The plan now uses the Smith machine split squat/)[0];
   assert.ok(card);
   model.savePlanDay("tue", withSwap(model.effectivePlanDay("tue").slots, "C1", "db_glute_bridge"));
   button(card, "Use them").click();
   const eff = model.effectivePlanDay("tue").slots;
   assert.deepEqual(eff.map((s) => [s.slot, s.ex, s.sets]), [
-    ["A1", "leg_press", 4], ["A2", "weighted_crunch", 3], ["B1", "romanian_deadlift", 3], ["B2", "face_pull", 3],
-    ["C1", "db_glute_bridge", 3], ["C2", "plank", 3], ["D", "leg_extension", 3],
+    ["A1", "leg_press", 4], ["A2", "reverse_crunch", 3], ["B1", "romanian_deadlift", 3], ["B2", "face_pull", 3],
+    ["C1", "db_glute_bridge", 3], ["C2", "dead_bug", 3], ["D", "leg_extension", 3],
   ]);
+});
+
+// Auditor 0.7.8: the D18 card's own re-check, now that R4 runs on the D20 card. A sync changes its one place (C2): Use it
+// changes nothing and says so.
+test("R4b the D18 card tapped after a sync changed its place: nothing is swapped, Rosario's newer choice stays", () => {
+  fresh();
+  const doc = store.load(); doc.plan_days = [rec("tue", OLD_TUE.map((s) => ({ ...s })))]; store.save(doc);
+  store.saveDevice({ machine_offers: { "tue:D20:plan": "kept" } });
+  const card = cardsStarting(openDay("tue"), /^The plan now uses simpler machines/)[0];
+  assert.ok(card);
+  model.savePlanDay("tue", withSwap(model.effectivePlanDay("tue").slots, "C2", "side_plank"));
+  button(card, "Use it").click();
+  assert.equal(exOf("tue", "C2").ex, "side_plank", "the newer choice is not replaced");
+  assert.ok(toasts().some((t) => /Tuesday changed meanwhile/.test(t)), toasts().join(" | "));
 });
 
 test("R5 a full phone: the offer answer fails quietly (the tap still works), nothing thrown", () => {
@@ -166,7 +182,7 @@ test("R11 Rosario swaps Tuesday C1 back to the hip thrust on 0.7.5: no D18 card 
   openDay("tue");
   planedit.openSwapSheet("tue", 3, "C1");
   const sh = body.querySelector("[data-sheet]");
-  sh.querySelectorAll("button").find((b) => /^Swap Hip thrust machine for Hip thrust[ .(]/.test(b.getAttribute("aria-label") ?? "")).click();
+  sh.querySelectorAll("button").find((b) => /^Swap Smith machine split squat for Hip thrust(?! machine)[ .(]/.test(b.getAttribute("aria-label") ?? "")).click(); // D20 (0.7.8): C1 is the split squat now
   assert.equal(exOf("tue", "C1").ex, "hip_thrust");
   assert.equal(cardsStarting(openDay("tue"), /^The plan now uses simpler machines/).length, 0);
 });

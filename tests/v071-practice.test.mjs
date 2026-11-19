@@ -155,7 +155,7 @@ const woman = { intake: intake({ q22_sex: "female" }) };
 const noSettings = { dumbbell_steps_kg: [], stack_step_kg: {} };
 
 test("D12-6 every weighted exercise has a first-try value; bodyweight and timed have none", () => {
-  assert.equal(weighted.length, 39); // 35 + 4 from trainer D18 (0.7.5): hip thrust machine, crunch with a dumbbell, ab crunch machine, reverse pec deck
+  assert.equal(weighted.length, 41); // 35 + 4 from trainer D18 (0.7.5): hip thrust machine, crunch with a dumbbell, ab crunch machine, reverse pec deck; + 2 from D20 (0.7.8): Smith machine split squat, dumbbell step-up
   for (const id of weighted) assert.ok(plan.firstTryKg[id] > 0, id);
   for (const id of Object.keys(plan.firstTryKg)) assert.ok(weighted.includes(id), `${id} is a weighted exercise`);
   assert.equal(plan.firstTryKg.chest_press, 20);

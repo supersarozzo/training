@@ -365,6 +365,42 @@
         "shoulders"
       ],
       "secondaryMuscles": []
+    },
+    "Smith_Single-Leg_Split_Squat": {
+      "name": "Smith Single-Leg Split Squat",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings"
+      ]
+    },
+    "Dumbbell_Step_Ups": {
+      "name": "Dumbbell Step Ups",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings"
+      ]
+    },
+    "Knee_Hip_Raise_On_Parallel_Bars": {
+      "name": "Knee/Hip Raise On Parallel Bars",
+      "primaryMuscles": [
+        "abdominals"
+      ],
+      "secondaryMuscles": []
+    },
+    "Decline_Crunch": {
+      "name": "Decline Crunch",
+      "primaryMuscles": [
+        "abdominals"
+      ],
+      "secondaryMuscles": []
     }
   }
 }

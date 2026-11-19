@@ -20,10 +20,10 @@ const SECTION_6 = {
   ],
   tue: [
     ["A1", "leg_press", 3, [10, 12], null, ["smith_squat"]],
-    ["A2", "weighted_crunch", 3, [10, 15], 90, ["ab_crunch_machine", "cable_crunch", "reverse_crunch"]], // D18: was cable_crunch
+    ["A2", "reverse_crunch", 3, [10, 15], 90, ["captain_chair_knee_raise", "decline_bench_crunch", "ab_crunch_machine", "weighted_crunch", "dead_bug"]], // D20 (0.7.8): was weighted_crunch (D18), cable_crunch before
     ["B1", "romanian_deadlift", 3, [8, 12], null, ["cable_pull_through"]],
     ["B2", "face_pull", 3, [12, 15], 90, ["rear_delt_raise", "reverse_pec_deck"]], // D18: reverse pec deck if the gym has a pec deck
-    ["C1", "booty_builder_hip_thrust", 3, [8, 12], null, ["hip_thrust", "db_glute_bridge"]], // D18: was hip_thrust
+    ["C1", "smith_split_squat", 3, [8, 12], null, ["db_step_up", "booty_builder_hip_thrust", "hip_thrust"]], // D20 (0.7.8): was booty_builder_hip_thrust (D18), hip_thrust before
     ["C2", "plank", 3, [20, 40], 75, ["dead_bug"]], // D18: was dead_bug
     ["D", "leg_extension", 3, [12, 15], 60, ["goblet_squat"]],
   ],
@@ -49,8 +49,8 @@ const SECTION_6 = {
   ],
   fri: [
     ["A1", "smith_squat", 3, [8, 12], null, ["leg_press"]],
-    ["A2", "reverse_crunch", 3, [10, 15], 90, ["dead_bug"]],
-    ["B1", "booty_builder_hip_thrust", 3, [8, 12], null, ["hip_thrust", "db_glute_bridge"]], // D18: was hip_thrust
+    ["A2", "reverse_crunch", 3, [10, 15], 90, ["captain_chair_knee_raise", "decline_bench_crunch", "ab_crunch_machine", "weighted_crunch", "dead_bug"]], // D20 (0.7.8): new swaps
+    ["B1", "smith_split_squat", 3, [8, 12], null, ["db_step_up", "booty_builder_hip_thrust", "hip_thrust"]], // D20 (0.7.8): was booty_builder_hip_thrust (D18), hip_thrust before
     ["B2", "lateral_raise", 3, [12, 15], 75, ["cable_lateral_raise"]],
     ["C1", "cable_pull_through", 3, [12, 15], null, ["romanian_deadlift", "leg_curl_machine"]],
     ["C2", "side_plank", 2, [15, 30], 60, ["plank"]],
@@ -159,7 +159,7 @@ test("every swap points to a real exercise; Q17 swaps name a known machine", () 
     }
   }
   const needing = Object.values(exercises).flatMap((e) => e.swaps.filter((s) => s.needsMachine).map((s) => s.needsMachine));
-  assert.deepEqual([...new Set(needing)].sort(), ["ab_crunch", "calf_raise", "lat_pulldown", "leg_curl", "pec_deck", "seated_row"]); // ab_crunch, pec_deck: trainer D18 (0.7.5)
+  assert.deepEqual([...new Set(needing)].sort(), ["ab_bench", "ab_crunch", "calf_raise", "captain_chair", "lat_pulldown", "leg_curl", "pec_deck", "seated_row"]); // ab_crunch, pec_deck: trainer D18 (0.7.5); ab_bench, captain_chair: D20 (0.7.8)
 });
 
 test("every exercise has a form cue and every plan exercise appears in a day", () => {

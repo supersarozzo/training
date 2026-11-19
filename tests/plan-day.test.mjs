@@ -72,7 +72,7 @@ test("daySoFar at the first card counts only that card; at the last card it is t
   const last = daySoFar("tue", 3, "D");
   assert.equal(last.position, 7);
   assert.deepEqual(last.weighted, setsByMuscle(daySets("tue", 3)).weighted);
-  assert.equal(last.weighted.quads, 6); // leg press 3 + leg extension 3
+  assert.equal(last.weighted.quads, 7.5); // leg press 3 + leg extension 3 + split squat 3 as a helper (D20, 0.7.8)
   assert.equal(last.weighted.rear_delts, 3); // face pull
 });
 
@@ -155,7 +155,7 @@ test("slotRole and restTile: the sheet's eyebrow and its Rest tile", () => {
 
 test("neighbours: Previous and Next are the cards before and after, none past the ends", () => {
   const n = neighbours("tue", 3, "B1");
-  assert.equal(n.prev.ex, "weighted_crunch"); // trainer D18 (0.7.5): was cable_crunch
+  assert.equal(n.prev.ex, "reverse_crunch"); // trainer D20 (0.7.8): was weighted_crunch (D18), cable_crunch before
   assert.equal(n.next.ex, "face_pull");
   assert.equal(neighbours("tue", 3, "A1").prev, null);
   assert.equal(neighbours("tue", 3, "D").next, null);

@@ -60,12 +60,13 @@ test("V3 the maths stays right for these labels", () => {
 
 const NONE = { lat_pulldown: null, seated_row: null, leg_curl: null, pec_deck: null, calf_raise: null, ab_crunch: null };
 const OLD_TUE = [["A1", "leg_press", 4, null], ["A2", "cable_crunch", 3, 90], ["B1", "romanian_deadlift", 3, null], ["B2", "face_pull", 3, 90], ["C1", "hip_thrust", 3, null], ["C2", "dead_bug", 3, 75], ["D", "leg_extension", 3, 60]];
-function freshOldTuesday(rows = OLD_TUE, machines = {}) {
+function freshOldTuesday(rows = OLD_TUE, machines = {}, { d20 = "kept" } = {}) {
   const doc = validDoc();
   doc.shared_settings.extra_machines = { ...NONE, ...machines };
   doc.plan_days = [{ id: "p-plan-v2-tue", updated_at: "2026-02-01T10:00:00.000Z", plan_id: "plan-v2", day: "tue", slots: rows.map(([slot, ex, sets, rest]) => ({ slot, ex, sets, rest })) }];
   store.save(doc);
-  store.saveDevice({ token: "made-up" });
+  // D20 answer 3 (0.7.8): the D18 card shows after the D20 card, so the D18 checks start with the D20 card answered.
+  store.saveDevice(d20 ? { token: "made-up", machine_offers: { "tue:D20:plan": d20 } } : { token: "made-up" });
   for (const s of body.querySelectorAll("[data-sheet]")) s.remove();
   for (const t of body.querySelectorAll(".toast")) t.remove();
 }
@@ -88,10 +89,11 @@ test("V4 removing an exercise from an edited 0.7.4 Tuesday does not answer the D
 
 test("V5 removing an added plank (which frees Tuesday C2 for the plank) does not answer the D18 card", () => {
   freshOldTuesday([...OLD_TUE, ["E1", "plank", 3, 60]]);
-  assert.deepEqual(d18Cards(openDay("tue")).length, 1);
+  // D20 answer 3 (0.7.8): C2 is the only D18 place left on Tuesday, and the plank elsewhere blocks it: no card yet (was 1).
+  assert.deepEqual(d18Cards(openDay("tue")).length, 0);
   planedit.removeSlot("tue", "E1");
   assert.ok(unanswered());
-  assert.equal(d18Cards(openDay("tue")).length, 1);
+  assert.equal(d18Cards(openDay("tue")).length, 1, "freed: the card shows, unanswered");
 });
 
 test("V6 a machine offer's Use it on an edited 0.7.4 Tuesday does not answer the D18 card", () => {
@@ -154,18 +156,21 @@ test("V9 a scanned food whose numbers look wrong: one warning line above the Sav
 
 // ---------- round 3 (both reviewers, minor): a place Rosario just put back is never offered back ----------
 
-test("V10 an old Tuesday whose card shows A2 and C2: Rosario swaps C1 back to the hip thrust; the card keeps A2 and C2 only", () => {
-  freshOldTuesday(OLD_TUE.map((r) => (r[0] === "C1" ? ["C1", "db_glute_bridge", 3, null] : r)));
-  assert.equal(d18Cards(openDay("tue")).length, 1);
+// D20 answer 3 (0.7.8): Tuesday A2 and C1 of a day edited before 0.7.5 are the D20 card's now, so the same rule is
+// checked on it (was the D18 card with "Hip thrust → Hip thrust machine" and "Cable crunch → Crunch with a dumbbell").
+const d20Cards = (p) => p.querySelectorAll(".card").filter((c) => c.textContent.startsWith("The plan now uses the "));
+test("V10 an old Tuesday whose D20 card shows A2: Rosario swaps C1 back to the hip thrust; the card keeps A2 only", () => {
+  freshOldTuesday(OLD_TUE.map((r) => (r[0] === "C1" ? ["C1", "db_glute_bridge", 3, null] : r)), {}, { d20: null });
+  assert.equal(d20Cards(openDay("tue")).length, 1);
   planedit.openSwapSheet("tue", 3, "C1");
   const sh = body.querySelector("[data-sheet]");
   sh.querySelectorAll("button").find((b) => /^Swap Dumbbell glute bridge for Hip thrust(\.| \()/.test(b.getAttribute("aria-label") ?? "")).click();
   assert.equal(model.effectivePlanDay("tue").slots.find((s) => s.slot === "C1").ex, "hip_thrust");
-  const card = d18Cards(openDay("tue"))[0];
-  assert.ok(card, "the card still offers the other places");
-  assert.doesNotMatch(card.textContent, /Hip thrust → Hip thrust machine/);
-  assert.match(card.textContent, /Cable crunch → Crunch with a dumbbell/);
-  assert.ok(unanswered(), "the card itself is not answered");
+  const card = d20Cards(openDay("tue"))[0];
+  assert.ok(card, "the card still offers the other place");
+  assert.doesNotMatch(card.textContent, /Hip thrust → Smith machine split squat/);
+  assert.match(card.textContent, /Cable crunch → Reverse crunch/);
+  assert.ok(!Object.hasOwn(readOfferAnswers(store), "tue:D20:plan"), "the card itself is not answered");
 });
 
 test("V11 'Gramm' and kJ labels are weights or energy, not pieces", () => {

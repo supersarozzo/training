@@ -26,12 +26,15 @@ const planIds = [...new Set(Object.values(days).flatMap((d) => d.slots.map((s) =
 const swapOnlyIds = Object.keys(exercises).filter((id) => !planIds.includes(id));
 const allIds = Object.keys(exercises);
 
-test("the plan has 27 exercises in its days and 16 swap-only ones (trainer D18, 0.7.5)", () => {
+test("the plan has 26 exercises in its days and 21 swap-only ones (trainer D20, 0.7.8)", () => {
   // Plan change 2026-11-18: 29 in the days, 10 swap-only. D18: hip thrust, cable crunch, dead bug and Smith standing calf
   // raise leave the days (they stay as swaps); hip thrust machine and crunch with a dumbbell join; plank and calf raise on
   // the leg press were already in the days. Ab crunch machine and reverse pec deck are new swap-only exercises.
-  assert.equal(planIds.length, 27); // 29 - 4 + 2
-  assert.equal(swapOnlyIds.length, 16); // 10 + 4 + 2
+  // D20 (0.7.8): hip thrust machine and crunch with a dumbbell leave the days (they stay as swaps); the Smith machine
+  // split squat joins (the reverse crunch was already in). Dumbbell step-up, captain's chair knee raise and decline abs
+  // bench crunch are new swap-only exercises.
+  assert.equal(planIds.length, 26); // 29 - 4 + 2 (D18), - 2 + 1 (D20)
+  assert.equal(swapOnlyIds.length, 21); // 10 + 4 + 2 (D18), + 2 + 3 (D20)
   for (const id of allIds) for (const s of exercises[id].swaps) assert.ok(exercises[s.id], `${id} swap ${s.id} is a known exercise`);
 });
 
@@ -78,14 +81,16 @@ test("every plan and swap-only exercise has main muscles, helpers and an equipme
 
 test("the equipment class fits how the plan moves the weight", () => {
   const { exerciseMuscles } = mod();
-  const fits = { stack: ["machine", "cable"], dumbbell: ["dumbbell"], bodyweight: ["bodyweight"], "smith_2x2.5": ["smith", "machine"] };
+  // D20 (0.7.8): a body-weight move may use a station ("machine": the captain's chair, trainer D20 data).
+  const fits = { stack: ["machine", "cable"], dumbbell: ["dumbbell"], bodyweight: ["bodyweight", "machine"], "smith_2x2.5": ["smith", "machine"] };
   for (const id of allIds) {
     const allowed = fits[exercises[id].step];
     assert.ok(allowed, `${id}: step ${exercises[id].step} is known`);
     assert.ok(allowed.includes(exerciseMuscles[id].equip), `${id}: step ${exercises[id].step} does not fit "${exerciseMuscles[id].equip}"`);
   }
-  // The machines only a first visit can confirm are machines.
-  for (const id of allIds) for (const s of exercises[id].swaps) if (s.needsMachine) assert.equal(exerciseMuscles[s.id].equip, "machine", s.id);
+  // The machines only a first visit can confirm are machines; D20 (0.7.8): or a body-weight bench the first visit checks
+  // (the decline abs bench, trainer D20 data: equipment class bodyweight).
+  for (const id of allIds) for (const s of exercises[id].swaps) if (s.needsMachine) assert.ok(exerciseMuscles[s.id].equip === "machine" || exercises[s.id].step === "bodyweight", s.id);
 });
 
 test("the reference file holds the free-exercise-db entry of every exercise", () => {
