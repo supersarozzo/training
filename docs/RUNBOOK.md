@@ -116,6 +116,14 @@ Git project: revert the commit (`git revert <commit>`). Nothing outside this fol
 5. Never change a file in `app/` without raising the version: the worker only downloads files again when `sw.js` changes. Never rename the cache prefix `training-`: old caches are found by it.
 6. To replay an update on the computer (as in the 0.7.3 check): a small server that switches between two copies of `app/` and sends `Cache-Control: max-age=600` like GitHub Pages, and headless Chrome driven over its DevTools port. How: docs/checks/2026-11-18-v073-update.md, "How the replay works". Give Chrome a short profile folder (a long Windows path makes its cache fail).
 
+## Rebuilding the built-in UK foods list (0.7.7)
+
+`app/data/uk-foods.json` is made from the UK government's CoFID 2021 Excel file; never edit it by hand.
+1. Download the Excel file from https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid ("McCance and Widdowson's composition of foods integrated dataset", 4.42 MB) into a **new, empty folder outside the project**: it is untrusted data.
+2. Run, from the project folder: `python -I tests/tools/build-uk-foods.py <that folder>/<file>.xlsx app/data/uk-foods.json --report` (`-I`: Python ignores the current folder; standard library only). The script refuses any other file (sha256 check) and checks the column headings.
+3. The same file gives the same list byte for byte; the test UK-1 holds its sha256. A new CoFID release needs a new expected sha256 in the script, a new count and sha256 in UK-1, a new app version and a note in DECISIONS.
+4. The rule (plain foods only, answer 104 a) is in the script: kept groups, left-out name words, "Tr" as 0, rows with "N" or an empty number left out.
+
 ## The update bar does not show (for Rosario)
 
 What this does: gets a new version onto the iPhone without losing anything. Your workouts, food and settings are

@@ -112,6 +112,26 @@ export function averageLast7(doc, today) {
   return { days: list.length, kcal: Math.round(list.reduce((n, d) => n + d.kcal, 0) / list.length), protein_g: Math.round(list.reduce((n, d) => n + d.protein_g, 0) / list.length) };
 }
 
+// 0.7.7, the Progress calories chart: kcal eaten per day for the n days before today and today, oldest first.
+// A day with no live entry is null (a gap on the chart, never a 0); a day with only 0 kcal entries is 0.
+export function dailyKcal(doc, today, n) {
+  const dates = Array.from({ length: n + 1 }, (_, i) => addDays(today, i - n));
+  const want = new Set(dates);
+  const per = new Map();
+  for (const r of doc.food_log ?? []) {
+    if (!liveEntry(r) || !want.has(r.date)) continue;
+    per.set(r.date, (per.get(r.date) ?? 0) + (fin(r.kcal) ? r.kcal : 0));
+  }
+  return dates.map((date) => ({ date, kcal: per.has(date) ? per.get(date) : null, today: date === today }));
+}
+
+// The average kcal of the n days before today, days with food only (the rule of averageLast7). null when there is none.
+export function averageDays(doc, today, n) {
+  const list = dailyKcal(doc, today, n).filter((d) => !d.today && d.kcal !== null);
+  if (!list.length) return null;
+  return { days: list.length, kcal: Math.round(list.reduce((t, d) => t + d.kcal, 0) / list.length) };
+}
+
 // The check step's soft warnings (DESIGN 15.9). They never block saving.
 // The pack size text from Open Food Facts ("450 g", "1 gram"): grams only, else null.
 function packGrams(text) {

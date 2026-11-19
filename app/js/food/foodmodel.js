@@ -7,12 +7,14 @@ import { MEALS, CHECK, validateFoodDoc } from "./foodvalidate.js";
 import { mergeFoodDocs, hasFoodData } from "./foodmerge.js";
 import { cleanText, numbersFor, againAmount, entriesOn, PER100_MAX } from "./foodmath.js";
 import { normalizeBarcode, foodIdFor } from "./barcode.js";
+import { UK_ID } from "./ukfoods.js";
 
 const MAX_AMOUNT = 5000; // grams in one entry
 const QUICK = { kcal: 10000, macro: 1000 };
 const isDate = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
 const fin = (n) => typeof n === "number" && Number.isFinite(n);
 
+const KEPT_SOURCES = ["off", "uk"];
 function need(ok, message) { if (!ok) throw new Error(message); }
 
 function cleanPer100(p) {
@@ -65,7 +67,8 @@ export function createFoodModel(store, clock = () => new Date()) {
       need(b.ok, "That barcode does not look right.");
       barcode = b.code;
     }
-    const id = fields.id && /^fo-\d{8}-[a-z0-9]{6}$/.test(fields.id) ? fields.id : barcode ? foodIdFor(barcode) : newId("fo", clock());
+    // A UK food (0.7.7) keeps its id fu-<CoFID code>: one record on every phone, like a barcode food.
+    const id = fields.id && (/^fo-\d{8}-[a-z0-9]{6}$/.test(fields.id) || UK_ID.test(fields.id)) ? fields.id : barcode ? foodIdFor(barcode) : newId("fo", clock());
     const i = doc.foods.findIndex((r) => r && r.id === id);
     const old = i >= 0 ? doc.foods[i] : {};
     const serving = fields.serving_g === undefined ? old.serving_g ?? null : fields.serving_g;
@@ -80,7 +83,8 @@ export function createFoodModel(store, clock = () => new Date()) {
       serving_label: cleanText(fields.serving_label ?? old.serving_label ?? "", 60) || null,
       last_amount_g: fin(old.last_amount_g) ? old.last_amount_g : null,
       fav: fields.fav === undefined ? old.fav === true : fields.fav === true,
-      source: fields.source === "off" ? "off" : old.source === "off" && fields.source === undefined ? "off" : "own",
+      // "off" (Open Food Facts) and "uk" (the UK food tables, 0.7.7) are kept; anything else is "own".
+      source: KEPT_SOURCES.includes(fields.source) ? fields.source : fields.source === undefined && KEPT_SOURCES.includes(old.source) ? old.source : "own",
       off_fetched_at: fields.off_fetched_at ?? old.off_fetched_at ?? null,
       edited: fields.edited === true || old.edited === true,
     };
@@ -128,7 +132,7 @@ export function createFoodModel(store, clock = () => new Date()) {
         const food = findLive(doc.foods, foodId);
         need(food, "That food was not found.");
         const amount = cleanAmount(amount_g ?? againAmount(food));
-        const entry = makeEntry(t, { date, meal, food: food.id, name: food.name, amount_g: amount, per100g: food.per100g, source: food.source === "off" ? "off" : "own" });
+        const entry = makeEntry(t, { date, meal, food: food.id, name: food.name, amount_g: amount, per100g: food.per100g, source: KEPT_SOURCES.includes(food.source) ? food.source : "own" });
         food.last_amount_g = amount;
         food.updated_at = t;
         doc.food_log.push(entry);

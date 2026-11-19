@@ -12,6 +12,7 @@ import { MEAL_WORDS, mealAt, savedFoods, checkFood, startAmount, cleanText, gram
 import { readMode, withMode, startMode } from "../food/foodmodes.js";
 import { normalizeBarcode, BARCODE_WORDS, foodIdFor } from "../food/barcode.js";
 import { now, today } from "../clock.js";
+import { UK_WORDS, UK_LICENCE_LINK, loadUkFoods, searchUk, ukFields, matchesWords } from "../food/ukfoods.js";
 
 const link = (text, href) => h("a", { href, target: "_blank", rel: "noopener noreferrer" }, text);
 
@@ -19,6 +20,14 @@ const link = (text, href) => h("a", { href, target: "_blank", rel: "noopener nor
 export function creditLine() {
   return h("p", { class: "credit small muted" },
     "Contains data from ", link("Open Food Facts", OFF_CREDIT_LINKS.off), ", available under the ", link("Open Database License", OFF_CREDIT_LINKS.odbl), ".");
+}
+
+// The UK food tables' credit line (0.7.7, Open Government Licence v3.0): on the search sheet, on every sheet of a food
+// from the tables and at the foot of the Diet tab. No endorsement is implied.
+export function ukCreditLine() {
+  return h("p", { class: "credit small muted" },
+    "Contains public sector information licensed under the ", link("Open Government Licence v3.0", UK_LICENCE_LINK),
+    ". Common foods: McCance and Widdowson's Composition of Foods Integrated Dataset 2021, Public Health England.");
 }
 
 const errText = (e) => (e && e.message ? e.message : "That did not work. Nothing was changed.");
@@ -144,23 +153,59 @@ export function openSearch() {
   let q = "";
   let seq = 0;
   const mine = h("div", { class: "foods-mine" });
+  const uk = h("div", { class: "foods-uk" }); // 0.7.7: the built-in UK foods, filtered while typing, offline
+  let ukList = null; // null: still loading; false: did not load
+  let ukAllFor = null; // the word "Show all" was tapped for (a new word shows 8 again)
+  let savedIds = new Set(); // ids of every saved food (not deleted): a UK food you saved is never offered again from the tables
   const online = h("div", { class: "foods-online", "aria-live": "polite" });
   const input = h("input", {
     type: "text", inputmode: "search", enterkeyhint: "search", autocomplete: "off", maxlength: "120",
     placeholder: "Food name or barcode digits", "aria-label": "Food name or barcode digits",
-    oninput: (e) => { q = e.target.value; drawMine(); }, // typing only filters your own foods on this phone
+    oninput: (e) => { q = e.target.value; drawMine(); }, // typing only filters the foods on this phone (yours, the UK list)
   });
   const row = (title, sub, right, onclick) => h("button", { class: "fl", type: "button", onclick },
     h("span", { class: "nm" }, h("b", {}, title), sub ? h("small", { class: "muted" }, sub) : null), h("span", { class: "kc muted small" }, right));
 
   function drawMine() {
     const word = q.trim().toLowerCase();
-    const list = savedFoods(fm.doc()).filter((f) => !word || `${f.name} ${f.brand ?? ""} ${f.barcode ?? ""}`.toLowerCase().includes(word)).slice(0, 30);
+    // 0.7.7: also every typed word at the start of a word, in any order (as the UK foods), so "chick breast" finds a saved
+    // "Chicken, breast, grilled"; the old match (the text anywhere) still works.
+    const all = savedFoods(fm.doc());
+    savedIds = new Set(all.map((f) => f.id));
+    const list = all.filter((f) => {
+      const all = `${f.name} ${f.brand ?? ""} ${f.barcode ?? ""}`;
+      return !word || all.toLowerCase().includes(word) || matchesWords(all, word);
+    }).slice(0, 30);
     mount(mine,
       h("h3", {}, "Your foods (work offline)"),
-      list.length ? list.map((f) => row(f.name, f.brand, `${show(f.per100g.kcal)} kcal / 100 g`, () => openCheck({ mode: "saved", food: f })))
+      list.length ? list.map((f) => row(f.name, f.brand || (f.source === "uk" ? UK_WORDS.sub : null), `${show(f.per100g.kcal)} kcal / 100 g`, () => openCheck({ mode: "saved", food: f })))
         : h("p", { class: "muted small" }, word ? "None of your foods match." : "No saved foods yet. Foods you save show here."));
+    drawUk();
   }
+
+  // The UK foods group: only while a word is typed (never a list of all of them), up to 8 rows, then "Show all N"
+  // (at most 100 shown). A food already in Your foods shows only there.
+  function drawUk() {
+    if (!q.trim()) { mount(uk); return; }
+    if (ukList === null) { mount(uk, h("h3", {}, UK_WORDS.group), h("p", { class: "muted small" }, UK_WORDS.loading)); return; }
+    if (ukList === false) { mount(uk, h("p", { class: "muted small" }, UK_WORDS.failed)); return; }
+    const ukAll = ukAllFor === q;
+    // A UK food you saved is yours (maybe renamed or with a piece weight): it shows only under Your foods, never twice,
+    // and the table row can never overwrite it (review round 1).
+    const res = searchUk(ukList, q, { limit: ukAll ? 100 : 8, exclude: savedIds });
+    if (!res.total) { // the plain line only when the tables have no match at all (not your saved food, not barcode digits)
+      const none = !/^[\d\s-]+$/.test(q) && !searchUk(ukList, q, { limit: 1 }).total;
+      mount(uk, none ? h("p", { class: "muted small" }, "No built-in UK food matches.") : null);
+      return;
+    }
+    mount(uk,
+      h("h3", {}, UK_WORDS.group),
+      res.rows.map((f) => row(f.name, UK_WORDS.sub, `${show(f.per100g.kcal)} kcal / 100 g`, () => openCheck({ mode: "uk", food: f }))),
+      res.total > res.rows.length && !ukAll
+        ? h("button", { class: "text-button", type: "button", onclick: () => { ukAllFor = q; drawUk(); } }, res.total > 100 ? `Show the first 100 of ${res.total}` : `Show all ${res.total}`)
+        : res.total > res.rows.length ? h("p", { class: "muted small" }, `${res.total} foods match. Type more words to find yours.`) : null);
+  }
+  loadUkFoods().then((list) => { ukList = list; }, () => { ukList = false; }).then(() => { if (uk.isConnected) drawUk(); });
 
   async function runSearch() {
     const text = cleanText(q);
@@ -194,28 +239,34 @@ export function openSearch() {
     h("h2", {}, "Your foods"),
     form,
     h("p", { class: "muted small" }, "Search runs when you tap Search. UK products only."),
-    mine, online,
+    mine, uk, online,
     secondaryButton("Make a new food", () => openCheck({ mode: "own", prefill: q.trim() && !/^[\d\s-]+$/.test(q) ? { name: cleanText(q) } : {} })),
-    creditLine());
+    creditLine(),
+    ukCreditLine());
 }
 
 // ---------- The check step ----------
 // mode "off": a product from Open Food Facts (check before saving). "own": a new food. "saved": a food already saved.
+// "uk" (0.7.7): a food from the built-in UK food tables, drawn like a saved food, saved with the id fu-<code>.
 export function openCheck({ mode = "own", product = null, food: rec = null, prefill = {} } = {}) {
-  const src = mode === "off" ? product : mode === "saved" ? rec : prefill;
+  if (mode === "uk" && rec) { // already saved (same fu- id): open your record, never the table numbers over it
+    const mine = savedFoods(fm.doc()).find((f) => f.id === rec.id);
+    if (mine) { mode = "saved"; rec = mine; }
+  }
+  const src = mode === "off" ? product : mode === "saved" ? rec : mode === "uk" ? ukFields(rec) : prefill;
   const text = (v) => (v === null || v === undefined ? "" : String(v));
   const per0 = src.per100g ?? {};
   const st = {
     name: text(src.name), brand: text(src.brand), quantity: text(src.quantity), barcode: text(src.barcode),
     kcal: text(per0.kcal), protein: text(per0.protein_g), carbs: text(per0.carbs_g), fat: text(per0.fat_g),
-    amount: String(startAmount({ serving_g: src.serving_g, last_amount_g: rec ? rec.last_amount_g : null })), meal: mealAt(now()),
+    amount: String(startAmount({ serving_g: src.serving_g, last_amount_g: rec && mode === "saved" ? rec.last_amount_g : null })), meal: mealAt(now()),
   };
   const id = `c${++uid}`;
   const per100g = () => ({ kcal: num(st.kcal), protein_g: num(st.protein), carbs_g: num(st.carbs), fat_g: num(st.fat) });
   const amountG = () => { const a = num(st.amount); return a !== null && a > 0 ? a : null; };
   const edited = () => mode === "off" && (st.name !== text(product.name) || st.kcal !== text(per0.kcal) || st.protein !== text(per0.protein_g) || st.carbs !== text(per0.carbs_g) || st.fat !== text(per0.fat_g));
   const fields = () => ({
-    ...(rec ? { id: rec.id } : {}),
+    ...(rec ? { id: rec.id } : {}), // a UK food: its fu-<code> id
     name: cleanText(st.name), brand: cleanText(st.brand), barcode: st.barcode || undefined, per100g: per100g(),
     ...servingFields(),
     source: mode === "own" ? "own" : (src.source ?? "own"), off_fetched_at: mode === "off" ? product.off_fetched_at : undefined,
@@ -326,12 +377,13 @@ export function openCheck({ mode = "own", product = null, food: rec = null, pref
   drawAmount();
   const amountRow = [seg, amountBox];
 
-  const heading = mode === "off" ? "From Open Food Facts · check before saving" : mode === "saved" ? "Your food" : "Make a new food";
+  const heading = mode === "off" ? "From Open Food Facts · check before saving" : mode === "saved" ? "Your food" : mode === "uk" ? UK_WORDS.heading : "Make a new food";
   // "Your food" and a scanned food (0.7.5, Rosario: "name and details underneath and all the inputs and save button
   // visible by default"): amount, meal and Save first, details under. A new food keeps its order (name and numbers first).
-  const firstAmount = mode === "saved" || mode === "off";
+  const firstAmount = mode === "saved" || mode === "off" || mode === "uk";
   const details = [
     mode === "off" ? h("p", { class: "muted small" }, "Anyone can add products to Open Food Facts, so numbers can be wrong. Compare with the pack. You can change anything.") : null,
+    mode === "uk" ? h("p", { class: "muted small" }, UK_WORDS.line) : null,
     textIn("name", "Name", "120"),
     pack ? h("p", { class: "pack-line muted small" }, pack) : null,
     h("h3", {}, "Per 100 g"),
@@ -349,7 +401,8 @@ export function openCheck({ mode = "own", product = null, food: rec = null, pref
   const close = openSheet(
     h("h2", {}, heading),
     ...(firstAmount ? [...amountAndSave, h("h3", {}, "Food details"), ...details] : [...details, ...amountAndSave]),
-    mode === "off" || (mode === "saved" && rec && rec.source === "off") ? creditLine() : null);
+    mode === "off" || (mode === "saved" && rec && rec.source === "off") ? creditLine() : null,
+    mode === "uk" || (mode === "saved" && rec && rec.source === "uk") ? ukCreditLine() : null);
   refresh();
   return close;
 }

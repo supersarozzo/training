@@ -233,6 +233,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 .row > * { flex: 1; min-width: 0; }
 .metric { margin-bottom: var(--s3); }
 .metric .value { font: 800 30px/1.1 var(--font-display); letter-spacing: -.03em; }
+.metric .value.second { font: 700 20px/1.25 var(--font-display); letter-spacing: -.015em; margin-top: var(--s2); } /* Progress: Trend, Target (mock-up v4) */
 .list-plain { list-style: none; margin: 0; padding: 0; }
 .list-plain li { padding: var(--s3) 0; border-bottom: 1px solid var(--border-default); display: flex; justify-content: space-between; align-items: center; gap: var(--s3); }
 .list-plain li:last-child { border-bottom: 0; }
@@ -452,10 +453,18 @@ input.step-input[type="number"] { height: 56px; border: 0; background: none; pad
 .chart svg { width: 100%; height: auto; display: block; overflow: visible; }
 .chart-grid { stroke: var(--border-default); stroke-width: 1; }
 .chart-text { fill: var(--text-muted); font-size: 12px; font-weight: 600; font-family: var(--font); }
-.chart-line { stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; filter: var(--glow); }
-.chart-area { fill: url(#chart-fill); stroke: none; }
-.chart-fill-top { stop-color: var(--accent); stop-opacity: .28; }
-.chart-fill-bottom { stop-color: var(--accent); stop-opacity: 0; }
+/* 0.7.7 (answer 102 a): the line is 2 px with no glow and no shaded area, as DESIGN.md section 7 says */
+.chart-line { stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart-text.halo { paint-order: stroke; stroke: var(--bg-surface); stroke-width: 4px; stroke-linejoin: round; } /* "so far" stays readable over the target line */
+.chart-text.strong { fill: var(--text-primary); font-weight: 700; }
+.chart-empty-grid { stroke: var(--border-default); stroke-width: 1; }
+/* the calories chart (0.7.7): bars, today as a dashed outline, a gap mark, the target as a dashed line */
+.chart-bar { fill: var(--accent); }
+.chart-today { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 4 3; }
+.chart-gap { stroke: var(--text-muted); stroke-width: 2; stroke-linecap: round; }
+.chart-target { stroke: var(--text-primary); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.chart-legend { margin: var(--s2) 0 0; }
+.metric .unit, .big-number .unit { font-size: 14px; font-weight: 700; }
 .chart-dot { fill: var(--text-muted); }
 .chart-dot-main { fill: var(--accent); }
 .chart-last { fill: var(--accent); stroke: var(--bg-surface); stroke-width: 3; }

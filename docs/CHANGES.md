@@ -2,6 +2,26 @@
 
 What is new in each app version, in plain words. Newest first. Older versions: see `docs/HANDOVER.md` and the git log.
 
+## 0.7.7 · 2026-11-19
+
+A calories chart on Progress, an easier-to-find body weight chart, and built-in UK foods in the Diet search, built by
+chat 8.44. Not live yet.
+
+- **Calories chart on Progress.** One bar per day with the kcal you logged, the daily target as a dashed line, today as
+  a dashed outline ("so far"), and a day with no food left empty (a small dash, never a 0). A switch shows 7 days or
+  30 days. The big number is the average of the days before today with food: the same number Diet shows.
+- **The body weight chart is easier to find.** It is now the first card on Progress, with a real title, the last
+  weigh-in date in words ("18 Nov"), and one line that says what the dots and the line mean. With no weigh-ins it
+  shows an empty chart with "No data yet." inside, instead of one grey line of text.
+- **Plainer chart lines.** All line charts (body weight and exercises) are a plain 2 px line now, with no glow and no
+  shaded area, and at most 4 grid lines.
+- **New order on Progress:** Body weight, Calories, then the workout totals.
+- **Built-in UK foods.** While you type in the food search, "Common UK foods (built in, work offline)" shows plain
+  foods from the UK government's food tables (CoFID 2021): rice, bananas, chicken breast, eggs, porridge oats: about
+  1,400 foods in all, per 100 g. Tap one, set the amount, save: it joins Your foods. It works with no signal.
+- **Your foods also find words in any order:** "chick breast" now finds a saved "Chicken, breast, grilled".
+- **One more credit line** in the food search and at the foot of Diet, as the government licence asks.
+
 ## 0.7.6 · 2026-11-18
 
 The lowest weight (trainer decision D19), safer old versions, and small fixes, built by chat 8.43. Not live yet.

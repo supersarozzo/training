@@ -128,7 +128,10 @@ app/
     food/foodmerge.js    pure merge of two food documents (same pick as merge.js)
     food/foodstore.js    the food box trn.food.v1 (+ trn.foodprev.v1), apart from the workout box
     food/foodmodel.js    create / change / delete food records; saves at once
-    food/foodmath.js     pure: numbers for a portion, totals, meals, recent foods, 7-day average, the check step's warnings
+    food/foodmath.js     pure: numbers for a portion, totals, meals, recent foods, 7-day average, the check step's warnings,
+                         daily kcal and the n-day average for the Progress calories chart (0.7.7)
+    food/ukfoods.js      the built-in UK foods (0.7.7): reads data/uk-foods.json as a JSON module, checks every row,
+                         word-start search, fu-<code> ids; no network address
     food/barcode.js      pure: check digit, clean barcode, fb-<barcode> ids
     food/off.js          Open Food Facts lookup and UK search (only the barcode or the word is sent)
     food/scanner.js      the camera scanner around zxing-wasm (loaded only when it opens)
@@ -264,19 +267,19 @@ Food lives in its **own document**: on the phone in its own box `trn.food.v1` (s
     "name": "…", "brand": "…", "barcode": "5000000000012",
     "per100g": { "kcal": 0, "protein_g": 0, "carbs_g": 0, "fat_g": 0 },
     "serving_g": 0, "serving_label": "…", "last_amount_g": 0,
-    "fav": false, "source": "off | own", "off_fetched_at": "…", "edited": false } ],
+    "fav": false, "source": "off | uk | own", "off_fetched_at": "…", "edited": false } ],
   "food_log": [ {
     "id": "f-20261118-k3f9qz", "updated_at": "…",
     "date": "2026-11-18", "meal": "breakfast | lunch | dinner | snack | null",
-    "food": "fb-… | fo-… | null", "name": "…",
+    "food": "fb-… | fu-… | fo-… | null", "name": "…",
     "amount_g": 0, "servings": null,
     "kcal": 0, "protein_g": 0, "carbs_g": 0, "fat_g": 0,
     "per100g": { "kcal": 0, "protein_g": 0, "carbs_g": 0, "fat_g": 0 },
-    "source": "off | own | quick" } ]
+    "source": "off | uk | own | quick" } ]
 }
 ```
 
-- **Ids:** a barcode food is `fb-<barcode>` (the barcode passes its check digit; UPC-A is kept in its 13-digit form), so a scan on two phones makes ONE record; an own food is `fo-<yyyymmdd>-<6>`; an entry is `f-<yyyymmdd>-<6>`.
+- **Ids:** a barcode food is `fb-<barcode>` (the barcode passes its check digit; UPC-A is kept in its 13-digit form), so a scan on two phones makes ONE record; a food saved from the built-in UK list is `fu-<CoFID code>` (0.7.7, for example `fu-18-323`, source `"uk"`), one record on every phone the same way (0.7.6 reads, merges and syncs it: id and source are free text. **But 0.7.6 saves only `fo-` ids, so saving such a food again on a 0.7.6 phone makes a new copy with source `"own"` each time**: nothing is lost, only duplicates; update every phone to 0.7.7 first. A saved UK food is never offered again from the table list, and opening a table row whose id is saved opens the saved record, so the table numbers never overwrite your edits; review round 1); an own food is `fo-<yyyymmdd>-<6>`; an entry is `f-<yyyymmdd>-<6>`.
 - **Numbers are worked out once** when a food is logged and stored in the entry (kcal whole, grams to 0.1), with a copy of the numbers per 100 g so the portion can be changed later. A later fix of a saved food never changes a day already logged. A quick add has no amount and no numbers per 100 g; its carbs and fat may be `null`.
 - **No counters** ("used 12 times"): two phones would lose one. "Log again" and "had today" come from `food_log`.
 - **Checks** (`food/foodvalidate.js`): text up to 200 letters (the model cuts names to 120), kcal per 100 g 0 to 900, each macro per 100 g 0 to 100, an entry's kcal 0 to 20000 and each macro 0 to 2000 g (the model refuses a portion that would go over, in words, so the phone never holds an entry that would stop the food sync), barcode 8 to 14 digits, dates and meals from fixed lists. A tombstone needs only `id` and `updated_at`. Unknown fields are kept; `token` and `device` are dropped; a newer `format` says "Update the app first".
@@ -384,6 +387,8 @@ Automatic sync (0.7.2, Rosario: "the sync is too complicated"; `autosync.js`). E
 - **Tests:** `tests/food-sync.test.mjs` (27 tests against the pretend GitHub, with one pretend repo holding both files) and `tests/food-data.test.mjs`. In the browser, `?fake-github=1` on localhost gives the food file its own pretend GitHub (`trn.fake.food.v1`).
 
 ### 5.4c Open Food Facts and the barcode reader (build steps 7 and 8, delicate)
+
+- **Built-in UK foods (0.7.7, not a network call):** `app/data/uk-foods.json` (1,395 plain foods from CoFID 2021, Public Health England, Open Government Licence v3.0; about 82 KB; `{ source, licence, credit, version, fields, foods: [[code, name, kcal, protein_g, carbs_g, fat_g], …] }`) is made by `tests/tools/build-uk-foods.py` from the gov.uk Excel file and listed in the `sw.js` FILES list. `food/ukfoods.js` reads it with `import(url, { with: { type: "json" } })` the first time the search sheet opens (a JSON module is data, never run; the page makes no `fetch` call; the CSP is unchanged), checks every row (code, name up to 120 letters, kcal 0 to 900, macros 0 to 100) and searches it while you type. A failed load is forgotten, so the next search sheet tries again (a browser may keep a failed module load until the app is reopened; not checked on Safari). Research: `docs/research/2026-11-18-uk-food-tables.md`.
 
 - **Open Food Facts** (`food/off.js`): `GET https://world.openfoodfacts.org/api/v3/product/<barcode>?fields=…&app_name=TrainingApp&app_version=<version>` and the UK-only name search `GET /cgi/search.pl?search_terms=<word>&…&tagtype_0=countries&tag_contains_0=contains&tag_0=en:united-kingdom` (checked on 2026-11-18: 5 of 5 results for "skyr" were UK products). Only the barcode or the word is sent; `credentials: "omit"`, `referrerPolicy: "no-referrer"`, no headers (no pre-flight, no key). 20 s limit (a lookup: "Open Food Facts did not answer"; a name search that gets an answer it cannot use, or none in 20 s: "Online search is not working right now. Try again later, or make a new food.", 0.7.6; no signal keeps the no-signal words, and the limit and the 2-letter minimum keep their own words). The newer search address `search.openfoodfacts.org` is not used and not in the CSP: it sends no CORS header, so a browser can not read its answers (checked with curl and headless Chrome on 2026-11-18); at most 10 lookups and 8 searches a minute (their limits: 15 and 10). The check digit is tested before any lookup. Their text is cleaned (control and direction letters out) and cut to 120 letters, every number is range-checked (a bad one becomes empty and the check step asks for it; kJ becomes kcal when kcal is missing), and only our fields are kept. The page shows their text with `h()` / text nodes only. Every sheet with their data shows the ODbL credit line.
 - **Barcode reader:** zxing-wasm 3.1.7, reader build, copied byte for byte into `app/vendor/zxing-wasm/` (npm integrity and the `.wasm` SHA-256 checked by a test), with its MIT licence, the Apache licences of zxing-cpp and NOTICE. `food/scanner.js` loads it only when the scanner opens and calls `prepareZXingModule` with `locateFile` pointed at our own `.wasm` (the library's default is jsDelivr; the CSP would block it too). It reads EAN-13, EAN-8 and UPC-A, one code at a time, from the middle band of the video. The video plays inline and muted. A good code stops every camera track before it is passed on; a misread keeps the camera open. The scanner is an overlay on the Diet route (the hash never changes while the camera runs), and the camera is also stopped on Close, on a route change (`main.js` stops it first in `render()`), on `pagehide` and when the app goes to the back. A test reads a drawn EAN-13 with the real copied files in Node.

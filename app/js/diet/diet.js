@@ -12,7 +12,7 @@ import { downloadText } from "../backup.js";
 import { entriesOn, totals, byMeal, MEAL_WORDS, mealAt, recentFoods, averageLast7, againAmount, numbersFor, dayBefore, proteinText } from "../food/foodmath.js";
 import { foodStatusText } from "../sync/foodsync.js";
 import { syncer } from "../syncer.js";
-import { openSearch, openDigits, openQuickAdd, openEntry, creditLine, undoToast, messageToast, setListRedraw } from "./sheets.js";
+import { openSearch, openDigits, openQuickAdd, openEntry, creditLine, ukCreditLine, undoToast, messageToast, setListRedraw } from "./sheets.js";
 import { openScanner } from "./scan.js";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -132,7 +132,8 @@ export function renderDiet() {
     h("div", { class: "backup-row" },
       secondaryButton("Download food backup", saveBackup),
       secondaryButton("Restore food from a file", () => pick.click()), pick),
-    creditLine());
+    creditLine(),
+    ukCreditLine()); // 0.7.7: the built-in UK foods' licence
 
   return [
     screen(
