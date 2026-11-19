@@ -538,6 +538,114 @@ Sources (read 2026-11-18): Bosquet et al. 2013, Scand J Med Sci Sports 23(3):e14
 
 **Answers to 8.43 (added 2026-11-18):** (1) After a pain swap that starts at the floor, the workout also uses at least 3 reps left, with one combined note: "You swapped because it hurt. Lightest weight already: stop with 3 reps left today." After pain is exactly when the session must get easier, and at the floor effort is the only way left. (2) A weight Rosario set below the floor stays exactly as set: it is never lowered, never raised. (3) In every at-floor case the note is "Lightest weight already. Stop with 3 reps left today." and it replaces the "about 10 % lower" text, which would be untrue. The 2-set rule after a break of more than 4 weeks still applies, with its own text. (4) A D18 move's first workout after a break: when the break lowering applies and the converted start equals the new move's floor, it counts as at the floor (the note, and at least 3 reps left). Without a break it is a plain new start. (5) Week 1, when the find-your-weight steps say "too heavy" but the weight is already at the floor: the weight holds and the note says "Lightest weight already. Do the reps you can with good form, or swap the exercise." (week 1 already stops with 3 reps left, so that note would add nothing).
 
+### D20. No hip thrust movement; abs on benches and machines — **2 glute slots and 1 abs slot change; 2 new first-visit checks**
+
+Asked by the Training Agent on 2026-11-19, for you (after 0.7.6): "Hip thrust is still here, and the abs exercises don't use machinery. They have the benches for abs, I'm pretty sure. Why are there no abs exercises with those machines?"
+
+**You were right.** D18 moved the hip thrust onto a machine, but it was still the hip thrust **movement**, and the photo still showed a barbell hip thrust. So to you nothing had changed. D20 removes the movement itself. For the abs, the gym's website lists no abs machine or abs bench, so D20 uses a bench the gym does have, and adds first-visit checks for the abs machines and benches.
+
+#### G. Glutes: the Smith machine split squat replaces the hip thrust (Tue C1, Fri B1)
+
+| Slot | Old | New |
+|---|---|---|
+| Tue C1 | Hip thrust machine (Booty Builder) | **Smith machine split squat**, confirmed machine |
+| Fri B1 | Hip thrust machine (Booty Builder) | **Smith machine split squat**, confirmed machine |
+
+**Why the split squat:** it is the "one foot forward, one back" lunge position, held still, with the bar on rails, so you need no balance. The Smith machine has safety stops. A long step with a slight forward lean makes the glutes a main mover.
+- Split squats and lunges are in the top group for glute work: over 60 % of the glute's maximum, the same band as the hip thrust. Step-ups were the highest (Neto 2020, a review of 16 studies).
+- Leaning the trunk forward in a lunge raised the glute and hamstring work (Farrokhi 2008).
+- Squat-type moves grew the glutes as much as hip thrusts (Plotkin 2023, 9 weeks, MRI).
+- A machine builds muscle as well as free weights (Haugen 2023, D18).
+
+**Not chosen:**
+- The Glute Drive and the Booty Builder V8 are both hip thrust machines (the V8 is sold as a pin-loaded hip thrust machine). The Booty Builder kickback is a separate machine the website does not list.
+- Cable kickbacks need an ankle strap, which is not confirmed.
+- A leg press with your feet high still trains mostly the front of the thighs, and Tuesday already starts with the leg press.
+
+**The fallback when the Smith machine is busy:** a **dumbbell step-up** onto a bench at knee height or lower, also confirmed equipment. It has the highest glute work in Neto 2020, but it needs some balance, which is why it is the second choice.
+
+#### A. Abs: the reverse crunch on a flat bench on both hard days; machines and abs benches as offers
+
+| Slot | Old | New |
+|---|---|---|
+| Tue A2 | Crunch with a dumbbell (floor) | **Reverse crunch on a flat bench**, confirmed (benches) |
+| Fri A2 | Reverse crunch (bench or mat) | **Reverse crunch on a flat bench** (the same exercise, now always on the bench) |
+
+**Why:** in an EMG study, the reverse crunch was among the 3 best abs moves out of 13, together with the hanging knee-up (Escamilla 2006). You lie on a flat bench and hold its top end behind your head. Then you curl your hips up and bring your knees toward your chest. The bench gives you something to hold, and nothing is on the floor.
+
+**First-visit checks (only if the gym has it):** two new checks, `captain_chair` and `ab_bench`, plus the D18 check `ab_crunch`. When an answer is "yes", the app offers the machine once, as a one-tap Plan edit, as in D18:
+
+| Slot | Plan now (confirmed) | Offer 1, if found | Offer 2, if found |
+|---|---|---|---|
+| Tue A2 | Reverse crunch on a bench | **Knee raise on the captain's chair** (`captain_chair`) | Ab crunch machine (`ab_crunch`) |
+| Fri A2 | Reverse crunch on a bench | **Crunch on a decline abs bench** (`ab_bench`) | Ab crunch machine (`ab_crunch`) |
+
+- The captain's chair came 2nd of 13 for the front abs and 1st for the side abs, at about twice the crunch (ACE study 2001). The hanging knee-up was in Escamilla's top 3.
+- The decline abs bench is the crunch on a slope: the same move, with more load from gravity.
+- The ab crunch machine is the chain's standard abs machine. The Gym Group's equipment page shows one, but this gym's page does not list it.
+- Hanging knee raises on the rig bar: not now. They need a strong grip and are hard for a beginner. Later they are a step up from the captain's chair.
+
+**The light days stay (D17):** the plank on Monday and Thursday and the side plank on Wednesday and Friday are 2 short holds at the end. No machine does the "hold the trunk still" job better (McGill 2010, D17). The hard abs days stay Tuesday and Friday.
+
+#### Pictures must show the real equipment
+For every exercise in the plan, the photo and the video must show the same equipment and move. If no exact picture exists, the line under the photo starts with **"Similar move:"** and says plainly what differs. Examples: "Similar move: the photo shows the floor. Do it lying on a flat bench, holding its top end." and "Similar move: the photo shows dumbbells. Do it in the Smith machine, with the safety stops set." The builder checks every changed exercise. The `booty_builder_hip_thrust` note also starts with "Similar move:".
+
+#### Weekly sets per muscle (checked with a script on the plan data, weeks 1 to 12)
+- **Glutes:** unchanged (9 direct sets a week in weeks 2-5 and 7-11, and the same fractional sets in every week).
+- **Abs and back of the thighs:** unchanged.
+- **Front of the thighs:** +3 fractional sets a week (weeks 2-5: 12 → 15; weeks 7-11: 14 → 17; weeks 1 and 6: 8 → 10). This is because the split squat uses them as a helper. Direct sets stay the same (12 and 14).
+- **Inner thighs:** +3 fractional. Both stay inside the D2 range.
+
+The D13 soreness note on Wednesday (very sore thighs: one step lighter) already covers the extra thigh work on Tuesday. The days, the minutes (split squats are done one leg at a time, so about 1 to 2 minutes more on each day) and the hard and light abs days stay.
+
+#### Exact data for the build worker
+
+New exercises:
+
+| id | name | equipment | kind, range | step | muscles (main; helpers; equip) | first try (D12) | swaps |
+|---|---|---|---|---|---|---|---|
+| `smith_split_squat` | Smith machine split squat | Smith press station, safety stops set | reps 8-12, perSide | smith_2x2.5 | glutes; quads, hamstrings, adductors; smith; `own: { reason: "Trainer D20: a long step with a slight forward lean makes the glutes a main mover (Neto 2020 review: split squat over 60 % MVIC; Farrokhi 2008 EMG: forward lean raises glute work)" }` | 5 (plates in total, bar not counted) | `db_step_up`, `booty_builder_hip_thrust`, `hip_thrust` |
+| `db_step_up` (swap only) | Dumbbell step-up | Bench at knee height or lower + dumbbells | reps 8-12, perSide | dumbbell | glutes; quads, hamstrings, adductors; dumbbell; `own: { reason: "Trainer D20: step-ups gave the highest glute work in the Neto 2020 review" }` | 6 | `smith_split_squat` |
+| `captain_chair_knee_raise` (swap only) | Knee raise on the captain's chair | Captain's chair: back pad and arm rests (first visit check) | reps 10-15 | bodyweight | abs; none; machine | none | none |
+| `decline_bench_crunch` (swap only) | Crunch on a decline abs bench | Decline abs bench with foot rollers (first visit check) | reps 10-15 | bodyweight | abs; none; bodyweight | none | none |
+
+Changed exercise, same id: `reverse_crunch`. Its equipment becomes "Flat bench: lie on it, hold its top end behind your head". Its swaps become `captain_chair_knee_raise` (needsMachine `captain_chair`), `decline_bench_crunch` (needsMachine `ab_bench`), `ab_crunch_machine` (needsMachine `ab_crunch`), `weighted_crunch`, `dead_bug`.
+
+Cues (`cues.js`):
+- `smith_split_squat`: "Bar on your upper back, one foot forward and one back, a long step. Bend both knees until the back knee is near the floor, lean slightly forward, and push up through the front heel. Do all reps, then switch legs. Set the safety stops just below your lowest point."
+- `db_step_up`: "Dumbbells at your sides, your whole foot on the bench. Push through that heel to stand up on the bench, then step down slowly. Do all reps, then switch legs. Use a lower bench if your knee comes above your hip."
+- `reverse_crunch` (replaces today's text): "Lie on a flat bench and hold its top end behind your head, knees bent. Curl your hips up off the bench, bringing your knees toward your chest, then lower slowly. Do not swing."
+- `captain_chair_knee_raise`: "Back against the pad, forearms on the rests. Lift your knees to hip height or higher, curling your hips up a little, then lower slowly. No swinging."
+- `decline_bench_crunch`: "Hook your feet under the rollers and lie back on the slope. Breathe out and curl your shoulders up, pause, lower slowly. Hands across your chest; do not pull your head."
+
+Day changes (sets and rest unchanged): `tue` A2 `weighted_crunch` → `reverse_crunch` (3, rest 90); `tue` C1 `booty_builder_hip_thrust` → `smith_split_squat` (3, rest null; paired with the plank, rest 75); `fri` B1 `booty_builder_hip_thrust` → `smith_split_squat` (3, rest null; paired with the lateral raise, rest 75). `fri` A2 stays `reverse_crunch`.
+
+Other data:
+- `smith_split_squat` joins `BIG_LIFTS`. The Tuesday warm-up rule then gives it both warm-up sets (no glute main lift earlier that day).
+- New checks `captain_chair` and `ab_bench` are appended to `extraMachines`, the `extra_machines` defaults and the settings names ("Captain's chair (knee raise station)", "Abs bench (decline bench with foot rollers)").
+- New gym-spot ids are appended to `MACHINE_IDS` (never renamed): `captain_chair`, `ab_bench`. `smith_split_squat` and `db_step_up` use the existing `smith_machine` and `dumbbells_bench` spots.
+
+**Saved data (the builder's checklist, as in D18):**
+- `booty_builder_hip_thrust`, `hip_thrust` and `weighted_crunch` stay in `exercises` with their muscles, first try, cue and media. They leave the days but stay as swaps, so old logs, `exercise_state` and history stay readable.
+- A saved Plan edit that still holds an old exercise in a slot D20 changes gets the same one-time offer as D18: "The plan now uses <new> on <day>. Use it in your edited <day>?" with **Use it** and **Keep mine**. It is never rewritten silently.
+- **The first weight:** `smith_split_squat` with no log of its own, when the old exercise in that slot has a log, uses the D18 conversion (old kg × 5 ÷ old first try, the D19 break lowering first if there was a break, rounded down, at least 5 kg), with the D18 first-workout rule of 2 work sets. `reverse_crunch` is bodyweight, so it has no weight.
+- The muscle check must show the numbers above: glutes, abs and back of the thighs unchanged; front and inner thighs +3 fractional.
+
+**Tests for the build worker to write first (they fail until the build):**
+1. The three day changes; sets and rest unchanged; Friday A2 is still `reverse_crunch`.
+2. Weeks 1 to 12: glutes, abs and hamstrings direct and fractional sets are equal before and after. Quads and adductors fractional sets are +3 in weeks 2-5 and 7-11, and +2 in weeks 1 and 6.
+3. Every new exercise has muscles (with `own.reason` where it differs from free-exercise-db), a cue, swaps that exist, and a first try when it is weighted. `smith_split_squat` is in `BIG_LIFTS`.
+4. Old ids still exist and still open: a saved Tuesday with `booty_builder_hip_thrust` and `weighted_crunch` logs shows its history.
+5. `captain_chair_knee_raise`, `decline_bench_crunch` and `ab_crunch_machine` are hidden until their check says yes. Then one offer appears once, and the Plan edit happens only after **Use it**.
+6. An edited Tuesday that still holds `booty_builder_hip_thrust` in C1 shows the one-time D20 offer. **Use it** changes only that slot (and A2 if it still holds `weighted_crunch`) and keeps all other edits. **Keep mine** changes nothing, and the offer never comes back.
+7. First weight: a made-up `booty_builder_hip_thrust` log of 40 and no own log gives `smith_split_squat` 40 × 5/20 = 10 kg; after a break of more than 4 weeks the old 40 is lowered first (40 × 0.8 = 32 → 30 on a 5 kg stack), then converted: 30 × 5/20 = 7.5 → rounded down to 5 kg. With no logs at all, it starts at 5.
+8. Pictures: every exercise in the plan has a photo with `match: "same"`, or a `matchNote` that starts with "Similar move:". This covers `smith_split_squat`, `reverse_crunch` and `booty_builder_hip_thrust`.
+9. My test `trainer 3` (KEPT_DAYS) and `trainer 1` (shipped ids): the builder may update them to the new days and add the new ids in the tests-first commit. I agree to that now.
+
+Sources (read 2026-11-19): Neto et al. 2020, J Sports Sci Med 19(1):195-203, glute activation review ([PubMed 32132843](https://pubmed.ncbi.nlm.nih.gov/32132843/)); Farrokhi et al. 2008, J Orthop Sports Phys Ther 38(7):403-409, trunk lean in the lunge ([PubMed 18591759](https://pubmed.ncbi.nlm.nih.gov/18591759/)); Plotkin et al. 2023 and Haugen et al. 2023 (D18); Booty Builder V8 maker's page (D18); Escamilla et al. 2006, Phys Ther, 13 abs exercises ([PubMed 16649890](https://pubmed.ncbi.nlm.nih.gov/16649890/)); ACE-commissioned study 2001, San Diego State University, 13 abs exercises ([ACE PDF](https://www.acefitness.org/getfit/studies/BestWorstAbExercises.pdf)); Escamilla et al. 2006, JOSPT, ab machines vs the crunch (D18); [The Gym Group equipment page](https://www.thegymgroup.com/equipment/) (an ab crunch machine in the chain's photos, not listed for this gym); McGill 2010 (D17); the gym equipment record `docs/research/2026-11-16-gym-equipment.md`.
+
+**Not verified:** whether this gym has a captain's chair, an abs bench or an ab crunch machine (hence the first-visit checks); the Smith machine's bar weight (first try 5 kg of plates on top of the bar is aimed low); the ACE study is a commissioned lab report, not a peer-reviewed paper; the 2008 lunge study is small (10 people); no study tested the split squat against the hip thrust for glute growth directly.
+
 ## 5. Changes to your earlier choices
 
 **None.** I kept 74 b and 80-83 exactly:
